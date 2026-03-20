@@ -215,13 +215,30 @@ See [docs/SKILLS.md](docs/SKILLS.md) for the full guide.
   campaigns/              Active + completed campaign files
   fleet/                  Fleet session state + discovery briefs
   coordination/           Multi-instance scope claims
-  telemetry/              Agent run logs
+  telemetry/              Agent run + hook timing logs
 
 scripts/
   coordination.js         Multi-instance coordination CLI
   compress-discovery.cjs  Discovery brief compression
+  telemetry-log.cjs       Agent and campaign event logging
   telemetry-report.cjs    Performance summaries
 ```
+
+---
+
+## Telemetry & Cost Tracking
+
+The harness logs agent events, hook timing, and discovery compression to `.planning/telemetry/` (JSONL format, never leaves your machine).
+
+```bash
+npm run telemetry:report           # Agent run summary
+npm run telemetry:report -- --hooks       # Hook timing averages
+npm run telemetry:report -- --compression # Discovery compression ratios
+```
+
+Archon and Fleet log campaign start/complete, wave events, and per-agent results automatically. Hooks log their own timing on every invocation.
+
+Token counts are logged when available. Claude Code doesn't currently surface per-session token usage to hooks, so cost tracking depends on your plan's usage dashboard.
 
 ---
 
