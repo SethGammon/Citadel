@@ -290,6 +290,4 @@ MIT
 
 ## Author
 
-Seth Gammon ([@SethGammon](https://github.com/SethGammon))
-
 Built while managing a 668K-line codebase solo. The harness is the distillation of what actually works when you run agents at scale.
