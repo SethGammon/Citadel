@@ -16,7 +16,7 @@
  *   2 = type errors found in edited file
  */
 
-const { execSync } = require('child_process');
+const { execFileSync } = require('child_process');
 const path = require('path');
 const fs = require('fs');
 const health = require('./harness-health-util');
@@ -48,6 +48,12 @@ function main() {
     // Extract file path from tool input
     const filePath = event.tool_input?.file_path || event.tool_input?.path || '';
     if (!filePath) {
+      process.exit(0);
+    }
+
+    const pathCheck = health.validatePath(filePath);
+    if (!pathCheck.safe) {
+      health.securityWarning('post-edit', `Possible injection in file path — ${pathCheck.violation}. Skipping typecheck.`);
       process.exit(0);
     }
 
@@ -107,7 +113,7 @@ function typecheckTypeScript(filePath, relativePath) {
   if (/\.d\.ts$/.test(filePath)) return 0;
 
   try {
-    execSync(`npx tsc --noEmit --pretty false 2>&1`, {
+    execFileSync('npx', ['tsc', '--noEmit', '--pretty', 'false'], {
       cwd: PROJECT_ROOT,
       timeout: 25000,
       encoding: 'utf8',
@@ -138,8 +144,17 @@ function typecheckTypeScript(filePath, relativePath) {
 function typecheckPython(filePath, relativePath, command) {
   if (!/\.py$/.test(filePath)) return 0;
 
+  const cmdCheck = health.validateCommand(command);
+  if (!cmdCheck.safe) {
+    health.securityWarning('post-edit', `Possible injection in typecheck command — ${cmdCheck.violation}. Skipping typecheck.`);
+    return 0;
+  }
+
+  // Command is expected to be simple whitespace-separated tokens (e.g., "mypy --strict").
+  // Quoted arguments like --config-file "my config.ini" are not supported.
+  const [cmd, ...cmdArgs] = command.split(/\s+/);
   try {
-    execSync(`${command} "${filePath}"`, {
+    execFileSync(cmd, [...cmdArgs, filePath], {
       cwd: PROJECT_ROOT,
       timeout: 20000,
       encoding: 'utf8',
@@ -162,7 +177,7 @@ function typecheckGo(filePath, relativePath) {
   const dir = path.dirname(filePath);
 
   try {
-    execSync(`go vet ./...`, {
+    execFileSync('go', ['vet', './...'], {
       cwd: dir,
       timeout: 20000,
       encoding: 'utf8',
@@ -181,7 +196,7 @@ function typecheckGo(filePath, relativePath) {
 
 function typecheckRust() {
   try {
-    execSync('cargo check --message-format=short 2>&1', {
+    execFileSync('cargo', ['check', '--message-format=short'], {
       cwd: PROJECT_ROOT,
       timeout: 30000,
       encoding: 'utf8',

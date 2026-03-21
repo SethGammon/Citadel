@@ -149,11 +149,11 @@ function getTypecheckConfig(language) {
     case 'python':
       // Try mypy first, fall back to pyright
       try {
-        require('child_process').execSync('mypy --version', { stdio: 'pipe' });
+        require('child_process').execFileSync('mypy', ['--version'], { stdio: 'pipe' });
         return { command: 'mypy', perFile: true };
       } catch {
         try {
-          require('child_process').execSync('pyright --version', { stdio: 'pipe' });
+          require('child_process').execFileSync('pyright', ['--version'], { stdio: 'pipe' });
           return { command: 'pyright', perFile: true };
         } catch {
           return { command: null, perFile: false };
@@ -170,12 +170,47 @@ function getTypecheckConfig(language) {
   }
 }
 
+// ── Input Validation ────────────────────────────────────────────────────────
+
+// Paths allow backslash (Windows path separator).
+// Commands reject backslash — expected to be simple tool names (e.g., "mypy"),
+// not absolute paths. Windows users with paths like C:\Python39\python.exe
+// would need to add the tool to PATH instead.
+const PATH_META_RE = /[`$;|&\n\r\0]|\$\(/;
+const CMD_META_RE = /[`$;|&\n\r\0\\]|\$\(/;
+
+/** @returns {{ safe: boolean, violation: string|null }} */
+function _validateInput(value, label, regex) {
+  if (!value || typeof value !== 'string') {
+    return { safe: false, violation: `empty or non-string ${label}` };
+  }
+  const match = value.match(regex);
+  if (match) {
+    return {
+      safe: false,
+      violation: `shell metacharacter ${JSON.stringify(match[0])} in ${label}: ${value.slice(0, 200)}`,
+    };
+  }
+  return { safe: true, violation: null };
+}
+
+function validatePath(filePath) { return _validateInput(filePath, 'path', PATH_META_RE); }
+function validateCommand(command) { return _validateInput(command, 'command', CMD_META_RE); }
+
+function securityWarning(hook, message) {
+  process.stdout.write(`[SECURITY] ${hook}: ${message}\n`);
+  increment(hook, 'security-warning');
+}
+
 module.exports = {
   increment,
   logTiming,
   readConfig,
   detectStack,
   getTypecheckConfig,
+  validatePath,
+  validateCommand,
+  securityWarning,
   PROJECT_ROOT,
   TELEMETRY_DIR,
 };

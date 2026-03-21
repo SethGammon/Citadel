@@ -16,7 +16,7 @@
 
 const fs = require('fs');
 const path = require('path');
-const { execSync } = require('child_process');
+const { execFileSync } = require('child_process');
 const health = require('./harness-health-util');
 
 // Read stdin for hook context
@@ -46,15 +46,25 @@ function run() {
   // Get recently modified files from git
   let changedFiles = [];
   try {
-    const output = execSync('git diff --name-only HEAD 2>/dev/null || git diff --name-only', {
-      cwd: projectDir,
-      encoding: 'utf8',
-      timeout: 5000,
-      stdio: ['pipe', 'pipe', 'pipe'],
-    });
+    let output;
+    try {
+      output = execFileSync('git', ['diff', '--name-only', 'HEAD'], {
+        cwd: projectDir,
+        encoding: 'utf8',
+        timeout: 5000,
+        stdio: ['pipe', 'pipe', 'pipe'],
+      });
+    } catch {
+      // HEAD may not exist (fresh repo) — fall back to plain diff
+      output = execFileSync('git', ['diff', '--name-only'], {
+        cwd: projectDir,
+        encoding: 'utf8',
+        timeout: 5000,
+        stdio: ['pipe', 'pipe', 'pipe'],
+      });
+    }
     changedFiles = output.trim().split('\n').filter(Boolean);
   } catch {
-    // No git or no changes — skip
     process.exit(0);
   }
 
