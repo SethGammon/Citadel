@@ -6,7 +6,7 @@
 
 Run autonomous coding campaigns with Claude Code. Route any task through the right tool at the right scale — from a one-line fix to a multi-day parallel campaign.
 
-**18 skills | 3 autonomous agents | 8 lifecycle hooks | campaign persistence | fleet coordination**
+**21 skills | 3 autonomous agents | 8 lifecycle hooks | campaign persistence | fleet coordination**
 
 ## Quickstart
 
@@ -60,7 +60,14 @@ Four tiers. Use the cheapest one that fits.
 </tr>
 </table>
 
-## Skills (18)
+## Skills (21)
+
+### App Creation (3)
+| Skill | What It Does | Invoke |
+|---|---|---|
+| PRD | Generates a Product Requirements Document from an app description | `/prd` |
+| Architect | Converts a PRD into file tree, build phases, and end conditions | `/architect` |
+| Create App | End-to-end app creation with 4 tiers: blank, guided, templated, generated | `/create-app` |
 
 ### Core (6)
 | Skill | What It Does | Invoke |

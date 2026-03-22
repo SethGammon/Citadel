@@ -100,6 +100,9 @@ frontmatter for name and description.
 
 | Input Contains | Route To |
 |---|---|
+| "prd", "requirements", "spec", "plan an app", "design an app" | `/prd` |
+| "architect", "architecture", "design the system", "file structure", "plan the build" | `/architect` |
+| "create app", "build app", "build me", "make an app", "new app", "generate app" | `/create-app` |
 | "review", "code review" | `/review` |
 | "test", "generate tests", "write tests" | `/test-gen` |
 | "document", "docs", "docstring", "readme" | `/doc-gen` |
@@ -128,7 +131,7 @@ When Tiers 0-2 don't resolve, classify across 6 dimensions:
 ```
 SCOPE: single-file | single-domain | cross-domain | platform-wide
 COMPLEXITY: 1 (trivial) | 2 (simple) | 3 (moderate) | 4 (complex) | 5 (campaign)
-INTENT: fix | build | audit | redesign | research | improve | wire | prune
+INTENT: fix | build | create | audit | redesign | research | improve | wire | prune
 REQUIRES_PERSISTENCE: true | false (multi-session?)
 REQUIRES_PARALLEL: true | false (independent sub-tasks?)
 REQUIRES_TASTE: true | false (quality judgment beyond tests?)
@@ -138,6 +141,8 @@ REQUIRES_TASTE: true | false (quality judgment beyond tests?)
 
 | Condition | Route |
 |---|---|
+| INTENT is "create", Complexity >= 3 | `/create-app` |
+| INTENT is "create", Complexity <= 2 | `/scaffold` |
 | Complexity 1, single skill match | Skill directly |
 | Complexity 1, no skill match | Do it yourself (direct edit) |
 | Complexity 2, single domain | `/marshal` |
@@ -195,6 +200,11 @@ ORCHESTRATION
   /archon [direction]   Multi-session campaigns
   /fleet [direction]    Parallel campaigns with coordination safety
   /autopilot            Intake-to-delivery pipeline
+
+APP CREATION
+  /prd                  Product requirements document
+  /architect            Implementation architecture from PRD
+  /create-app           End-to-end app creation (4 tiers)
 
 SKILLS
   /review               5-pass structured code review

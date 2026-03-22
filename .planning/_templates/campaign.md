@@ -11,12 +11,28 @@ Direction: {The original user direction that created this campaign}
 
 ## Phases
 <!-- 3-8 phases. Mark status as: [pending], [in-progress], [complete], [skipped], [failed] -->
-1. [pending] Research: Audit existing auth implementation
-2. [pending] Plan: Design token refresh architecture
-3. [pending] Build: Implement JWT middleware
-4. [pending] Build: Add refresh token endpoint
-5. [pending] Wire: Connect auth to existing routes
-6. [pending] Verify: Run full test suite, manual verification
+<!-- "Done When" column: machine-verifiable acceptance criteria. Not "auth is implemented." -->
+<!-- Instead: "File exists AND typecheck passes AND endpoint returns 200" -->
+| # | Status | Type | Phase | Done When |
+|---|--------|------|-------|-----------|
+| 1 | pending | research | Audit existing auth implementation | Decision Log has auth audit findings |
+| 2 | pending | plan | Design token refresh architecture | Architecture decision logged with alternatives evaluated |
+| 3 | pending | build | Implement JWT middleware | src/auth/middleware.ts exists AND typecheck passes |
+| 4 | pending | build | Add refresh token endpoint | /api/auth/refresh returns 200 with valid token |
+| 5 | pending | wire | Connect auth to existing routes | Protected routes return 401 without token, 200 with token |
+| 6 | pending | verify | Run full test suite, manual verification | npm test passes with 0 failures |
+
+## Phase End Conditions
+<!-- Machine-verifiable criteria. Archon checks these before marking a phase complete. -->
+<!-- Format: phase_number | condition_type | check_command_or_description -->
+<!-- Condition types: file_exists, command_passes, metric_threshold, visual_verify, manual -->
+<!-- Example:
+| 1 | command_passes | npx tsc --noEmit (exit 0) |
+| 1 | file_exists | src/auth/middleware.ts |
+| 2 | visual_verify | /dashboard renders with data (not skeleton/blank) |
+| 2 | metric_threshold | npm test -- --coverage | coverage > 60% |
+| 3 | manual | User confirms auth flow works end-to-end |
+-->
 
 ## Feature Ledger
 <!-- Track what was actually built. Updated after each phase. -->

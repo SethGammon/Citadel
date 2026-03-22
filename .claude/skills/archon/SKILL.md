@@ -66,8 +66,14 @@ Break the direction into 3-8 phases:
 | verify | Confirm everything works | Typecheck, tests, manual review |
 | prune | Remove dead code, clean up | Marshal with removal targets |
 
-4. Write the campaign file to `.planning/campaigns/{slug}.md`
-5. Register a scope claim if `.planning/coordination/` exists
+4. For each phase, write machine-verifiable end conditions:
+   - Every phase MUST have at least one non-manual condition
+   - Use condition types: `file_exists`, `command_passes`, `metric_threshold`, `visual_verify`, `manual`
+   - Examples: "src/auth/middleware.ts exists", "npx tsc --noEmit exits 0", "/dashboard renders components"
+   - Write conditions to the Phase End Conditions table in the campaign file
+   - `manual` type is acceptable for UX/design decisions but must not be the only condition
+5. Write the campaign file to `.planning/campaigns/{slug}.md`
+6. Register a scope claim if `.planning/coordination/` exists
 
 ### Step 3: EXECUTE PHASES
 
@@ -83,7 +89,15 @@ For each phase:
    - `.claude/agent-context/rules-summary.md`
    - Phase-specific direction and scope
    - Relevant decisions from the campaign's Decision Log
-4. **Review**: Read the sub-agent's HANDOFF. Did it accomplish the phase goal?
+4. **Verify end conditions**: Before marking a phase complete, check its end conditions:
+   - `file_exists`: check if the file exists on disk
+   - `command_passes`: run the command, verify exit code 0
+   - `metric_threshold`: run the command, parse the output, compare to threshold
+   - `visual_verify`: invoke /live-preview on the specified route
+   - `manual`: log to Review Queue for human verification, don't block
+   - If ANY non-manual condition fails: the phase is NOT complete. Fix what's failing.
+   - Log which conditions passed/failed in the Feature Ledger
+5. **Review**: Read the sub-agent's HANDOFF. Did it accomplish the phase goal?
 5. **Log delegation result**:
    ```bash
    node scripts/telemetry-log.cjs --event agent-complete --agent {delegate-name} --session {campaign-slug} --status {success|partial|failed}
