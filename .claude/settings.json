@@ -44,17 +44,6 @@
         ]
       }
     ],
-    "WorktreeCreate": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/worktree-setup.js\"",
-            "timeout": 120
-          }
-        ]
-      }
-    ],
     "Stop": [
       {
         "hooks": [
