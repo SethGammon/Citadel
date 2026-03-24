@@ -20,6 +20,9 @@ const CITADEL_MARKERS = [
 // Top-level directories/files from Citadel to install (everything else skipped)
 const INSTALL_PATHS = ['.claude', '.planning', 'scripts'];
 
+// Valid values for the --conflict flag
+const CONFLICT_MODES = ['overwrite', 'skip', 'backup'];
+
 // ── Validation ────────────────────────────────────────────────────────────────
 
 /**
@@ -213,6 +216,21 @@ function collectCitadelFiles(citadelRoot) {
 }
 
 /**
+ * Validates and returns a conflict mode string.
+ * Throws if the value is not one of the valid modes.
+ * @param {string} value
+ * @returns {'overwrite'|'skip'|'backup'}
+ */
+function parseConflictMode(value) {
+  if (!CONFLICT_MODES.includes(value)) {
+    throw new Error(
+      `Invalid --conflict value: "${value}". Must be one of: ${CONFLICT_MODES.join(', ')}`
+    );
+  }
+  return value;
+}
+
+/**
  * Decision tree classification for a single file.
  * @param {string} relPath       Relative path of the file (e.g. '.claude/settings.json')
  * @param {string} projectRoot   Absolute path to the project root
@@ -300,13 +318,15 @@ function showDiff(relPath, existingContent, citadelContent) {
 
 /**
  * Installs a single file from Citadel into the project.
- * @param {string} relPath      Relative file path
- * @param {string} citadelRoot  Absolute path to Citadel repo
- * @param {string} projectRoot  Absolute path to project root
- * @param {object} counters     { copied, merged, overwritten, skipped, backedUp }
- * @param {object} manifest     { copied, merged, overwritten, skipped, backedUp } — arrays of relPaths
+ * @param {string} relPath        Relative file path
+ * @param {string} citadelRoot    Absolute path to Citadel repo
+ * @param {string} projectRoot    Absolute path to project root
+ * @param {object} counters       { copied, merged, overwritten, skipped, backedUp }
+ * @param {object} manifest       { copied, merged, overwritten, skipped, backedUp } — arrays of relPaths
+ * @param {string} [conflictMode] 'overwrite'|'skip'|'backup' — skips interactive prompt when set.
+ *                                Has no effect on .claude/settings.json, which always deep-merges.
  */
-async function installFile(relPath, citadelRoot, projectRoot, counters, manifest) {
+async function installFile(relPath, citadelRoot, projectRoot, counters, manifest, conflictMode) {
   const src  = path.join(citadelRoot, relPath);
   const dest = path.join(projectRoot, relPath);
   const action = classifyFile(relPath, projectRoot);
@@ -339,11 +359,17 @@ async function installFile(relPath, citadelRoot, projectRoot, counters, manifest
     }
 
     if (!existingSettings) {
-      // Fall back to interactive — only back up if user selects [b]
+      // Fall back to interactive (or auto-resolve) — only back up if choice is 'backup'
       const existingRaw  = fs.readFileSync(dest, 'utf8');
       const citadelRaw   = fs.readFileSync(src,  'utf8');
       const lastModified = fs.statSync(dest).mtime.toISOString();
-      const choice = await promptConflict(relPath, existingRaw, citadelRaw, null, lastModified);
+      let choice;
+      if (conflictMode) {
+        console.log(`  Auto-${conflictMode} (--conflict): ${relPath}`);
+        choice = conflictMode;
+      } else {
+        choice = await promptConflict(relPath, existingRaw, citadelRaw, null, lastModified);
+      }
       if (choice === 'skip') { counters.skipped++; manifest.skipped.push(relPath); return; }
       if (choice === 'backup') { backupFile(dest); counters.backedUp++; manifest.backedUp.push(relPath); }
       fs.copyFileSync(src, dest);
@@ -368,7 +394,13 @@ async function installFile(relPath, citadelRoot, projectRoot, counters, manifest
   const existingRaw    = fs.readFileSync(dest, 'utf8');
   const citadelRaw     = fs.readFileSync(src,  'utf8');
   const lastModified   = fs.statSync(dest).mtime.toISOString();
-  const choice = await promptConflict(relPath, existingRaw, citadelRaw, null, lastModified);
+  let choice;
+  if (conflictMode) {
+    console.log(`  Auto-${conflictMode} (--conflict): ${relPath}`);
+    choice = conflictMode;
+  } else {
+    choice = await promptConflict(relPath, existingRaw, citadelRaw, null, lastModified);
+  }
 
   if (choice === 'skip') {
     counters.skipped++;
@@ -454,6 +486,7 @@ module.exports = {
   normaliseCommand, commandsEquivalent,
   mergeHookEvent, mergeSettings,
   walkDir, collectCitadelFiles, classifyFile,
+  parseConflictMode,
   promptConflict, buildManifest,
 };
 
@@ -462,17 +495,26 @@ module.exports = {
 async function main() {
   checkNodeVersion(process.version);
 
-  // Parse --source=<value> and --target=<value> named flags
+  // Parse --source=<value>, --target=<value>, and --conflict=<value> named flags
   const argv = process.argv.slice(2);
-  let sourcePath, targetPath;
+  let sourcePath, targetPath, conflictMode;
   for (const arg of argv) {
-    if (arg.startsWith('--source=')) sourcePath = arg.slice('--source='.length);
-    else if (arg.startsWith('--target=')) targetPath = arg.slice('--target='.length);
+    if (arg.startsWith('--source='))   sourcePath   = arg.slice('--source='.length);
+    else if (arg.startsWith('--target='))   targetPath   = arg.slice('--target='.length);
+    else if (arg.startsWith('--conflict=')) conflictMode = arg.slice('--conflict='.length);
   }
 
   if (!sourcePath || !targetPath) {
-    console.error('Usage: node <path>/install-citadel.js --source=<citadel-clone> --target=<project>');
+    console.error(
+      'Usage: node <path>/install-citadel.js --source=<citadel-clone> --target=<project>' +
+      ' [--conflict=overwrite|skip|backup]'
+    );
     process.exit(1);
+  }
+
+  if (conflictMode !== undefined) {
+    try { parseConflictMode(conflictMode); }
+    catch (e) { console.error(e.message); process.exit(1); }
   }
 
   const citadelRoot = path.resolve(sourcePath.replace(/^~/, process.env.HOME || ''));
@@ -516,7 +558,7 @@ async function main() {
 
   for (const relPath of files) {
     try {
-      await installFile(relPath, citadelRoot, projectRoot, counters, manifest);
+      await installFile(relPath, citadelRoot, projectRoot, counters, manifest, conflictMode);
     } catch (err) {
       console.error(`  Error processing ${relPath}: ${err.message}`);
       counters.skipped++;

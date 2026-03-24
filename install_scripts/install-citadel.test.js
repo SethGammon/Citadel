@@ -208,6 +208,20 @@ test('mergeSettings: unknown top-level key — project value wins for scalars', 
   assert.strictEqual(result.someFlag, true);
 });
 
+const { parseConflictMode } = require('./install-citadel.js');
+
+test('parseConflictMode accepts valid modes', () => {
+  assert.strictEqual(parseConflictMode('overwrite'), 'overwrite');
+  assert.strictEqual(parseConflictMode('skip'),      'skip');
+  assert.strictEqual(parseConflictMode('backup'),    'backup');
+});
+
+test('parseConflictMode throws on invalid value', () => {
+  assert.throws(() => parseConflictMode('force'),  /Invalid --conflict value/);
+  assert.throws(() => parseConflictMode(''),       /Invalid --conflict value/);
+  assert.throws(() => parseConflictMode('SKIP'),   /Invalid --conflict value/);
+});
+
 const { promptConflict } = require('./install-citadel.js');
 const { Readable, Writable } = require('stream');
 
