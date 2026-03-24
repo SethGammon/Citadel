@@ -16,6 +16,9 @@ No API key setup needed — Citadel inherits Claude Code's authentication.
 git clone https://github.com/SethGammon/Citadel.git
 cd your-project
 
+# Back up existing settings if you have them
+[ -f .claude/settings.json ] && cp .claude/settings.json .claude/settings.json.bak
+
 cp -r ../Citadel/.claude .
 cp -r ../Citadel/.planning .
 cp -r ../Citadel/scripts .
@@ -24,10 +27,15 @@ cp -r ../Citadel/scripts .
 cp ../Citadel/CLAUDE.md .
 ```
 
+> **If you backed up settings.json:** merge your existing hooks and MCP servers back into `.claude/settings.json` after the copy. The Citadel hooks are in the `"hooks"` key. Your other settings (MCP servers, permissions, etc.) go alongside them.
+
 ### Windows (Command Prompt)
 ```cmd
 git clone https://github.com/SethGammon/Citadel.git
 cd your-project
+
+:: Back up existing settings if you have them
+if exist .claude\settings.json copy .claude\settings.json .claude\settings.json.bak
 
 xcopy /E /I ..\Citadel\.claude .\.claude
 xcopy /E /I ..\Citadel\.planning .\.planning
@@ -39,6 +47,9 @@ xcopy ..\Citadel\CLAUDE.md .\CLAUDE.md*
 ```powershell
 git clone https://github.com/SethGammon/Citadel.git
 cd your-project
+
+# Back up existing settings if you have them
+if (Test-Path .claude\settings.json) { Copy-Item .claude\settings.json .claude\settings.json.bak }
 
 Copy-Item -Recurse ..\Citadel\.claude .\.claude
 Copy-Item -Recurse ..\Citadel\.planning .\.planning

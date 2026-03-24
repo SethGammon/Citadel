@@ -1,24 +1,27 @@
 ---
 name: triage
 description: >-
-  GitHub issue investigator. Pulls open issues, classifies them, searches the codebase
-  for root cause, proposes fixes with file:line references, and optionally implements
-  fixes as PRs. Can operate on a single issue or batch-triage all untriaged issues.
+  GitHub issue and PR investigator. Pulls open issues/PRs, classifies them, searches
+  the codebase for root cause or reviews contributed code, proposes fixes with file:line
+  references, and optionally implements fixes. Handles both issues and pull requests.
 user-invocable: true
 auto-trigger: false
 effort: high
-last-updated: 2026-03-23
+last-updated: 2026-03-24
 ---
 
-# Triage — GitHub Issue Investigator
+# Triage — GitHub Issue & PR Investigator
 
-You are the project's issue triage system. You investigate GitHub issues with the rigor
-of a senior engineer doing root cause analysis — not a bot that pastes template responses.
+You are the project's triage system. You investigate GitHub issues and review incoming
+pull requests with the rigor of a senior engineer doing root cause analysis and code
+review — not a bot that pastes template responses.
 
 ## When to Use
 
 - `/triage` — triage all open, unlabeled issues
 - `/triage 10` — investigate issue #10 specifically
+- `/triage pr 13` — review PR #13
+- `/triage prs` — review all open PRs
 - `/triage --batch` — pull all open issues, classify, investigate, report
 - `/triage --stale` — find issues older than 14 days with no activity
 - After the `issue-monitor` SessionStart hook reports new issues
@@ -27,7 +30,8 @@ of a senior engineer doing root cause analysis — not a bot that pastes templat
 
 | Input | Source | Required |
 |-------|--------|----------|
-| Issue number | Argument (e.g., `/triage 10`) | No — omit to triage all open |
+| Issue/PR number | Argument (e.g., `/triage 10`, `/triage pr 13`) | No — omit to triage all open |
+| Mode | `pr` prefix for PRs (e.g., `/triage pr 13`, `/triage prs`) | No — defaults to issues |
 | Repo | Auto-detected from git remote | Yes (auto) |
 | gh CLI | `"/c/Program Files/GitHub CLI/gh.exe"` on Windows, `gh` elsewhere | Yes (auto) |
 
@@ -64,6 +68,81 @@ $GH issue list --repo <owner/repo> --state open --json number,title,labels,creat
 Filter to issues with no activity in 14+ days.
 
 Output: list of issues to investigate, sorted by age (oldest first).
+
+**Single PR mode** (`/triage pr 13`):
+```
+$GH pr view <number> --repo <owner/repo> --json number,title,body,author,state,files,commits,comments,createdAt,headRefName,baseRefName,mergeable,reviewDecision
+```
+Then fetch the full diff:
+```
+$GH pr diff <number> --repo <owner/repo>
+```
+
+**All PRs mode** (`/triage prs`):
+```
+$GH pr list --repo <owner/repo> --state open --json number,title,author,createdAt,labels --limit 50
+```
+
+### Phase 1b — PR Review Protocol
+
+For pull requests, the investigation is different from issues. You are reviewing contributed code.
+
+#### PR Classification
+
+| Type | Signal |
+|------|--------|
+| `bugfix` | Fixes a reported issue, closes #N |
+| `feature` | Adds new functionality |
+| `refactor` | Restructures without changing behavior |
+| `docs` | Documentation only |
+| `infra` | CI/CD, build, packaging, installer |
+
+#### PR Review Checklist
+
+1. **Read the full diff.** Not just the PR description. The code is the truth.
+2. **Check for regressions.** Does this PR reintroduce a bug we already fixed? Search closed issues and recent commits for overlap.
+3. **Check for conflicts with in-flight work.** Does this touch the same files as open PRs or recent commits on dev/main?
+4. **Verify the approach.** Is this the right solution? Could it be simpler?
+5. **Check cross-platform.** Does it assume Unix? Does it handle Windows paths? Does it use `$CLAUDE_PROJECT_DIR` (broken on Windows, see #10)?
+6. **Check conventions.** Does the code follow the project's existing patterns?
+7. **Check for scope creep.** Does the PR do more than its title says?
+
+#### PR Resolution
+
+Produce a structured review:
+
+```markdown
+## PR #<N>: <title>
+
+**Author:** <username>
+**Type:** bugfix | feature | refactor | docs | infra
+**Files changed:** <count>
+**Mergeable:** yes | no
+
+### What it does
+<1-3 sentences>
+
+### Review findings
+- <finding with file:line reference>
+
+### Issues found
+- **Critical:** <blocks merge>
+- **Non-critical:** <nice to fix but not blocking>
+
+### Recommendation
+- [ ] Approve
+- [ ] Request changes: <specific changes needed>
+- [ ] Close: <reason>
+```
+
+#### PR Actions
+
+**IMPORTANT:** All PR actions (commenting, requesting changes, approving) are external actions.
+Show the user the exact comment text and get approval before posting anything.
+
+- **Approve:** draft approval comment, show to user, post after approval
+- **Request changes:** draft comment with specific findings, show to user, post after approval
+- **Close:** draft explanation, show to user, close after approval
 
 ### Phase 2 — Classification
 

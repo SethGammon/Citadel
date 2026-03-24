@@ -6,7 +6,7 @@
 
 Run autonomous coding campaigns with Claude Code. Route any task through the right tool at the right scale — from a one-line fix to a multi-day parallel campaign.
 
-**24 skills | 3 autonomous agents | 8 lifecycle hooks | campaign persistence | fleet coordination**
+**26 skills | 4 autonomous agents | 10 lifecycle hooks | campaign persistence | fleet coordination**
 
 <img src="assets/citadel-overview.svg" width="100%" alt="Citadel system overview — app creation pipeline and safety systems" />
 
@@ -19,6 +19,8 @@ Run autonomous coding campaigns with Claude Code. Route any task through the rig
 git clone https://github.com/SethGammon/Citadel.git
 cp -r Citadel/.claude Citadel/.planning Citadel/scripts your-project/
 ```
+
+> **Already have a `.claude/settings.json`?** The copy above will overwrite it. Back up your existing settings first: `cp your-project/.claude/settings.json your-project/.claude/settings.json.bak` — then merge the Citadel hooks into your existing file after install.
 
 <details>
 <summary>Windows? Use PowerShell or Command Prompt instead</summary>
@@ -98,7 +100,7 @@ Four tiers. Use the cheapest one that fits.
 </tr>
 </table>
 
-## Skills (24)
+## Skills (26)
 
 ### App Creation (3)
 | Skill | What It Does | Invoke |
@@ -141,14 +143,20 @@ Four tiers. Use the cheapest one that fits.
 | QA | Browser-based interaction testing via Playwright (optional dependency) | `/qa` |
 | Postmortem | Auto-generates structured postmortems from completed campaigns | `/postmortem` |
 
-### Utilities (3)
+### Maintenance (1)
+| Skill | What It Does | Invoke |
+|---|---|---|
+| Triage | GitHub issue and PR investigator. Classifies, investigates root cause, reviews contributed code. | `/triage` |
+
+### Utilities (4)
 | Skill | What It Does | Invoke |
 |---|---|---|
 | Live Preview | Mid-build visual verification via screenshots | `/live-preview` |
 | Session Handoff | Context transfer between sessions | `/session-handoff` |
 | Setup | First-run harness configuration | `/do setup` |
+| Simplify | Reviews changed code for reuse, quality, and efficiency | `/simplify` |
 
-## Hooks (8)
+## Hooks (10)
 
 Automated quality enforcement that runs without you thinking about it.
 
@@ -162,6 +170,8 @@ Automated quality enforcement that runs without you thinking about it.
 | Pre-compaction save | Before context compaction | Saves session state so nothing is lost |
 | Post-compaction restore | After context compaction | Restores session state from saved snapshot |
 | Worktree setup | Agent spawn | Auto-installs deps in parallel agent worktrees |
+| Smoke test | On demand | Validates all hooks load, parse, and resolve (`npm run test:hooks`) |
+| External action gate | Before bash (opt-in) | Blocks push/PR/comment until user approves. Add to `settings.local.json` to enable. |
 
 ## Sub-Agents (4)
 
@@ -197,6 +207,10 @@ Run 2-3 agents simultaneously in isolated worktrees. Discoveries compress into ~
 **Can I use this with other AI tools?** — Designed for Claude Code specifically. The concepts are portable but the implementation uses Claude Code's extension points.
 
 **Does this work on Windows?** — Yes. All hooks and scripts run on Node.js. The [quickstart](#quickstart) has install commands for Bash, PowerShell, and Command Prompt.
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines on submitting issues, PRs, and new skills.
 
 ## Learn More
 
