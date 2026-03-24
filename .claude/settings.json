@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/protect-files.js\"",
+            "command": "node .claude/hooks/protect-files.js",
             "timeout": 5
           }
         ]
@@ -16,7 +16,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/protect-files.js\"",
+            "command": "node .claude/hooks/protect-files.js",
             "timeout": 5
           }
         ]
@@ -27,7 +27,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/post-edit.js\"",
+            "command": "node .claude/hooks/post-edit.js",
             "timeout": 30
           }
         ]
@@ -38,7 +38,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/pre-compact.js\"",
+            "command": "node .claude/hooks/pre-compact.js",
             "timeout": 10
           }
         ]
@@ -49,7 +49,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/quality-gate.js\"",
+            "command": "node .claude/hooks/quality-gate.js",
             "timeout": 10
           }
         ]
@@ -60,7 +60,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/circuit-breaker.js\"",
+            "command": "node .claude/hooks/circuit-breaker.js",
             "timeout": 5
           }
         ]
@@ -72,7 +72,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/restore-compact.js\"",
+            "command": "node .claude/hooks/restore-compact.js",
             "timeout": 5
           }
         ]
@@ -81,7 +81,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/intake-scanner.js\"",
+            "command": "node .claude/hooks/intake-scanner.js",
             "timeout": 5
           }
         ]

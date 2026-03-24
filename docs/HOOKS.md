@@ -40,7 +40,7 @@ Hooks are configured in `.claude/settings.json`:
         "hooks": [
           {
             "type": "command",
-            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/post-edit.js\"",
+            "command": "node .claude/hooks/post-edit.js",
             "timeout": 30
           }
         ]

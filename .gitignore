@@ -2,6 +2,8 @@
 .claude/circuit-breaker-state.json
 .claude/compact-state.json
 .claude/harness.json
+.claude/issue-monitor-state.json
+.claude/settings.local.json
 
 # Coordination (ephemeral, per-session)
 .planning/coordination/instances/*.json
