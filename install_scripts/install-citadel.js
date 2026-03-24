@@ -86,23 +86,6 @@ function commandsEquivalent(a, b) {
   return normaliseCommand(a) === normaliseCommand(b);
 }
 
-/**
- * Rewrites a hook command to use the $CLAUDE_PROJECT_DIR-prefixed form,
- * ONLY if it is in one of two forms:
- *   - bare relative: "node .claude/..."
- *   - already prefixed: node "$CLAUDE_PROJECT_DIR/.claude/..."
- * Other absolute paths are returned unchanged.
- */
-function rewriteToProjectDir(cmd) {
-  if (cmd.includes('$CLAUDE_PROJECT_DIR')) return cmd;
-  if (/^node\s+["']?\.claude\//.test(cmd)) {
-    return cmd.replace(/^(node\s+)["']?(\.claude\/.+?)["']?$/, (_, prefix, hook) => {
-      return `${prefix}"$CLAUDE_PROJECT_DIR/${hook}"`;
-    });
-  }
-  return cmd;
-}
-
 // ── settings.json merge ───────────────────────────────────────────────────────
 
 /**
@@ -126,7 +109,7 @@ function mergeHookEvent(projectEntries, citadelEntries) {
     if (!byMatcher.has(key)) {
       byMatcher.set(key, {
         ...(citEntry.matcher ? { matcher: citEntry.matcher } : {}),
-        hooks: (citEntry.hooks || []).map(h => ({ ...h, command: rewriteToProjectDir(h.command) })),
+        hooks: [...(citEntry.hooks || [])],
       });
     } else {
       const existing = byMatcher.get(key);
@@ -135,10 +118,9 @@ function mergeHookEvent(projectEntries, citadelEntries) {
           commandsEquivalent(ph.command, citHook.command)
         );
         if (!alreadyPresent) {
-          existing.hooks.push({ ...citHook, command: rewriteToProjectDir(citHook.command) });
+          existing.hooks.push({ ...citHook });
         }
       }
-      existing.hooks = existing.hooks.map(h => ({ ...h, command: rewriteToProjectDir(h.command) }));
     }
   }
 
@@ -172,7 +154,7 @@ function mergeSettings(project, citadel) {
       if (projEntries.length === 0) {
         mergedHooks[event] = citEntries.map(e => ({
           ...(e.matcher ? { matcher: e.matcher } : {}),
-          hooks: (e.hooks || []).map(h => ({ ...h, command: rewriteToProjectDir(h.command) })),
+          hooks: [...(e.hooks || [])],
         }));
       } else if (citEntries.length === 0) {
         mergedHooks[event] = projEntries;
@@ -469,7 +451,7 @@ function buildManifest(manifest, citadelRoot, projectRoot, timestamp) {
 module.exports = {
   checkNodeVersion, isCitadelRepo,
   countLines, backupPath, backupFile,
-  normaliseCommand, commandsEquivalent, rewriteToProjectDir,
+  normaliseCommand, commandsEquivalent,
   mergeHookEvent, mergeSettings,
   walkDir, collectCitadelFiles, classifyFile,
   promptConflict, buildManifest,
