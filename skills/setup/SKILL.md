@@ -184,10 +184,30 @@ If CLAUDE.md ALREADY exists:
    reference lines. NEVER overwrite or delete existing content.
 4. If already present: skip, don't duplicate
 
-**Hooks:** Citadel's hooks are managed by the plugin and fire automatically.
-No per-project hook configuration is needed. The plugin's `hooks/hooks.json`
-defines all lifecycle hooks (protect-files, post-edit typecheck, circuit breaker,
-quality gate, intake scanner, init-project, pre-compact, restore-compact).
+**Hooks — Install to Project:**
+
+Citadel's plugin hooks require path resolution into the project's `.claude/settings.json`.
+This is necessary because `${CLAUDE_PLUGIN_ROOT}` variable expansion in hook commands
+has a known upstream bug (anthropics/claude-code#24529).
+
+Run the hook installer to resolve paths:
+```bash
+node {citadel-root}/scripts/install-hooks.js
+```
+
+Where `{citadel-root}` is the absolute path to the Citadel plugin directory. To find it:
+1. Check `.citadel/plugin-root.txt` in the project (written by init-project if it ran)
+2. Or ask the user where they cloned Citadel
+
+The installer:
+- Reads `hooks/hooks.json` from Citadel
+- Replaces `${CLAUDE_PLUGIN_ROOT}` with the resolved absolute path
+- Writes working hooks into this project's `.claude/settings.json`
+- Preserves any existing non-Citadel settings (permissions, env, mcpServers)
+- Is idempotent — safe to re-run after Citadel updates
+
+After running, verify hooks are active by checking `.claude/settings.json` exists
+and contains hook definitions with absolute paths to Citadel's `hooks_src/` directory.
 
 ### Step 3: DEMONSTRATE (run one real task)
 

@@ -23,19 +23,24 @@ git clone https://github.com/SethGammon/Citadel.git
 # 2. Launch Claude Code with the plugin loaded
 claude --plugin-dir /path/to/Citadel
 
-# 3. Run setup (inside any project)
+# 3. Install hooks into your project (one-time per project)
+node /path/to/Citadel/scripts/install-hooks.js
+
+# 4. Run setup
 /do setup
 
-# 4. Try something
+# 5. Try something
 /do review src/main.ts
 ```
 
-For persistent install across all sessions, use the marketplace method inside Claude Code:
+For persistent plugin install across all sessions, use the marketplace method inside Claude Code:
 ```
 /plugin marketplace add /path/to/Citadel
 /plugin install citadel@citadel-local
 /reload-plugins
 ```
+
+> **Note:** The hook installer (step 3) is required until [a known upstream bug](https://github.com/anthropics/claude-code/issues/24529) is resolved. It writes Citadel's hook config into your project's `.claude/settings.json` with resolved paths. `/do setup` will also run this automatically.
 
 [Full install guide →](QUICKSTART.md)
 

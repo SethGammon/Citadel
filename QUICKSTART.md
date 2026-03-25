@@ -38,9 +38,22 @@ This installs the plugin permanently — no flags needed on future sessions.
 
 > **Troubleshooting:** If `/plugin install` says "Plugin not found", launch with `claude --plugin-dir /path/to/Citadel` first, then run the marketplace add and install from inside that session.
 
-## 2. Run setup
+## 2. Install hooks into your project
 
-Open any project in Claude Code, then:
+From your project directory, run:
+```bash
+node /path/to/Citadel/scripts/install-hooks.js
+```
+
+This resolves Citadel's hook paths and writes them into your project's `.claude/settings.json`. It's a one-time step per project and is idempotent (safe to re-run after Citadel updates).
+
+> **Why is this needed?** There's a [known bug](https://github.com/anthropics/claude-code/issues/24529) in Claude Code where `${CLAUDE_PLUGIN_ROOT}` doesn't expand in hook commands. This script works around it by writing resolved absolute paths. Once the bug is fixed upstream, this step will no longer be necessary.
+
+If you already have a `.claude/settings.json`, the installer merges Citadel's hooks with your existing settings — it won't overwrite your permissions, env vars, or MCP servers.
+
+## 3. Run setup
+
+Open your project in Claude Code, then:
 ```
 /do setup
 ```
@@ -50,12 +63,10 @@ This will:
 - Detect your language and framework
 - Configure the typecheck hook for your stack
 - Generate `.claude/harness.json` with your settings
-- Verify the auto-scaffolded `.planning/` directory structure
+- Scaffold the `.planning/` directory structure
 - Run a quick demo on your code
 
-> **Note:** The `init-project` hook automatically creates `.planning/` and `.citadel/scripts/` on every session start. You don't need to copy any files.
-
-## 3. Try these first
+## 4. Try these first
 
 Start simple and work up:
 
@@ -75,7 +86,7 @@ Or just describe what you want:
 
 The `/do` router classifies your intent and dispatches to the cheapest tool that can handle it. Most requests resolve without spending any extra tokens.
 
-## 4. Scale up when ready
+## 5. Scale up when ready
 
 Once you're comfortable with skills, try orchestrators:
 
@@ -93,7 +104,7 @@ Or build entire apps from a description:
 
 Or let `/do` route to them automatically — it will escalate when the task requires it.
 
-## 5. Create your first custom skill
+## 6. Create your first custom skill
 
 ```
 /create-skill
