@@ -10,7 +10,7 @@
       "name": "citadel",
       "description": "Agent orchestration harness for Claude Code — route any task through the right tool at the right scale",
       "version": "1.0.0",
-      "source": "./",
+      "source": "../",
       "author": {
         "name": "SethGammon",
         "email": "noreply@github.com"
