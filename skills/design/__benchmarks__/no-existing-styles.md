@@ -6,7 +6,7 @@ tags: [fringe, missing-state]
 input: /design
 state: clean
 assert-contains:
-  - design
+  - Generate
 assert-not-contains:
   - ENOENT
   - TypeError

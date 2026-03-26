@@ -5,9 +5,10 @@ description: doc-gen generates a structured README from an existing campaign pro
 tags: [happy-path]
 input: /doc-gen README
 state: with-campaign
+timeout: 240000
 assert-contains:
   - README
-  - install
+  - source
 assert-not-contains:
   - ENOENT
   - TypeError

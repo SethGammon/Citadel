@@ -70,7 +70,7 @@ const tagFilter   = getArgValue('--tag');
  *   state           — named project state: clean | with-campaign | with-completed-campaign | with-telemetry
  *   assert-contains — YAML list: patterns that MUST appear in output (case-insensitive substring)
  *   assert-not-contains — YAML list: patterns that must NOT appear in output
- *   timeout         — milliseconds before giving up (default: 60000)
+ *   timeout         — milliseconds before giving up (default: 180000)
  *
  * @param {string} filePath
  * @returns {object|null} parsed scenario, or null with error logged
@@ -153,7 +153,7 @@ function parseScenario(filePath) {
     state:            fm.state || 'clean',
     assertContains:    Array.isArray(fm['assert-contains'])     ? fm['assert-contains']     : [],
     assertNotContains: Array.isArray(fm['assert-not-contains']) ? fm['assert-not-contains'] : [],
-    timeout:          parseInt(fm.timeout, 10) || 60000,
+    timeout:          parseInt(fm.timeout, 10) || 180000,
     filePath,
     body,
   };

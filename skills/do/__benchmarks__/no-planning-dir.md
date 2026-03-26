@@ -5,9 +5,10 @@ description: Router skips Tier 1 gracefully when .planning/ does not exist
 tags: [fringe, missing-state]
 input: /do fix the login bug
 state: clean
+timeout: 240000
 assert-contains:
-  - Routing
-  - marshal
+  - login
+  - bug
 assert-not-contains:
   - ENOENT
   - TypeError

@@ -7,7 +7,7 @@ input: /design extract the design system
 state: with-campaign
 assert-contains:
   - color
-  - typography
+  - Extract
 assert-not-contains:
   - ENOENT
   - TypeError

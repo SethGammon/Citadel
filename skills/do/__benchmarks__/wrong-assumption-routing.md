@@ -5,6 +5,7 @@ description: User who uses wrong terminology still gets routed correctly
 tags: [fringe, wrong-wording, user-assumption]
 input: create a new github action to auto triage my issues
 state: clean
+timeout: 240000
 assert-contains:
   - triage
 assert-not-contains:

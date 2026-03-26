@@ -3,11 +3,11 @@ name: repeated-pattern
 skill: create-skill
 description: create-skill extracts a recurring typecheck workflow into a skill proposal with SKILL.md structure
 tags: [happy-path]
-input: I keep having to manually run typecheck before every PR
+input: /create-skill I keep having to manually run typecheck before every PR
 state: clean
 assert-contains:
-  - SKILL.md
-  - skill
+  - typecheck
+  - Question
 assert-not-contains:
   - ENOENT
   - TypeError

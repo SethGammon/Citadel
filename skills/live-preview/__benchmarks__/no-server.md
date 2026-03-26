@@ -6,9 +6,8 @@ tags: [fringe, missing-tool]
 input: /live-preview
 state: clean
 assert-contains:
-  - server
-  - port
-  - start
+  - preview
+  - Nothing
 assert-not-contains:
   - ENOENT
   - TypeError

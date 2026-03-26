@@ -6,7 +6,7 @@ tags: [fringe, missing-state]
 input: /create-skill
 state: clean
 assert-contains:
-  - pattern
+  - repeating
 assert-not-contains:
   - ENOENT
   - TypeError

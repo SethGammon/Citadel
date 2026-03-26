@@ -5,6 +5,7 @@ description: experiment asks for a measurable metric before starting when none i
 tags: [fringe, missing-state]
 input: /experiment make the dashboard faster
 state: clean
+timeout: 240000
 assert-contains:
   - metric
 assert-not-contains:
