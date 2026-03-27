@@ -36,7 +36,8 @@
       background: transparent;
       color: var(--text);
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
-      min-height: 100vh;
+      height: 100vh;
+      overflow: hidden;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -214,8 +215,24 @@
       font-size: 10px; color: var(--muted);
     }
 
+    /* ─── Cinematic scroll layout ─── */
+    #page-wrap {
+      flex: 1; width: 100%; overflow: hidden; position: relative;
+      height: calc(100vh - var(--nav-h, 48px));
+    }
+    #screens-inner {
+      position: absolute; top: 0; left: 0; right: 0;
+      will-change: transform;
+    }
+    #screen-1 {
+      height: calc(100vh - var(--nav-h, 48px));
+      display: flex; flex-direction: column;
+      justify-content: center; align-items: center;
+      overflow: hidden; width: 100%;
+    }
+
     /* ─── Playground ─── */
-    .playground { width: 100%; max-width: 1100px; padding: 0 32px 64px; }
+    .playground { width: 100%; max-width: 1100px; padding: 0 32px 8px; }
 
     /* ─── Generator buttons ─── */
     .generators {
@@ -438,6 +455,93 @@
     }
     .history-pill:hover { border-color: var(--pill-color, var(--cyan)); color: var(--text); }
 
+    /* ─── Card visualizations ─── */
+    .card-vis {
+      margin: -28px -28px 20px -28px; padding: 14px 20px 14px 24px;
+      background: color-mix(in srgb, var(--card-color, var(--border)) 6%, var(--surface-2));
+      border-bottom: 1px solid color-mix(in srgb, var(--card-color, var(--border)) 20%, var(--border));
+      font-family: 'SF Mono', 'Cascadia Code', monospace; font-size: 11px;
+      overflow: hidden; position: relative; height: 78px;
+      display: flex; flex-direction: column; justify-content: center; gap: 6px;
+    }
+
+    /* Tier 0 — scanning regex highlight */
+    .t0-code { color: var(--dim); }
+    @keyframes t0-scan {
+      0%,15%  { background: transparent; color: var(--dim); border-radius: 3px; }
+      25%,65% { background: color-mix(in srgb, var(--green) 22%, transparent); color: var(--green); border-radius: 3px; }
+      75%,100%{ background: transparent; color: var(--dim); border-radius: 3px; }
+    }
+    .t0-word { padding: 1px 3px; animation: t0-scan 3.2s ease-in-out infinite; }
+    .t0-tag  { font-size: 10px; color: var(--green); opacity: 0.7; letter-spacing: 1px; }
+
+    /* Tier 2 — keyword lookup table cycling */
+    .t2-table { display: flex; flex-direction: column; gap: 2px; }
+    .t2-row {
+      padding: 2px 6px; border-radius: 4px; color: var(--dim);
+      display: flex; justify-content: space-between;
+    }
+    .t2-row span { color: var(--cyan); opacity: 0.5; }
+    @keyframes t2-on {
+      0%,5%   { background: color-mix(in srgb, var(--cyan) 14%, transparent); color: var(--text); }
+      0%,5%   { }
+      0%,5%   { }
+    }
+    @keyframes t2-on {
+      0%,8%   { background: color-mix(in srgb, var(--cyan) 14%, transparent); color: var(--text); }
+      22%,100%{ background: transparent; color: var(--dim); }
+    }
+    .t2-r1 { animation: t2-on 4.5s ease-in-out 0s infinite; }
+    .t2-r2 { animation: t2-on 4.5s ease-in-out 1.5s infinite; }
+    .t2-r3 { animation: t2-on 4.5s ease-in-out 3s infinite; }
+    .t2-r1 span, .t2-r2 span, .t2-r3 span { transition: opacity 0.3s; }
+
+    /* Tier 3 — classification chips appearing */
+    .t3-chips { display: flex; flex-wrap: wrap; gap: 5px; }
+    .t3-chip {
+      font-size: 10px; padding: 2px 8px; border-radius: 20px;
+      border: 1px solid color-mix(in srgb, var(--orange) 35%, transparent);
+      color: var(--orange); opacity: 0;
+      animation: t3-chip-in 5.5s ease-in-out infinite;
+    }
+    @keyframes t3-chip-in {
+      0%,5%   { opacity: 0; transform: translateY(3px); }
+      15%,65% { opacity: 1; transform: translateY(0); }
+      80%,100%{ opacity: 0; transform: translateY(0); }
+    }
+    .t3-c1 { animation-delay: 0s; }
+    .t3-c2 { animation-delay: 0.15s; }
+    .t3-c3 { animation-delay: 0.3s; }
+    .t3-c4 { animation-delay: 0.45s; }
+    .t3-c5 { animation-delay: 0.6s; }
+    .t3-c6 { animation-delay: 0.75s; }
+    .t3-route { font-size: 10px; color: var(--orange); opacity: 0.65; letter-spacing: 1px; margin-top: 2px; }
+
+    /* Fleet — parallel progress tracks */
+    .tf-tracks { display: flex; flex-direction: column; gap: 5px; }
+    .tf-track { display: flex; align-items: center; gap: 8px; }
+    .tf-label { font-size: 10px; color: var(--dim); min-width: 80px; }
+    .tf-bar { flex: 1; height: 3px; background: color-mix(in srgb, var(--purple) 18%, transparent); border-radius: 2px; overflow: hidden; }
+    .tf-fill { height: 100%; background: var(--purple); border-radius: 2px; width: 0%; }
+    @keyframes tf-run {
+      0%     { width: 0%; }
+      55%,72%{ width: 100%; }
+      82%,100%{ width: 0%; }
+    }
+    .tf-f1 { animation: tf-run 3.8s ease-in-out 0s infinite; }
+    .tf-f2 { animation: tf-run 3.8s ease-in-out 0.18s infinite; }
+    .tf-f3 { animation: tf-run 3.8s ease-in-out 0.36s infinite; }
+    .tf-merge { font-size: 10px; color: var(--purple); opacity: 0.65; letter-spacing: 1px; margin-top: 2px; }
+
+    /* ─── Screen-2 up-arrow ─── */
+    .up-cue {
+      display: block; margin: 0 auto 0; padding: 16px 0 0;
+      background: none; border: none; cursor: pointer;
+      color: var(--muted); opacity: 0.4;
+      transition: opacity 0.2s, color 0.15s;
+    }
+    .up-cue:hover { opacity: 0.9; color: var(--cyan); }
+
     /* ─── Stats bar ─── */
     .stat-bar {
       width: 100%; max-width: 1100px;
@@ -460,9 +564,9 @@
     /* ─── How it works section ─── */
     .how-section {
       width: 100%; max-width: 1100px;
-      padding: 56px 32px 64px;
+      padding: 40px 32px 52px;
       display: grid; grid-template-columns: repeat(2, 1fr);
-      gap: 32px;
+      gap: 28px;
     }
     .how-card {
       padding: 28px; border-radius: 14px;
@@ -729,6 +833,10 @@
     </div>
   </nav>
 
+  <div id="page-wrap">
+  <div id="screens-inner">
+  <div id="screen-1">
+
   <!-- Hero -->
   <div class="hero">
     <div class="hero-eyebrow">
@@ -736,7 +844,7 @@
       <span>Interactive Demo · /do Intent Router</span>
     </div>
     <h1>Say what you want.<br><span class="h1-sub">Citadel routes it.</span></h1>
-    <p>Type any engineering task. The router evaluates four tiers in sequence and dispatches to the cheapest tool capable — no configuration, no manual skill selection.</p>
+    <p>Type any engineering task. The router evaluates four tiers in sequence and dispatches to the cheapest tool capable. No configuration, no manual skill selection.</p>
   </div>
 
   <!-- Search bar -->
@@ -894,15 +1002,7 @@
 
   </div><!-- /playground -->
 
-  <!-- Scroll cue -->
-  <button class="scroll-cue" id="scroll-cue" onclick="scrollToScreen2()" aria-label="Scroll to learn more">
-    <svg width="22" height="13" viewBox="0 0 22 13" fill="none">
-      <path d="M1 1.5L11 10.5L21 1.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-    </svg>
-    <svg width="22" height="13" viewBox="0 0 22 13" fill="none" style="opacity:0.35">
-      <path d="M1 1.5L11 10.5L21 1.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-    </svg>
-  </button>
+  </div><!-- /screen-1 -->
 
   <div class="screen-2" id="screen-2">
   <!-- Stats -->
@@ -928,6 +1028,10 @@
   <!-- How It Works cards -->
   <div class="how-section">
     <div class="how-card" style="--card-color:var(--green)">
+      <div class="card-vis">
+        <div class="t0-code"><span class="t0-pre">/do </span><span class="t0-word">fix typo</span><span class="t0-pre"> on line 42</span></div>
+        <div class="t0-tag">✓ REGEX HIT · &lt;1ms · 0 TOKENS</div>
+      </div>
       <div class="how-card-header">
         <span class="how-tier-badge" style="color:var(--green)">TIER 0</span>
         <div>
@@ -944,6 +1048,13 @@
     </div>
 
     <div class="how-card" style="--card-color:var(--cyan)">
+      <div class="card-vis">
+        <div class="t2-table">
+          <div class="t2-row t2-r1">review <span>→ /review</span></div>
+          <div class="t2-row t2-r2">debug <span>→ /systematic-debugging</span></div>
+          <div class="t2-row t2-r3">scaffold <span>→ /scaffold</span></div>
+        </div>
+      </div>
       <div class="how-card-header">
         <span class="how-tier-badge" style="color:var(--cyan)">TIER 2</span>
         <div>
@@ -960,6 +1071,17 @@
     </div>
 
     <div class="how-card" style="--card-color:var(--orange)">
+      <div class="card-vis">
+        <div class="t3-chips">
+          <span class="t3-chip t3-c1">scope: cross-domain</span>
+          <span class="t3-chip t3-c2">complexity: 4</span>
+          <span class="t3-chip t3-c3">intent: create</span>
+          <span class="t3-chip t3-c4">persist: true</span>
+          <span class="t3-chip t3-c5">parallel: false</span>
+          <span class="t3-chip t3-c6">taste: true</span>
+        </div>
+        <div class="t3-route">→ /archon dispatched</div>
+      </div>
       <div class="how-card-header">
         <span class="how-tier-badge" style="color:var(--orange)">TIER 3</span>
         <div>
@@ -976,6 +1098,14 @@
     </div>
 
     <div class="how-card" style="--card-color:var(--purple)">
+      <div class="card-vis">
+        <div class="tf-tracks">
+          <div class="tf-track"><span class="tf-label">worktree-a</span><div class="tf-bar"><div class="tf-fill tf-f1"></div></div></div>
+          <div class="tf-track"><span class="tf-label">worktree-b</span><div class="tf-bar"><div class="tf-fill tf-f2"></div></div></div>
+          <div class="tf-track"><span class="tf-label">worktree-c</span><div class="tf-bar"><div class="tf-fill tf-f3"></div></div></div>
+        </div>
+        <div class="tf-merge">↓ merge arbitration · conflict check</div>
+      </div>
       <div class="how-card-header">
         <span class="how-tier-badge" style="color:var(--purple)">TIER 3+</span>
         <div>
@@ -1165,6 +1295,12 @@
     </div>
   </div>
 
+  <button class="up-cue" onclick="goToScreen(0)" aria-label="Back to top" title="Back to top">
+    <svg width="22" height="13" viewBox="0 0 22 13" fill="none">
+      <path d="M1 11.5L11 2.5L21 11.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </button>
+
   <footer>
     <span>Citadel — Agent Orchestration for Claude Code &nbsp;·&nbsp; <a href="https://repo-explainer.com/SethGammon/Citadel/">Architecture overview</a></span>
     <span>
@@ -1174,6 +1310,18 @@
     </span>
   </footer>
   </div><!-- /screen-2 -->
+  </div><!-- /screens-inner -->
+  </div><!-- /page-wrap -->
+
+  <!-- Scroll cue (fixed, outside sliding area) -->
+  <button class="scroll-cue" id="scroll-cue" onclick="goToScreen(1)" aria-label="Scroll to learn more">
+    <svg width="22" height="13" viewBox="0 0 22 13" fill="none">
+      <path d="M1 1.5L11 10.5L21 1.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    <svg width="22" height="13" viewBox="0 0 22 13" fill="none" style="opacity:0.35">
+      <path d="M1 1.5L11 10.5L21 1.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </button>
 
   <script>
     // ─── Routing logic ─────────────────────────────────────────────────────
@@ -1317,7 +1465,8 @@
 
       // Compress hero + fold generators, reveal result
       document.body.classList.add('mode-result');
-      window.scrollTo({ top: 0 });
+      if (currentScreen === 1) goToScreen(0);
+      updateScrollCue();
       panel.classList.add('visible');
       resultCmd.textContent = `/do ${cmd}`;
       spinner.classList.add('active');
@@ -1456,11 +1605,8 @@
       histIdx = -1;
       updateLivePreview('');
       resetTiers();
-      window.scrollTo({ top: 0 });
-      setTimeout(() => {
-        input.focus();
-        if (window.scrollY <= 80) scrollCue.classList.add('visible');
-      }, 300);
+      goToScreen(0);
+      setTimeout(() => { input.focus(); updateScrollCue(); }, 300);
     }
 
     function triggerRoute() {
@@ -1623,34 +1769,88 @@
       if (e.key === 'Escape' && activePanel) { closePanel(); e.stopPropagation(); }
     });
 
-    // ─── Scroll cue ───────────────────────────────────────────────────────────
-    const scrollCue = document.getElementById('scroll-cue');
-    function scrollToScreen2() {
-      const s2 = document.getElementById('screen-2');
-      const navH = document.querySelector('nav').offsetHeight;
-      const top = s2.getBoundingClientRect().top + window.scrollY - navH;
-      window.scrollTo({ top, behavior: 'smooth' });
-    }
-    window.addEventListener('scroll', () => {
-      const hidden = window.scrollY > 80 || document.body.classList.contains('mode-result');
-      scrollCue.classList.toggle('visible', !hidden);
-    }, { passive: true });
-    setTimeout(() => {
-      if (!document.body.classList.contains('mode-result')) scrollCue.classList.add('visible');
-    }, 1200);
+    // ─── Cinematic scroll ─────────────────────────────────────────────────────
+    let currentScreen = 0, isTransitioning = false;
 
-    // ─── Dot grid background (physics: repulsion + spring) ────────────────────
+    // Set --nav-h CSS var from measured nav
+    (function() {
+      const nav = document.querySelector('nav');
+      const h = nav ? nav.offsetHeight : 48;
+      document.documentElement.style.setProperty('--nav-h', h + 'px');
+    })();
+
+    function easeInOutQuart(t) {
+      return t < 0.5 ? 8*t*t*t*t : 1 - Math.pow(-2*t + 2, 4) / 2;
+    }
+
+    function goToScreen(n) {
+      if (isTransitioning) return;
+      if (n === currentScreen) return;
+      const inner = document.getElementById('screens-inner');
+      const h = document.getElementById('page-wrap').clientHeight;
+      const startY = currentScreen * -h;
+      const endY = n * -h;
+      const diff = endY - startY;
+      isTransitioning = true;
+      const startTime = performance.now();
+      function tick(now) {
+        const t = Math.min((now - startTime) / 780, 1);
+        inner.style.transform = `translateY(${startY + diff * easeInOutQuart(t)}px)`;
+        if (t < 1) requestAnimationFrame(tick);
+        else { inner.style.transform = `translateY(${endY}px)`; currentScreen = n; isTransitioning = false; updateScrollCue(); }
+      }
+      currentScreen = n;
+      updateScrollCue();
+      requestAnimationFrame(tick);
+    }
+
+    // Wheel interception
+    let wheelAcc = 0, wheelTimer = null;
+    window.addEventListener('wheel', (e) => {
+      if (e.target.closest('.panel-body, .side-panel')) return;
+      e.preventDefault();
+      if (isTransitioning || document.body.classList.contains('mode-result')) return;
+      wheelAcc += e.deltaY;
+      clearTimeout(wheelTimer);
+      wheelTimer = setTimeout(() => { wheelAcc = 0; }, 300);
+      if (wheelAcc > 40 && currentScreen === 0) { wheelAcc = 0; goToScreen(1); }
+      else if (wheelAcc < -40 && currentScreen === 1) { wheelAcc = 0; goToScreen(0); }
+    }, { passive: false });
+
+    // Touch support
+    let touchStartY = 0;
+    window.addEventListener('touchstart', e => {
+      if (e.target.closest('.panel-body')) return;
+      touchStartY = e.touches[0].clientY;
+    }, { passive: true });
+    window.addEventListener('touchend', e => {
+      if (e.target.closest('.panel-body')) return;
+      if (isTransitioning || document.body.classList.contains('mode-result')) return;
+      const diff = touchStartY - e.changedTouches[0].clientY;
+      if (diff > 50 && currentScreen === 0) goToScreen(1);
+      else if (diff < -50 && currentScreen === 1) goToScreen(0);
+    }, { passive: true });
+
+    // Scroll cue
+    const scrollCue = document.getElementById('scroll-cue');
+    function updateScrollCue() {
+      const show = currentScreen === 0 && !document.body.classList.contains('mode-result');
+      scrollCue.classList.toggle('visible', show);
+    }
+    setTimeout(() => updateScrollCue(), 1200);
+
+    // ─── Dot grid background (physics: liquid repulsion + spring) ─────────────
     (function () {
       const canvas = document.getElementById('bg-dots');
       const ctx = canvas.getContext('2d');
-      const SPACING = 36, BASE_R = 1.3, MAX_R = 3.6;
-      const REPEL_DIST = 120, REPEL_STRENGTH = 18;
-      const SPRING = 0.08, DAMPING = 0.72;
+      const SPACING = 36, BASE_R = 1.2, MAX_R = 2.8;
+      const REPEL_DIST = 90, REPEL_STRENGTH = 6;
+      const SPRING = 0.045, DAMPING = 0.88;
       let W, H, cols, rows;
-      let dots = null; // Float32Array: [ox,oy, x,y, vx,vy, heat, ...] per dot — stride 7
+      let dots = null;
       const STRIDE = 7;
       let mx = -9999, my = -9999, raf = null, lastTime = 0;
-      const FRAME_MS = 1000 / 60; // 60fps for smooth physics
+      const FRAME_MS = 1000 / 60;
 
       function resize() {
         W = canvas.width = window.innerWidth;
@@ -1660,95 +1860,62 @@
         const n = cols * rows;
         dots = new Float32Array(n * STRIDE);
         for (let i = 0; i < n; i++) {
-          const ox = (i % cols) * SPACING;
-          const oy = ((i / cols) | 0) * SPACING;
+          const ox = (i % cols) * SPACING, oy = ((i / cols) | 0) * SPACING;
           const b = i * STRIDE;
-          dots[b]   = ox; dots[b+1] = oy; // origin
-          dots[b+2] = ox; dots[b+3] = oy; // current pos
-          dots[b+4] = 0;  dots[b+5] = 0;  // velocity
-          dots[b+6] = 0;                   // heat
+          dots[b]=ox; dots[b+1]=oy; dots[b+2]=ox; dots[b+3]=oy;
+          dots[b+4]=0; dots[b+5]=0; dots[b+6]=0;
         }
       }
 
       function draw(now) {
         raf = requestAnimationFrame(draw);
         if (now - lastTime < FRAME_MS) return;
-        const dt = Math.min(now - lastTime, 32) / 16; // capped delta, normalized
+        const dt = Math.min(now - lastTime, 32) / 16;
         lastTime = now;
-
         const n = cols * rows;
         for (let i = 0; i < n; i++) {
           const b = i * STRIDE;
-          const ox = dots[b], oy = dots[b+1];
-          let   x  = dots[b+2], y  = dots[b+3];
-          let   vx = dots[b+4], vy = dots[b+5];
-
-          // Repulsion from cursor
-          const dx = x - mx, dy = y - my;
-          const dist = Math.sqrt(dx*dx + dy*dy) || 1;
+          const ox=dots[b], oy=dots[b+1];
+          let x=dots[b+2], y=dots[b+3], vx=dots[b+4], vy=dots[b+5];
+          const dx=x-mx, dy=y-my, dist=Math.sqrt(dx*dx+dy*dy)||1;
           if (dist < REPEL_DIST) {
-            const force = (1 - dist / REPEL_DIST) * REPEL_STRENGTH;
-            vx += (dx / dist) * force * dt;
-            vy += (dy / dist) * force * dt;
+            const force = (1 - dist/REPEL_DIST) * REPEL_STRENGTH;
+            vx += (dx/dist)*force*dt; vy += (dy/dist)*force*dt;
           }
-
-          // Spring back to origin
-          vx += (ox - x) * SPRING * dt;
-          vy += (oy - y) * SPRING * dt;
-
-          // Damping
-          vx *= DAMPING;
-          vy *= DAMPING;
-
-          x += vx * dt;
-          y += vy * dt;
-
-          dots[b+2] = x; dots[b+3] = y;
-          dots[b+4] = vx; dots[b+5] = vy;
-
-          // Heat = how displaced the dot is (normalized by repel dist)
-          const disp = Math.sqrt((x-ox)*(x-ox) + (y-oy)*(y-oy));
-          dots[b+6] = Math.min(1, disp / (REPEL_DIST * 0.4));
+          vx += (ox-x)*SPRING*dt; vy += (oy-y)*SPRING*dt;
+          vx *= DAMPING; vy *= DAMPING;
+          x += vx*dt; y += vy*dt;
+          dots[b+2]=x; dots[b+3]=y; dots[b+4]=vx; dots[b+5]=vy;
+          const disp = Math.sqrt((x-ox)*(x-ox)+(y-oy)*(y-oy));
+          dots[b+6] = Math.min(1, disp / (REPEL_DIST * 0.35));
         }
-
-        ctx.clearRect(0, 0, W, H);
-
-        // Batch: rest dots (dim)
-        ctx.beginPath();
-        ctx.fillStyle = 'rgba(30,38,50,0.72)';
-        for (let i = 0; i < n; i++) {
-          const b = i * STRIDE;
-          if (dots[b+6] < 0.04) {
-            const x = dots[b+2], y = dots[b+3];
-            ctx.moveTo(x + BASE_R, y);
-            ctx.arc(x, y, BASE_R, 0, Math.PI * 2);
-          }
+        ctx.clearRect(0,0,W,H);
+        ctx.beginPath(); ctx.fillStyle='rgba(30,38,50,0.72)';
+        for (let i=0;i<n;i++) {
+          const b=i*STRIDE;
+          if(dots[b+6]<0.04){ const x=dots[b+2],y=dots[b+3]; ctx.moveTo(x+BASE_R,y); ctx.arc(x,y,BASE_R,0,Math.PI*2); }
         }
         ctx.fill();
-
-        // Individual: displaced dots (cyan glow)
-        for (let i = 0; i < n; i++) {
-          const b = i * STRIDE;
-          const t = dots[b+6];
-          if (t < 0.04) continue;
-          const x = dots[b+2], y = dots[b+3];
-          const r = BASE_R + (MAX_R - BASE_R) * t * t;
-          const alpha = (0.2 + 0.7 * t).toFixed(2);
-          ctx.beginPath();
-          ctx.arc(x, y, r, 0, Math.PI * 2);
-          ctx.fillStyle = `rgba(0,210,255,${alpha})`;
-          ctx.fill();
+        for (let i=0;i<n;i++) {
+          const b=i*STRIDE, t=dots[b+6]; if(t<0.04) continue;
+          const x=dots[b+2],y=dots[b+3],r=BASE_R+(MAX_R-BASE_R)*t*t;
+          ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2);
+          ctx.fillStyle=`rgba(0,210,255,${(0.15+0.6*t).toFixed(2)})`; ctx.fill();
         }
       }
 
-      function start() { if (!raf) { lastTime = performance.now(); raf = requestAnimationFrame(draw); } }
-      function stop()  { if (raf) { cancelAnimationFrame(raf); raf = null; } }
+      function start() { if(!raf){ lastTime=performance.now(); raf=requestAnimationFrame(draw); } }
+      function stop()  { if(raf){ cancelAnimationFrame(raf); raf=null; } }
 
       resize();
-      window.addEventListener('resize', () => { resize(); });
-      window.addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; });
-      window.addEventListener('mouseleave', () => { mx = -9999; my = -9999; });
-      document.addEventListener('visibilitychange', () => document.hidden ? stop() : (lastTime = performance.now(), start()));
+      window.addEventListener('resize', resize);
+      window.addEventListener('mousemove', e => { mx=e.clientX; my=e.clientY; });
+      window.addEventListener('mouseleave', () => {
+        mx=-9999; my=-9999;
+        // zero velocities so dots glide home cleanly instead of oscillating
+        if(dots) for(let i=0;i<dots.length;i+=STRIDE){ dots[i+4]=0; dots[i+5]=0; }
+      });
+      document.addEventListener('visibilitychange', ()=>document.hidden?stop():(lastTime=performance.now(),start()));
       start();
     })();
   </script>
