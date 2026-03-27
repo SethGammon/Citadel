@@ -190,25 +190,55 @@
     /* ─── Playground ─── */
     .playground { width: 100%; max-width: 1100px; padding: 0 32px 64px; }
 
-    /* ─── Example categories ─── */
-    .examples-wrap { margin-bottom: 28px; margin-top: 32px; }
-    .example-row { display: flex; flex-wrap: wrap; gap: 7px; }
-    .example-btn {
-      padding: 7px 13px; background: var(--surface-2);
-      border: 1px solid var(--border); border-radius: 20px;
-      font-size: 12px; font-family: 'SF Mono', monospace;
-      color: var(--muted); cursor: pointer; transition: all 0.15s;
+    /* ─── Generator buttons ─── */
+    .generators {
+      display: flex; gap: 12px;
+      margin-top: 28px; margin-bottom: 32px;
     }
-    .example-btn:hover { border-color: var(--active-color, var(--cyan)); color: var(--text); }
-    .example-btn.t0 { --active-color: var(--green); }
-    .example-btn.t2 { --active-color: var(--blue); }
-    .example-btn.t3a { --active-color: var(--orange); }
-    .example-btn.t3b { --active-color: var(--purple); }
-    .example-category {
-      font-size: 10px; letter-spacing: 1.5px; color: var(--dim);
-      text-transform: uppercase; margin-bottom: 7px; margin-top: 14px;
+    .gen-btn {
+      flex: 1; padding: 18px 20px;
+      background: var(--surface-2);
+      border: 1.5px solid var(--border);
+      border-radius: 12px; cursor: pointer;
+      text-align: left; position: relative; overflow: hidden;
+      transition: border-color 0.2s, background 0.2s, box-shadow 0.2s, transform 0.1s;
     }
-    .example-category:first-child { margin-top: 0; }
+    .gen-btn::before {
+      content: ''; position: absolute; top: 0; left: 0;
+      width: 3px; height: 100%;
+      background: var(--gc); opacity: 0.7;
+      transition: opacity 0.2s;
+    }
+    .gen-btn:hover {
+      border-color: var(--gc);
+      background: color-mix(in srgb, var(--gc) 6%, var(--surface-2));
+      box-shadow: 0 0 22px color-mix(in srgb, var(--gc) 10%, transparent);
+    }
+    .gen-btn:hover::before { opacity: 1; }
+    .gen-btn:active { transform: translateY(1px); }
+    .gen-btn.busy { opacity: 0.6; pointer-events: none; }
+    .gen-icon {
+      font-size: 17px; display: block; margin-bottom: 10px;
+      color: var(--gc);
+    }
+    .gen-name {
+      font-size: 12px; font-weight: 700; letter-spacing: 2px;
+      text-transform: uppercase; color: var(--text); margin-bottom: 4px;
+    }
+    .gen-meta {
+      font-size: 11px; color: var(--dim);
+      font-family: 'SF Mono', monospace;
+    }
+    .gen-again {
+      font-size: 10px; color: var(--gc); opacity: 0;
+      margin-top: 7px; font-family: 'SF Mono', monospace;
+      transition: opacity 0.2s;
+    }
+    .gen-btn:hover .gen-again { opacity: 0.65; }
+    @media (max-width: 760px) {
+      .generators { flex-wrap: wrap; }
+      .gen-btn { flex: calc(50% - 6px); min-width: 0; }
+    }
 
     /* ─── Result panel — folds out downward from search bar ─── */
     .result-panel {
@@ -597,41 +627,32 @@
   <!-- Playground -->
   <div class="playground">
 
-    <!-- Example buttons -->
-    <div class="examples-wrap">
-      <div class="example-category">⚡ Instant — no model call</div>
-      <div class="example-row">
-        <button class="example-btn t0" data-cmd="fix the typo on line 42">fix the typo on line 42</button>
-        <button class="example-btn t0" data-cmd="rename UserController to UserHandler">rename UserController to UserHandler</button>
-        <button class="example-btn t0" data-cmd="commit my changes">commit my changes</button>
-        <button class="example-btn t0" data-cmd="typecheck">typecheck</button>
-      </div>
-
-      <div class="example-category">◆ Code quality — keyword match</div>
-      <div class="example-row">
-        <button class="example-btn t2" data-cmd="review the auth module">review the auth module</button>
-        <button class="example-btn t2" data-cmd="write tests for the payment service">write tests for the payment service</button>
-        <button class="example-btn t2" data-cmd="document the API endpoints">document the API endpoints</button>
-        <button class="example-btn t2" data-cmd="refactor the auth middleware">refactor the auth middleware</button>
-        <button class="example-btn t2" data-cmd="scaffold a new notifications module">scaffold a new notifications module</button>
-        <button class="example-btn t2" data-cmd="why is the API returning 500">why is the API returning 500</button>
-        <button class="example-btn t2" data-cmd="research the best caching strategy">research the best caching strategy</button>
-      </div>
-
-      <div class="example-category">⬡ Multi-session campaign — LLM routes</div>
-      <div class="example-row">
-        <button class="example-btn t3a" data-cmd="build me a recipe app">build me a recipe app</button>
-        <button class="example-btn t3a" data-cmd="add a dark mode toggle">add a dark mode toggle</button>
-        <button class="example-btn t3a" data-cmd="implement Stripe payments">implement Stripe payments</button>
-        <button class="example-btn t3a" data-cmd="create a real-time chat feature">create a real-time chat feature</button>
-      </div>
-
-      <div class="example-category">⬢ Parallel fleet — platform-wide</div>
-      <div class="example-row">
-        <button class="example-btn t3b" data-cmd="overhaul all three services">overhaul all three services</button>
-        <button class="example-btn t3b" data-cmd="redesign the entire data layer">redesign the entire data layer</button>
-        <button class="example-btn t3b" data-cmd="migrate the platform to TypeScript strict mode">migrate the platform to TypeScript strict mode</button>
-      </div>
+    <!-- Generator buttons -->
+    <div class="generators">
+      <button class="gen-btn" style="--gc:var(--green)" onclick="generate('instant')">
+        <span class="gen-icon">⚡</span>
+        <div class="gen-name">Instant</div>
+        <div class="gen-meta">~0 tokens · &lt;1ms</div>
+        <div class="gen-again">try another →</div>
+      </button>
+      <button class="gen-btn" style="--gc:var(--cyan)" onclick="generate('skill')">
+        <span class="gen-icon">◆</span>
+        <div class="gen-name">Skill</div>
+        <div class="gen-meta">~0 tokens · &lt;10ms</div>
+        <div class="gen-again">try another →</div>
+      </button>
+      <button class="gen-btn" style="--gc:var(--orange)" onclick="generate('campaign')">
+        <span class="gen-icon">⬡</span>
+        <div class="gen-name">Campaign</div>
+        <div class="gen-meta">~500 tokens · Archon</div>
+        <div class="gen-again">try another →</div>
+      </button>
+      <button class="gen-btn" style="--gc:var(--purple)" onclick="generate('fleet')">
+        <span class="gen-icon">⬢</span>
+        <div class="gen-name">Fleet</div>
+        <div class="gen-meta">~500 tokens · parallel</div>
+        <div class="gen-again">try another →</div>
+      </button>
     </div>
 
     <!-- Result panel (folds out on Enter) -->
@@ -1318,14 +1339,80 @@
       }
     });
 
-    // Example buttons
-    document.querySelectorAll('.example-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        input.value = btn.dataset.cmd;
-        updateLivePreview(btn.dataset.cmd);
-        animateRoute(btn.dataset.cmd);
-      });
-    });
+    // ─── Generator pools ─────────────────────────────────────────────────
+    const POOLS = {
+      instant: [
+        'fix the typo on line 42',
+        'rename UserController to UserHandler',
+        'commit my changes',
+        'typecheck',
+        'rename AuthService to AuthHandler',
+        'list skills',
+        'status',
+      ],
+      skill: [
+        'review the auth module',
+        'write tests for the payment service',
+        'document the API endpoints',
+        'refactor the auth middleware',
+        'scaffold a new notifications module',
+        'why is the API returning 500',
+        'research the best caching strategy',
+        'debug the login failure',
+      ],
+      campaign: [
+        'build me a recipe app',
+        'add a dark mode toggle',
+        'implement Stripe payments',
+        'create a real-time chat feature',
+        'add OAuth login to the app',
+        'implement a search feature',
+      ],
+      fleet: [
+        'overhaul all three services',
+        'redesign the entire data layer',
+        'migrate the platform to TypeScript strict mode',
+        'rebuild the entire API layer',
+      ],
+    };
+
+    const lastIdx = { instant: -1, skill: -1, campaign: -1, fleet: -1 };
+    let isTyping = false;
+
+    function pickNext(tier) {
+      const pool = POOLS[tier];
+      const candidates = pool.map((_, i) => i).filter(i => i !== lastIdx[tier]);
+      const idx = candidates[Math.floor(Math.random() * candidates.length)];
+      lastIdx[tier] = idx;
+      return pool[idx];
+    }
+
+    async function typeInto(text) {
+      input.value = '';
+      updateLivePreview('');
+      for (const ch of text) {
+        input.value += ch;
+        updateLivePreview(input.value);
+        await sleep(32 + Math.random() * 24);
+      }
+      await sleep(200);
+    }
+
+    async function generate(tier) {
+      if (isTyping) return;
+      isTyping = true;
+      // Mark button busy
+      const btn = [...document.querySelectorAll('.gen-btn')]
+        .find(b => b.getAttribute('onclick') === `generate('${tier}')`);
+      if (btn) btn.classList.add('busy');
+
+      const text = pickNext(tier);
+      await typeInto(text);
+      animateRoute(text);
+
+      if (btn) btn.classList.remove('busy');
+      isTyping = false;
+    }
 
     // How-section example links
     document.querySelectorAll('.how-example[data-cmd]').forEach(el => {
