@@ -92,6 +92,7 @@
       padding: 64px 40px 20px;
       max-width: 820px;
       width: 100%;
+      transition: padding 0.45s cubic-bezier(0.22, 1, 0.36, 1);
     }
     .hero-eyebrow {
       display: inline-flex; align-items: center; gap: 8px;
@@ -99,16 +100,23 @@
       text-transform: uppercase; margin-bottom: 20px;
       padding: 5px 14px; border: 1px solid color-mix(in srgb, var(--cyan) 30%, transparent);
       border-radius: 20px; background: color-mix(in srgb, var(--cyan) 5%, transparent);
+      max-height: 60px; overflow: hidden;
+      transition: max-height 0.4s cubic-bezier(0.22, 1, 0.36, 1),
+                  opacity 0.25s ease, margin-bottom 0.35s cubic-bezier(0.22, 1, 0.36, 1);
     }
     .hero h1 {
       font-size: 48px; font-weight: 800; line-height: 1.1; margin-bottom: 16px;
       background: linear-gradient(135deg, #e6edf3 20%, #58a6ff 80%);
       -webkit-background-clip: text; -webkit-text-fill-color: transparent;
       background-clip: text;
+      transition: font-size 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+                  margin-bottom 0.35s ease;
     }
     .hero p {
       font-size: 17px; color: var(--muted); line-height: 1.7;
       max-width: 580px; margin: 0 auto;
+      max-height: 120px; overflow: hidden;
+      transition: max-height 0.4s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.25s ease;
     }
 
     /* ─── Search bar ─── */
@@ -116,6 +124,7 @@
       width: 100%; max-width: 860px;
       padding: 36px 32px 0;
       margin: 0 auto;
+      transition: padding-top 0.45s cubic-bezier(0.22, 1, 0.36, 1);
     }
 
     .search-bar {
@@ -194,6 +203,9 @@
     .generators {
       display: flex; gap: 12px;
       margin-top: 28px; margin-bottom: 32px;
+      max-height: 200px; overflow: hidden;
+      transition: max-height 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+                  opacity 0.3s ease, margin-top 0.4s ease, margin-bottom 0.4s ease;
     }
     .gen-btn {
       flex: 1; padding: 18px 20px;
@@ -317,7 +329,11 @@
 
     .tier-center { min-width: 0; }
     .tier-name { font-size: 14px; font-weight: 600; margin-bottom: 2px; }
-    .tier-desc { font-size: 11px; color: var(--muted); line-height: 1.5; }
+    .tier-desc {
+      font-size: 11px; color: var(--muted); line-height: 1.5;
+      max-height: 40px; overflow: hidden;
+      transition: max-height 0.3s ease, opacity 0.25s ease;
+    }
 
     .tier-status {
       font-size: 11px; font-weight: 600; white-space: nowrap;
@@ -565,6 +581,48 @@
       background: var(--bg); padding: 1px 5px; border-radius: 3px; font-size: 11px;
     }
 
+    /* ─── Mode: result — hero compresses, generators fold, tiers collapse ─── */
+    body.mode-result .hero {
+      padding: 18px 40px 8px;
+    }
+    body.mode-result .hero-eyebrow {
+      max-height: 0; opacity: 0; margin-bottom: 0;
+    }
+    body.mode-result .hero h1 {
+      font-size: 26px; margin-bottom: 4px;
+    }
+    body.mode-result .hero p {
+      max-height: 0; opacity: 0;
+    }
+    body.mode-result .search-wrap {
+      padding-top: 16px;
+    }
+    body.mode-result .generators {
+      max-height: 0; opacity: 0; margin-top: 0; margin-bottom: 0;
+    }
+    body.mode-result .playground {
+      padding-bottom: 20px;
+    }
+    body.mode-result .tier-row.skipped {
+      padding-top: 8px; padding-bottom: 8px; opacity: 0.1;
+    }
+    body.mode-result .tier-row.skipped .tier-desc {
+      max-height: 0; opacity: 0;
+    }
+    body.mode-result .tier-row.skipped .tier-sub {
+      opacity: 0;
+      transition: opacity 0.2s ease;
+    }
+
+    /* ─── Reset button ─── */
+    .reset-btn {
+      font-size: 11px; padding: 4px 12px; border-radius: 20px;
+      background: transparent; border: 1px solid var(--border);
+      color: var(--muted); cursor: pointer; font-family: 'SF Mono', monospace;
+      transition: border-color 0.15s, color 0.15s; white-space: nowrap;
+    }
+    .reset-btn:hover { border-color: var(--cyan); color: var(--cyan); }
+
     /* ─── Responsive ─── */
     @media (max-width: 760px) {
       nav { padding: 12px 20px; gap: 12px; }
@@ -662,6 +720,7 @@
         <span class="result-command" id="result-command"></span>
         <div class="result-meta">
           <span class="result-timer" id="result-timer"></span>
+          <button class="reset-btn" onclick="resetDemo()" title="Reset — Esc">↺ new</button>
         </div>
       </div>
 
@@ -1171,7 +1230,9 @@
       const resultCmd = document.getElementById('result-command');
       const timerEl = document.getElementById('result-timer');
 
-      // Fold-out reveal
+      // Compress hero + fold generators, reveal result
+      document.body.classList.add('mode-result');
+      window.scrollTo({ top: 0 });
       panel.classList.add('visible');
       resultCmd.textContent = `/do ${cmd}`;
       spinner.classList.add('active');
@@ -1303,6 +1364,17 @@
       });
     }
 
+    function resetDemo() {
+      document.body.classList.remove('mode-result');
+      document.getElementById('result-panel').classList.remove('visible');
+      input.value = '';
+      histIdx = -1;
+      updateLivePreview('');
+      resetTiers();
+      window.scrollTo({ top: 0 });
+      setTimeout(() => input.focus(), 50);
+    }
+
     function triggerRoute() {
       if (input.value.trim()) animateRoute(input.value.trim());
     }
@@ -1333,9 +1405,13 @@
         updateLivePreview(input.value);
       }
       if (e.key === 'Escape' && !activePanel) {
-        input.value = '';
-        histIdx = -1;
-        updateLivePreview('');
+        if (document.body.classList.contains('mode-result')) {
+          resetDemo();
+        } else {
+          input.value = '';
+          histIdx = -1;
+          updateLivePreview('');
+        }
       }
     });
 
