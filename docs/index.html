@@ -27,11 +27,13 @@
     }
 
     /* Hide scrollbar everywhere */
-    html { scrollbar-width: none; }
+    html { scrollbar-width: none; background: var(--bg); }
     ::-webkit-scrollbar { display: none; }
 
+    #bg-dots { position: fixed; inset: 0; z-index: -1; pointer-events: none; width: 100%; height: 100%; }
+
     body {
-      background: var(--bg);
+      background: transparent;
       color: var(--text);
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
       min-height: 100vh;
@@ -628,6 +630,28 @@
     body.mode-result footer {
       display: none;
     }
+    body.mode-result .screen-2 { display: none; }
+    body.mode-result .scroll-cue { opacity: 0 !important; pointer-events: none; }
+
+    /* ─── Scroll cue ─── */
+    .scroll-cue {
+      position: fixed; bottom: 28px; left: 50%;
+      transform: translateX(-50%);
+      background: none; border: none; cursor: pointer;
+      color: var(--muted);
+      display: flex; flex-direction: column; align-items: center; gap: 1px;
+      padding: 8px; border-radius: 8px;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.5s ease, color 0.15s;
+      z-index: 50;
+    }
+    .scroll-cue.visible { opacity: 0.45; pointer-events: all; }
+    .scroll-cue:hover { opacity: 1 !important; color: var(--cyan); }
+    @keyframes cue-drift {
+      0%, 100% { transform: translateX(-50%) translateY(0); }
+      50%       { transform: translateX(-50%) translateY(5px); }
+    }
+    .scroll-cue.visible { animation: cue-drift 2s ease-in-out infinite; }
 
     /* ─── Reset button ─── */
     .reset-btn {
@@ -657,6 +681,7 @@
   </style>
 </head>
 <body>
+  <canvas id="bg-dots"></canvas>
 
   <nav>
     <a class="nav-logo" href="https://github.com/SethGammon/Citadel">CITADEL</a>
@@ -836,6 +861,17 @@
 
   </div><!-- /playground -->
 
+  <!-- Scroll cue -->
+  <button class="scroll-cue" id="scroll-cue" onclick="scrollToScreen2()" aria-label="Scroll to learn more">
+    <svg width="22" height="13" viewBox="0 0 22 13" fill="none">
+      <path d="M1 1.5L11 10.5L21 1.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    <svg width="22" height="13" viewBox="0 0 22 13" fill="none" style="opacity:0.35">
+      <path d="M1 1.5L11 10.5L21 1.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </button>
+
+  <div class="screen-2" id="screen-2">
   <!-- Stats -->
   <div class="stat-bar">
     <div class="stat">
@@ -1104,6 +1140,7 @@
       <a href="https://github.com/SethGammon/Citadel/blob/main/LICENSE">MIT License</a>
     </span>
   </footer>
+  </div><!-- /screen-2 -->
 
   <script>
     // ─── Routing logic ─────────────────────────────────────────────────────
@@ -1387,7 +1424,10 @@
       updateLivePreview('');
       resetTiers();
       window.scrollTo({ top: 0 });
-      setTimeout(() => input.focus(), 50);
+      setTimeout(() => {
+        input.focus();
+        if (window.scrollY <= 80) scrollCue.classList.add('visible');
+      }, 300);
     }
 
     function triggerRoute() {
@@ -1549,6 +1589,83 @@
     document.addEventListener('keydown', e => {
       if (e.key === 'Escape' && activePanel) { closePanel(); e.stopPropagation(); }
     });
+
+    // ─── Scroll cue ───────────────────────────────────────────────────────────
+    const scrollCue = document.getElementById('scroll-cue');
+    function scrollToScreen2() {
+      const s2 = document.getElementById('screen-2');
+      const navH = document.querySelector('nav').offsetHeight;
+      const top = s2.getBoundingClientRect().top + window.scrollY - navH;
+      window.scrollTo({ top, behavior: 'smooth' });
+    }
+    window.addEventListener('scroll', () => {
+      const hidden = window.scrollY > 80 || document.body.classList.contains('mode-result');
+      scrollCue.classList.toggle('visible', !hidden);
+    }, { passive: true });
+    setTimeout(() => {
+      if (!document.body.classList.contains('mode-result')) scrollCue.classList.add('visible');
+    }, 1200);
+
+    // ─── Dot grid background ──────────────────────────────────────────────────
+    (function () {
+      const canvas = document.getElementById('bg-dots');
+      const ctx = canvas.getContext('2d');
+      const SPACING = 32, BASE_R = 1.2, MAX_R = 3.8, INFLUENCE = 150;
+      const LERP_IN = 0.16, LERP_OUT = 0.05;
+      let W, H, cols, rows, heat;
+      let mx = -9999, my = -9999, raf = null, lastTime = 0;
+      const FRAME_MS = 1000 / 30;
+      function resize() {
+        W = canvas.width = window.innerWidth;
+        H = canvas.height = window.innerHeight;
+        cols = Math.ceil(W / SPACING) + 1;
+        rows = Math.ceil(H / SPACING) + 1;
+        heat = new Float32Array(cols * rows);
+      }
+      function draw(now) {
+        raf = requestAnimationFrame(draw);
+        if (now - lastTime < FRAME_MS) return;
+        lastTime = now;
+        const len = heat.length;
+        for (let i = 0; i < len; i++) {
+          const x = (i % cols) * SPACING, y = ((i / cols) | 0) * SPACING;
+          const dx = x - mx, dy = y - my;
+          const dist2 = dx * dx + dy * dy;
+          const target = dist2 < INFLUENCE * INFLUENCE ? 1 - Math.sqrt(dist2) / INFLUENCE : 0;
+          const lr = target > heat[i] ? LERP_IN : LERP_OUT;
+          heat[i] += (target - heat[i]) * lr;
+        }
+        ctx.clearRect(0, 0, W, H);
+        ctx.beginPath();
+        ctx.fillStyle = 'rgba(30,38,50,0.7)';
+        for (let i = 0; i < len; i++) {
+          if (heat[i] < 0.02) {
+            const x = (i % cols) * SPACING, y = ((i / cols) | 0) * SPACING;
+            ctx.moveTo(x + BASE_R, y);
+            ctx.arc(x, y, BASE_R, 0, Math.PI * 2);
+          }
+        }
+        ctx.fill();
+        for (let i = 0; i < len; i++) {
+          const t = heat[i];
+          if (t < 0.02) continue;
+          const x = (i % cols) * SPACING, y = ((i / cols) | 0) * SPACING;
+          const r = BASE_R + (MAX_R - BASE_R) * t * t;
+          ctx.beginPath();
+          ctx.arc(x, y, r, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(0,210,255,${(0.18 + 0.65 * t).toFixed(2)})`;
+          ctx.fill();
+        }
+      }
+      function start() { if (!raf) { lastTime = 0; raf = requestAnimationFrame(draw); } }
+      function stop() { if (raf) { cancelAnimationFrame(raf); raf = null; } }
+      resize();
+      window.addEventListener('resize', resize);
+      window.addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; });
+      window.addEventListener('mouseleave', () => { mx = -9999; my = -9999; });
+      document.addEventListener('visibilitychange', () => document.hidden ? stop() : start());
+      start();
+    })();
   </script>
 </body>
 </html>
