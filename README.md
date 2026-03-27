@@ -252,6 +252,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines on submitting issues, PRs,
 - [Hooks reference](docs/HOOKS.md)
 - [Campaign guide](docs/CAMPAIGNS.md)
 - [Fleet guide](docs/FLEET.md)
+- [External overview: "The Operating System for Autonomous Engineering"](https://repo-explainer.com/SethGammon/Citadel/) — third-party writeup on the architecture and philosophy
 
 ## License
 
