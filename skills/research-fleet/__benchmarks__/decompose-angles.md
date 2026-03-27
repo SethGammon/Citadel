@@ -5,6 +5,7 @@ description: Research-fleet spawns scouts across multiple angles and produces a 
 tags: [happy-path]
 input: /research-fleet should we use Redis or Postgres for session storage
 state: clean
+skip-execute: true
 assert-contains:
   - scouts
   - REPORT

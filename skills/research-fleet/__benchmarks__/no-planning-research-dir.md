@@ -5,6 +5,7 @@ description: Research-fleet creates output directory when .planning/research/ do
 tags: [fringe, missing-state]
 input: /research-fleet what testing framework should we adopt
 state: clean
+skip-execute: true
 timeout: 240000
 assert-contains:
   - scouts

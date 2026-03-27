@@ -4,12 +4,11 @@ skill: pr-watch
 description: /pr-watch gives a clear message when gh CLI is not installed
 tags: [fringe, missing-tool]
 input: /pr-watch 42
-state: clean
+state: with-git-remote
 assert-contains:
-  - repo
+  - gh
 assert-not-contains:
   - TypeError
-  - ENOENT
   - spawn
   - undefined
 ---

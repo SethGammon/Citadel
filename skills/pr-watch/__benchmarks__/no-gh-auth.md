@@ -4,10 +4,10 @@ skill: pr-watch
 description: PR-watch exits with auth instructions when gh CLI is not authenticated
 tags: [fringe, missing-tool]
 input: /pr-watch 1
-state: clean
+state: with-git-remote
 assert-contains:
-  - remote
-  - repo
+  - gh
+  - auth
 assert-not-contains:
   - ENOENT
   - TypeError

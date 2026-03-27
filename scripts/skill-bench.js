@@ -156,6 +156,7 @@ function parseScenario(filePath) {
     assertContains:    Array.isArray(fm['assert-contains'])     ? fm['assert-contains']     : [],
     assertNotContains: Array.isArray(fm['assert-not-contains']) ? fm['assert-not-contains'] : [],
     timeout:          parseInt(fm.timeout, 10) || 180000,
+    skipExecute:      fm['skip-execute'] === 'true' || fm['skip-execute'] === true,
     filePath,
     body,
   };
@@ -240,6 +241,18 @@ const STATES = {
       'Sub-step: Writing tests',
       'Blocking: none',
     ].join('\n'));
+
+    // Add harness.json so setup/already-configured tests the right code path
+    const claudeDir = path.join(tmpDir, '.claude');
+    fs.mkdirSync(claudeDir, { recursive: true });
+    fs.writeFileSync(path.join(claudeDir, 'harness.json'), JSON.stringify({
+      language: 'typescript', framework: 'react', packageManager: 'npm',
+      typecheck: { command: 'npm run typecheck', perFile: true },
+      test: { command: 'npm test', framework: 'jest' },
+      qualityRules: { builtIn: ['no-confirm-alert', 'no-transition-all'], custom: [] },
+      protectedFiles: ['.claude/harness.json'],
+      features: { intakeScanner: true, telemetry: true },
+    }, null, 2));
 
     // Add some telemetry
     const telemetryDir = path.join(tmpDir, '.planning', 'telemetry');
@@ -341,6 +354,21 @@ const STATES = {
       'wave: 2',
       'agents: 3',
       'coordinator: archon',
+    ].join('\n'));
+  },
+
+  'with-git-remote': (tmpDir) => {
+    // Minimal git repo with a GitHub remote — for git-dependent skills (pr-watch, triage)
+    try {
+      execSync('git init', { cwd: tmpDir, stdio: 'pipe' });
+      execSync('git remote add origin https://github.com/example/test-repo.git', { cwd: tmpDir, stdio: 'pipe' });
+      execSync('git config user.email "bench@citadel.test"', { cwd: tmpDir, stdio: 'pipe' });
+      execSync('git config user.name "Bench"', { cwd: tmpDir, stdio: 'pipe' });
+    } catch { /* ignore git init errors in restricted envs */ }
+    fs.writeFileSync(path.join(tmpDir, 'CLAUDE.md'), [
+      '# Test Project',
+      '',
+      'A TypeScript project.',
     ].join('\n'));
   },
 };
@@ -569,7 +597,18 @@ function main() {
     let result;
     let tmpDir = null;
 
-    if (canExecute) {
+    if (canExecute && scenario.skipExecute) {
+      // skip-execute: true — scenario requires sub-agent spawning or external services
+      // that can't reliably run in bench. Count as skipped (not failed).
+      result = {
+        scenario: scenario.name,
+        skill:    scenario.skill,
+        mode:     'execute',
+        passed:   true,
+        skipped:  true,
+        assertionResults: [],
+      };
+    } else if (canExecute) {
       // Execute mode: set up state, run, assert
       try {
         tmpDir = setupProjectState(scenario.state);

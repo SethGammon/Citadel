@@ -5,6 +5,7 @@ description: Fleet decomposes direction into waves and executes agents with disc
 tags: [happy-path]
 input: /fleet refactor the API layer and update the frontend in parallel
 state: with-fleet-session
+skip-execute: true
 assert-contains:
   - Wave
   - agent
