@@ -125,11 +125,20 @@ function run() {
     }
 
     // Custom rules (regex-based)
+    // Reject patterns with nested repetition or excessive alternation to prevent ReDoS.
+    const REDOS_HEURISTIC = /(\+|\*|\{[\d,]+\}){2,}|(\|[^|]*){4,}/;
     const customRules = config.qualityRules?.custom || [];
     for (const rule of customRules) {
       if (rule.pattern && rule.message) {
-        const regex = new RegExp(rule.pattern);
-        if (rule.filePattern && !new RegExp(rule.filePattern).test(file)) continue;
+        if (REDOS_HEURISTIC.test(rule.pattern)) continue; // skip dangerous patterns
+        let regex, fileRegex;
+        try {
+          regex = new RegExp(rule.pattern);
+          fileRegex = rule.filePattern ? new RegExp(rule.filePattern) : null;
+        } catch {
+          continue; // skip invalid patterns
+        }
+        if (fileRegex && !fileRegex.test(file)) continue;
         if (regex.test(content)) {
           violations.push({ file, rule: rule.name || 'custom', message: rule.message });
         }

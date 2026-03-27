@@ -8,7 +8,7 @@
  * Stores last-check timestamp in .claude/issue-monitor-state.json (gitignored).
  */
 
-const { execSync } = require('child_process');
+const { execSync, execFileSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 
@@ -20,7 +20,7 @@ function getGhPath() {
   const windowsPath = '/c/Program Files/GitHub CLI/gh.exe';
   try {
     if (fs.existsSync(windowsPath) || fs.existsSync(windowsPath.replace(/\//g, '\\'))) {
-      return `"${windowsPath}"`;
+      return windowsPath;
     }
   } catch {}
   return 'gh';
@@ -40,11 +40,16 @@ function saveState(state) {
   fs.writeFileSync(STATE_FILE, JSON.stringify(state, null, 2));
 }
 
+const REPO_SLUG_RE = /^[\w.-]{1,100}\/[\w.-]{1,100}$/;
+
 function getRepoSlug() {
   try {
     const remote = execSync('git remote get-url origin', { encoding: 'utf8' }).trim();
     const match = remote.match(/github\.com[/:]([\w.-]+)\/([\w.-]+?)(?:\.git)?$/);
-    if (match) return `${match[1]}/${match[2]}`;
+    if (!match) return null;
+    const slug = `${match[1]}/${match[2]}`;
+    if (!REPO_SLUG_RE.test(slug)) return null;
+    return slug;
   } catch {}
   return null;
 }
@@ -57,8 +62,7 @@ function main() {
   const state = loadState();
 
   try {
-    const cmd = `${gh} issue list --repo ${repo} --state open --json number,title,labels,createdAt,updatedAt --limit 50`;
-    const raw = execSync(cmd, { encoding: 'utf8', timeout: 15000 });
+    const raw = execFileSync(gh, ['issue', 'list', '--repo', repo, '--state', 'open', '--json', 'number,title,labels,createdAt,updatedAt', '--limit', '50'], { encoding: 'utf8', timeout: 15000 });
     const issues = JSON.parse(raw);
 
     if (issues.length === 0) {
