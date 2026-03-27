@@ -57,19 +57,24 @@
     /* ─── Nav ─── */
     nav {
       width: 100%;
-      border-bottom: 1px solid var(--border);
+      border-bottom: 1px solid color-mix(in srgb, var(--cyan) 18%, var(--border));
       padding: 13px 40px;
       display: flex;
       align-items: center;
       gap: 20px;
-      background: var(--surface);
+      background: rgba(13,17,23,0.75);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
       position: sticky;
       top: 0;
       z-index: 100;
     }
     .nav-logo {
-      font-size: 15px; font-weight: 700; color: var(--text);
-      letter-spacing: 3px; text-decoration: none;
+      font-size: 15px; font-weight: 800; color: var(--text);
+      letter-spacing: 4px; text-decoration: none;
+      background: linear-gradient(90deg, var(--cyan) 0%, #7eb8ff 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
     }
     .nav-sep { color: var(--border); }
     .nav-link {
@@ -110,11 +115,18 @@
       transition: max-height 0.55s cubic-bezier(0.22, 1, 0.36, 1),
                   opacity 0.35s ease, margin-bottom 0.5s cubic-bezier(0.22, 1, 0.36, 1);
     }
+    @keyframes aurora-shift {
+      0%   { background-position: 0% 50%; }
+      50%  { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
     .hero h1 {
       font-size: 48px; font-weight: 800; line-height: 1.1; margin-bottom: 16px;
-      background: linear-gradient(135deg, #e6edf3 20%, #58a6ff 80%);
+      background: linear-gradient(135deg, #e6edf3 0%, #00d2ff 40%, #7eb8ff 65%, #e6edf3 100%);
+      background-size: 300% 300%;
       -webkit-background-clip: text; -webkit-text-fill-color: transparent;
       background-clip: text;
+      animation: aurora-shift 8s ease infinite;
       transition: font-size 0.65s cubic-bezier(0.22, 1, 0.36, 1),
                   margin-bottom 0.5s ease;
     }
@@ -453,25 +465,46 @@
       gap: 32px;
     }
     .how-card {
-      padding: 28px; border-radius: 12px;
-      border: 1.5px solid var(--border); background: var(--surface);
+      padding: 28px; border-radius: 14px;
+      border: 1.5px solid color-mix(in srgb, var(--card-color, var(--border)) 30%, var(--border));
+      background: var(--surface);
+      position: relative; overflow: hidden;
+      transition: border-color 0.3s, box-shadow 0.3s;
     }
-    .how-card-header { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+    .how-card::before {
+      content: ''; position: absolute; top: 0; left: 0;
+      width: 4px; height: 100%;
+      background: var(--card-color, var(--border));
+      opacity: 0.7;
+    }
+    .how-card::after {
+      content: ''; position: absolute; inset: 0;
+      background: radial-gradient(ellipse at top left, color-mix(in srgb, var(--card-color, transparent) 6%, transparent) 0%, transparent 60%);
+      pointer-events: none;
+    }
+    .how-card:hover {
+      border-color: color-mix(in srgb, var(--card-color, var(--cyan)) 60%, var(--border));
+      box-shadow: 0 0 32px color-mix(in srgb, var(--card-color, var(--cyan)) 12%, transparent);
+    }
+    .how-card-header { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; padding-left: 8px; }
     .how-tier-badge {
       font-size: 11px; font-weight: 700; letter-spacing: 2px;
       padding: 5px 12px; border-radius: 6px; border: 1.5px solid currentColor;
     }
     .how-card-name { font-size: 16px; font-weight: 700; }
     .how-card-sub { font-size: 12px; color: var(--dim); margin-top: 2px; }
-    .how-card-desc { font-size: 13px; color: var(--muted); line-height: 1.65; margin-bottom: 14px; }
-    .how-examples { display: flex; flex-direction: column; gap: 5px; }
+    .how-card-desc { font-size: 13px; color: var(--muted); line-height: 1.65; margin-bottom: 14px; padding-left: 8px; }
+    .how-examples { display: flex; flex-direction: column; gap: 5px; padding-left: 8px; }
     .how-example {
       font-size: 12px; font-family: 'SF Mono', monospace;
       color: var(--dim); padding: 6px 10px; border-radius: 6px;
       background: var(--surface-2); border: 1px solid var(--border);
-      cursor: pointer; transition: border-color 0.15s, color 0.15s;
+      cursor: pointer; transition: border-color 0.15s, color 0.15s, background 0.15s;
     }
-    .how-example:hover { border-color: var(--ex-color, var(--cyan)); color: var(--text); }
+    .how-example:hover {
+      border-color: var(--ex-color, var(--cyan)); color: var(--text);
+      background: color-mix(in srgb, var(--ex-color, var(--cyan)) 5%, var(--surface-2));
+    }
 
     /* ─── Footer ─── */
     footer {
@@ -894,7 +927,7 @@
 
   <!-- How It Works cards -->
   <div class="how-section">
-    <div class="how-card">
+    <div class="how-card" style="--card-color:var(--green)">
       <div class="how-card-header">
         <span class="how-tier-badge" style="color:var(--green)">TIER 0</span>
         <div>
@@ -910,7 +943,7 @@
       </div>
     </div>
 
-    <div class="how-card">
+    <div class="how-card" style="--card-color:var(--cyan)">
       <div class="how-card-header">
         <span class="how-tier-badge" style="color:var(--cyan)">TIER 2</span>
         <div>
@@ -926,7 +959,7 @@
       </div>
     </div>
 
-    <div class="how-card">
+    <div class="how-card" style="--card-color:var(--orange)">
       <div class="how-card-header">
         <span class="how-tier-badge" style="color:var(--orange)">TIER 3</span>
         <div>
@@ -942,7 +975,7 @@
       </div>
     </div>
 
-    <div class="how-card">
+    <div class="how-card" style="--card-color:var(--purple)">
       <div class="how-card-header">
         <span class="how-tier-badge" style="color:var(--purple)">TIER 3+</span>
         <div>
@@ -1606,64 +1639,116 @@
       if (!document.body.classList.contains('mode-result')) scrollCue.classList.add('visible');
     }, 1200);
 
-    // ─── Dot grid background ──────────────────────────────────────────────────
+    // ─── Dot grid background (physics: repulsion + spring) ────────────────────
     (function () {
       const canvas = document.getElementById('bg-dots');
       const ctx = canvas.getContext('2d');
-      const SPACING = 32, BASE_R = 1.2, MAX_R = 3.8, INFLUENCE = 150;
-      const LERP_IN = 0.16, LERP_OUT = 0.05;
-      let W, H, cols, rows, heat;
+      const SPACING = 36, BASE_R = 1.3, MAX_R = 3.6;
+      const REPEL_DIST = 120, REPEL_STRENGTH = 18;
+      const SPRING = 0.08, DAMPING = 0.72;
+      let W, H, cols, rows;
+      let dots = null; // Float32Array: [ox,oy, x,y, vx,vy, heat, ...] per dot — stride 7
+      const STRIDE = 7;
       let mx = -9999, my = -9999, raf = null, lastTime = 0;
-      const FRAME_MS = 1000 / 30;
+      const FRAME_MS = 1000 / 60; // 60fps for smooth physics
+
       function resize() {
         W = canvas.width = window.innerWidth;
         H = canvas.height = window.innerHeight;
         cols = Math.ceil(W / SPACING) + 1;
         rows = Math.ceil(H / SPACING) + 1;
-        heat = new Float32Array(cols * rows);
+        const n = cols * rows;
+        dots = new Float32Array(n * STRIDE);
+        for (let i = 0; i < n; i++) {
+          const ox = (i % cols) * SPACING;
+          const oy = ((i / cols) | 0) * SPACING;
+          const b = i * STRIDE;
+          dots[b]   = ox; dots[b+1] = oy; // origin
+          dots[b+2] = ox; dots[b+3] = oy; // current pos
+          dots[b+4] = 0;  dots[b+5] = 0;  // velocity
+          dots[b+6] = 0;                   // heat
+        }
       }
+
       function draw(now) {
         raf = requestAnimationFrame(draw);
         if (now - lastTime < FRAME_MS) return;
+        const dt = Math.min(now - lastTime, 32) / 16; // capped delta, normalized
         lastTime = now;
-        const len = heat.length;
-        for (let i = 0; i < len; i++) {
-          const x = (i % cols) * SPACING, y = ((i / cols) | 0) * SPACING;
+
+        const n = cols * rows;
+        for (let i = 0; i < n; i++) {
+          const b = i * STRIDE;
+          const ox = dots[b], oy = dots[b+1];
+          let   x  = dots[b+2], y  = dots[b+3];
+          let   vx = dots[b+4], vy = dots[b+5];
+
+          // Repulsion from cursor
           const dx = x - mx, dy = y - my;
-          const dist2 = dx * dx + dy * dy;
-          const target = dist2 < INFLUENCE * INFLUENCE ? 1 - Math.sqrt(dist2) / INFLUENCE : 0;
-          const lr = target > heat[i] ? LERP_IN : LERP_OUT;
-          heat[i] += (target - heat[i]) * lr;
+          const dist = Math.sqrt(dx*dx + dy*dy) || 1;
+          if (dist < REPEL_DIST) {
+            const force = (1 - dist / REPEL_DIST) * REPEL_STRENGTH;
+            vx += (dx / dist) * force * dt;
+            vy += (dy / dist) * force * dt;
+          }
+
+          // Spring back to origin
+          vx += (ox - x) * SPRING * dt;
+          vy += (oy - y) * SPRING * dt;
+
+          // Damping
+          vx *= DAMPING;
+          vy *= DAMPING;
+
+          x += vx * dt;
+          y += vy * dt;
+
+          dots[b+2] = x; dots[b+3] = y;
+          dots[b+4] = vx; dots[b+5] = vy;
+
+          // Heat = how displaced the dot is (normalized by repel dist)
+          const disp = Math.sqrt((x-ox)*(x-ox) + (y-oy)*(y-oy));
+          dots[b+6] = Math.min(1, disp / (REPEL_DIST * 0.4));
         }
+
         ctx.clearRect(0, 0, W, H);
+
+        // Batch: rest dots (dim)
         ctx.beginPath();
-        ctx.fillStyle = 'rgba(30,38,50,0.7)';
-        for (let i = 0; i < len; i++) {
-          if (heat[i] < 0.02) {
-            const x = (i % cols) * SPACING, y = ((i / cols) | 0) * SPACING;
+        ctx.fillStyle = 'rgba(30,38,50,0.72)';
+        for (let i = 0; i < n; i++) {
+          const b = i * STRIDE;
+          if (dots[b+6] < 0.04) {
+            const x = dots[b+2], y = dots[b+3];
             ctx.moveTo(x + BASE_R, y);
             ctx.arc(x, y, BASE_R, 0, Math.PI * 2);
           }
         }
         ctx.fill();
-        for (let i = 0; i < len; i++) {
-          const t = heat[i];
-          if (t < 0.02) continue;
-          const x = (i % cols) * SPACING, y = ((i / cols) | 0) * SPACING;
+
+        // Individual: displaced dots (cyan glow)
+        for (let i = 0; i < n; i++) {
+          const b = i * STRIDE;
+          const t = dots[b+6];
+          if (t < 0.04) continue;
+          const x = dots[b+2], y = dots[b+3];
           const r = BASE_R + (MAX_R - BASE_R) * t * t;
+          const alpha = (0.2 + 0.7 * t).toFixed(2);
           ctx.beginPath();
           ctx.arc(x, y, r, 0, Math.PI * 2);
-          ctx.fillStyle = `rgba(0,210,255,${(0.18 + 0.65 * t).toFixed(2)})`;
+          ctx.fillStyle = `rgba(0,210,255,${alpha})`;
           ctx.fill();
         }
       }
-      function start() { if (!raf) { lastTime = 0; raf = requestAnimationFrame(draw); } }
-      function stop() { if (raf) { cancelAnimationFrame(raf); raf = null; } }
+
+      function start() { if (!raf) { lastTime = performance.now(); raf = requestAnimationFrame(draw); } }
+      function stop()  { if (raf) { cancelAnimationFrame(raf); raf = null; } }
+
       resize();
-      window.addEventListener('resize', resize);
+      window.addEventListener('resize', () => { resize(); });
       window.addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; });
       window.addEventListener('mouseleave', () => { mx = -9999; my = -9999; });
-      document.addEventListener('visibilitychange', () => document.hidden ? stop() : start());
+      document.addEventListener('visibilitychange', () => document.hidden ? stop() : (lastTime = performance.now(), start()));
       start();
     })();
   </script>
