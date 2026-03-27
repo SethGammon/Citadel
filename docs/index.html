@@ -66,8 +66,8 @@
       background: rgba(13,17,23,0.75);
       backdrop-filter: blur(16px);
       -webkit-backdrop-filter: blur(16px);
-      position: sticky;
-      top: 0;
+      flex-shrink: 0;
+      position: relative;
       z-index: 100;
     }
     .nav-logo {
@@ -217,15 +217,13 @@
 
     /* ─── Cinematic scroll layout ─── */
     #page-wrap {
-      flex: 1; width: 100%; overflow: hidden; position: relative;
-      height: calc(100vh - var(--nav-h, 48px));
+      flex: 1; min-height: 0; width: 100%; overflow: hidden; position: relative;
     }
     #screens-inner {
       position: absolute; top: 0; left: 0; right: 0;
       will-change: transform;
     }
     #screen-1 {
-      height: calc(100vh - var(--nav-h, 48px));
       display: flex; flex-direction: column;
       justify-content: center; align-items: center;
       overflow: hidden; width: 100%;
@@ -1772,12 +1770,19 @@
     // ─── Cinematic scroll ─────────────────────────────────────────────────────
     let currentScreen = 0, isTransitioning = false;
 
-    // Set --nav-h CSS var from measured nav
-    (function() {
+    // Set layout heights imperatively from measured nav
+    function setupLayout() {
       const nav = document.querySelector('nav');
-      const h = nav ? nav.offsetHeight : 48;
-      document.documentElement.style.setProperty('--nav-h', h + 'px');
-    })();
+      const navH = nav ? nav.offsetHeight : 48;
+      const pageH = window.innerHeight - navH;
+      document.documentElement.style.setProperty('--nav-h', navH + 'px');
+      const pageWrap = document.getElementById('page-wrap');
+      const screen1 = document.getElementById('screen-1');
+      if (pageWrap) pageWrap.style.height = pageH + 'px';
+      if (screen1) screen1.style.height = pageH + 'px';
+    }
+    setupLayout();
+    window.addEventListener('resize', setupLayout);
 
     function easeInOutQuart(t) {
       return t < 0.5 ? 8*t*t*t*t : 1 - Math.pow(-2*t + 2, 4) / 2;
