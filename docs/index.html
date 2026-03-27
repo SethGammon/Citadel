@@ -26,6 +26,10 @@
       -webkit-tap-highlight-color: transparent;
     }
 
+    /* Hide scrollbar everywhere */
+    html { scrollbar-width: none; }
+    ::-webkit-scrollbar { display: none; }
+
     body {
       background: var(--bg);
       color: var(--text);
@@ -92,7 +96,7 @@
       padding: 64px 40px 20px;
       max-width: 820px;
       width: 100%;
-      transition: padding 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+      transition: padding 0.65s cubic-bezier(0.22, 1, 0.36, 1);
     }
     .hero-eyebrow {
       display: inline-flex; align-items: center; gap: 8px;
@@ -101,22 +105,22 @@
       padding: 5px 14px; border: 1px solid color-mix(in srgb, var(--cyan) 30%, transparent);
       border-radius: 20px; background: color-mix(in srgb, var(--cyan) 5%, transparent);
       max-height: 60px; overflow: hidden;
-      transition: max-height 0.4s cubic-bezier(0.22, 1, 0.36, 1),
-                  opacity 0.25s ease, margin-bottom 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+      transition: max-height 0.55s cubic-bezier(0.22, 1, 0.36, 1),
+                  opacity 0.35s ease, margin-bottom 0.5s cubic-bezier(0.22, 1, 0.36, 1);
     }
     .hero h1 {
       font-size: 48px; font-weight: 800; line-height: 1.1; margin-bottom: 16px;
       background: linear-gradient(135deg, #e6edf3 20%, #58a6ff 80%);
       -webkit-background-clip: text; -webkit-text-fill-color: transparent;
       background-clip: text;
-      transition: font-size 0.45s cubic-bezier(0.22, 1, 0.36, 1),
-                  margin-bottom 0.35s ease;
+      transition: font-size 0.65s cubic-bezier(0.22, 1, 0.36, 1),
+                  margin-bottom 0.5s ease;
     }
     .hero p {
       font-size: 17px; color: var(--muted); line-height: 1.7;
       max-width: 580px; margin: 0 auto;
       max-height: 120px; overflow: hidden;
-      transition: max-height 0.4s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.25s ease;
+      transition: max-height 0.55s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.35s ease;
     }
 
     /* ─── Search bar ─── */
@@ -124,7 +128,7 @@
       width: 100%; max-width: 860px;
       padding: 36px 32px 0;
       margin: 0 auto;
-      transition: padding-top 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+      transition: padding-top 0.65s cubic-bezier(0.22, 1, 0.36, 1);
     }
 
     .search-bar {
@@ -204,8 +208,8 @@
       display: flex; gap: 12px;
       margin-top: 28px; margin-bottom: 32px;
       max-height: 200px; overflow: hidden;
-      transition: max-height 0.45s cubic-bezier(0.22, 1, 0.36, 1),
-                  opacity 0.3s ease, margin-top 0.4s ease, margin-bottom 0.4s ease;
+      transition: max-height 0.6s cubic-bezier(0.22, 1, 0.36, 1),
+                  opacity 0.45s ease, margin-top 0.55s ease, margin-bottom 0.55s ease;
     }
     .gen-btn {
       flex: 1; padding: 18px 20px;
@@ -258,7 +262,7 @@
       border-radius: 14px; overflow: hidden;
       clip-path: inset(0 0 100% 0 round 14px);
       opacity: 0;
-      transition: clip-path 0.5s cubic-bezier(0.22, 1, 0.36, 1),
+      transition: clip-path 0.7s cubic-bezier(0.22, 1, 0.36, 1),
                   opacity 0.3s ease;
     }
     .result-panel.visible {
@@ -332,7 +336,7 @@
     .tier-desc {
       font-size: 11px; color: var(--muted); line-height: 1.5;
       max-height: 40px; overflow: hidden;
-      transition: max-height 0.3s ease, opacity 0.25s ease;
+      transition: max-height 0.45s ease, opacity 0.35s ease;
     }
 
     .tier-status {
@@ -589,13 +593,20 @@
       max-height: 0; opacity: 0; margin-bottom: 0;
     }
     body.mode-result .hero h1 {
-      font-size: 26px; margin-bottom: 4px;
+      font-size: 22px; margin-bottom: 4px;
+    }
+    body.mode-result .hero h1 br,
+    body.mode-result .hero h1 .h1-sub {
+      display: none;
     }
     body.mode-result .hero p {
       max-height: 0; opacity: 0;
     }
     body.mode-result .search-wrap {
-      padding-top: 16px;
+      padding-top: 14px;
+    }
+    body.mode-result .search-hint {
+      display: none;
     }
     body.mode-result .generators {
       max-height: 0; opacity: 0; margin-top: 0; margin-bottom: 0;
@@ -611,7 +622,11 @@
     }
     body.mode-result .tier-row.skipped .tier-sub {
       opacity: 0;
-      transition: opacity 0.2s ease;
+    }
+    body.mode-result .stat-bar,
+    body.mode-result .how-section,
+    body.mode-result footer {
+      display: none;
     }
 
     /* ─── Reset button ─── */
@@ -662,7 +677,7 @@
       <span>⚡</span>
       <span>Interactive Demo · /do Intent Router</span>
     </div>
-    <h1>Say what you want.<br>Citadel routes it.</h1>
+    <h1>Say what you want.<br><span class="h1-sub">Citadel routes it.</span></h1>
     <p>Type any engineering task. The router evaluates four tiers in sequence and dispatches to the cheapest tool capable — no configuration, no manual skill selection.</p>
   </div>
 
@@ -1246,7 +1261,7 @@
         const statusEl = document.getElementById(`tier${i}-status`);
 
         if (i === 1) {
-          await sleep(80);
+          await sleep(200);
           tierEl.classList.add('skipped');
           statusEl.textContent = '— no active session';
           statusEl.style.color = 'var(--muted)';
@@ -1257,7 +1272,7 @@
         statusEl.textContent = 'evaluating…';
         statusEl.style.color = 'var(--muted)';
 
-        const delay = i === 0 ? 280 : i === 2 ? 380 : 520;
+        const delay = i === 0 ? 480 : i === 2 ? 620 : 800;
         await sleep(delay);
 
         if (i === result.tier) {
@@ -1312,7 +1327,7 @@
         }
       }
 
-      await sleep(180);
+      await sleep(320);
 
       // Output card
       document.getElementById('output-icon').textContent = result.icon || '◆';
