@@ -29,6 +29,23 @@ experiences IS the system they'll use for everything.
 
 ## Protocol
 
+### Step 0: CHECK EXISTING CONFIG
+
+Before doing anything, check if `.claude/harness.json` already exists:
+
+```
+Read .claude/harness.json
+```
+
+**If it exists:**
+1. Output: "This project is already configured. Here's the current config:"
+2. Print the key fields: language, framework, packageManager, typecheck.command, registeredSkillCount
+3. Ask: "Would you like to re-run setup to update the configuration? (y/n)"
+4. If NO: output "Config unchanged. Use `/do` to start working." and stop.
+5. If YES: proceed with Step 1 (setup will update/overwrite harness.json).
+
+**If it doesn't exist:** proceed directly to Step 1.
+
 ### Step 1: ORIENT (ask about the project)
 
 **Q1: Project description**
