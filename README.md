@@ -1,10 +1,12 @@
-# Citadel — Agent Orchestration Harness for Claude Code
+# Citadel — The Operating System for Autonomous Engineering
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Node.js 18+](https://img.shields.io/badge/Node.js-18%2B-green.svg)](https://nodejs.org/)
 [![Claude Code](https://img.shields.io/badge/Claude_Code-compatible-blueviolet.svg)](https://docs.anthropic.com/en/docs/claude-code)
 
-Run autonomous coding campaigns with Claude Code. Route any task through the right tool at the right scale — from a one-line fix to a multi-day parallel campaign.
+Citadel turns Claude Code into a multi-agent engineering factory: durable state, intelligent routing, parallel execution, and safety guardrails for autonomous coding campaigns that outlast any single session.
+
+> Autonomous engineering needs better infrastructure, not just better reasoning.
 
 **33 skills | 4 autonomous agents | 14 lifecycle hook events | campaign persistence | fleet coordination | governance audit log**
 
@@ -57,7 +59,7 @@ Say what you want. `/do` routes it to the cheapest tool that can handle it.
 
 ## How It Works
 
-You type what you want. `/do` classifies your intent and picks the cheapest tool that can handle it — no menus, no flags, no routing decisions on your end.
+You type what you want. `/do` classifies your intent and routes it to the appropriate execution tier — from regex-based operations for simple fixes to frontier models for architectural decisions. This matches tool capability to task difficulty, so you never over-spend on a typo or under-power a campaign.
 
 ```
 You say:                               Citadel runs:
@@ -170,7 +172,7 @@ Automated enforcement and observability that runs without you thinking about it.
 | **PreToolUse** (Edit/Write) | Blocks writes to protected files and `.env` secrets. Warns on out-of-scope edits during active campaigns. Hard-blocks files declared Restricted in a campaign. |
 | **PreToolUse** (Edit/Write/Bash/Agent) | Governance: appends every significant tool call to `audit.jsonl`. Never blocks. <5ms overhead. |
 | **PostToolUse** | Per-file typecheck on every edit. Catches type errors at write-time. |
-| **PostToolUseFailure** | Circuit breaker: tracks consecutive failures. At 3, suggests a different approach. At 5, hard stop. |
+| **PostToolUseFailure** | Circuit breaker: prevents runaway token expenditure. At 3 consecutive failures, forces a strategic pivot. At 5, cuts execution entirely. |
 | **PreCompact** | Saves active campaign context and full session handoff before context compression. Three modes: auto (default), prompt, off. |
 | **PostCompact** | Re-injects pre-compact state after a compacted session resumes. |
 | **Stop** | Quality gate: scans recently-edited files for anti-patterns (confirm/alert, transition-all, magic intervals). Custom rules via `harness.json`. |
@@ -203,15 +205,19 @@ Campaign scope enforcement works in the same hook layer: declare a `## Claimed S
 
 The `external-action-gate` hook (opt-in via `settings.local.json`) blocks irreversible external actions — PR merges, issue closes, releases — while allowing pushes and PR creation.
 
-## Campaign Persistence
+## Solving AI Amnesia
 
-Work survives across sessions. Close the terminal, come back tomorrow, `/do continue` picks up where you left off.
+LLMs compress their context. Without intervention, a long campaign loses its architectural goals the moment compaction kicks in. Citadel externalizes agent context to the filesystem before that happens — the PreCompact hook captures active campaign state and writes a full session handoff to disk. When the session resumes, PostCompact re-injects it. Campaigns run indefinitely without losing their thread.
 
-Campaigns track phases, decisions, feature status, and continuation state in markdown files. See [docs/CAMPAIGNS.md](docs/CAMPAIGNS.md).
+Close the terminal, come back tomorrow, `/do continue` picks up where you left off.
 
-## Fleet Parallelism
+Campaigns track phases, decisions, feature status, and continuation state in plain markdown files. See [docs/CAMPAIGNS.md](docs/CAMPAIGNS.md).
 
-Run 2-3 agents simultaneously in isolated worktrees. Discoveries compress into ~500-token briefs and relay between waves. See [docs/FLEET.md](docs/FLEET.md).
+## Native Parallelism
+
+Instead of in-memory coordination, Citadel uses Git's native worktree feature to spawn isolated branches for concurrent agents. Each agent operates on its own disk snapshot — no race conditions, no shared state collisions. Discoveries compress into ~500-token briefs between waves and relay to the next. Hardware is the only limit.
+
+See [docs/FLEET.md](docs/FLEET.md).
 
 ## Testing (for contributors)
 
@@ -229,7 +235,7 @@ Run `node scripts/test-all.js` after any change. Run `verify-hooks.js` and `inte
 
 ## FAQ
 
-**How is this different from CLAUDE.md?** — CLAUDE.md tells Claude about your project. The harness tells Claude *how to work*: routing, persistence, quality enforcement, parallel coordination.
+**How is this different from CLAUDE.md?** — CLAUDE.md tells Claude about your project. Citadel tells Claude *how to work*: durable state, intelligent routing, automated safety, and native parallelism — the infrastructure layer that CLAUDE.md assumes someone else built.
 
 **Do I need to learn all 33 skills?** — No. Just use `/do` and describe what you want in plain English. The router picks the right skill. You can go months without ever typing a skill name directly.
 
