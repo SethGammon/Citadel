@@ -3,15 +3,13 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Citadel — Intent Router</title>
+  <title>Citadel — Intent Router Demo</title>
   <style>
     :root {
-      --bg: #080c10;
-      --surface: #0f1419;
-      --surface-2: #161b22;
-      --surface-3: #1c2330;
-      --border: rgba(48,54,61,0.7);
-      --border-hi: rgba(48,54,61,1);
+      --bg: #0d1117;
+      --surface: #161b22;
+      --surface-2: #21262d;
+      --border: #30363d;
       --text: #e6edf3;
       --muted: #8b949e;
       --dim: #4a5568;
@@ -20,7 +18,7 @@
       --green: #3fb950;
       --orange: #f0883e;
       --purple: #bc8cff;
-      --nav-h: 52px;
+      --red: #ff7b72;
     }
 
     *, *::before, *::after {
@@ -32,604 +30,533 @@
       background: var(--bg);
       color: var(--text);
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
-      height: 100vh; overflow: hidden;
-      user-select: none; -webkit-user-select: none;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      /* No blinking cursor when clicking background */
+      user-select: none;
+      -webkit-user-select: none;
     }
 
-    input, textarea { user-select: text; -webkit-user-select: text; }
-    :focus { outline: none; }
-    :focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; border-radius: 3px; }
-    button { cursor: pointer; }
+    /* Restore selection where needed */
+    input, textarea, [contenteditable], .panel-body, .how-card-desc, .output-desc {
+      user-select: text;
+      -webkit-user-select: text;
+    }
 
-    /* ─── Background orbs ─── */
-    .bg-orbs {
-      position: fixed; inset: 0; z-index: 0;
-      pointer-events: none; overflow: hidden;
-    }
-    .orb {
-      position: absolute; border-radius: 50%;
-      filter: blur(90px); pointer-events: none;
-    }
-    .orb-cyan {
-      width: 800px; height: 800px;
-      background: radial-gradient(circle, #00d2ff 0%, transparent 65%);
-      opacity: 0.07; top: -280px; left: -200px;
-      animation: drift-a 24s ease-in-out infinite;
-    }
-    .orb-purple {
-      width: 650px; height: 650px;
-      background: radial-gradient(circle, #bc8cff 0%, transparent 65%);
-      opacity: 0.06; bottom: -220px; right: -150px;
-      animation: drift-b 30s ease-in-out infinite;
-    }
-    .orb-orange {
-      width: 450px; height: 450px;
-      background: radial-gradient(circle, #f0883e 0%, transparent 65%);
-      opacity: 0; top: 25%; left: 30%;
-      animation: drift-c 20s ease-in-out infinite;
-      transition: opacity 1s ease;
-    }
-    .orb-orange.lit { opacity: 0.09; }
-
-    @keyframes drift-a {
-      0%,100% { transform: translate(0,0) scale(1); }
-      33%  { transform: translate(70px,50px) scale(1.06); }
-      66%  { transform: translate(-40px,80px) scale(0.94); }
-    }
-    @keyframes drift-b {
-      0%,100% { transform: translate(0,0) scale(1); }
-      40%  { transform: translate(-90px,-60px) scale(1.09); }
-      70%  { transform: translate(50px,-35px) scale(0.96); }
-    }
-    @keyframes drift-c {
-      0%,100% { transform: translate(0,0) scale(1); }
-      50%  { transform: translate(60px,-70px) scale(1.12); }
-    }
+    *:focus { outline: none; }
+    *:focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; border-radius: 4px; }
 
     /* ─── Nav ─── */
     nav {
-      position: fixed; top: 0; left: 0; right: 0; z-index: 200;
-      height: var(--nav-h);
-      display: flex; align-items: center; gap: 22px;
-      padding: 0 36px;
-      background: rgba(8,12,16,0.88);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
+      width: 100%;
       border-bottom: 1px solid var(--border);
+      padding: 13px 40px;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      background: var(--surface);
+      position: sticky;
+      top: 0;
+      z-index: 100;
     }
     .nav-logo {
-      font-size: 13px; font-weight: 800; color: var(--text);
-      letter-spacing: 3.5px; text-decoration: none;
+      font-size: 15px; font-weight: 700; color: var(--text);
+      letter-spacing: 3px; text-decoration: none;
     }
-    .nav-logo em { color: var(--cyan); font-style: normal; }
-    .nav-sep { color: var(--border-hi); }
+    .nav-sep { color: var(--border); }
     .nav-link {
-      font-size: 12px; color: var(--muted);
-      background: none; border: none; cursor: pointer;
-      padding: 0; font-family: inherit; letter-spacing: 0.3px;
-      transition: color 0.15s;
+      font-size: 13px; color: var(--muted); text-decoration: none;
+      transition: color 0.15s; background: none; border: none;
+      cursor: pointer; padding: 0; font-family: inherit;
     }
     .nav-link:hover { color: var(--text); }
     .nav-link.panel-active { color: var(--cyan); }
-    .nav-right { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+    .nav-right { margin-left: auto; display: flex; align-items: center; gap: 12px; }
     .nav-badge {
-      font-size: 10px; padding: 3px 9px; border-radius: 20px;
-      border: 1px solid var(--border-hi); color: var(--dim); letter-spacing: 0.5px;
+      font-size: 11px; padding: 3px 10px; border-radius: 20px;
+      border: 1px solid var(--border); color: var(--muted);
     }
     .nav-star {
-      font-size: 12px; padding: 5px 14px; border-radius: 6px;
-      background: rgba(255,255,255,0.04); border: 1px solid var(--border-hi);
+      font-size: 12px; padding: 4px 12px; border-radius: 6px;
+      background: var(--surface-2); border: 1px solid var(--border);
       color: var(--text); text-decoration: none;
-      transition: border-color 0.15s, background 0.15s, color 0.15s;
+      transition: border-color 0.15s;
     }
-    .nav-star:hover { border-color: var(--cyan); background: rgba(0,210,255,0.07); color: var(--cyan); }
+    .nav-star:hover { border-color: var(--cyan); color: var(--cyan); }
 
-    /* ─── App shell ─── */
-    .app-shell {
-      position: fixed; top: var(--nav-h); left: 0; right: 0; bottom: 0;
-      display: grid; grid-template-columns: 1fr 460px; z-index: 1;
+    /* ─── Hero ─── */
+    .hero {
+      text-align: center;
+      padding: 64px 40px 20px;
+      max-width: 820px;
+      width: 100%;
+    }
+    .hero-eyebrow {
+      display: inline-flex; align-items: center; gap: 8px;
+      font-size: 11px; letter-spacing: 3px; color: var(--cyan);
+      text-transform: uppercase; margin-bottom: 20px;
+      padding: 5px 14px; border: 1px solid color-mix(in srgb, var(--cyan) 30%, transparent);
+      border-radius: 20px; background: color-mix(in srgb, var(--cyan) 5%, transparent);
+    }
+    .hero h1 {
+      font-size: 48px; font-weight: 800; line-height: 1.1; margin-bottom: 16px;
+      background: linear-gradient(135deg, #e6edf3 20%, #58a6ff 80%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .hero p {
+      font-size: 17px; color: var(--muted); line-height: 1.7;
+      max-width: 580px; margin: 0 auto;
     }
 
-    /* ─── Left column ─── */
-    .left-col {
-      overflow-y: auto; overflow-x: hidden;
-      padding: 32px 44px;
-      display: flex; flex-direction: column;
-      scrollbar-width: thin; scrollbar-color: var(--surface-3) transparent;
+    /* ─── Search bar ─── */
+    .search-wrap {
+      width: 100%; max-width: 860px;
+      padding: 36px 32px 0;
+      margin: 0 auto;
     }
 
-    /* ─── Input ─── */
-    .input-section { margin-bottom: 22px; }
-    .input-eyebrow {
-      font-size: 10px; letter-spacing: 2.5px; text-transform: uppercase;
-      color: var(--dim); margin-bottom: 10px; font-family: 'SF Mono', monospace;
+    .search-bar {
+      position: relative;
+      filter: drop-shadow(0 8px 32px color-mix(in srgb, var(--cyan) 8%, transparent));
     }
-    .input-wrap { position: relative; margin-bottom: 8px; }
-    .input-prompt {
-      position: absolute; left: 20px; top: 50%; transform: translateY(-50%);
-      font-family: 'SF Mono', monospace; font-size: 17px; color: var(--cyan);
-      pointer-events: none; font-weight: 600; z-index: 1;
+
+    .search-prompt {
+      position: absolute; left: 26px; top: 50%; transform: translateY(-50%);
+      font-family: 'SF Mono', 'Cascadia Code', 'Consolas', monospace;
+      font-size: 18px; color: var(--cyan);
+      pointer-events: none; font-weight: 600;
+      letter-spacing: -0.5px;
     }
+
     #cmd-input {
-      width: 100%; padding: 19px 150px 19px 54px;
-      background: rgba(22,27,34,0.72);
-      border: 1.5px solid var(--border-hi);
-      border-radius: 12px;
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-      font-family: 'SF Mono', monospace;
-      font-size: 15px; color: var(--text); outline: none;
-      transition: border-color 0.2s, box-shadow 0.2s;
+      width: 100%;
+      padding: 22px 180px 22px 72px;
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: 40px;
+      font-family: 'SF Mono', 'Cascadia Code', 'Consolas', monospace;
+      font-size: 17px; color: var(--text);
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+      user-select: text; -webkit-user-select: text;
     }
-    #cmd-input::placeholder { color: var(--dim); }
     #cmd-input:focus {
       border-color: var(--cyan);
-      box-shadow: 0 0 0 3px rgba(0,210,255,0.10), 0 0 24px rgba(0,210,255,0.07);
+      background: color-mix(in srgb, var(--cyan) 2%, var(--surface));
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--cyan) 12%, transparent),
+                  0 4px 24px color-mix(in srgb, var(--cyan) 8%, transparent);
     }
-    .input-actions {
+    #cmd-input::placeholder { color: var(--dim); }
+
+    .search-actions {
       position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
+      display: flex; align-items: center; gap: 8px;
     }
+
     .live-badge {
-      font-size: 11px; padding: 3px 10px; border-radius: 20px;
+      font-size: 11px; padding: 5px 13px; border-radius: 20px;
       background: transparent; border: 1px solid transparent;
-      color: var(--muted); transition: all 0.18s; white-space: nowrap;
+      color: var(--muted); transition: all 0.2s; white-space: nowrap;
       font-family: 'SF Mono', monospace;
     }
     .live-badge.active { border-color: currentColor; }
-    .input-hint {
-      display: flex; gap: 18px;
-      font-size: 11px; color: var(--dim); font-family: 'SF Mono', monospace;
-      padding-left: 2px;
+
+    .enter-key {
+      display: flex; align-items: center; justify-content: center;
+      width: 36px; height: 36px; border-radius: 50%;
+      background: var(--surface-2); border: 1px solid var(--border);
+      color: var(--muted); font-size: 13px; cursor: pointer;
+      transition: all 0.15s; flex-shrink: 0;
     }
-    .input-hint kbd {
-      display: inline-block; padding: 1px 6px; border-radius: 4px;
-      border: 1px solid var(--border-hi); background: var(--surface);
-      font-size: 10px; color: var(--muted); margin-right: 3px;
+    .enter-key:hover { border-color: var(--cyan); color: var(--cyan); }
+    .enter-key.lit {
+      background: color-mix(in srgb, var(--cyan) 15%, var(--surface-2));
+      border-color: var(--cyan); color: var(--cyan);
     }
 
-    /* ─── Examples ─── */
-    .examples-section { margin-bottom: 22px; }
-    .ex-cat {
+    .search-hint {
+      font-size: 11px; color: var(--dim); margin-top: 12px;
+      font-family: 'SF Mono', monospace; text-align: center;
+    }
+    .search-hint kbd {
+      display: inline-block; padding: 1px 6px; border-radius: 4px;
+      border: 1px solid var(--border); background: var(--surface);
+      font-size: 10px; color: var(--muted);
+    }
+
+    /* ─── Playground ─── */
+    .playground { width: 100%; max-width: 1100px; padding: 0 32px 64px; }
+
+    /* ─── Example categories ─── */
+    .examples-wrap { margin-bottom: 28px; margin-top: 32px; }
+    .example-row { display: flex; flex-wrap: wrap; gap: 7px; }
+    .example-btn {
+      padding: 7px 13px; background: var(--surface-2);
+      border: 1px solid var(--border); border-radius: 20px;
+      font-size: 12px; font-family: 'SF Mono', monospace;
+      color: var(--muted); cursor: pointer; transition: all 0.15s;
+    }
+    .example-btn:hover { border-color: var(--active-color, var(--cyan)); color: var(--text); }
+    .example-btn.t0 { --active-color: var(--green); }
+    .example-btn.t2 { --active-color: var(--blue); }
+    .example-btn.t3a { --active-color: var(--orange); }
+    .example-btn.t3b { --active-color: var(--purple); }
+    .example-category {
       font-size: 10px; letter-spacing: 1.5px; color: var(--dim);
-      text-transform: uppercase; margin-bottom: 7px; margin-top: 12px;
+      text-transform: uppercase; margin-bottom: 7px; margin-top: 14px;
     }
-    .ex-cat:first-child { margin-top: 0; }
-    .ex-row { display: flex; flex-wrap: wrap; gap: 6px; }
-    .ex-btn {
-      padding: 5px 12px;
-      background: rgba(22,27,34,0.55);
-      border: 1px solid var(--border-hi); border-radius: 20px;
-      font-size: 11px; font-family: 'SF Mono', monospace;
-      color: var(--muted); cursor: pointer; backdrop-filter: blur(4px);
-      transition: border-color 0.14s, color 0.14s, background 0.14s;
+    .example-category:first-child { margin-top: 0; }
+
+    /* ─── Result panel — folds out downward from search bar ─── */
+    .result-panel {
+      background: var(--surface); border: 1.5px solid var(--border);
+      border-radius: 14px; overflow: hidden;
+      clip-path: inset(0 0 100% 0 round 14px);
+      opacity: 0;
+      transition: clip-path 0.5s cubic-bezier(0.22, 1, 0.36, 1),
+                  opacity 0.3s ease;
     }
-    .ex-btn:hover {
-      border-color: var(--ec, var(--cyan));
-      color: var(--text); background: rgba(22,27,34,0.9);
+    .result-panel.visible {
+      clip-path: inset(0 0 0% 0 round 14px);
+      opacity: 1;
     }
-    .ex-btn.t0 { --ec: var(--green); }
-    .ex-btn.t2 { --ec: var(--blue); }
-    .ex-btn.t3a { --ec: var(--orange); }
-    .ex-btn.t3b { --ec: var(--purple); }
+
+    .result-header {
+      padding: 16px 24px; border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; gap: 12px;
+      background: var(--surface-2);
+    }
+    .result-command {
+      font-family: 'SF Mono', monospace; font-size: 15px; color: var(--blue);
+    }
+    .result-meta { margin-left: auto; display: flex; gap: 8px; align-items: center; }
+    .result-timer {
+      font-size: 11px; color: var(--dim); font-family: 'SF Mono', monospace;
+    }
 
     /* ─── Tier cascade ─── */
-    .tier-cascade { display: flex; flex-direction: column; gap: 8px; margin-bottom: 22px; }
+    .tier-cascade { padding: 20px 20px 12px; display: flex; flex-direction: column; gap: 8px; }
 
     .tier-row {
-      display: grid; grid-template-columns: 92px 1fr auto;
-      align-items: center; gap: 14px;
-      padding: 12px 18px; border-radius: 10px;
+      display: grid;
+      grid-template-columns: 108px 1fr auto;
+      align-items: center; gap: 16px;
+      padding: 14px 20px;
+      border-radius: 10px;
       border: 1.5px solid var(--border);
-      background: rgba(22,27,34,0.45);
-      backdrop-filter: blur(6px);
-      opacity: 0.28; position: relative; overflow: hidden;
-      transition: opacity 0.2s, border-color 0.25s, box-shadow 0.35s, background 0.25s;
+      background: var(--surface-2);
+      opacity: 0.3;
+      position: relative; overflow: hidden;
+      transition: opacity 0.25s, border-color 0.25s, background 0.25s, box-shadow 0.25s;
     }
     .tier-row::after {
-      content: ''; position: absolute; top: 0; left: -120px; width: 120px; height: 100%;
-      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.045), transparent);
-      opacity: 0; pointer-events: none;
+      content: ''; position: absolute; top: 0; left: -80px;
+      width: 80px; height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.05), transparent);
+      transform: translateX(0); opacity: 0;
+      transition: none;
     }
-    .tier-row.checking { opacity: 0.58; }
     .tier-row.checking::after {
-      opacity: 1; animation: tscan 0.65s linear infinite;
+      opacity: 1;
+      animation: tier-scan 0.65s linear infinite;
     }
-    @keyframes tscan {
-      from { transform: translateX(0); }
-      to   { transform: translateX(calc(100% + 240px + 120px)); }
+    @keyframes tier-scan {
+      0%   { transform: translateX(0); }
+      100% { transform: translateX(calc(100% + 80px + 100%)); }
     }
+    .tier-row.checking { opacity: 0.65; }
     .tier-row.matched {
       opacity: 1;
-      border-color: var(--mc);
-      background: rgba(22,27,34,0.82);
-      box-shadow: 0 0 28px var(--ms), inset 0 0 0 1px var(--mi);
+      border-color: var(--match-color);
+      background: color-mix(in srgb, var(--match-color) 7%, var(--surface-2));
+      box-shadow: 0 0 28px color-mix(in srgb, var(--match-color) 16%, transparent),
+                  inset 0 0 0 1px color-mix(in srgb, var(--match-color) 22%, transparent);
     }
-    .tier-row.bloom { animation: tbloom 0.55s ease-out forwards; }
-    @keyframes tbloom {
-      0%   { box-shadow: 0 0 55px var(--mb), inset 0 0 0 1px var(--mi); background: rgba(22,27,34,0.95); }
-      100% { box-shadow: 0 0 28px var(--ms), inset 0 0 0 1px var(--mi); background: rgba(22,27,34,0.82); }
-    }
-    .tier-row.skipped { opacity: 0.11; }
+    .tier-row.skipped { opacity: 0.14; }
 
     .tier-left { display: flex; flex-direction: column; gap: 4px; }
     .tier-badge {
       font-size: 10px; font-weight: 700; letter-spacing: 2px;
-      padding: 4px 10px; border-radius: 5px;
-      border: 1.5px solid currentColor; text-align: center; white-space: nowrap;
+      padding: 4px 10px; border-radius: 5px; white-space: nowrap;
+      border: 1.5px solid currentColor; text-align: center;
     }
-    .tier-sub { font-size: 10px; color: var(--dim); text-align: center; }
+    .tier-sub { font-size: 10px; color: var(--dim); text-align: center; letter-spacing: 0.5px; }
+
     .tier-center { min-width: 0; }
-    .tier-name { font-size: 13px; font-weight: 600; margin-bottom: 2px; }
+    .tier-name { font-size: 14px; font-weight: 600; margin-bottom: 2px; }
     .tier-desc { font-size: 11px; color: var(--muted); line-height: 1.5; }
-    .tier-status { font-size: 11px; font-weight: 600; white-space: nowrap; text-align: right; min-width: 120px; }
 
-    .think-dots {
-      display: inline-flex; gap: 3px; align-items: center; margin-left: 5px; vertical-align: middle;
+    .tier-status {
+      font-size: 11px; font-weight: 600; white-space: nowrap;
+      text-align: right; min-width: 120px;
     }
-    .think-dots span {
-      width: 5px; height: 5px; border-radius: 50%; background: var(--orange); opacity: 0;
-    }
-    .think-dots span:nth-child(1) { animation: dpulse 1.1s 0.0s ease-in-out infinite; }
-    .think-dots span:nth-child(2) { animation: dpulse 1.1s 0.2s ease-in-out infinite; }
-    .think-dots span:nth-child(3) { animation: dpulse 1.1s 0.4s ease-in-out infinite; }
-    @keyframes dpulse { 0%,100% { opacity: 0.1; } 45% { opacity: 1; } }
 
-    /* ─── Stats strip ─── */
-    .stats-strip {
-      display: flex; margin-top: auto; padding-top: 18px;
+    /* ─── Classification panel (Tier 3) ─── */
+    .classification {
+      margin: 4px 20px 12px;
+      padding: 14px 18px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: color-mix(in srgb, var(--orange) 4%, var(--surface));
+      display: none;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px 20px;
+    }
+    .classification.visible { display: grid; }
+    .classification.purple-theme {
+      background: color-mix(in srgb, var(--purple) 4%, var(--surface));
+    }
+    .cl-dim { display: flex; flex-direction: column; gap: 3px; }
+    .cl-label {
+      font-size: 9px; letter-spacing: 2px; color: var(--dim);
+      text-transform: uppercase; font-family: 'SF Mono', monospace;
+    }
+    .cl-value {
+      font-size: 13px; font-weight: 600; color: var(--text);
+      font-family: 'SF Mono', monospace;
+    }
+    .cl-value.accent { color: var(--orange); }
+    .cl-value.accent-purple { color: var(--purple); }
+    .cl-dots { display: flex; gap: 3px; margin-top: 1px; }
+    .cl-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--border); }
+    .cl-dot.on { background: var(--orange); }
+    .cl-dot.on-purple { background: var(--purple); }
+
+    /* ─── Output section ─── */
+    .output-section {
+      border-top: 1.5px solid var(--border);
+      padding: 20px;
+      opacity: 0; transform: translateY(4px);
+      transition: opacity 0.35s, transform 0.35s, border-color 0.35s;
+    }
+    .output-section.visible { opacity: 1; transform: translateY(0); }
+
+    .output-inner {
+      display: flex; align-items: flex-start; gap: 24px;
+      padding: 22px 24px; border-radius: 10px;
+      border: 1.5px solid var(--border); background: var(--surface-2);
+      transition: border-color 0.3s, box-shadow 0.3s;
+    }
+    .output-icon { font-size: 44px; line-height: 1; flex-shrink: 0; }
+    .output-tool { flex: 1; min-width: 0; }
+    .output-name {
+      font-size: 28px; font-weight: 700;
+      font-family: 'SF Mono', monospace; margin-bottom: 8px;
+    }
+    .output-desc { font-size: 14px; color: var(--muted); line-height: 1.65; margin-bottom: 12px; }
+    .output-meta { display: flex; flex-wrap: wrap; gap: 7px; }
+    .meta-badge {
+      font-size: 11px; padding: 4px 12px; border-radius: 20px;
+      background: var(--bg); border: 1px solid var(--border); color: var(--muted);
+    }
+    .meta-badge.hi {
+      border-color: var(--match-color); color: var(--match-color);
+      background: color-mix(in srgb, var(--match-color) 8%, var(--bg));
+    }
+
+    /* ─── Route history ─── */
+    .history-section { padding: 0 20px 16px; display: none; }
+    .history-section.visible { display: block; }
+    .history-label {
+      font-size: 10px; letter-spacing: 2px; color: var(--dim);
+      text-transform: uppercase; margin-bottom: 8px;
+    }
+    .history-items { display: flex; flex-wrap: wrap; gap: 6px; }
+    .history-pill {
+      font-size: 11px; padding: 4px 12px; border-radius: 20px;
+      border: 1px solid var(--border); color: var(--muted);
+      background: var(--bg); cursor: pointer; font-family: 'SF Mono', monospace;
+      transition: all 0.15s; max-width: 240px; overflow: hidden;
+      text-overflow: ellipsis; white-space: nowrap;
+    }
+    .history-pill:hover { border-color: var(--pill-color, var(--cyan)); color: var(--text); }
+
+    /* ─── Stats bar ─── */
+    .stat-bar {
+      width: 100%; max-width: 1100px;
+      display: grid; grid-template-columns: repeat(4, 1fr);
       border-top: 1px solid var(--border);
-    }
-    .stat-item {
-      flex: 1; text-align: center; padding: 12px 8px;
-      border-right: 1px solid var(--border);
-    }
-    .stat-item:last-child { border-right: none; }
-    .stat-num {
-      display: block; font-size: 22px; font-weight: 800; color: var(--cyan);
-      font-family: 'SF Mono', monospace; line-height: 1; margin-bottom: 4px;
-    }
-    .stat-lbl { font-size: 10px; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; }
-
-    /* ─── Right column ─── */
-    .right-col {
-      border-left: 1px solid var(--border);
-      background: rgba(12,17,23,0.72);
-      backdrop-filter: blur(18px);
-      -webkit-backdrop-filter: blur(18px);
-      display: flex; flex-direction: column;
-      overflow: hidden;
-    }
-
-    /* ─── Context panes ─── */
-    .ctx-pane {
-      flex: 1; overflow-y: auto; overflow-x: hidden;
-      padding: 28px 28px 20px;
-      display: none; flex-direction: column;
-      scrollbar-width: thin; scrollbar-color: var(--surface-3) transparent;
-    }
-    .ctx-pane.active {
-      display: flex;
-      animation: ctxin 0.22s ease-out;
-    }
-    @keyframes ctxin {
-      from { opacity: 0; transform: translateY(7px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-
-    /* ── IDLE ── */
-    .idle-headline {
-      font-size: 22px; font-weight: 800; line-height: 1.25;
-      margin-bottom: 10px;
-      background: linear-gradient(135deg, var(--text) 30%, var(--blue) 100%);
-      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
-    .idle-sub {
-      font-size: 13px; color: var(--muted); line-height: 1.7; margin-bottom: 22px;
-    }
-    .idle-tw {
-      font-family: 'SF Mono', monospace; font-size: 13px; color: var(--dim);
-      min-height: 20px; margin-bottom: 26px;
-    }
-    .tw-cursor {
-      display: inline-block; width: 2px; height: 13px;
-      background: var(--cyan); vertical-align: middle; margin-left: 1px;
-      animation: cblink 1s step-end infinite;
-    }
-    @keyframes cblink { 0%,100% { opacity: 1; } 50% { opacity: 0; } }
-
-    .idle-cards { display: flex; flex-direction: column; gap: 10px; }
-    .idle-card {
-      padding: 16px 18px; border-radius: 10px;
-      border: 1px solid var(--border); background: rgba(22,27,34,0.45);
-      cursor: pointer; transition: border-color 0.15s, background 0.15s;
-    }
-    .idle-card:hover { border-color: var(--ic); background: rgba(22,27,34,0.8); }
-    .idle-card-top { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
-    .idle-card-icon { font-size: 18px; }
-    .idle-card-title { font-size: 13px; font-weight: 600; }
-    .idle-card-body { font-size: 12px; color: var(--muted); line-height: 1.6; }
-
-    /* ── RESULT ── */
-    .res-header {
-      display: flex; align-items: flex-start; gap: 14px;
-      margin-bottom: 18px; padding-bottom: 18px;
       border-bottom: 1px solid var(--border);
     }
-    .res-icon { font-size: 32px; line-height: 1; flex-shrink: 0; margin-top: 2px; }
-    .res-name {
-      font-size: 24px; font-weight: 800;
-      font-family: 'SF Mono', monospace; line-height: 1; margin-bottom: 6px;
+    .stat {
+      text-align: center; padding: 28px 20px;
+      border-right: 1px solid var(--border);
     }
-    .res-desc { font-size: 12px; color: var(--muted); line-height: 1.6; }
-    .res-badges { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 20px; }
-    .rbadge {
-      font-size: 11px; padding: 3px 11px; border-radius: 20px;
-      background: var(--bg); border: 1px solid var(--border-hi); color: var(--muted);
+    .stat:last-child { border-right: none; }
+    .stat-num {
+      font-size: 32px; font-weight: 800; color: var(--cyan);
+      font-family: 'SF Mono', monospace; line-height: 1;
+      margin-bottom: 6px;
     }
-    .rbadge.hi { border-color: var(--rc); color: var(--rc); background: rgba(0,0,0,0.25); }
+    .stat-label { font-size: 11px; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; }
 
-    .sec-label {
-      font-size: 10px; letter-spacing: 2px; text-transform: uppercase;
-      color: var(--dim); margin-bottom: 10px;
+    /* ─── How it works section ─── */
+    .how-section {
+      width: 100%; max-width: 1100px;
+      padding: 56px 32px 64px;
+      display: grid; grid-template-columns: repeat(2, 1fr);
+      gap: 32px;
     }
-    .wn-list { display: flex; flex-direction: column; gap: 7px; margin-bottom: 22px; }
-    .wn-step {
-      display: flex; gap: 12px; padding: 10px 14px; border-radius: 8px;
-      background: rgba(22,27,34,0.45); border: 1px solid var(--border);
-      opacity: 0;
+    .how-card {
+      padding: 28px; border-radius: 12px;
+      border: 1.5px solid var(--border); background: var(--surface);
     }
-    .wn-step.in { animation: ctxin 0.2s ease-out forwards; }
-    .wn-n {
-      font-size: 11px; font-weight: 700; color: var(--rc, var(--cyan));
-      min-width: 18px; flex-shrink: 0; font-family: 'SF Mono', monospace; margin-top: 1px;
+    .how-card-header { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+    .how-tier-badge {
+      font-size: 11px; font-weight: 700; letter-spacing: 2px;
+      padding: 5px 12px; border-radius: 6px; border: 1.5px solid currentColor;
     }
-    .wn-t { font-size: 12px; color: var(--muted); line-height: 1.6; }
+    .how-card-name { font-size: 16px; font-weight: 700; }
+    .how-card-sub { font-size: 12px; color: var(--dim); margin-top: 2px; }
+    .how-card-desc { font-size: 13px; color: var(--muted); line-height: 1.65; margin-bottom: 14px; }
+    .how-examples { display: flex; flex-direction: column; gap: 5px; }
+    .how-example {
+      font-size: 12px; font-family: 'SF Mono', monospace;
+      color: var(--dim); padding: 6px 10px; border-radius: 6px;
+      background: var(--surface-2); border: 1px solid var(--border);
+      cursor: pointer; transition: border-color 0.15s, color 0.15s;
+    }
+    .how-example:hover { border-color: var(--ex-color, var(--cyan)); color: var(--text); }
 
-    .dims-grid {
-      display: grid; grid-template-columns: 1fr 1fr;
-      gap: 8px 16px; margin-bottom: 22px;
+    /* ─── Footer ─── */
+    footer {
+      width: 100%; border-top: 1px solid var(--border);
+      padding: 20px 40px; display: flex; align-items: center;
+      justify-content: space-between; color: var(--muted); font-size: 13px;
     }
-    .dim-item { display: flex; flex-direction: column; gap: 3px; }
-    .dim-lbl { font-size: 9px; letter-spacing: 2px; color: var(--dim); text-transform: uppercase; font-family: 'SF Mono', monospace; }
-    .dim-val { font-size: 13px; font-weight: 600; font-family: 'SF Mono', monospace; color: var(--text); }
-    .dim-val.ac { color: var(--rc); }
-    .dim-dots { display: flex; gap: 3px; margin-top: 2px; }
-    .dim-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--border-hi); }
-    .dim-dot.on { background: var(--rc); }
+    footer a { color: var(--muted); text-decoration: none; }
+    footer a:hover { color: var(--text); }
 
-    .dims-block { display: none; margin-bottom: 22px; }
-    .dims-block.show { display: block; }
-
-    .related { display: flex; flex-wrap: wrap; gap: 6px; }
-    .rel-btn {
-      font-size: 11px; font-family: 'SF Mono', monospace;
-      padding: 5px 11px; border-radius: 6px;
-      background: rgba(22,27,34,0.45); border: 1px solid var(--border);
-      color: var(--muted); cursor: pointer;
-      transition: border-color 0.14s, color 0.14s;
+    /* ─── Spinner ─── */
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .spinner {
+      width: 13px; height: 13px; border: 2px solid var(--border);
+      border-top-color: var(--cyan); border-radius: 50%;
+      animation: spin 0.55s linear infinite; display: none; flex-shrink: 0;
     }
-    .rel-btn:hover { border-color: var(--rc, var(--cyan)); color: var(--text); }
-
-    /* ── SIMULATOR ── */
-    .sim-hd { margin-bottom: 18px; padding-bottom: 16px; border-bottom: 1px solid var(--border); }
-    .sim-title { font-size: 17px; font-weight: 700; margin-bottom: 4px; }
-    .sim-cmd { font-size: 12px; color: var(--muted); font-family: 'SF Mono', monospace; }
-
-    .sim-body { flex: 1; display: flex; flex-direction: column; gap: 9px; }
-
-    .sim-phase {
-      border-radius: 8px; border: 1px solid var(--border);
-      background: rgba(22,27,34,0.4); overflow: hidden;
-      opacity: 0.3; transition: opacity 0.3s, border-color 0.3s;
-    }
-    .sim-phase.running { opacity: 1; border-color: var(--orange); }
-    .sim-phase.done { opacity: 0.75; border-color: var(--green); }
-    .sim-phase-hd {
-      display: flex; align-items: center; gap: 10px;
-      padding: 9px 14px; border-bottom: 1px solid var(--border);
-    }
-    .sim-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
-    .sim-dot.pending { background: var(--border-hi); }
-    .sim-dot.running { background: var(--orange); animation: dpulse 0.9s ease-in-out infinite; }
-    .sim-dot.done { background: var(--green); }
-    .sim-phase-name { font-size: 12px; font-weight: 600; flex: 1; }
-    .sim-elapsed { font-size: 11px; color: var(--muted); font-family: 'SF Mono', monospace; }
-    .sim-term {
-      padding: 9px 14px;
-      font-family: 'SF Mono', monospace; font-size: 11px;
-      color: var(--muted); line-height: 1.85;
-      display: none;
-    }
-    .sim-phase.running .sim-term,
-    .sim-phase.done .sim-term { display: block; }
-    .sim-line { opacity: 0; animation: linein 0.18s ease-out forwards; }
-    @keyframes linein { from { opacity: 0; transform: translateX(-5px); } to { opacity: 1; transform: none; } }
-    .sim-line.ok { color: var(--green); }
-    .sim-line.info { color: var(--cyan); }
-
-    .fleet-agents { display: flex; flex-direction: column; gap: 9px; }
-    .fleet-agent {
-      border-radius: 8px; border: 1px solid var(--border);
-      background: rgba(22,27,34,0.4); overflow: hidden;
-    }
-    .fa-hd {
-      display: flex; align-items: center; gap: 9px;
-      padding: 9px 14px; border-bottom: 1px solid var(--border);
-    }
-    .fa-dot { width: 8px; height: 8px; border-radius: 50%; }
-    .fa-label { font-size: 12px; font-weight: 600; flex: 1; }
-    .fa-status { font-size: 11px; font-family: 'SF Mono', monospace; }
-    .fa-term {
-      padding: 8px 14px;
-      font-family: 'SF Mono', monospace; font-size: 11px;
-      color: var(--muted); line-height: 1.8;
-    }
-    .fleet-hub {
-      text-align: center; padding: 14px 16px; margin-top: 4px;
-      border-radius: 8px; border: 1px dashed var(--border);
-      display: none; animation: ctxin 0.3s ease-out;
-    }
-    .fleet-hub.show { display: block; }
-    .fleet-hub-title { font-size: 12px; font-weight: 700; color: var(--purple); margin-bottom: 3px; }
-    .fleet-hub-sub { font-size: 11px; color: var(--muted); }
-
-    .sim-controls {
-      flex-shrink: 0; display: flex; gap: 8px;
-      padding: 16px 28px; border-top: 1px solid var(--border);
-    }
-    .sim-btn {
-      flex: 1; padding: 9px 12px; border-radius: 8px;
-      font-size: 12px; font-family: inherit; font-weight: 600;
-      cursor: pointer; border: 1.5px solid var(--border-hi);
-      background: rgba(22,27,34,0.4); color: var(--muted);
-      transition: border-color 0.14s, color 0.14s, background 0.14s;
-    }
-    .sim-btn:hover { border-color: var(--text); color: var(--text); }
-    .sim-btn.orange { border-color: var(--orange); color: var(--orange); background: rgba(240,136,62,0.06); }
-    .sim-btn.orange:hover { background: rgba(240,136,62,0.13); }
-    .sim-btn.purple { border-color: var(--purple); color: var(--purple); background: rgba(188,140,255,0.06); }
-    .sim-btn.purple:hover { background: rgba(188,140,255,0.13); }
-
-    /* ─── History strip ─── */
-    .history-strip {
-      flex-shrink: 0;
-      padding: 10px 28px; border-top: 1px solid var(--border);
-      display: none; align-items: center; gap: 8px; flex-wrap: wrap;
-    }
-    .history-strip.show { display: flex; }
-    .hist-label { font-size: 10px; color: var(--dim); letter-spacing: 1.5px; text-transform: uppercase; white-space: nowrap; }
-    .hist-pill {
-      font-size: 11px; padding: 3px 10px; border-radius: 20px;
-      border: 1px solid var(--border); color: var(--muted);
-      background: transparent; cursor: pointer; font-family: 'SF Mono', monospace;
-      transition: border-color 0.14s, color 0.14s;
-      max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-    }
-    .hist-pill:hover { border-color: var(--pc, var(--cyan)); color: var(--text); }
+    .spinner.active { display: inline-block; }
 
     /* ─── Side panels ─── */
     .panel-backdrop {
-      position: fixed; inset: 0; background: rgba(0,0,0,0.62);
-      backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
-      z-index: 300; opacity: 0; pointer-events: none; transition: opacity 0.25s;
+      position: fixed; inset: 0; background: rgba(0,0,0,0.55);
+      z-index: 200; opacity: 0; pointer-events: none;
+      transition: opacity 0.25s; backdrop-filter: blur(2px);
     }
     .panel-backdrop.open { opacity: 1; pointer-events: all; }
     .side-panel {
       position: fixed; top: 0; right: 0; bottom: 0;
       width: 480px; max-width: 92vw;
-      background: rgba(12,17,23,0.97);
-      backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
-      border-left: 1px solid var(--border-hi);
-      z-index: 301; display: flex; flex-direction: column;
+      background: var(--surface); border-left: 1px solid var(--border);
+      z-index: 201; display: flex; flex-direction: column;
       transform: translateX(100%);
-      transition: transform 0.3s cubic-bezier(0.32,0.72,0,1);
+      transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+      overflow: hidden;
     }
     .side-panel.open { transform: translateX(0); }
-    .panel-hd {
+    .panel-header {
       display: flex; align-items: center; gap: 12px;
-      padding: 18px 24px; border-bottom: 1px solid var(--border); flex-shrink: 0;
+      padding: 18px 24px; border-bottom: 1px solid var(--border);
+      background: var(--surface-2); flex-shrink: 0;
     }
     .panel-title {
-      font-size: 11px; font-weight: 700; letter-spacing: 3px;
+      font-size: 13px; font-weight: 700; letter-spacing: 2.5px;
       text-transform: uppercase; color: var(--text); flex: 1;
     }
     .panel-close {
       width: 28px; height: 28px; border-radius: 6px;
-      background: transparent; border: 1px solid var(--border-hi);
+      background: transparent; border: 1px solid var(--border);
       color: var(--muted); cursor: pointer; font-size: 14px;
       display: flex; align-items: center; justify-content: center;
       transition: border-color 0.15s, color 0.15s;
     }
     .panel-close:hover { border-color: var(--text); color: var(--text); }
     .panel-body {
-      flex: 1; overflow-y: auto; padding: 26px 24px;
-      scrollbar-width: thin; scrollbar-color: var(--surface-3) transparent;
+      flex: 1; overflow-y: auto; padding: 28px 24px;
+      scrollbar-width: thin; scrollbar-color: var(--border) transparent;
+      user-select: text; -webkit-user-select: text;
     }
-    .p-step { display: flex; gap: 16px; margin-bottom: 26px; }
-    .p-step-n {
+    .panel-step { display: flex; gap: 16px; margin-bottom: 28px; }
+    .panel-step-num {
       width: 26px; height: 26px; border-radius: 50%;
       border: 1.5px solid var(--cyan); color: var(--cyan);
       font-size: 12px; font-weight: 700; display: flex;
       align-items: center; justify-content: center; flex-shrink: 0; margin-top: 2px;
     }
-    .p-step-body { flex: 1; min-width: 0; }
-    .p-step-label { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 6px; }
-    .p-code {
+    .panel-step-body { flex: 1; min-width: 0; }
+    .panel-step-label { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 6px; }
+    .panel-code {
       font-family: 'SF Mono', monospace; font-size: 12px;
-      background: var(--bg); border: 1px solid var(--border-hi);
+      background: var(--bg); border: 1px solid var(--border);
       border-radius: 8px; padding: 10px 14px; color: var(--cyan);
-      margin-bottom: 6px; position: relative; word-break: break-all;
+      margin-bottom: 6px; word-break: break-all;
     }
-    .p-copy {
-      position: absolute; top: 8px; right: 8px;
-      font-size: 10px; padding: 2px 7px; border-radius: 4px;
-      background: var(--surface-2); border: 1px solid var(--border-hi);
-      color: var(--muted); cursor: pointer; font-family: inherit;
-      transition: color 0.14s, border-color 0.14s;
-    }
-    .p-copy:hover { color: var(--text); border-color: var(--text); }
-    .p-copy.copied { color: var(--green); border-color: var(--green); }
-    .p-note { font-size: 12px; color: var(--muted); line-height: 1.65; }
-    .p-note code { font-family: 'SF Mono', monospace; color: var(--cyan); font-size: 11px; }
-    .p-section {
+    .panel-note { font-size: 12px; color: var(--muted); line-height: 1.6; }
+    .panel-section-label {
       font-size: 10px; letter-spacing: 2.5px; text-transform: uppercase;
       color: var(--dim); margin-bottom: 10px; margin-top: 24px;
     }
-    .p-section:first-child { margin-top: 0; }
-    .skill-list { display: flex; flex-direction: column; gap: 2px; margin-bottom: 4px; }
+    .panel-section-label:first-child { margin-top: 0; }
+    .skill-list { display: flex; flex-direction: column; gap: 4px; margin-bottom: 6px; }
     .skill-row {
       display: flex; gap: 10px; align-items: baseline;
-      padding: 6px 10px; border-radius: 6px;
-      border: 1px solid transparent;
-      transition: border-color 0.12s, background 0.12s;
+      padding: 7px 10px; border-radius: 6px;
+      border: 1px solid transparent; transition: border-color 0.12s, background 0.12s;
     }
-    .skill-row:hover { border-color: var(--border-hi); background: rgba(22,27,34,0.55); }
-    .skill-n { font-family: 'SF Mono', monospace; font-size: 12px; color: var(--cyan); white-space: nowrap; min-width: 138px; }
-    .skill-d { font-size: 12px; color: var(--muted); line-height: 1.5; }
-    .hook-tbl { width: 100%; border-collapse: collapse; }
-    .hook-tbl th {
+    .skill-row:hover { border-color: var(--border); background: var(--surface-2); }
+    .skill-name {
+      font-family: 'SF Mono', monospace; font-size: 12px;
+      color: var(--cyan); white-space: nowrap; min-width: 140px;
+    }
+    .skill-desc { font-size: 12px; color: var(--muted); line-height: 1.5; }
+    .hook-table { width: 100%; border-collapse: collapse; }
+    .hook-table th {
       text-align: left; font-size: 10px; letter-spacing: 2px;
       text-transform: uppercase; color: var(--dim); padding: 0 8px 10px 0;
       border-bottom: 1px solid var(--border);
     }
-    .hook-tbl td {
-      padding: 8px 8px 8px 0; font-size: 12px;
-      border-bottom: 1px solid rgba(48,54,61,0.35); vertical-align: top;
+    .hook-table td {
+      padding: 9px 8px 9px 0; font-size: 12px;
+      border-bottom: 1px solid color-mix(in srgb, var(--border) 50%, transparent);
+      vertical-align: top;
     }
-    .hook-ev { font-family: 'SF Mono', monospace; color: var(--blue); white-space: nowrap; }
-    .hook-d { color: var(--muted); line-height: 1.55; }
-    .c-block {
-      background: rgba(22,27,34,0.45); border: 1px solid var(--border);
-      border-radius: 8px; padding: 13px 15px; margin-bottom: 11px;
+    .hook-event { font-family: 'SF Mono', monospace; color: var(--blue); white-space: nowrap; }
+    .hook-desc { color: var(--muted); line-height: 1.5; }
+    .campaign-block {
+      background: var(--surface-2); border: 1px solid var(--border);
+      border-radius: 8px; padding: 14px 16px; margin-bottom: 12px;
     }
-    .c-block-t { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
-    .c-block-b { font-size: 12px; color: var(--muted); line-height: 1.65; }
-    .c-block-b code { font-family: 'SF Mono', monospace; color: var(--cyan); font-size: 11px; background: var(--bg); padding: 1px 4px; border-radius: 3px; }
+    .campaign-block-title { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 5px; }
+    .campaign-block-body { font-size: 12px; color: var(--muted); line-height: 1.6; }
+    .campaign-block-body code {
+      font-family: 'SF Mono', monospace; color: var(--cyan);
+      background: var(--bg); padding: 1px 5px; border-radius: 3px; font-size: 11px;
+    }
 
     /* ─── Responsive ─── */
-    @media (max-width: 900px) {
-      .app-shell { grid-template-columns: 1fr; }
-      .right-col { display: none; }
-      .left-col { padding: 20px 18px; }
-      nav { padding: 0 18px; gap: 14px; }
-    }
-    @media (max-width: 560px) {
-      .tier-row { grid-template-columns: 76px 1fr; }
+    @media (max-width: 760px) {
+      nav { padding: 12px 20px; gap: 12px; }
+      .hero { padding: 40px 20px 16px; }
+      .hero h1 { font-size: 32px; }
+      .search-wrap { padding: 24px 16px 0; }
+      #cmd-input { padding: 18px 140px 18px 60px; font-size: 15px; }
+      .search-prompt { font-size: 15px; left: 20px; }
+      .playground { padding: 0 16px 40px; }
+      .tier-row { grid-template-columns: 90px 1fr; }
       .tier-status { display: none; }
+      .how-section { grid-template-columns: 1fr; padding: 32px 16px 40px; }
+      .stat-bar { grid-template-columns: repeat(2, 1fr); }
+      .stat { border-bottom: 1px solid var(--border); }
+      .classification { grid-template-columns: repeat(2, 1fr); }
     }
   </style>
 </head>
 <body>
 
-  <div class="bg-orbs" aria-hidden="true">
-    <div class="orb orb-cyan"></div>
-    <div class="orb orb-purple"></div>
-    <div class="orb orb-orange" id="orb-orange"></div>
-  </div>
-
   <nav>
-    <a class="nav-logo" href="https://github.com/SethGammon/Citadel" target="_blank" rel="noopener">CITA<em>DEL</em></a>
+    <a class="nav-logo" href="https://github.com/SethGammon/Citadel">CITADEL</a>
     <span class="nav-sep">·</span>
     <button class="nav-link" onclick="openPanel('install')">Install</button>
     <button class="nav-link" onclick="openPanel('skills')">Skills</button>
@@ -637,106 +564,124 @@
     <button class="nav-link" onclick="openPanel('campaigns')">Campaigns</button>
     <div class="nav-right">
       <span class="nav-badge">v2.1</span>
-      <a class="nav-star" href="https://github.com/SethGammon/Citadel" target="_blank" rel="noopener">★ Star</a>
+      <a class="nav-star" href="https://github.com/SethGammon/Citadel">★ Star</a>
     </div>
   </nav>
 
-  <div class="app-shell">
+  <!-- Hero -->
+  <div class="hero">
+    <div class="hero-eyebrow">
+      <span>⚡</span>
+      <span>Interactive Demo · /do Intent Router</span>
+    </div>
+    <h1>Say what you want.<br>Citadel routes it.</h1>
+    <p>Type any engineering task. The router evaluates four tiers in sequence and dispatches to the cheapest tool capable — no configuration, no manual skill selection.</p>
+  </div>
 
-    <!-- ── LEFT: router ── -->
-    <div class="left-col">
+  <!-- Search bar -->
+  <div class="search-wrap">
+    <div class="search-bar">
+      <span class="search-prompt">/do</span>
+      <input id="cmd-input" type="text" placeholder="describe what you want…"
+             autocomplete="off" spellcheck="false" />
+      <div class="search-actions">
+        <span class="live-badge" id="live-badge"></span>
+        <button class="enter-key" id="enter-key" title="Route (Enter)" onclick="triggerRoute()">↵</button>
+      </div>
+    </div>
+    <div class="search-hint">
+      <kbd>Enter</kbd> to route &nbsp;·&nbsp; <kbd>↑ ↓</kbd> history &nbsp;·&nbsp; <kbd>Esc</kbd> clear
+    </div>
+  </div>
 
-      <div class="input-section">
-        <div class="input-eyebrow">/do — intent router</div>
-        <div class="input-wrap">
-          <span class="input-prompt">/do</span>
-          <input id="cmd-input" type="text"
-            placeholder="describe what you want to build, fix, or understand…"
-            autocomplete="off" spellcheck="false" />
-          <div class="input-actions">
-            <span class="live-badge" id="live-badge"></span>
-          </div>
-        </div>
-        <div class="input-hint">
-          <span><kbd>Enter</kbd> route</span>
-          <span><kbd>↑ ↓</kbd> history</span>
-          <span><kbd>Esc</kbd> clear</span>
-        </div>
+  <!-- Playground -->
+  <div class="playground">
+
+    <!-- Example buttons -->
+    <div class="examples-wrap">
+      <div class="example-category">⚡ Instant — no model call</div>
+      <div class="example-row">
+        <button class="example-btn t0" data-cmd="fix the typo on line 42">fix the typo on line 42</button>
+        <button class="example-btn t0" data-cmd="rename UserController to UserHandler">rename UserController to UserHandler</button>
+        <button class="example-btn t0" data-cmd="commit my changes">commit my changes</button>
+        <button class="example-btn t0" data-cmd="typecheck">typecheck</button>
       </div>
 
-      <div class="examples-section">
-        <div class="ex-cat">⚡ Instant — no model call</div>
-        <div class="ex-row">
-          <button class="ex-btn t0" data-cmd="fix the typo on line 42">fix the typo on line 42</button>
-          <button class="ex-btn t0" data-cmd="rename UserController to UserHandler">rename UserController to UserHandler</button>
-          <button class="ex-btn t0" data-cmd="commit my changes">commit my changes</button>
-          <button class="ex-btn t0" data-cmd="typecheck">typecheck</button>
-        </div>
-        <div class="ex-cat">◆ Keyword match — skill dispatch</div>
-        <div class="ex-row">
-          <button class="ex-btn t2" data-cmd="review the auth module">review the auth module</button>
-          <button class="ex-btn t2" data-cmd="write tests for the payment service">write tests for payment service</button>
-          <button class="ex-btn t2" data-cmd="document the API endpoints">document the API endpoints</button>
-          <button class="ex-btn t2" data-cmd="refactor the auth middleware">refactor the auth middleware</button>
-          <button class="ex-btn t2" data-cmd="why is the API returning 500">why is the API returning 500</button>
-          <button class="ex-btn t2" data-cmd="research the best caching strategy">research the best caching strategy</button>
-        </div>
-        <div class="ex-cat">⬡ LLM classifier → Archon campaign</div>
-        <div class="ex-row">
-          <button class="ex-btn t3a" data-cmd="build me a recipe app">build me a recipe app</button>
-          <button class="ex-btn t3a" data-cmd="implement Stripe payments">implement Stripe payments</button>
-          <button class="ex-btn t3a" data-cmd="create a real-time chat feature">create a real-time chat feature</button>
-        </div>
-        <div class="ex-cat">⬢ Platform-wide → Fleet parallel</div>
-        <div class="ex-row">
-          <button class="ex-btn t3b" data-cmd="overhaul all three services">overhaul all three services</button>
-          <button class="ex-btn t3b" data-cmd="migrate the platform to TypeScript strict mode">migrate platform to TypeScript strict</button>
-          <button class="ex-btn t3b" data-cmd="redesign the entire data layer">redesign the entire data layer</button>
+      <div class="example-category">◆ Code quality — keyword match</div>
+      <div class="example-row">
+        <button class="example-btn t2" data-cmd="review the auth module">review the auth module</button>
+        <button class="example-btn t2" data-cmd="write tests for the payment service">write tests for the payment service</button>
+        <button class="example-btn t2" data-cmd="document the API endpoints">document the API endpoints</button>
+        <button class="example-btn t2" data-cmd="refactor the auth middleware">refactor the auth middleware</button>
+        <button class="example-btn t2" data-cmd="scaffold a new notifications module">scaffold a new notifications module</button>
+        <button class="example-btn t2" data-cmd="why is the API returning 500">why is the API returning 500</button>
+        <button class="example-btn t2" data-cmd="research the best caching strategy">research the best caching strategy</button>
+      </div>
+
+      <div class="example-category">⬡ Multi-session campaign — LLM routes</div>
+      <div class="example-row">
+        <button class="example-btn t3a" data-cmd="build me a recipe app">build me a recipe app</button>
+        <button class="example-btn t3a" data-cmd="add a dark mode toggle">add a dark mode toggle</button>
+        <button class="example-btn t3a" data-cmd="implement Stripe payments">implement Stripe payments</button>
+        <button class="example-btn t3a" data-cmd="create a real-time chat feature">create a real-time chat feature</button>
+      </div>
+
+      <div class="example-category">⬢ Parallel fleet — platform-wide</div>
+      <div class="example-row">
+        <button class="example-btn t3b" data-cmd="overhaul all three services">overhaul all three services</button>
+        <button class="example-btn t3b" data-cmd="redesign the entire data layer">redesign the entire data layer</button>
+        <button class="example-btn t3b" data-cmd="migrate the platform to TypeScript strict mode">migrate the platform to TypeScript strict mode</button>
+      </div>
+    </div>
+
+    <!-- Result panel (folds out on Enter) -->
+    <div class="result-panel" id="result-panel">
+      <div class="result-header">
+        <span class="spinner" id="spinner"></span>
+        <span class="result-command" id="result-command"></span>
+        <div class="result-meta">
+          <span class="result-timer" id="result-timer"></span>
         </div>
       </div>
 
       <div class="tier-cascade">
-        <div class="tier-row" id="tier0"
-          style="--mc:var(--green);--ms:rgba(63,185,80,0.10);--mi:rgba(63,185,80,0.13);--mb:rgba(63,185,80,0.28)">
+        <div class="tier-row" id="tier0" style="--match-color: var(--green)">
           <div class="tier-left">
             <span class="tier-badge" style="color:var(--green)">TIER 0</span>
             <span class="tier-sub">~0 tokens</span>
           </div>
           <div class="tier-center">
             <div class="tier-name">Pattern Match</div>
-            <div class="tier-desc">Regex on raw input — fix, rename, commit, build, status</div>
+            <div class="tier-desc">Regex on raw input — fix typo, rename, commit, build, status</div>
           </div>
-          <span class="tier-status" id="t0s"></span>
+          <span class="tier-status" id="tier0-status"></span>
         </div>
 
-        <div class="tier-row" id="tier1"
-          style="--mc:var(--blue);--ms:rgba(88,166,255,0.10);--mi:rgba(88,166,255,0.13);--mb:rgba(88,166,255,0.28)">
+        <div class="tier-row" id="tier1" style="--match-color: var(--blue)">
           <div class="tier-left">
             <span class="tier-badge" style="color:var(--blue)">TIER 1</span>
             <span class="tier-sub">~0 tokens</span>
           </div>
           <div class="tier-center">
             <div class="tier-name">Active State</div>
-            <div class="tier-desc">Resumes an active campaign or fleet session</div>
+            <div class="tier-desc">Resumes a campaign or fleet session already in progress</div>
           </div>
-          <span class="tier-status" id="t1s"></span>
+          <span class="tier-status" id="tier1-status"></span>
         </div>
 
-        <div class="tier-row" id="tier2"
-          style="--mc:var(--cyan);--ms:rgba(0,210,255,0.10);--mi:rgba(0,210,255,0.13);--mb:rgba(0,210,255,0.28)">
+        <div class="tier-row" id="tier2" style="--match-color: var(--cyan)">
           <div class="tier-left">
             <span class="tier-badge" style="color:var(--cyan)">TIER 2</span>
             <span class="tier-sub">~0 tokens</span>
           </div>
           <div class="tier-center">
             <div class="tier-name">Keyword Match</div>
-            <div class="tier-desc">Scanned against installed skill keyword table</div>
+            <div class="tier-desc">Matched against the installed skill keyword table — review, test, debug, scaffold…</div>
           </div>
-          <span class="tier-status" id="t2s"></span>
+          <span class="tier-status" id="tier2-status"></span>
         </div>
 
-        <div class="tier-row" id="tier3"
-          style="--mc:var(--orange);--ms:rgba(240,136,62,0.10);--mi:rgba(240,136,62,0.13);--mb:rgba(240,136,62,0.28)">
+        <div class="tier-row" id="tier3" style="--match-color: var(--orange)">
           <div class="tier-left">
             <span class="tier-badge" style="color:var(--orange)">TIER 3</span>
             <span class="tier-sub">~500 tokens</span>
@@ -745,807 +690,687 @@
             <div class="tier-name">LLM Classifier</div>
             <div class="tier-desc">6-dimension classification: scope · complexity · intent · persist · parallel · taste</div>
           </div>
-          <span class="tier-status" id="t3s"></span>
+          <span class="tier-status" id="tier3-status"></span>
         </div>
       </div>
 
-      <div class="stats-strip">
-        <div class="stat-item"><span class="stat-num" data-to="33">0</span><span class="stat-lbl">Skills</span></div>
-        <div class="stat-item"><span class="stat-num" data-to="4">0</span><span class="stat-lbl">Agents</span></div>
-        <div class="stat-item"><span class="stat-num" data-to="13">0</span><span class="stat-lbl">Hook Events</span></div>
-        <div class="stat-item"><span class="stat-num">~0</span><span class="stat-lbl">Config</span></div>
+      <!-- Tier 3 classification breakdown -->
+      <div class="classification" id="classification">
+        <div class="cl-dim">
+          <span class="cl-label">Intent</span>
+          <span class="cl-value accent" id="cl-intent">build</span>
+        </div>
+        <div class="cl-dim">
+          <span class="cl-label">Scope</span>
+          <span class="cl-value" id="cl-scope">single-domain</span>
+        </div>
+        <div class="cl-dim">
+          <span class="cl-label">Complexity</span>
+          <div class="cl-dots" id="cl-dots"></div>
+        </div>
+        <div class="cl-dim">
+          <span class="cl-label">Multi-session</span>
+          <span class="cl-value accent" id="cl-persist">yes</span>
+        </div>
+        <div class="cl-dim">
+          <span class="cl-label">Parallel</span>
+          <span class="cl-value" id="cl-parallel">no</span>
+        </div>
+        <div class="cl-dim">
+          <span class="cl-label">Taste required</span>
+          <span class="cl-value" id="cl-taste">yes</span>
+        </div>
       </div>
 
+      <div class="output-section" id="output-section">
+        <div class="output-inner" id="output-inner">
+          <div class="output-icon" id="output-icon"></div>
+          <div class="output-tool">
+            <div class="output-name" id="output-name"></div>
+            <div class="output-desc" id="output-desc"></div>
+            <div class="output-meta" id="output-meta"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="history-section" id="history-section">
+        <div class="history-label">Recently routed</div>
+        <div class="history-items" id="history-items"></div>
+      </div>
     </div>
 
-    <!-- ── RIGHT: context pane ── -->
-    <div class="right-col">
+  </div><!-- /playground -->
 
-      <!-- IDLE -->
-      <div class="ctx-pane active" id="ctx-idle">
-        <div class="idle-headline">Say what you want.<br>Citadel routes it.</div>
-        <div class="idle-sub">Type any engineering task. The router classifies it across four tiers and dispatches to the cheapest tool capable — no configuration, no skill selection.</div>
-        <div class="idle-tw">/do <span id="tw-text"></span><span class="tw-cursor"></span></div>
-        <div class="idle-cards">
-          <div class="idle-card" style="--ic:var(--orange)" onclick="startSim('archon')">
-            <div class="idle-card-top">
-              <span class="idle-card-icon">⬡</span>
-              <span class="idle-card-title">Watch an Archon campaign run</span>
-            </div>
-            <div class="idle-card-body">Multi-session campaign — phases execute, sub-agents spawn, quality gates verify. Watch it live.</div>
-          </div>
-          <div class="idle-card" style="--ic:var(--purple)" onclick="startSim('fleet')">
-            <div class="idle-card-top">
-              <span class="idle-card-icon">⬢</span>
-              <span class="idle-card-title">Watch Fleet run in parallel</span>
-            </div>
-            <div class="idle-card-body">Three agents work simultaneously in isolated worktrees. Discoveries shared between waves.</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- RESULT -->
-      <div class="ctx-pane" id="ctx-result">
-        <div class="res-header">
-          <div class="res-icon" id="r-icon"></div>
-          <div>
-            <div class="res-name" id="r-name"></div>
-            <div class="res-desc" id="r-desc"></div>
-          </div>
-        </div>
-        <div class="res-badges" id="r-badges"></div>
-        <div class="sec-label">What happens next</div>
-        <div class="wn-list" id="wn-list"></div>
-        <div class="dims-block" id="dims-block">
-          <div class="sec-label">Classification</div>
-          <div class="dims-grid" id="dims-grid"></div>
-        </div>
-        <div class="sec-label">Related</div>
-        <div class="related" id="related"></div>
-      </div>
-
-      <!-- SIMULATOR -->
-      <div class="ctx-pane" id="ctx-sim">
-        <div class="sim-hd">
-          <div class="sim-title" id="sim-title">Campaign Simulator</div>
-          <div class="sim-cmd" id="sim-cmd"></div>
-        </div>
-        <div class="sim-body" id="sim-body"></div>
-      </div>
-
-      <div class="sim-controls" id="sim-controls" style="display:none">
-        <button class="sim-btn orange" onclick="startSim('archon')">⬡ Archon</button>
-        <button class="sim-btn purple" onclick="startSim('fleet')">⬢ Fleet</button>
-      </div>
-
-      <div class="history-strip" id="history-strip">
-        <span class="hist-label">Prior</span>
-        <div id="hist-pills" style="display:flex;flex-wrap:wrap;gap:6px;"></div>
-      </div>
-
+  <!-- Stats -->
+  <div class="stat-bar">
+    <div class="stat">
+      <div class="stat-num">33</div>
+      <div class="stat-label">Skills</div>
     </div>
-
+    <div class="stat">
+      <div class="stat-num">4</div>
+      <div class="stat-label">Autonomous Agents</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num">14</div>
+      <div class="stat-label">Hook Events</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num">~0</div>
+      <div class="stat-label">Config Required</div>
+    </div>
   </div>
 
-  <!-- backdrop -->
+  <!-- How It Works cards -->
+  <div class="how-section">
+    <div class="how-card">
+      <div class="how-card-header">
+        <span class="how-tier-badge" style="color:var(--green)">TIER 0</span>
+        <div>
+          <div class="how-card-name">Pattern Match</div>
+          <div class="how-card-sub">~0 tokens · &lt;1ms</div>
+        </div>
+      </div>
+      <p class="how-card-desc">Pure regex against the raw input string. No model call, no skill load. Catches exact-intent commands that need no classification — typos, renames, commits, status checks. If it matches here, Claude executes it directly and stops.</p>
+      <div class="how-examples">
+        <div class="how-example" style="--ex-color:var(--green)" data-cmd="fix the typo on line 42">/do fix the typo on line 42</div>
+        <div class="how-example" style="--ex-color:var(--green)" data-cmd="rename AuthService to AuthHandler">/do rename AuthService to AuthHandler</div>
+        <div class="how-example" style="--ex-color:var(--green)" data-cmd="commit my changes">/do commit my changes</div>
+      </div>
+    </div>
+
+    <div class="how-card">
+      <div class="how-card-header">
+        <span class="how-tier-badge" style="color:var(--cyan)">TIER 2</span>
+        <div>
+          <div class="how-card-name">Keyword Match</div>
+          <div class="how-card-sub">~0 tokens · &lt;10ms</div>
+        </div>
+      </div>
+      <p class="how-card-desc">The input is scanned against a keyword table built from every installed skill's name and description. "review" → /review, "debug" → /systematic-debugging. New skills register their own keywords automatically. No LLM needed.</p>
+      <div class="how-examples">
+        <div class="how-example" style="--ex-color:var(--cyan)" data-cmd="review the auth module">/do review the auth module</div>
+        <div class="how-example" style="--ex-color:var(--cyan)" data-cmd="write tests for UserService">/do write tests for UserService</div>
+        <div class="how-example" style="--ex-color:var(--cyan)" data-cmd="scaffold a new dashboard component">/do scaffold a new dashboard component</div>
+      </div>
+    </div>
+
+    <div class="how-card">
+      <div class="how-card-header">
+        <span class="how-tier-badge" style="color:var(--orange)">TIER 3</span>
+        <div>
+          <div class="how-card-name">LLM Classifier</div>
+          <div class="how-card-sub">~500 tokens · ~1–2s</div>
+        </div>
+      </div>
+      <p class="how-card-desc">Classifies 6 dimensions: scope, complexity (1–5), intent, multi-session persistence, parallel execution, and taste/judgment requirements. The first match wins. Routing to Archon or Fleet is expensive — the classifier only fires when simpler tiers fail.</p>
+      <div class="how-examples">
+        <div class="how-example" style="--ex-color:var(--orange)" data-cmd="build me a recipe app">/do build me a recipe app</div>
+        <div class="how-example" style="--ex-color:var(--orange)" data-cmd="add Stripe payments to checkout">/do add Stripe payments to checkout</div>
+        <div class="how-example" style="--ex-color:var(--orange)" data-cmd="create a real-time notification system">/do create a real-time notification system</div>
+      </div>
+    </div>
+
+    <div class="how-card">
+      <div class="how-card-header">
+        <span class="how-tier-badge" style="color:var(--purple)">TIER 3+</span>
+        <div>
+          <div class="how-card-name">Fleet Dispatch</div>
+          <div class="how-card-sub">~500 tokens · parallel</div>
+        </div>
+      </div>
+      <p class="how-card-desc">When the classifier detects platform-wide scope or required parallelism, it dispatches to Fleet instead of Archon. Fleet spawns 2–3 agents in isolated git worktrees per wave, shares discoveries between waves, and merges results with conflict arbitration.</p>
+      <div class="how-examples">
+        <div class="how-example" style="--ex-color:var(--purple)" data-cmd="overhaul all three services">/do overhaul all three services</div>
+        <div class="how-example" style="--ex-color:var(--purple)" data-cmd="redesign the entire data layer">/do redesign the entire data layer</div>
+        <div class="how-example" style="--ex-color:var(--purple)" data-cmd="migrate the platform to TypeScript strict mode">/do migrate the platform to TypeScript strict mode</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Panel backdrop -->
   <div class="panel-backdrop" id="panel-backdrop" onclick="closePanel()"></div>
 
-  <!-- INSTALL panel -->
+  <!-- Install panel -->
   <div class="side-panel" id="panel-install">
-    <div class="panel-hd"><span class="panel-title">Install</span><button class="panel-close" onclick="closePanel()">✕</button></div>
+    <div class="panel-header">
+      <span class="panel-title">Install</span>
+      <button class="panel-close" onclick="closePanel()">✕</button>
+    </div>
     <div class="panel-body">
-      <div class="p-step">
-        <div class="p-step-n">1</div>
-        <div class="p-step-body">
-          <div class="p-step-label">Install Claude Code</div>
-          <div class="p-code">npm install -g @anthropic-ai/claude-code<button class="p-copy" onclick="cpCode(this)">copy</button></div>
-          <div class="p-note">Requires Node 18+ and an Anthropic API key or Claude.ai Pro.</div>
+      <div class="panel-step">
+        <div class="panel-step-num">1</div>
+        <div class="panel-step-body">
+          <div class="panel-step-label">Install Claude Code</div>
+          <div class="panel-code">npm install -g @anthropic-ai/claude-code</div>
+          <div class="panel-note">Requires Node 18+ and an Anthropic API key or Claude.ai Pro.</div>
         </div>
       </div>
-      <div class="p-step">
-        <div class="p-step-n">2</div>
-        <div class="p-step-body">
-          <div class="p-step-label">Add Citadel as a plugin</div>
-          <div class="p-code">claude plugin add https://github.com/SethGammon/Citadel<button class="p-copy" onclick="cpCode(this)">copy</button></div>
-          <div class="p-note">Installs once globally. Skills and agents are available in every project immediately.</div>
+      <div class="panel-step">
+        <div class="panel-step-num">2</div>
+        <div class="panel-step-body">
+          <div class="panel-step-label">Add Citadel as a plugin</div>
+          <div class="panel-code">claude plugin add https://github.com/SethGammon/Citadel</div>
+          <div class="panel-note">Installs once globally. Skills and agents become available in every project.</div>
         </div>
       </div>
-      <div class="p-step">
-        <div class="p-step-n">3</div>
-        <div class="p-step-body">
-          <div class="p-step-label">Open any project and go</div>
-          <div class="p-code">cd your-project<br>claude<br>/do describe what you want<button class="p-copy" onclick="cpCode(this)">copy</button></div>
-          <div class="p-note">The SessionStart hook auto-scaffolds <code>.planning/</code> on first run. No manual setup required.</div>
+      <div class="panel-step">
+        <div class="panel-step-num">3</div>
+        <div class="panel-step-body">
+          <div class="panel-step-label">Open any project and start</div>
+          <div class="panel-code">cd your-project<br>claude<br>/do describe what you want</div>
+          <div class="panel-note">The SessionStart hook auto-scaffolds <code style="font-family:'SF Mono',monospace;color:var(--cyan);font-size:11px">.planning/</code> and installs hooks on first run. No manual setup required.</div>
         </div>
       </div>
-      <div class="p-section">Optional</div>
-      <div class="c-block">
-        <div class="c-block-t">Per-project config</div>
-        <div class="c-block-b">Run <code>/do setup</code> to generate <code>.claude/harness.json</code> — hook toggles, timeouts, doc sync, quality rules. All settings have working defaults.</div>
+      <div class="panel-section-label">Optional: per-project config</div>
+      <div class="campaign-block">
+        <div class="campaign-block-title">Generate harness.json</div>
+        <div class="campaign-block-body">Run <code>/do setup</code> to create <code>.claude/harness.json</code> with project-specific settings — hook toggles, agent timeouts, doc sync, quality rules. All settings have working defaults so this step is optional.</div>
       </div>
     </div>
   </div>
 
-  <!-- SKILLS panel -->
+  <!-- Skills panel -->
   <div class="side-panel" id="panel-skills">
-    <div class="panel-hd"><span class="panel-title">Skills — 33 installed</span><button class="panel-close" onclick="closePanel()">✕</button></div>
+    <div class="panel-header">
+      <span class="panel-title">Skills — 33 installed</span>
+      <button class="panel-close" onclick="closePanel()">✕</button>
+    </div>
     <div class="panel-body">
-      <div class="p-note" style="margin-bottom:18px">Invoke directly with <code>/skill-name</code> or let <code>/do</code> route automatically.</div>
-      <div class="p-section">Routing</div>
+      <div class="panel-note" style="margin-bottom:20px">Invoke any skill directly with <code style="font-family:'SF Mono',monospace;color:var(--cyan);font-size:11px">/skill-name</code>, or let <code style="font-family:'SF Mono',monospace;color:var(--cyan);font-size:11px">/do</code> route to the right one automatically.</div>
+      <div class="panel-section-label">Routing</div>
       <div class="skill-list">
-        <div class="skill-row"><span class="skill-n">/do</span><span class="skill-d">Universal intent router. Dispatches to the cheapest capable tool.</span></div>
+        <div class="skill-row"><span class="skill-name">/do</span><span class="skill-desc">Universal intent router. Dispatches to the cheapest capable tool — no configuration needed.</span></div>
       </div>
-      <div class="p-section">Orchestration</div>
+      <div class="panel-section-label">Orchestration</div>
       <div class="skill-list">
-        <div class="skill-row"><span class="skill-n">/archon</span><span class="skill-d">Multi-session campaigns with phases, quality gates, direction self-correction.</span></div>
-        <div class="skill-row"><span class="skill-n">/fleet</span><span class="skill-d">Parallel coordinator. 2–3 agents in isolated git worktrees per wave.</span></div>
-        <div class="skill-row"><span class="skill-n">/marshal</span><span class="skill-d">Single-session orchestrator. Chains skills end-to-end.</span></div>
-        <div class="skill-row"><span class="skill-n">/autopilot</span><span class="skill-d">Processes items from .planning/intake/ automatically.</span></div>
+        <div class="skill-row"><span class="skill-name">/archon</span><span class="skill-desc">Multi-session campaign executor. Decomposes into phases, enforces quality gates, self-corrects direction drift.</span></div>
+        <div class="skill-row"><span class="skill-name">/fleet</span><span class="skill-desc">Parallel coordinator. Spawns 2–3 agents in isolated git worktrees per wave.</span></div>
+        <div class="skill-row"><span class="skill-name">/marshal</span><span class="skill-desc">Single-session orchestrator. Chains skills end-to-end within one conversation.</span></div>
+        <div class="skill-row"><span class="skill-name">/autopilot</span><span class="skill-desc">Intake-to-delivery pipeline. Processes items from .planning/intake/ automatically.</span></div>
       </div>
-      <div class="p-section">App Creation</div>
+      <div class="panel-section-label">App Creation</div>
       <div class="skill-list">
-        <div class="skill-row"><span class="skill-n">/prd</span><span class="skill-d">Product Requirements Document from natural language description.</span></div>
-        <div class="skill-row"><span class="skill-n">/architect</span><span class="skill-d">Converts PRD into file tree, phases, and verifiable end conditions.</span></div>
-        <div class="skill-row"><span class="skill-n">/create-app</span><span class="skill-d">End-to-end app creation. Greenfield and existing codebases.</span></div>
+        <div class="skill-row"><span class="skill-name">/prd</span><span class="skill-desc">Generates a Product Requirements Document from a natural language description.</span></div>
+        <div class="skill-row"><span class="skill-name">/architect</span><span class="skill-desc">Converts a PRD into a file tree, build phases, and verifiable end conditions.</span></div>
+        <div class="skill-row"><span class="skill-name">/create-app</span><span class="skill-desc">End-to-end app creation. Works on greenfield projects and existing codebases.</span></div>
       </div>
-      <div class="p-section">Code Quality</div>
+      <div class="panel-section-label">Code Quality</div>
       <div class="skill-list">
-        <div class="skill-row"><span class="skill-n">/review</span><span class="skill-d">5-pass review: correctness, security, performance, readability, consistency.</span></div>
-        <div class="skill-row"><span class="skill-n">/test-gen</span><span class="skill-d">Generates runnable tests. Iterates up to 3× on failures before stopping.</span></div>
-        <div class="skill-row"><span class="skill-n">/doc-gen</span><span class="skill-d">Function-level, module, or API reference docs. Reads your existing style first.</span></div>
-        <div class="skill-row"><span class="skill-n">/refactor</span><span class="skill-d">Safe multi-file refactoring. Typechecks before and after every change.</span></div>
-        <div class="skill-row"><span class="skill-n">/scaffold</span><span class="skill-d">Project-aware file generation. Reads naming conventions from existing code.</span></div>
-        <div class="skill-row"><span class="skill-n">/create-skill</span><span class="skill-d">Extracts a repeated pattern into a reusable skill.</span></div>
+        <div class="skill-row"><span class="skill-name">/review</span><span class="skill-desc">5-pass structured review: correctness, security, performance, readability, consistency.</span></div>
+        <div class="skill-row"><span class="skill-name">/test-gen</span><span class="skill-desc">Generates runnable tests using your actual framework. Iterates up to 3× on failures.</span></div>
+        <div class="skill-row"><span class="skill-name">/doc-gen</span><span class="skill-desc">Three modes: function-level, module-level, or API reference. Reads your existing doc style first.</span></div>
+        <div class="skill-row"><span class="skill-name">/refactor</span><span class="skill-desc">Safe multi-file refactoring. Typechecks before and after every change. Auto-reverts on failure.</span></div>
+        <div class="skill-row"><span class="skill-name">/scaffold</span><span class="skill-desc">Project-aware file generation. Reads naming conventions from existing code before generating.</span></div>
+        <div class="skill-row"><span class="skill-name">/create-skill</span><span class="skill-desc">Extracts a repeated pattern into a reusable Citadel skill.</span></div>
       </div>
-      <div class="p-section">Research &amp; Debugging</div>
+      <div class="panel-section-label">Research &amp; Debugging</div>
       <div class="skill-list">
-        <div class="skill-row"><span class="skill-n">/research</span><span class="skill-d">Structured investigation with confidence levels and cited sources.</span></div>
-        <div class="skill-row"><span class="skill-n">/research-fleet</span><span class="skill-d">3–5 parallel scouts. Findings compressed into unified brief.</span></div>
-        <div class="skill-row"><span class="skill-n">/experiment</span><span class="skill-d">Metric-driven optimization loops in isolated worktrees.</span></div>
-        <div class="skill-row"><span class="skill-n">/systematic-debugging</span><span class="skill-d">4-phase RCA: observe → hypothesize → verify → fix.</span></div>
-        <div class="skill-row"><span class="skill-n">/live-preview</span><span class="skill-d">Mid-build visual verification via screenshot.</span></div>
+        <div class="skill-row"><span class="skill-name">/research</span><span class="skill-desc">Structured investigation with confidence levels and cited sources.</span></div>
+        <div class="skill-row"><span class="skill-name">/research-fleet</span><span class="skill-desc">Parallel multi-scout research. 3–5 independent angles simultaneously, then compressed.</span></div>
+        <div class="skill-row"><span class="skill-name">/experiment</span><span class="skill-desc">Metric-driven optimization loops in isolated worktrees. Stops when metric plateaus.</span></div>
+        <div class="skill-row"><span class="skill-name">/systematic-debugging</span><span class="skill-desc">4-phase root cause: observe → hypothesize → verify → fix. Emergency stop after 2 failures.</span></div>
+        <div class="skill-row"><span class="skill-name">/live-preview</span><span class="skill-desc">Mid-build visual verification via screenshot. Used by Archon to validate UI phases.</span></div>
       </div>
-      <div class="p-section">Quality &amp; Verification</div>
+      <div class="panel-section-label">Quality &amp; Verification</div>
       <div class="skill-list">
-        <div class="skill-row"><span class="skill-n">/design</span><span class="skill-d">Extracts or generates a design manifest: colors, typography, spacing.</span></div>
-        <div class="skill-row"><span class="skill-n">/qa</span><span class="skill-d">Browser QA via Playwright. Click-through testing with assertions.</span></div>
-        <div class="skill-row"><span class="skill-n">/postmortem</span><span class="skill-d">Structured postmortems from campaign telemetry and git history.</span></div>
+        <div class="skill-row"><span class="skill-name">/design</span><span class="skill-desc">Extracts or generates a design manifest: colors, typography, spacing, component patterns.</span></div>
+        <div class="skill-row"><span class="skill-name">/qa</span><span class="skill-desc">Browser QA via Playwright. Click-through testing with pass/fail assertions.</span></div>
+        <div class="skill-row"><span class="skill-name">/postmortem</span><span class="skill-desc">Auto-generates structured postmortems from campaign telemetry and git history.</span></div>
       </div>
-      <div class="p-section">Utilities</div>
+      <div class="panel-section-label">Utilities</div>
       <div class="skill-list">
-        <div class="skill-row"><span class="skill-n">/session-handoff</span><span class="skill-d">Compresses session context for transfer to a new session.</span></div>
-        <div class="skill-row"><span class="skill-n">/setup</span><span class="skill-d">First-run configuration. Generates harness.json and registers keywords.</span></div>
-        <div class="skill-row"><span class="skill-n">/triage</span><span class="skill-d">Pulls GitHub issues and PRs, classifies by severity, searches codebase.</span></div>
+        <div class="skill-row"><span class="skill-name">/session-handoff</span><span class="skill-desc">Compresses current session context for transfer to a new session.</span></div>
+        <div class="skill-row"><span class="skill-name">/setup</span><span class="skill-desc">First-run harness configuration. Generates harness.json and registers skill keywords.</span></div>
+        <div class="skill-row"><span class="skill-name">/triage</span><span class="skill-desc">Pulls open GitHub issues and PRs, classifies by severity, searches codebase for context.</span></div>
       </div>
     </div>
   </div>
 
-  <!-- HOOKS panel -->
+  <!-- Hooks panel -->
   <div class="side-panel" id="panel-hooks">
-    <div class="panel-hd"><span class="panel-title">Hooks — 13 events</span><button class="panel-close" onclick="closePanel()">✕</button></div>
+    <div class="panel-header">
+      <span class="panel-title">Hooks — 13 events</span>
+      <button class="panel-close" onclick="closePanel()">✕</button>
+    </div>
     <div class="panel-body">
-      <div class="p-note" style="margin-bottom:18px">Hooks fire automatically on Claude Code lifecycle events — no agent intervention needed.</div>
-      <table class="hook-tbl">
-        <thead><tr><th style="width:140px">Event</th><th>What it does</th></tr></thead>
+      <div class="panel-note" style="margin-bottom:20px">Hooks fire automatically on Claude Code lifecycle events — no agent intervention needed.</div>
+      <table class="hook-table">
+        <thead><tr><th style="width:145px">Event</th><th>What it does</th></tr></thead>
         <tbody>
-          <tr><td class="hook-ev">SessionStart</td><td class="hook-d">Scans .planning/intake/, restores compressed context, scaffolds .planning/ on first run.</td></tr>
-          <tr><td class="hook-ev">PreCompact</td><td class="hook-d">Detects unwritten work before compression. Auto-saves a handoff to disk.</td></tr>
-          <tr><td class="hook-ev">PostCompact</td><td class="hook-d">Re-injects the saved handoff into the new compressed context.</td></tr>
-          <tr><td class="hook-ev">PreToolUse</td><td class="hook-d">Campaign scope enforcement — blocks edits outside declared scope.</td></tr>
-          <tr><td class="hook-ev">PostToolUse</td><td class="hook-d">Per-file typecheck on every Edit or Write. Failures surface immediately.</td></tr>
-          <tr><td class="hook-ev">Stop</td><td class="hook-d">Quality gate before session ends. Checks uncommitted work, open phases.</td></tr>
-          <tr><td class="hook-ev">StopFailure</td><td class="hook-d">API failure telemetry and recovery trigger.</td></tr>
-          <tr><td class="hook-ev">TaskCreated</td><td class="hook-d">Logs agent task boundary start to audit trail.</td></tr>
-          <tr><td class="hook-ev">TaskCompleted</td><td class="hook-d">Logs completion with duration to agent-runs.jsonl.</td></tr>
-          <tr><td class="hook-ev">SubagentStop</td><td class="hook-d">Ensures sub-agents write HANDOFF and release scope claims before exit.</td></tr>
-          <tr><td class="hook-ev">SessionEnd</td><td class="hook-d">Campaign cleanup, triggers doc sync queue.</td></tr>
-          <tr><td class="hook-ev">WorktreeCreate</td><td class="hook-d">Installs hooks and scaffolds .planning/ in Fleet worktrees.</td></tr>
-          <tr><td class="hook-ev">WorktreeRemove</td><td class="hook-d">Cleanup — conflict check and lifecycle metrics logging.</td></tr>
+          <tr><td class="hook-event">SessionStart</td><td class="hook-desc">Scans .planning/intake/, restores compressed context, scaffolds .planning/ on first run.</td></tr>
+          <tr><td class="hook-event">PreCompact</td><td class="hook-desc">Detects unwritten work before context compression. Auto-saves a handoff to disk.</td></tr>
+          <tr><td class="hook-event">PostCompact</td><td class="hook-desc">Re-injects the saved handoff into the new compressed context so nothing is lost.</td></tr>
+          <tr><td class="hook-event">PreToolUse</td><td class="hook-desc">Campaign scope enforcement — blocks edits outside a campaign's declared scope.</td></tr>
+          <tr><td class="hook-event">PostToolUse</td><td class="hook-desc">Runs per-file typecheck on every Edit or Write. Failures surface immediately.</td></tr>
+          <tr><td class="hook-event">Stop</td><td class="hook-desc">Quality gate before session ends. Checks for uncommitted work and open campaign phases.</td></tr>
+          <tr><td class="hook-event">StopFailure</td><td class="hook-desc">API failure telemetry — logs to .planning/telemetry/ and triggers recovery if configured.</td></tr>
+          <tr><td class="hook-event">TaskCreated</td><td class="hook-desc">Logs agent task boundary start events to the audit trail.</td></tr>
+          <tr><td class="hook-event">TaskCompleted</td><td class="hook-desc">Logs task completion with duration and outcome to agent-runs.jsonl.</td></tr>
+          <tr><td class="hook-event">SubagentStop</td><td class="hook-desc">Ensures sub-agents write a HANDOFF block and release scope claims before exiting.</td></tr>
+          <tr><td class="hook-event">SessionEnd</td><td class="hook-desc">Campaign cleanup, triggers the doc sync queue.</td></tr>
+          <tr><td class="hook-event">WorktreeCreate</td><td class="hook-desc">Installs hooks and scaffolds .planning/ in isolated Fleet worktrees.</td></tr>
+          <tr><td class="hook-event">WorktreeRemove</td><td class="hook-desc">Fleet cleanup — triggers merge conflict check and logs worktree metrics.</td></tr>
         </tbody>
       </table>
+      <div class="panel-section-label" style="margin-top:24px">Configuration</div>
+      <div class="campaign-block">
+        <div class="campaign-block-title">Enable / disable hooks</div>
+        <div class="campaign-block-body">Toggle individual hooks in <code>.claude/harness.json</code> under the <code>hooks</code> key. Example: <code>"postToolUse": { "enabled": false }</code></div>
+      </div>
     </div>
   </div>
 
-  <!-- CAMPAIGNS panel -->
+  <!-- Campaigns panel -->
   <div class="side-panel" id="panel-campaigns">
-    <div class="panel-hd"><span class="panel-title">Campaigns</span><button class="panel-close" onclick="closePanel()">✕</button></div>
+    <div class="panel-header">
+      <span class="panel-title">Campaigns</span>
+      <button class="panel-close" onclick="closePanel()">✕</button>
+    </div>
     <div class="panel-body">
-      <div class="p-note" style="margin-bottom:18px">A campaign is work that spans multiple sessions. State persists to disk and resumes exactly where it left off.</div>
-      <div class="c-block">
-        <div class="c-block-t">Starting a campaign</div>
-        <div class="c-block-b"><code>/archon build a notifications system</code> — or let <code>/do</code> route there automatically. Archon creates <code>.planning/campaigns/{slug}.md</code> before executing anything.</div>
+      <div class="panel-note" style="margin-bottom:20px">A <strong style="color:var(--text)">campaign</strong> is work that spans multiple sessions. State is persisted to disk and resumed exactly where it left off.</div>
+      <div class="campaign-block">
+        <div class="campaign-block-title">Starting a campaign</div>
+        <div class="campaign-block-body"><code>/archon build a real-time notifications system</code> — or let <code>/do</code> route there automatically. Archon creates a file at <code>.planning/campaigns/{slug}.md</code> before executing anything.</div>
       </div>
-      <div class="c-block">
-        <div class="c-block-t">Phase types</div>
-        <div class="c-block-b"><strong style="color:var(--text)">research</strong> → <strong style="color:var(--text)">plan</strong> → <strong style="color:var(--text)">build</strong> → <strong style="color:var(--text)">wire</strong> → <strong style="color:var(--text)">verify</strong> → <strong style="color:var(--text)">prune</strong>. Each has machine-verifiable end conditions — not marked complete until they pass.</div>
+      <div class="campaign-block">
+        <div class="campaign-block-title">Phase types</div>
+        <div class="campaign-block-body">Campaigns break into 3–8 ordered phases: <strong style="color:var(--text)">research</strong> → <strong style="color:var(--text)">plan</strong> → <strong style="color:var(--text)">build</strong> → <strong style="color:var(--text)">wire</strong> → <strong style="color:var(--text)">verify</strong> → <strong style="color:var(--text)">prune</strong>. Each has machine-verifiable end conditions (file exists, command passes, metric threshold) — a phase isn't marked complete until they pass.</div>
       </div>
-      <div class="c-block">
-        <div class="c-block-t">Automatic self-correction</div>
-        <div class="c-block-b">
-          · Direction alignment every 2 phases<br>
-          · Quality spot-check every phase<br>
-          · Regression guard after build phases<br>
-          · Anti-pattern scan on all modified files
+      <div class="campaign-block">
+        <div class="campaign-block-title">Self-correction (automatic)</div>
+        <div class="campaign-block-body">
+          · <strong style="color:var(--text)">Direction alignment</strong> every 2 phases — catches scope drift before it compounds<br>
+          · <strong style="color:var(--text)">Quality spot-check</strong> every phase — reads the most significant output, verifies it meets the project's bar<br>
+          · <strong style="color:var(--text)">Regression guard</strong> after build phases — runs typecheck, escalates on 5+ new errors<br>
+          · <strong style="color:var(--text)">Anti-pattern scan</strong> — catches transition-all, confirm(), missing Escape handlers
         </div>
       </div>
-      <div class="c-block">
-        <div class="c-block-t">Resuming</div>
-        <div class="c-block-b">Run <code>/do continue</code>. Archon reads the Active Context section and picks up at the exact sub-step.</div>
+      <div class="campaign-block">
+        <div class="campaign-block-title">Resuming across sessions</div>
+        <div class="campaign-block-body">Run <code>/do continue</code> or <code>/archon</code> with no arguments. The SessionStart hook restores context. Archon reads the campaign's Active Context section and picks up at the exact sub-step.</div>
       </div>
-      <div class="c-block">
-        <div class="c-block-t">Archon vs Fleet</div>
-        <div class="c-block-b"><strong style="color:var(--orange)">Archon</strong> — sequential phases, one agent per phase. Best for single-domain complex work.<br><br><strong style="color:var(--purple)">Fleet</strong> — parallel agents in isolated worktrees per wave. Best for platform-wide independent tracks.</div>
+      <div class="campaign-block">
+        <div class="campaign-block-title">Archon vs Fleet</div>
+        <div class="campaign-block-body"><strong style="color:var(--orange)">Archon</strong> — sequential phases, one agent per phase. Best for complex single-domain work.<br><br><strong style="color:var(--purple)">Fleet</strong> — parallel agents in isolated worktrees, 2–3 per wave. Best for platform-wide work where phases are independent. <code>/do</code> routes to Fleet automatically when it detects platform-wide scope.</div>
       </div>
-      <div class="c-block">
-        <div class="c-block-t">Circuit breakers</div>
-        <div class="c-block-b">Parks when: 3+ consecutive failures on the same approach · 5+ new type errors in one phase · direction drift detected twice · quality bar fails 3 times.</div>
+      <div class="campaign-block">
+        <div class="campaign-block-title">Circuit breakers</div>
+        <div class="campaign-block-body">Campaigns park automatically when: 3+ consecutive failures on the same approach · 5+ new type errors in a single phase · direction drift detected twice in a row · quality bar fails 3 times. You get a clear status and a decision point.</div>
       </div>
     </div>
   </div>
 
+  <footer>
+    <span>Citadel — Agent Orchestration for Claude Code &nbsp;·&nbsp; <a href="https://repo-explainer.com/SethGammon/Citadel/">Architecture overview</a></span>
+    <span>
+      <a href="https://github.com/SethGammon/Citadel">GitHub</a>
+      &nbsp;·&nbsp;
+      <a href="https://github.com/SethGammon/Citadel/blob/main/LICENSE">MIT License</a>
+    </span>
+  </footer>
+
   <script>
-    // ─── Routing tables ──────────────────────────────────────────────────────
-    const T0 = [
-      { re: /\b(fix|correct)\s+(the\s+)?typo\b/i,  label: 'pattern: fix typo',       color: 'var(--green)' },
-      { re: /\brename\s+\w+\s+to\b/i,               label: 'pattern: rename X to Y',  color: 'var(--green)' },
-      { re: /\b(commit|stage)\b/i,                   label: 'pattern: commit',         color: 'var(--green)' },
-      { re: /\b(typecheck|type.?check|build)\b/i,    label: 'pattern: build/check',    color: 'var(--green)' },
-      { re: /\b(run tests?|test suite)\b/i,          label: 'pattern: run tests',      color: 'var(--green)' },
-      { re: /\bstatus\b/i,                           label: 'pattern: status',         color: 'var(--green)' },
-      { re: /\b(continue|keep going|resume)\b/i,     label: 'pattern: continue',       color: 'var(--green)' },
-      { re: /\bsetup\b/i,                            label: 'pattern: setup',          color: 'var(--green)' },
-      { re: /\b(list|--list)\b/i,                    label: 'pattern: list',           color: 'var(--green)' },
+    // ─── Routing logic ─────────────────────────────────────────────────────
+    const TIER0 = [
+      { re: /\b(fix|correct)\s+(the\s+)?typo\b/i,    label: 'pattern: "fix typo"',     color: 'var(--green)' },
+      { re: /\brename\s+\w+\s+to\b/i,                label: 'pattern: "rename X to Y"', color: 'var(--green)' },
+      { re: /\b(commit|stage)\b/i,                    label: 'pattern: "commit"',        color: 'var(--green)' },
+      { re: /\b(typecheck|type.?check|build)\b/i,     label: 'pattern: "build/check"',   color: 'var(--green)' },
+      { re: /\b(run tests?|test suite)\b/i,           label: 'pattern: "run tests"',     color: 'var(--green)' },
+      { re: /\bstatus\b/i,                            label: 'pattern: "status"',        color: 'var(--green)' },
+      { re: /\b(continue|keep going|resume)\b/i,      label: 'pattern: "continue"',      color: 'var(--green)' },
+      { re: /\bsetup\b/i,                             label: 'pattern: "setup"',         color: 'var(--green)' },
+      { re: /\b(list|--list)\b/i,                     label: 'pattern: "list"',          color: 'var(--green)' },
     ];
 
-    const T2 = [
-      { re: /\b(review|code.?review)\b/i, skill: '/review', icon: '◆',
-        desc: '5-pass structured review: correctness, security, performance, readability, consistency.',
-        next: ['Reads all target files in full', 'Runs 5-pass analysis across each quality dimension', 'Outputs structured findings with line-level references'],
-        rel: ['review the payment module', 'review for security issues only', 'code review src/auth.ts'] },
-      { re: /\b(test|tests|write tests|generate tests?)\b/i, skill: '/test-gen', icon: '⚗',
-        desc: 'Generates runnable tests using your actual framework. Iterates up to 3× on failures.',
-        next: ['Detects test framework (Jest, Vitest, pytest…)', 'Reads 2–3 existing tests to match your style', 'Generates tests, runs them, auto-fixes failures up to 3×'],
-        rel: ['write tests for UserService', 'generate unit tests for the API', 'write integration tests for checkout'] },
-      { re: /\b(document|docs|docstring|readme)\b/i, skill: '/doc-gen', icon: '📄',
-        desc: 'Three modes: function-level, module-level, or API reference. Reads your existing doc style first.',
-        next: ['Reads your existing documentation style from 2–3 examples', 'Selects mode: function / module / API reference', 'Generates docs without touching implementation code'],
-        rel: ['document the auth module', 'generate API reference docs', 'add JSDoc to the payment service'] },
-      { re: /\b(refactor|extract|split file)\b/i, skill: '/refactor', icon: '↻',
-        desc: 'Safe multi-file refactoring. Typechecks before and after every change. Auto-reverts on failure.',
-        next: ['Runs typecheck to establish baseline error count', 'Makes changes incrementally, typechecks after each', 'Auto-reverts any change that increases the error count'],
-        rel: ['extract the database logic into its own module', 'split the 600-line component', 'refactor the routing layer'] },
-      { re: /\b(scaffold|new module|new component|bootstrap)\b/i, skill: '/scaffold', icon: '⬡',
-        desc: 'Project-aware file generation. Reads naming conventions from existing code.',
-        next: ['Reads naming conventions from 3–5 existing files', 'Generates file tree matching your patterns exactly', 'Creates each file with appropriate boilerplate'],
-        rel: ['scaffold a notifications module', 'new dashboard component', 'bootstrap the reporting service'] },
-      { re: /\b(research|investigate|look into|find out)\b/i, skill: '/research', icon: '⌕',
-        desc: 'Structured investigation with confidence levels and cited sources. Writes findings to .planning/research/.',
-        next: ['Formulates 3–5 specific sub-questions from your request', 'Searches with source quality scoring per result', 'Writes findings to .planning/research/ with confidence levels'],
-        rel: ['research Redis vs Memcached trade-offs', 'investigate the memory leak pattern', 'look into WebSocket alternatives'] },
-      { re: /\b(debug|root.?cause|diagnose|why is|investigate.?bug)\b/i, skill: '/systematic-debugging', icon: '⚡',
-        desc: '4-phase root cause analysis: observe → hypothesize → verify → fix.',
-        next: ['Reproduces the issue with a minimal test case', 'Lists 3–5 hypotheses ranked by likelihood', 'Verifies each hypothesis before attempting a fix'],
-        rel: ['why is login returning 401', 'debug the race condition', 'root cause the memory leak in prod'] },
-      { re: /\b(prd|requirements|spec|plan an app)\b/i, skill: '/prd', icon: '📋',
-        desc: 'Generates a Product Requirements Document from a natural language description.',
-        next: ['Asks 3–5 clarifying questions if scope is vague', 'Generates: user stories, technical constraints, success metrics', 'Writes to docs/PRD.md'],
-        rel: ['write a PRD for a task manager', 'create requirements for billing', 'spec out the notifications feature'] },
-      { re: /\b(architect|file structure|plan the build)\b/i, skill: '/architect', icon: '🏗',
-        desc: 'Converts a PRD into file tree, build phases, and machine-verifiable end conditions.',
-        next: ['Reads existing file structure and naming conventions', 'Generates phase-by-phase build plan with file tree', 'Writes machine-verifiable end conditions per phase'],
-        rel: ['architect the recipe app', 'plan the file structure for billing', 'design the module layout'] },
-      { re: /\b(experiment|optimize|a\/b|measure)\b/i, skill: '/experiment', icon: '⚗',
-        desc: 'Metric-driven optimization loops in isolated worktrees. Stops when metric plateaus.',
-        next: ['Creates an isolated git worktree for safe experimentation', 'Defines a scalar fitness function for your metric', 'Runs variants, stops when metric plateaus for 3 iterations'],
-        rel: ['optimize the query performance', 'A/B the bundle size', 'measure render time before and after'] },
-      { re: /\b(triage|issues|pull requests)\b/i, skill: '/triage', icon: '📌',
-        desc: 'Pulls open GitHub issues and PRs, classifies by severity, searches codebase for context.',
-        next: ['Fetches open issues and PRs from GitHub API', 'Classifies each by severity and type', 'Searches codebase for relevant context per issue'],
-        rel: ['triage the open issues', 'review the pending PRs', 'classify the bug reports by severity'] },
-      { re: /\b(postmortem|retro|what broke)\b/i, skill: '/postmortem', icon: '📊',
-        desc: 'Generates structured postmortems from campaign telemetry and git history.',
-        next: ['Reads .planning/telemetry/ for campaign events', 'Reads git log for the campaign time window', 'Generates: timeline, root causes, learnings, action items'],
-        rel: ['postmortem the last campaign', 'retro on the deploy failure', 'what broke in last week\'s release'] },
+    const TIER2 = [
+      { re: /\b(review|code.?review)\b/i,             skill: '/review',
+        desc: '5-pass structured code review: correctness, security, performance, readability, consistency.', icon: '◆' },
+      { re: /\b(test|tests|write tests|generate tests?)\b/i, skill: '/test-gen',
+        desc: 'Generates runnable tests using your actual framework. Iterates up to 3x on failures before stopping.', icon: '⚗' },
+      { re: /\b(document|docs|docstring|readme)\b/i,  skill: '/doc-gen',
+        desc: 'Three modes: function-level, module-level, or API reference. Reads your existing doc style first.', icon: '📄' },
+      { re: /\b(refactor|extract|split file)\b/i,     skill: '/refactor',
+        desc: 'Safe multi-file refactoring. Typechecks before and after every change. Reverts automatically on failure.', icon: '↻' },
+      { re: /\b(scaffold|new module|new component|bootstrap)\b/i, skill: '/scaffold',
+        desc: 'Project-aware file generation. Reads your naming conventions and patterns from existing code before generating.', icon: '⬡' },
+      { re: /\b(research|investigate|look into|find out)\b/i, skill: '/research',
+        desc: 'Structured investigation with confidence levels and cited sources. Writes findings to .planning/research/.', icon: '⌕' },
+      { re: /\b(debug|root.?cause|diagnose|why is|investigate.?bug)\b/i, skill: '/systematic-debugging',
+        desc: '4-phase root cause analysis: observe → hypothesize → verify → fix. Emergency stop after 2 failed attempts.', icon: '⚡' },
+      { re: /\b(prd|requirements|spec|plan an app)\b/i, skill: '/prd',
+        desc: 'Generates a Product Requirements Document from a natural language description of your app.', icon: '📋' },
+      { re: /\b(architect|file structure|plan the build)\b/i, skill: '/architect',
+        desc: 'Converts a PRD into file tree, build phases, and machine-verifiable end conditions for each phase.', icon: '🏗' },
+      { re: /\b(experiment|optimize|a\/b|measure)\b/i, skill: '/experiment',
+        desc: 'Optimization loops with scalar fitness functions in isolated worktrees. Stops when metric stops improving.', icon: '⚗' },
+      { re: /\b(triage|issues|pull requests)\b/i,     skill: '/triage',
+        desc: 'Pulls open issues and PRs from GitHub, classifies them by severity, and searches the codebase for context.', icon: '📌' },
+      { re: /\b(postmortem|retro|what broke)\b/i,     skill: '/postmortem',
+        desc: 'Auto-generates structured postmortems from campaign telemetry and git history.', icon: '📊' },
     ];
 
-    const T3 = [
+    const TIER3 = [
       { re: /\b(overhaul|redesign|rewrite|rearchitect|rebuild|migrate)\b.*\b(all|entire|platform|services|system)\b/i,
-        tool: '/fleet', icon: '⬢', color: 'var(--purple)',
-        desc: 'Parallel campaign coordinator. 2–3 agents in isolated git worktrees per wave. Discoveries shared between waves.',
-        dims: { intent:'redesign', scope:'platform-wide', complexity:5, persist:true, parallel:true, taste:true },
-        next: ['Decomposes work into 3–5 independent parallel tracks', 'Creates an isolated git worktree per agent in Wave 1', 'Wave 1 completes → discoveries compressed into brief for Wave 2'],
-        rel: ['migrate all services to TypeScript', 'overhaul the entire auth system', 'rebuild all three microservices'] },
+        tool: '/fleet', icon: '⬢',
+        desc: 'Parallel campaign coordinator. Spawns 2-3 agents in isolated git worktrees per wave. Discoveries shared between waves via compressed briefs. Merge arbitration on completion.',
+        dims: { intent: 'redesign', scope: 'platform-wide', complexity: 5, persist: true, parallel: true, taste: true }, color: 'var(--purple)' },
       { re: /\b(migrate|migration)\b/i,
-        tool: '/fleet', icon: '⬢', color: 'var(--purple)',
-        desc: 'Parallel coordinator for independent migration tracks.',
-        dims: { intent:'migrate', scope:'platform-wide', complexity:5, persist:true, parallel:true, taste:true },
-        next: ['Maps migration into independent tracks', 'Spawns one agent per track in isolated worktrees', 'Merges results with conflict arbitration after each wave'],
-        rel: ['migrate to TypeScript strict mode', 'migrate the database schema', 'migrate all tests to Vitest'] },
+        tool: '/fleet', icon: '⬢',
+        desc: 'Parallel campaign coordinator. Spawns 2-3 agents in isolated git worktrees per wave. Discoveries shared between waves via compressed briefs. Merge arbitration on completion.',
+        dims: { intent: 'migrate', scope: 'platform-wide', complexity: 5, persist: true, parallel: true, taste: true }, color: 'var(--purple)' },
       { re: /\b(redesign|overhaul)\b/i,
-        tool: '/fleet', icon: '⬢', color: 'var(--purple)',
-        desc: 'Parallel coordinator for cross-domain redesigns.',
-        dims: { intent:'redesign', scope:'cross-domain', complexity:4, persist:true, parallel:true, taste:true },
-        next: ['Analyzes which domains can be worked in parallel', 'Spawns Fleet Wave 1 with 2–3 agents', 'Quality gates between waves prevent regressions accumulating'],
-        rel: ['redesign the component library', 'overhaul the API layer', 'redesign state management'] },
+        tool: '/fleet', icon: '⬢',
+        desc: 'Parallel campaign coordinator. Spawns 2-3 agents in isolated git worktrees per wave. Discoveries shared between waves via compressed briefs.',
+        dims: { intent: 'redesign', scope: 'cross-domain', complexity: 4, persist: true, parallel: true, taste: true }, color: 'var(--purple)' },
       { re: /\b(create|build|make|generate)\b.*\b(app|application|tool|service|site|website)\b/i,
-        tool: '/archon', icon: '⬡', color: 'var(--orange)',
-        desc: 'Multi-session campaign executor. Decomposes into phases, delegates to Marshal sub-agents, enforces quality gates.',
-        dims: { intent:'create', scope:'single-domain', complexity:4, persist:true, parallel:false, taste:true },
-        next: ['Creates .planning/campaigns/{slug}.md with 4–6 phases', 'Phase 1 (research) delegates to Marshal immediately', 'Quality spot-check after every phase — direction check every 2'],
-        rel: ['build a task manager app', 'create a REST API service', 'make a real-time dashboard'] },
+        tool: '/archon', icon: '⬡',
+        desc: 'Multi-session campaign executor. Decomposes into phases, delegates to Marshal sub-agents, enforces quality gates at each phase. Self-corrects direction every 2 phases.',
+        dims: { intent: 'create', scope: 'single-domain', complexity: 4, persist: true, parallel: false, taste: true }, color: 'var(--orange)' },
       { re: /\b(add|implement|integrate)\b/i,
-        tool: '/create-app', icon: '⬡', color: 'var(--orange)',
-        desc: 'Feature addition mode. Reads existing conventions and adds without breaking existing patterns.',
-        dims: { intent:'add', scope:'single-domain', complexity:3, persist:false, parallel:false, taste:false },
-        next: ['Reads existing codebase architecture and naming conventions', 'Plans the integration without breaking existing patterns', 'Implements with typecheck validation after each file'],
-        rel: ['add dark mode toggle', 'implement OAuth login', 'integrate the Stripe SDK'] },
+        tool: '/create-app', icon: '⬡',
+        desc: 'Feature addition mode. Reads existing codebase conventions and architecture, adds the feature without breaking existing patterns.',
+        dims: { intent: 'add', scope: 'single-domain', complexity: 3, persist: false, parallel: false, taste: false }, color: 'var(--orange)' },
     ];
 
     function route(cmd) {
-      for (const p of T0) if (p.re.test(cmd)) return {
-        tier:0, label:p.label, color:p.color, tool:'Direct Edit', icon:'✎',
-        desc:'Claude performs the change inline — no skill loaded, no model call for routing.',
-        next:['Identifies the specific change from your description','Makes the edit directly in the target file','Done — 0 tokens spent, no orchestrator spawned'],
-        rel:['fix the typo on line 12','rename ApiClient to HttpClient','commit and push'],
-        tokens:'0', lat:'<1ms' };
-      for (const k of T2) if (k.re.test(cmd)) return {
-        tier:2, label:'keyword hit', color:'var(--cyan)', tool:k.skill, icon:k.icon, desc:k.desc,
-        next:k.next, rel:k.rel, tokens:'0', lat:'<10ms' };
-      for (const r of T3) if (r.re.test(cmd)) return {
-        tier:3, label:`intent: ${r.dims.intent}`, color:r.color, tool:r.tool, icon:r.icon, desc:r.desc,
-        next:r.next, rel:r.rel, dims:r.dims, tokens:'~500', lat:'~1–2s' };
-      return {
-        tier:3, label:'confidence < 0.7 → safe default', color:'var(--purple)',
-        tool:'/marshal', icon:'⟳',
-        desc:'Single-session meta-orchestrator. Chains the right skills in sequence with quality gates between steps.',
-        next:['Analyzes which skills are needed in what order','Invokes the first skill with full context injection','Enforces quality gate between each step — stops on failure'],
-        rel:['orchestrate the refactor and test','chain review then fix','multi-step cleanup of auth module'],
-        tokens:'~500', lat:'~1–2s' };
-    }
-
-    // ─── State ───────────────────────────────────────────────────────────────
-    let routeHistory = [], histIdx = -1, activePanel = null, simBusy = false;
-
-    // ─── Live preview ────────────────────────────────────────────────────────
-    const inp = document.getElementById('cmd-input');
-    const badge = document.getElementById('live-badge');
-
-    function livePreview(v) {
-      if (!v.trim()) { badge.textContent=''; badge.className='live-badge'; return; }
-      const r = route(v.trim());
-      badge.textContent = `→ ${r.tool}`;
-      badge.style.color = r.color;
-      badge.className = 'live-badge active';
-    }
-    inp.addEventListener('input', e => livePreview(e.target.value));
-
-    // ─── Typewriter idle ─────────────────────────────────────────────────────
-    const TW_EXAMPLES = [
-      'review the payment service',
-      'build me a recipe app',
-      'why is the API returning 500',
-      'migrate platform to TypeScript strict',
-      'write tests for UserService',
-      'refactor the auth middleware',
-      'research the best caching strategy',
-      'scaffold a notifications module',
-    ];
-    let twIdx=0, twCh=0, twDel=false, twTimer=null;
-    const twEl = document.getElementById('tw-text');
-
-    function twTick() {
-      const t = TW_EXAMPLES[twIdx];
-      if (!twDel) {
-        twEl.textContent = t.slice(0, ++twCh);
-        if (twCh >= t.length) { twDel=true; twTimer=setTimeout(twTick,2000); return; }
-        twTimer = setTimeout(twTick, 45 + Math.random()*28);
-      } else {
-        twEl.textContent = t.slice(0, --twCh);
-        if (twCh === 0) { twDel=false; twIdx=(twIdx+1)%TW_EXAMPLES.length; twTimer=setTimeout(twTick,350); return; }
-        twTimer = setTimeout(twTick, 20);
+      for (const p of TIER0) {
+        if (p.re.test(cmd)) return {
+          tier: 0, label: p.label, color: p.color,
+          tool: 'Direct Edit', icon: '✎',
+          desc: 'Claude performs the change inline — no skill loaded, no orchestrator spawned. Fastest possible path.',
+          tokens: '0', latency: '<1ms'
+        };
       }
+      for (const k of TIER2) {
+        if (k.re.test(cmd)) return {
+          tier: 2, label: 'keyword hit', color: 'var(--cyan)',
+          tool: k.skill, icon: k.icon, desc: k.desc,
+          tokens: '0', latency: '<10ms'
+        };
+      }
+      for (const r of TIER3) {
+        if (r.re.test(cmd)) return {
+          tier: 3, label: `intent: ${r.dims.intent}`, color: r.color,
+          tool: r.tool, icon: r.icon, desc: r.desc,
+          tokens: '~500', latency: '~1–2s', dims: r.dims
+        };
+      }
+      return {
+        tier: 3, label: 'confidence < 0.7 → safe default', color: 'var(--purple)',
+        tool: '/marshal', icon: '⟳',
+        desc: 'Single-session meta-orchestrator. Takes any direction and executes it end-to-end by chaining the appropriate skills in sequence.',
+        tokens: '~500', latency: '~1–2s'
+      };
     }
-    function twStart() { clearTimeout(twTimer); twTimer=setTimeout(twTick,700); }
-    function twStop()  { clearTimeout(twTimer); }
 
-    // ─── Context switching ────────────────────────────────────────────────────
-    function showCtx(id) {
-      document.querySelectorAll('.ctx-pane').forEach(p => p.classList.remove('active'));
-      document.getElementById(id).classList.add('active');
-      const ctrl = document.getElementById('sim-controls');
-      ctrl.style.display = id === 'ctx-sim' ? 'flex' : 'none';
-      if (id === 'ctx-idle') twStart(); else twStop();
+    // ─── Live preview ─────────────────────────────────────────────────────
+    const input = document.getElementById('cmd-input');
+    const liveBadge = document.getElementById('live-badge');
+    const enterKey = document.getElementById('enter-key');
+
+    function updateLivePreview(val) {
+      if (!val.trim()) {
+        liveBadge.textContent = '';
+        liveBadge.className = 'live-badge';
+        enterKey.classList.remove('lit');
+        return;
+      }
+      const r = route(val.trim());
+      liveBadge.textContent = `→ ${r.tool}`;
+      liveBadge.style.color = r.color;
+      liveBadge.className = 'live-badge active';
+      enterKey.classList.add('lit');
     }
 
-    // ─── Tier animation ───────────────────────────────────────────────────────
-    const sleep = ms => new Promise(r => setTimeout(r,ms));
+    input.addEventListener('input', e => updateLivePreview(e.target.value));
+
+    // ─── Animation ────────────────────────────────────────────────────────
+    const TIER_IDS = ['tier0', 'tier1', 'tier2', 'tier3'];
+    let history = [];
+    let histIdx = -1;
+
+    async function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
     function resetTiers() {
-      ['tier0','tier1','tier2','tier3'].forEach(id => {
+      for (const id of TIER_IDS) {
         const el = document.getElementById(id);
         el.className = 'tier-row';
-        const s = el.querySelector('.tier-status');
-        s.textContent=''; s.style.color='';
-      });
-      document.getElementById('orb-orange').classList.remove('lit');
+        el.querySelector('.tier-status').textContent = '';
+      }
+      document.getElementById('output-section').classList.remove('visible');
+      document.getElementById('classification').classList.remove('visible', 'purple-theme');
     }
 
-    async function animate(cmd) {
-      simBusy = false; // cancel any pending sim
+    async function animateRoute(cmd) {
       resetTiers();
-      const r = route(cmd);
+      const panel = document.getElementById('result-panel');
+      const spinner = document.getElementById('spinner');
+      const resultCmd = document.getElementById('result-command');
+      const timerEl = document.getElementById('result-timer');
 
-      const t0=document.getElementById('tier0'), s0=document.getElementById('t0s');
-      const t1=document.getElementById('tier1'), s1=document.getElementById('t1s');
-      const t2=document.getElementById('tier2'), s2=document.getElementById('t2s');
-      const t3=document.getElementById('tier3'), s3=document.getElementById('t3s');
+      // Fold-out reveal
+      panel.classList.add('visible');
+      resultCmd.textContent = `/do ${cmd}`;
+      spinner.classList.add('active');
+      timerEl.textContent = '';
+      const t0 = performance.now();
 
-      if (r.tier === 0) {
-        // Instant flash
-        t0.classList.add('matched','bloom');
-        s0.textContent=`✓  ${r.label}`; s0.style.color=r.color;
-        [t1,t2,t3].forEach(el => {
-          el.classList.add('skipped');
-          el.querySelector('.tier-status').textContent='— skipped';
-          el.querySelector('.tier-status').style.color='var(--dim)';
-        });
-      } else {
-        // Tier 0 fast check + miss
-        t0.classList.add('checking'); s0.textContent='checking…'; s0.style.color='var(--muted)';
-        await sleep(65);
-        t0.classList.remove('checking'); t0.classList.add('skipped');
-        s0.textContent='— no match'; s0.style.color='var(--dim)';
+      const result = route(cmd);
 
-        // Tier 1 skip (always in this demo — no active session)
-        t1.classList.add('skipped'); s1.textContent='— no active session'; s1.style.color='var(--dim)';
+      for (let i = 0; i <= 3; i++) {
+        const tierEl = document.getElementById(`tier${i}`);
+        const statusEl = document.getElementById(`tier${i}-status`);
 
-        if (r.tier === 2) {
-          t2.classList.add('checking'); s2.textContent='scanning…'; s2.style.color='var(--muted)';
-          await sleep(330);
-          t2.classList.remove('checking'); t2.classList.add('matched','bloom');
-          s2.textContent=`✓  ${r.label}`; s2.style.color=r.color;
-          t3.classList.add('skipped'); s3.textContent='— skipped'; s3.style.color='var(--dim)';
-        } else {
-          // Tier 2 miss
-          t2.classList.add('checking'); s2.textContent='scanning…'; s2.style.color='var(--muted)';
-          await sleep(270);
-          t2.classList.remove('checking'); t2.classList.add('skipped');
-          s2.textContent='— no match'; s2.style.color='var(--dim)';
+        if (i === 1) {
+          await sleep(80);
+          tierEl.classList.add('skipped');
+          statusEl.textContent = '— no active session';
+          statusEl.style.color = 'var(--muted)';
+          continue;
+        }
 
-          // Tier 3 — update colors for purple if needed
-          if (r.color.includes('purple')) {
-            t3.style.setProperty('--mc','var(--purple)');
-            t3.style.setProperty('--ms','rgba(188,140,255,0.10)');
-            t3.style.setProperty('--mi','rgba(188,140,255,0.13)');
-            t3.style.setProperty('--mb','rgba(188,140,255,0.28)');
+        tierEl.classList.add('checking');
+        statusEl.textContent = 'evaluating…';
+        statusEl.style.color = 'var(--muted)';
+
+        const delay = i === 0 ? 280 : i === 2 ? 380 : 520;
+        await sleep(delay);
+
+        if (i === result.tier) {
+          tierEl.classList.remove('checking');
+          tierEl.classList.add('matched');
+          statusEl.textContent = `✓  ${result.label}`;
+          statusEl.style.color = result.color;
+
+          for (let j = i + 1; j <= 3; j++) {
+            document.getElementById(`tier${j}`).classList.add('skipped');
+            const s = document.getElementById(`tier${j}-status`);
+            s.textContent = '— skipped'; s.style.color = 'var(--muted)';
           }
-          t3.classList.add('checking');
-          s3.innerHTML='classifying <span class="think-dots"><span></span><span></span><span></span></span>';
-          s3.style.color=r.color;
-          document.getElementById('orb-orange').classList.add('lit');
-          await sleep(920);
-          t3.classList.remove('checking'); t3.classList.add('matched','bloom');
-          s3.innerHTML=`✓  ${r.label}`; s3.style.color=r.color;
+          break;
+        } else {
+          tierEl.classList.remove('checking');
+          tierEl.classList.add('skipped');
+          statusEl.textContent = '— no match';
+          statusEl.style.color = 'var(--muted)';
         }
       }
 
-      await sleep(110);
-      showResult(r, cmd);
-    }
+      spinner.classList.remove('active');
+      const elapsed = Math.round(performance.now() - t0);
+      timerEl.textContent = `${elapsed}ms`;
 
-    function showResult(r, cmd) {
-      if (r.tier !== 3) document.getElementById('orb-orange').classList.remove('lit');
+      // Classification breakdown for Tier 3
+      if (result.tier === 3 && result.dims) {
+        const cl = document.getElementById('classification');
+        cl.classList.add('visible');
+        if (result.color === 'var(--purple)') cl.classList.add('purple-theme');
 
-      const ctx = document.getElementById('ctx-result');
-      ctx.style.setProperty('--rc', r.color);
+        const isP = result.color === 'var(--purple)';
+        const ac = isP ? 'accent-purple' : 'accent';
+        const dc = isP ? 'on-purple' : 'on';
 
-      document.getElementById('r-icon').textContent = r.icon||'◆';
-      document.getElementById('r-icon').style.color = r.color;
-      document.getElementById('r-name').textContent = r.tool;
-      document.getElementById('r-name').style.color = r.color;
-      document.getElementById('r-desc').textContent = r.desc;
+        document.getElementById('cl-intent').textContent = result.dims.intent;
+        document.getElementById('cl-intent').className = `cl-value ${ac}`;
+        document.getElementById('cl-scope').textContent = result.dims.scope;
+        document.getElementById('cl-parallel').textContent = result.dims.parallel ? 'yes' : 'no';
+        document.getElementById('cl-parallel').className = `cl-value ${result.dims.parallel ? ac : ''}`;
+        document.getElementById('cl-persist').textContent = result.dims.persist ? 'yes' : 'no';
+        document.getElementById('cl-persist').className = `cl-value ${result.dims.persist ? ac : ''}`;
+        document.getElementById('cl-taste').textContent = result.dims.taste ? 'yes' : 'no';
 
-      document.getElementById('r-badges').innerHTML = `
-        <span class="rbadge hi">Tier ${r.tier}</span>
-        <span class="rbadge">${r.tokens||'0'} tokens</span>
-        <span class="rbadge">${r.lat||'<1ms'}</span>
-        ${r.dims?.persist ? '<span class="rbadge hi">multi-session</span>' : ''}
-        ${r.dims?.parallel ? '<span class="rbadge hi">parallel fleet</span>' : ''}
-      `;
-
-      // What happens next — staggered in
-      const wnEl = document.getElementById('wn-list');
-      wnEl.innerHTML = '';
-      (r.next||[]).forEach((step, i) => {
-        const d = document.createElement('div');
-        d.className = 'wn-step';
-        d.innerHTML = `<span class="wn-n">${i+1}.</span><span class="wn-t">${step}</span>`;
-        wnEl.appendChild(d);
-        setTimeout(() => d.classList.add('in'), i * 75);
-      });
-
-      // Dims
-      const db = document.getElementById('dims-block');
-      if (r.dims) {
-        db.classList.add('show');
-        document.getElementById('dims-grid').innerHTML = `
-          <div class="dim-item"><span class="dim-lbl">Intent</span><span class="dim-val ac">${r.dims.intent}</span></div>
-          <div class="dim-item"><span class="dim-lbl">Scope</span><span class="dim-val">${r.dims.scope}</span></div>
-          <div class="dim-item"><span class="dim-lbl">Complexity</span><div class="dim-dots">${[1,2,3,4,5].map(i=>`<div class="dim-dot${i<=r.dims.complexity?' on':''}"></div>`).join('')}</div></div>
-          <div class="dim-item"><span class="dim-lbl">Multi-session</span><span class="dim-val${r.dims.persist?' ac':''}">${r.dims.persist?'yes':'no'}</span></div>
-          <div class="dim-item"><span class="dim-lbl">Parallel</span><span class="dim-val${r.dims.parallel?' ac':''}">${r.dims.parallel?'yes':'no'}</span></div>
-          <div class="dim-item"><span class="dim-lbl">Taste req.</span><span class="dim-val${r.dims.taste?' ac':''}">${r.dims.taste?'yes':'no'}</span></div>
-        `;
-      } else {
-        db.classList.remove('show');
+        const dotsEl = document.getElementById('cl-dots');
+        dotsEl.innerHTML = '';
+        for (let i = 0; i < 5; i++) {
+          const d = document.createElement('div');
+          d.className = `cl-dot${i < result.dims.complexity ? ' ' + dc : ''}`;
+          dotsEl.appendChild(d);
+        }
       }
 
-      // Related
-      document.getElementById('related').innerHTML = (r.rel||[])
-        .map(c => `<button class="rel-btn" onclick="runCmd(${JSON.stringify(c)})">${c}</button>`).join('');
+      await sleep(180);
 
-      showCtx('ctx-result');
+      // Output card
+      document.getElementById('output-icon').textContent = result.icon || '◆';
+      document.getElementById('output-icon').style.color = result.color;
+      document.getElementById('output-name').textContent = result.tool;
+      document.getElementById('output-name').style.color = result.color;
+      document.getElementById('output-desc').textContent = result.desc;
 
-      routeHistory = [{cmd,r}, ...routeHistory.filter(h=>h.cmd!==cmd)].slice(0,6);
+      const inner = document.getElementById('output-inner');
+      inner.style.borderColor = result.color;
+      inner.style.boxShadow = `0 0 28px color-mix(in srgb, ${result.color} 12%, transparent)`;
+
+      const outSection = document.getElementById('output-section');
+      outSection.style.borderColor = result.color + '30';
+
+      document.getElementById('output-meta').innerHTML = `
+        <span class="meta-badge hi" style="--match-color:${result.color}">Tier ${result.tier}</span>
+        <span class="meta-badge">${result.tokens} tokens to classify</span>
+        <span class="meta-badge">${result.latency} dispatch</span>
+        ${result.dims && result.dims.persist ? `<span class="meta-badge hi" style="--match-color:${result.color}">multi-session</span>` : ''}
+        ${result.dims && result.dims.parallel ? `<span class="meta-badge hi" style="--match-color:${result.color}">parallel fleet</span>` : ''}
+      `;
+
+      outSection.classList.add('visible');
+
+      // History
+      history = [{ cmd, result }, ...history.filter(h => h.cmd !== cmd)].slice(0, 6);
       histIdx = -1;
       renderHistory();
     }
 
-    function runCmd(cmd) {
-      inp.value = cmd; livePreview(cmd); animate(cmd);
-    }
-
-    // ─── History ──────────────────────────────────────────────────────────────
     function renderHistory() {
-      const strip = document.getElementById('history-strip');
-      const pills = document.getElementById('hist-pills');
-      if (routeHistory.length < 2) { strip.classList.remove('show'); return; }
-      strip.classList.add('show');
-      pills.innerHTML = '';
-      routeHistory.slice(1).forEach(h => {
-        const b = document.createElement('button');
-        b.className='hist-pill'; b.style.setProperty('--pc',h.r.color);
-        b.textContent=h.cmd; b.title=`→ ${h.r.tool}`;
-        b.onclick = () => runCmd(h.cmd);
-        pills.appendChild(b);
+      const sec = document.getElementById('history-section');
+      const items = document.getElementById('history-items');
+      if (history.length < 2) { sec.classList.remove('visible'); return; }
+      sec.classList.add('visible');
+      items.innerHTML = '';
+      history.slice(1).forEach(h => {
+        const pill = document.createElement('button');
+        pill.className = 'history-pill';
+        pill.style.setProperty('--pill-color', h.result.color);
+        pill.textContent = h.cmd;
+        pill.title = `→ ${h.result.tool}`;
+        pill.addEventListener('click', () => {
+          input.value = h.cmd;
+          animateRoute(h.cmd);
+        });
+        items.appendChild(pill);
       });
     }
 
-    // ─── Keyboard ────────────────────────────────────────────────────────────
-    inp.addEventListener('keydown', e => {
-      if (e.key === 'Enter' && inp.value.trim()) { animate(inp.value.trim()); return; }
+    function triggerRoute() {
+      if (input.value.trim()) animateRoute(input.value.trim());
+    }
+
+    // ─── Event handlers ───────────────────────────────────────────────────
+    input.addEventListener('keydown', e => {
+      if (e.key === 'Enter' && input.value.trim()) {
+        animateRoute(input.value.trim());
+      }
       if (e.key === 'ArrowUp') {
         e.preventDefault();
-        if (routeHistory.length) {
-          histIdx = Math.min(histIdx+1, routeHistory.length-1);
-          inp.value = routeHistory[histIdx].cmd; livePreview(inp.value);
+        const cmds = history.map(h => h.cmd);
+        if (cmds.length > 0) {
+          histIdx = Math.min(histIdx + 1, cmds.length - 1);
+          input.value = cmds[histIdx];
+          updateLivePreview(input.value);
         }
       }
       if (e.key === 'ArrowDown') {
         e.preventDefault();
-        histIdx > 0 ? (inp.value=routeHistory[--histIdx].cmd) : (histIdx=-1, inp.value='');
-        livePreview(inp.value);
+        if (histIdx > 0) {
+          histIdx--;
+          input.value = history[histIdx].cmd;
+        } else {
+          histIdx = -1;
+          input.value = '';
+        }
+        updateLivePreview(input.value);
       }
-      if (e.key === 'Escape') { inp.value=''; histIdx=-1; livePreview(''); }
+      if (e.key === 'Escape' && !activePanel) {
+        input.value = '';
+        histIdx = -1;
+        updateLivePreview('');
+      }
     });
 
-    document.querySelectorAll('.ex-btn').forEach(b => {
-      b.onclick = () => { inp.value=b.dataset.cmd; livePreview(b.dataset.cmd); animate(b.dataset.cmd); };
+    // Example buttons
+    document.querySelectorAll('.example-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        input.value = btn.dataset.cmd;
+        updateLivePreview(btn.dataset.cmd);
+        animateRoute(btn.dataset.cmd);
+      });
     });
 
-    // ─── Panels ───────────────────────────────────────────────────────────────
+    // How-section example links
+    document.querySelectorAll('.how-example[data-cmd]').forEach(el => {
+      el.addEventListener('click', () => {
+        input.value = el.dataset.cmd;
+        updateLivePreview(el.dataset.cmd);
+        animateRoute(el.dataset.cmd);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      });
+    });
+
+    // Auto-demo on load
+    setTimeout(() => animateRoute('review the auth module'), 700);
+
+    // ─── Side panels ──────────────────────────────────────────────────────
+    let activePanel = null;
+
     function openPanel(name) {
-      if (activePanel===name) { closePanel(); return; }
+      if (activePanel === name) { closePanel(); return; }
       if (activePanel) {
         document.getElementById(`panel-${activePanel}`).classList.remove('open');
-        document.querySelectorAll('.nav-link').forEach(el=>el.classList.remove('panel-active'));
+        document.querySelectorAll('.nav-link').forEach(el => el.classList.remove('panel-active'));
       }
-      activePanel=name;
+      activePanel = name;
       document.getElementById('panel-backdrop').classList.add('open');
       document.getElementById(`panel-${name}`).classList.add('open');
-      const btn=[...document.querySelectorAll('.nav-link')].find(el=>el.getAttribute('onclick')===`openPanel('${name}')`);
+      const btn = [...document.querySelectorAll('.nav-link')].find(
+        el => el.getAttribute('onclick') === `openPanel('${name}')`
+      );
       if (btn) btn.classList.add('panel-active');
+      document.body.style.overflow = 'hidden';
     }
+
     function closePanel() {
       if (!activePanel) return;
       document.getElementById('panel-backdrop').classList.remove('open');
       document.getElementById(`panel-${activePanel}`).classList.remove('open');
-      document.querySelectorAll('.nav-link').forEach(el=>el.classList.remove('panel-active'));
-      activePanel=null;
-    }
-    function cpCode(btn) {
-      const block = btn.closest('.p-code');
-      const text = [...block.childNodes]
-        .filter(n=>n.nodeType===Node.TEXT_NODE||n.tagName==='BR')
-        .map(n=>n.tagName==='BR'?'\n':n.textContent).join('').trim();
-      navigator.clipboard.writeText(text).then(()=>{
-        btn.textContent='copied!'; btn.classList.add('copied');
-        setTimeout(()=>{ btn.textContent='copy'; btn.classList.remove('copied'); },1800);
-      });
+      document.querySelectorAll('.nav-link').forEach(el => el.classList.remove('panel-active'));
+      document.body.style.overflow = '';
+      activePanel = null;
     }
 
     document.addEventListener('keydown', e => {
-      if (e.key==='Escape') {
-        if (activePanel) { closePanel(); e.stopPropagation(); return; }
-        inp.value=''; histIdx=-1; livePreview('');
-      }
+      if (e.key === 'Escape' && activePanel) { closePanel(); e.stopPropagation(); }
     });
-
-    // ─── Simulator ────────────────────────────────────────────────────────────
-    const ARCHON_DATA = {
-      cmd: '/archon build me a recipe app',
-      phases: [
-        { name:'Phase 1 — Research', lines:[
-          {t:'→ Reading CLAUDE.md conventions…', d:0},
-          {t:'→ Checking for existing PRD…', d:320},
-          {t:'→ No PRD found — generating from description', d:640, c:'info'},
-          {t:'✓ docs/PRD.md written (42 lines)', d:1050, c:'ok'},
-        ]},
-        { name:'Phase 2 — Architecture', lines:[
-          {t:'→ Delegating to /architect…', d:0, c:'info'},
-          {t:'→ Reading src/ naming conventions…', d:380},
-          {t:'→ Creating 5 build phases with end conditions…', d:720},
-          {t:'✓ .planning/campaigns/recipe-app.md written', d:1120, c:'ok'},
-        ]},
-        { name:'Phase 3 — Build (database layer)', lines:[
-          {t:'→ Marshal spawned for database layer', d:0, c:'info'},
-          {t:'→ Writing src/db/schema.ts…', d:420},
-          {t:'→ Writing src/db/queries.ts…', d:780},
-          {t:'→ Running typecheck…', d:1100},
-          {t:'✓ Typecheck: 0 errors', d:1520, c:'ok'},
-        ]},
-        { name:'Phase 4 — Wire API routes', lines:[
-          {t:'→ Marshal spawned for API routes', d:0, c:'info'},
-          {t:'→ Writing src/routes/recipes.ts…', d:400},
-          {t:'→ Writing src/routes/ingredients.ts…', d:760},
-          {t:'✓ End condition: GET /recipes → 200', d:1180, c:'ok'},
-        ]},
-        { name:'Phase 5 — Verify', lines:[
-          {t:'→ Running npm run typecheck…', d:0},
-          {t:'→ Running npm test…', d:620},
-          {t:'✓ 24/24 tests passing', d:1250, c:'ok'},
-          {t:'✓ Campaign complete — moved to completed/', d:1650, c:'ok'},
-        ]},
-      ]
-    };
-
-    const FLEET_DATA = {
-      cmd: '/fleet migrate platform to TypeScript strict',
-      agents: [
-        { label:'src/kernel/', color:'var(--cyan)', lines:[
-          {t:'→ Scanning 42 files…', d:0},
-          {t:'→ Found 18 implicit any violations', d:480},
-          {t:'→ Adding explicit type annotations…', d:880},
-          {t:'✓ kernel/: 0 strict errors', d:2100, c:'ok'},
-        ]},
-        { label:'src/domains/', color:'var(--blue)', lines:[
-          {t:'→ Scanning 67 files…', d:120},
-          {t:'→ Found 34 strict violations', d:580},
-          {t:'→ Adding type guards + return types…', d:980},
-          {t:'✓ domains/: 0 strict errors', d:2450, c:'ok'},
-        ]},
-        { label:'src/canvas/', color:'var(--purple)', lines:[
-          {t:'→ Scanning 29 files…', d:260},
-          {t:'→ Found 11 implicit returns', d:700},
-          {t:'→ Adding return types…', d:1050},
-          {t:'✓ canvas/: 0 strict errors', d:1820, c:'ok'},
-        ]},
-      ]
-    };
-
-    async function startSim(type) {
-      simBusy = true;
-      showCtx('ctx-sim');
-      const body = document.getElementById('sim-body');
-      body.innerHTML='';
-
-      if (type==='archon') {
-        document.getElementById('sim-title').textContent='Archon Campaign';
-        document.getElementById('sim-cmd').textContent=ARCHON_DATA.cmd;
-        if (simBusy) await runArchon(body);
-      } else {
-        document.getElementById('sim-title').textContent='Fleet Parallel Execution';
-        document.getElementById('sim-cmd').textContent=FLEET_DATA.cmd;
-        if (simBusy) await runFleet(body);
-      }
-    }
-
-    async function runArchon(body) {
-      const phases = ARCHON_DATA.phases;
-      const els = phases.map(ph => {
-        const el = document.createElement('div');
-        el.className='sim-phase';
-        el.innerHTML=`<div class="sim-phase-hd"><div class="sim-dot pending"></div><span class="sim-phase-name">${ph.name}</span><span class="sim-elapsed"></span></div><div class="sim-term"></div>`;
-        body.appendChild(el); return el;
-      });
-
-      for (let i=0; i<phases.length; i++) {
-        if (!simBusy) return;
-        const ph=phases[i], el=els[i];
-        const dot=el.querySelector('.sim-dot'), term=el.querySelector('.sim-term'), elap=el.querySelector('.sim-elapsed');
-        el.classList.add('running'); dot.className='sim-dot running';
-        const t0=Date.now();
-        const timer=setInterval(()=>{ if(document.hidden) return; elap.textContent=`${((Date.now()-t0)/1000).toFixed(1)}s`; },100);
-        const maxDelay=Math.max(...ph.lines.map(l=>l.d))+450;
-        ph.lines.forEach(line=>{
-          setTimeout(()=>{
-            if(!simBusy) return;
-            const ln=document.createElement('div');
-            ln.className=`sim-line${line.c?' '+line.c:''}`;
-            ln.textContent=line.t; term.appendChild(ln);
-            el.scrollIntoView({behavior:'smooth',block:'nearest'});
-          },line.d);
-        });
-        await sleep(maxDelay);
-        clearInterval(timer);
-        elap.textContent=`${((Date.now()-t0)/1000).toFixed(1)}s`;
-        el.classList.remove('running'); el.classList.add('done'); dot.className='sim-dot done';
-        await sleep(180);
-      }
-      simBusy=false;
-    }
-
-    async function runFleet(body) {
-      const {agents}=FLEET_DATA;
-      const els=agents.map(ag=>{
-        const el=document.createElement('div');
-        el.className='fleet-agent';
-        el.innerHTML=`<div class="fa-hd"><div class="fa-dot" style="background:${ag.color}"></div><span class="fa-label">${ag.label}</span><span class="fa-status" style="color:${ag.color}">running</span></div><div class="fa-term"></div>`;
-        body.appendChild(el); return el;
-      });
-      const hub=document.createElement('div');
-      hub.className='fleet-hub';
-      hub.innerHTML='<div class="fleet-hub-title">↑ Hub convergence</div><div class="fleet-hub-sub">Wave 1 complete — discoveries shared</div>';
-      body.appendChild(hub);
-
-      const maxDelay=Math.max(...agents.flatMap(a=>a.lines.map(l=>l.d)))+700;
-      agents.forEach((ag,ai)=>{
-        const term=els[ai].querySelector('.fa-term');
-        ag.lines.forEach(line=>{
-          setTimeout(()=>{
-            if(!simBusy) return;
-            const ln=document.createElement('div');
-            ln.className=`sim-line${line.c?' '+line.c:''}`;
-            ln.textContent=line.t; term.appendChild(ln);
-          },line.d);
-        });
-      });
-
-      await sleep(maxDelay);
-      if (!simBusy) return;
-      agents.forEach((ag,ai)=>{
-        const s=els[ai].querySelector('.fa-status');
-        s.textContent='done'; s.style.color='var(--green)';
-      });
-      hub.classList.add('show');
-      await sleep(380);
-      if (!simBusy) return;
-      const fin=document.createElement('div');
-      fin.className='sim-line ok';
-      fin.style.cssText='text-align:center;padding:6px 14px';
-      fin.textContent='✓ 63 files updated · 0 type errors · merge arbitration clean';
-      hub.appendChild(fin);
-      simBusy=false;
-    }
-
-    // ─── Stats counter ────────────────────────────────────────────────────────
-    function countUp() {
-      document.querySelectorAll('.stat-num[data-to]').forEach(el=>{
-        const target=parseInt(el.dataset.to), step=Math.ceil(target/18);
-        let n=0;
-        const iv=setInterval(()=>{
-          if(document.hidden) return;
-          n=Math.min(n+step,target); el.textContent=n;
-          if(n>=target) clearInterval(iv);
-        },38);
-      });
-    }
-
-    // ─── Init ─────────────────────────────────────────────────────────────────
-    showCtx('ctx-idle');
-    setTimeout(countUp, 400);
-    setTimeout(() => animate('review the auth module'), 850);
-    inp.focus();
   </script>
 </body>
 </html>
