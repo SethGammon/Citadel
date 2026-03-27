@@ -28,13 +28,14 @@ const path             = require('path');
 const PLUGIN_ROOT  = path.resolve(__dirname, '..');
 const SMOKE_TEST   = path.join(PLUGIN_ROOT, 'hooks_src', 'smoke-test.js');
 const SKILL_LINT   = path.join(PLUGIN_ROOT, 'scripts', 'skill-lint.js');
+const DEMO_TEST    = path.join(PLUGIN_ROOT, 'scripts', 'test-demo.js');
 
 const STRICT = process.argv.includes('--strict');
 
 // ── Banner ────────────────────────────────────────────────────────────────────
 
 console.log('\nCitadel Full Test Suite\n' + '='.repeat(40));
-console.log('Running: hook smoke test + skill lint\n');
+console.log('Running: hook smoke test + skill lint + demo routing check\n');
 
 // ── Run a sub-script ──────────────────────────────────────────────────────────
 
@@ -61,19 +62,21 @@ function run(label, scriptPath, extraArgs = []) {
 
 // ── Execute ───────────────────────────────────────────────────────────────────
 
-const hooksPassed  = run('Hook Smoke Test',  SMOKE_TEST);
+const hooksPassed  = run('Hook Smoke Test',    SMOKE_TEST);
 const lintArgs     = STRICT ? ['--warn-as-fail'] : [];
-const skillsPassed = run('Skill Lint',       SKILL_LINT, lintArgs);
+const skillsPassed = run('Skill Lint',         SKILL_LINT, lintArgs);
+const demoPassed   = run('Demo Routing Check', DEMO_TEST);
 
 // ── Summary ───────────────────────────────────────────────────────────────────
 
 console.log('\n' + '='.repeat(40));
 console.log('SUMMARY');
-console.log(`  Hook smoke test: ${hooksPassed  ? 'PASS' : 'FAIL'}`);
-console.log(`  Skill lint:      ${skillsPassed ? 'PASS' : 'FAIL'}`);
+console.log(`  Hook smoke test:    ${hooksPassed  ? 'PASS' : 'FAIL'}`);
+console.log(`  Skill lint:         ${skillsPassed ? 'PASS' : 'FAIL'}`);
+console.log(`  Demo routing check: ${demoPassed   ? 'PASS' : 'FAIL'}`);
 console.log('');
 
-if (hooksPassed && skillsPassed) {
+if (hooksPassed && skillsPassed && demoPassed) {
   console.log('All tests pass.\n');
   console.log('Next steps:');
   console.log('  node scripts/skill-bench.js --list      see benchmark scenarios');
@@ -83,10 +86,12 @@ if (hooksPassed && skillsPassed) {
 } else {
   const hookFail  = !hooksPassed  ? 1 : 0;
   const skillFail = !skillsPassed ? 2 : 0;
-  const code      = hookFail | skillFail;
+  const demoFail  = !demoPassed   ? 4 : 0;
+  const code      = hookFail | skillFail | demoFail;
 
   if (!hooksPassed)  console.log('Hook smoke test failed. Fix hook issues before proceeding.');
   if (!skillsPassed) console.log('Skill lint failed. Fix FAIL-level issues before shipping.');
+  if (!demoPassed)   console.log('Demo routing check failed. Fix routing bugs in docs/index.html before shipping.');
   console.log('');
   process.exit(code);
 }
