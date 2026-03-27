@@ -27,11 +27,11 @@
     }
 
     /* Hide scrollbar everywhere */
-    html { scrollbar-width: none; }
+    html { scrollbar-width: none; background: var(--bg); }
     ::-webkit-scrollbar { display: none; }
 
     body {
-      background: var(--bg);
+      background: transparent;
       color: var(--text);
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
       min-height: 100vh;
@@ -51,6 +51,13 @@
 
     *:focus { outline: none; }
     *:focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; border-radius: 4px; }
+
+    /* ─── Dot grid canvas ─── */
+    #bg-dots {
+      position: fixed; inset: 0;
+      z-index: -1; pointer-events: none;
+      width: 100%; height: 100%;
+    }
 
     /* ─── Nav ─── */
     nav {
@@ -260,6 +267,7 @@
     .result-panel {
       background: var(--surface); border: 1.5px solid var(--border);
       border-radius: 14px; overflow: hidden;
+      margin-top: 8px;
       clip-path: inset(0 0 100% 0 round 14px);
       opacity: 0;
       transition: clip-path 0.7s cubic-bezier(0.22, 1, 0.36, 1),
@@ -612,6 +620,7 @@
       max-height: 0; opacity: 0; margin-top: 0; margin-bottom: 0;
     }
     body.mode-result .playground {
+      padding-top: 24px;
       padding-bottom: 20px;
     }
     body.mode-result .tier-row.skipped {
@@ -623,11 +632,8 @@
     body.mode-result .tier-row.skipped .tier-sub {
       opacity: 0;
     }
-    body.mode-result .stat-bar,
-    body.mode-result .how-section,
-    body.mode-result footer {
-      display: none;
-    }
+    body.mode-result .screen-2 { display: none; }
+    body.mode-result .scroll-cue { opacity: 0 !important; pointer-events: none; }
 
     /* ─── Reset button ─── */
     .reset-btn {
@@ -637,6 +643,33 @@
       transition: border-color 0.15s, color 0.15s; white-space: nowrap;
     }
     .reset-btn:hover { border-color: var(--cyan); color: var(--cyan); }
+
+    /* ─── Screen 2 ─── */
+    .screen-2 {
+      width: 100%;
+      display: flex; flex-direction: column; align-items: center;
+      scroll-margin-top: 46px; /* sticky nav height */
+    }
+
+    /* ─── Scroll cue ─── */
+    .scroll-cue {
+      position: fixed; bottom: 28px; left: 50%;
+      transform: translateX(-50%);
+      background: none; border: none; cursor: pointer;
+      color: var(--muted);
+      display: flex; flex-direction: column; align-items: center; gap: 1px;
+      padding: 8px; border-radius: 8px;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.5s ease, color 0.15s;
+      z-index: 50;
+    }
+    .scroll-cue.visible { opacity: 0.45; pointer-events: all; }
+    .scroll-cue:hover { opacity: 1 !important; color: var(--cyan); }
+    @keyframes cue-drift {
+      0%, 100% { transform: translateX(-50%) translateY(0); }
+      50%       { transform: translateX(-50%) translateY(5px); }
+    }
+    .scroll-cue.visible { animation: cue-drift 2s ease-in-out infinite; }
 
     /* ─── Responsive ─── */
     @media (max-width: 760px) {
@@ -657,6 +690,8 @@
   </style>
 </head>
 <body>
+
+  <canvas id="bg-dots"></canvas>
 
   <nav>
     <a class="nav-logo" href="https://github.com/SethGammon/Citadel">CITADEL</a>
@@ -836,92 +871,85 @@
 
   </div><!-- /playground -->
 
-  <!-- Stats -->
-  <div class="stat-bar">
-    <div class="stat">
-      <div class="stat-num">33</div>
-      <div class="stat-label">Skills</div>
-    </div>
-    <div class="stat">
-      <div class="stat-num">4</div>
-      <div class="stat-label">Autonomous Agents</div>
-    </div>
-    <div class="stat">
-      <div class="stat-num">14</div>
-      <div class="stat-label">Hook Events</div>
-    </div>
-    <div class="stat">
-      <div class="stat-num">~0</div>
-      <div class="stat-label">Config Required</div>
-    </div>
-  </div>
+  <!-- ── Screen 2 ─────────────────────────────────────────────────────── -->
+  <div class="screen-2" id="screen-2">
 
-  <!-- How It Works cards -->
-  <div class="how-section">
-    <div class="how-card">
-      <div class="how-card-header">
-        <span class="how-tier-badge" style="color:var(--green)">TIER 0</span>
-        <div>
-          <div class="how-card-name">Pattern Match</div>
-          <div class="how-card-sub">~0 tokens · &lt;1ms</div>
-        </div>
-      </div>
-      <p class="how-card-desc">Pure regex against the raw input string. No model call, no skill load. Catches exact-intent commands that need no classification — typos, renames, commits, status checks. If it matches here, Claude executes it directly and stops.</p>
-      <div class="how-examples">
-        <div class="how-example" style="--ex-color:var(--green)" data-cmd="fix the typo on line 42">/do fix the typo on line 42</div>
-        <div class="how-example" style="--ex-color:var(--green)" data-cmd="rename AuthService to AuthHandler">/do rename AuthService to AuthHandler</div>
-        <div class="how-example" style="--ex-color:var(--green)" data-cmd="commit my changes">/do commit my changes</div>
-      </div>
+    <!-- Stats -->
+    <div class="stat-bar">
+      <div class="stat"><div class="stat-num">33</div><div class="stat-label">Skills</div></div>
+      <div class="stat"><div class="stat-num">4</div><div class="stat-label">Autonomous Agents</div></div>
+      <div class="stat"><div class="stat-num">14</div><div class="stat-label">Hook Events</div></div>
+      <div class="stat"><div class="stat-num">~0</div><div class="stat-label">Config Required</div></div>
     </div>
 
-    <div class="how-card">
-      <div class="how-card-header">
-        <span class="how-tier-badge" style="color:var(--cyan)">TIER 2</span>
-        <div>
-          <div class="how-card-name">Keyword Match</div>
-          <div class="how-card-sub">~0 tokens · &lt;10ms</div>
+    <!-- How It Works -->
+    <div class="how-section">
+      <div class="how-card">
+        <div class="how-card-header">
+          <span class="how-tier-badge" style="color:var(--green)">TIER 0</span>
+          <div><div class="how-card-name">Pattern Match</div><div class="how-card-sub">~0 tokens · &lt;1ms</div></div>
+        </div>
+        <p class="how-card-desc">Pure regex against the raw input string. No model call, no skill load. Catches exact-intent commands — typos, renames, commits, status checks. If it matches here, Claude executes it directly and stops.</p>
+        <div class="how-examples">
+          <div class="how-example" style="--ex-color:var(--green)" data-cmd="fix the typo on line 42">/do fix the typo on line 42</div>
+          <div class="how-example" style="--ex-color:var(--green)" data-cmd="rename AuthService to AuthHandler">/do rename AuthService to AuthHandler</div>
+          <div class="how-example" style="--ex-color:var(--green)" data-cmd="commit my changes">/do commit my changes</div>
         </div>
       </div>
-      <p class="how-card-desc">The input is scanned against a keyword table built from every installed skill's name and description. "review" → /review, "debug" → /systematic-debugging. New skills register their own keywords automatically. No LLM needed.</p>
-      <div class="how-examples">
-        <div class="how-example" style="--ex-color:var(--cyan)" data-cmd="review the auth module">/do review the auth module</div>
-        <div class="how-example" style="--ex-color:var(--cyan)" data-cmd="write tests for UserService">/do write tests for UserService</div>
-        <div class="how-example" style="--ex-color:var(--cyan)" data-cmd="scaffold a new dashboard component">/do scaffold a new dashboard component</div>
-      </div>
-    </div>
-
-    <div class="how-card">
-      <div class="how-card-header">
-        <span class="how-tier-badge" style="color:var(--orange)">TIER 3</span>
-        <div>
-          <div class="how-card-name">LLM Classifier</div>
-          <div class="how-card-sub">~500 tokens · ~1–2s</div>
+      <div class="how-card">
+        <div class="how-card-header">
+          <span class="how-tier-badge" style="color:var(--cyan)">TIER 2</span>
+          <div><div class="how-card-name">Keyword Match</div><div class="how-card-sub">~0 tokens · &lt;10ms</div></div>
+        </div>
+        <p class="how-card-desc">The input is scanned against a keyword table built from every installed skill. "review" → /review, "debug" → /systematic-debugging. New skills register their own keywords automatically. No LLM needed.</p>
+        <div class="how-examples">
+          <div class="how-example" style="--ex-color:var(--cyan)" data-cmd="review the auth module">/do review the auth module</div>
+          <div class="how-example" style="--ex-color:var(--cyan)" data-cmd="write tests for UserService">/do write tests for UserService</div>
+          <div class="how-example" style="--ex-color:var(--cyan)" data-cmd="scaffold a new dashboard component">/do scaffold a new dashboard component</div>
         </div>
       </div>
-      <p class="how-card-desc">Classifies 6 dimensions: scope, complexity (1–5), intent, multi-session persistence, parallel execution, and taste/judgment requirements. The first match wins. Routing to Archon or Fleet is expensive — the classifier only fires when simpler tiers fail.</p>
-      <div class="how-examples">
-        <div class="how-example" style="--ex-color:var(--orange)" data-cmd="build me a recipe app">/do build me a recipe app</div>
-        <div class="how-example" style="--ex-color:var(--orange)" data-cmd="add Stripe payments to checkout">/do add Stripe payments to checkout</div>
-        <div class="how-example" style="--ex-color:var(--orange)" data-cmd="create a real-time notification system">/do create a real-time notification system</div>
+      <div class="how-card">
+        <div class="how-card-header">
+          <span class="how-tier-badge" style="color:var(--orange)">TIER 3</span>
+          <div><div class="how-card-name">LLM Classifier</div><div class="how-card-sub">~500 tokens · ~1–2s</div></div>
+        </div>
+        <p class="how-card-desc">Classifies 6 dimensions: scope, complexity (1–5), intent, multi-session persistence, parallel execution, and taste/judgment requirements. Only fires when Tiers 0–2 all miss.</p>
+        <div class="how-examples">
+          <div class="how-example" style="--ex-color:var(--orange)" data-cmd="build me a recipe app">/do build me a recipe app</div>
+          <div class="how-example" style="--ex-color:var(--orange)" data-cmd="add Stripe payments to checkout">/do add Stripe payments to checkout</div>
+          <div class="how-example" style="--ex-color:var(--orange)" data-cmd="create a real-time notification system">/do create a real-time notification system</div>
+        </div>
+      </div>
+      <div class="how-card">
+        <div class="how-card-header">
+          <span class="how-tier-badge" style="color:var(--purple)">TIER 3+</span>
+          <div><div class="how-card-name">Fleet Dispatch</div><div class="how-card-sub">~500 tokens · parallel</div></div>
+        </div>
+        <p class="how-card-desc">When the classifier detects platform-wide scope or required parallelism, it dispatches to Fleet. Spawns 2–3 agents in isolated git worktrees per wave, shares discoveries between waves, merge arbitration on completion.</p>
+        <div class="how-examples">
+          <div class="how-example" style="--ex-color:var(--purple)" data-cmd="overhaul all three services">/do overhaul all three services</div>
+          <div class="how-example" style="--ex-color:var(--purple)" data-cmd="redesign the entire data layer">/do redesign the entire data layer</div>
+          <div class="how-example" style="--ex-color:var(--purple)" data-cmd="migrate the platform to TypeScript strict mode">/do migrate the platform to TypeScript strict mode</div>
+        </div>
       </div>
     </div>
 
-    <div class="how-card">
-      <div class="how-card-header">
-        <span class="how-tier-badge" style="color:var(--purple)">TIER 3+</span>
-        <div>
-          <div class="how-card-name">Fleet Dispatch</div>
-          <div class="how-card-sub">~500 tokens · parallel</div>
-        </div>
-      </div>
-      <p class="how-card-desc">When the classifier detects platform-wide scope or required parallelism, it dispatches to Fleet instead of Archon. Fleet spawns 2–3 agents in isolated git worktrees per wave, shares discoveries between waves, and merges results with conflict arbitration.</p>
-      <div class="how-examples">
-        <div class="how-example" style="--ex-color:var(--purple)" data-cmd="overhaul all three services">/do overhaul all three services</div>
-        <div class="how-example" style="--ex-color:var(--purple)" data-cmd="redesign the entire data layer">/do redesign the entire data layer</div>
-        <div class="how-example" style="--ex-color:var(--purple)" data-cmd="migrate the platform to TypeScript strict mode">/do migrate the platform to TypeScript strict mode</div>
-      </div>
-    </div>
-  </div>
+    <footer>
+      <span>Citadel — Agent Orchestration for Claude Code &nbsp;·&nbsp; <a href="https://repo-explainer.com/SethGammon/Citadel/">Architecture</a></span>
+      <span><a href="https://github.com/SethGammon/Citadel">GitHub</a> &nbsp;·&nbsp; <a href="https://github.com/SethGammon/Citadel/blob/main/LICENSE">MIT</a></span>
+    </footer>
+
+  </div><!-- /screen-2 -->
+
+  <!-- Scroll cue (fixed, connects screen 1 → screen 2) -->
+  <button class="scroll-cue" id="scroll-cue" onclick="scrollToScreen2()" aria-label="Scroll to learn more">
+    <svg width="22" height="13" viewBox="0 0 22 13" fill="none">
+      <path d="M1 1.5L11 10.5L21 1.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    <svg width="22" height="13" viewBox="0 0 22 13" fill="none" style="opacity:0.35">
+      <path d="M1 1.5L11 10.5L21 1.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </button>
 
   <!-- Panel backdrop -->
   <div class="panel-backdrop" id="panel-backdrop" onclick="closePanel()"></div>
@@ -1097,11 +1125,11 @@
   </div>
 
   <footer>
-    <span>Citadel — Agent Orchestration for Claude Code &nbsp;·&nbsp; <a href="https://repo-explainer.com/SethGammon/Citadel/">Architecture overview</a></span>
+    <span>Citadel &nbsp;·&nbsp; 33 skills &nbsp;·&nbsp; 4 agents &nbsp;·&nbsp; 14 hooks &nbsp;·&nbsp; ~0 config</span>
     <span>
       <a href="https://github.com/SethGammon/Citadel">GitHub</a>
       &nbsp;·&nbsp;
-      <a href="https://github.com/SethGammon/Citadel/blob/main/LICENSE">MIT License</a>
+      <a href="https://github.com/SethGammon/Citadel/blob/main/LICENSE">MIT</a>
     </span>
   </footer>
 
@@ -1387,7 +1415,10 @@
       updateLivePreview('');
       resetTiers();
       window.scrollTo({ top: 0 });
-      setTimeout(() => input.focus(), 50);
+      setTimeout(() => {
+        input.focus();
+        if (window.scrollY <= 80) scrollCue.classList.add('visible');
+      }, 300);
     }
 
     function triggerRoute() {
@@ -1549,6 +1580,112 @@
     document.addEventListener('keydown', e => {
       if (e.key === 'Escape' && activePanel) { closePanel(); e.stopPropagation(); }
     });
+
+    // ─── Scroll cue ───────────────────────────────────────────────────────
+    const scrollCue = document.getElementById('scroll-cue');
+
+    function scrollToScreen2() {
+      const s2 = document.getElementById('screen-2');
+      const navH = document.querySelector('nav').offsetHeight;
+      const top = s2.getBoundingClientRect().top + window.scrollY - navH;
+      window.scrollTo({ top, behavior: 'smooth' });
+    }
+
+    window.addEventListener('scroll', () => {
+      const hidden = window.scrollY > 80 || document.body.classList.contains('mode-result');
+      scrollCue.classList.toggle('visible', !hidden);
+    }, { passive: true });
+
+    setTimeout(() => {
+      if (!document.body.classList.contains('mode-result')) {
+        scrollCue.classList.add('visible');
+      }
+    }, 1200);
+
+    // ─── Interactive dot grid ──────────────────────────────────────────────
+    (function () {
+      const canvas = document.getElementById('bg-dots');
+      const ctx = canvas.getContext('2d');
+      const SPACING  = 32;
+      const BASE_R   = 1.2;
+      const MAX_R    = 3.8;
+      const INFLUENCE = 150;
+      const LERP_IN  = 0.16;  // heats up quickly
+      const LERP_OUT = 0.05;  // cools down slowly — trail effect
+
+      let W, H, cols, rows, heat;
+      let mx = -9999, my = -9999;
+      let raf = null, lastTime = 0;
+      const FRAME_MS = 1000 / 30; // throttle to 30fps
+
+      function resize() {
+        W = canvas.width  = window.innerWidth;
+        H = canvas.height = window.innerHeight;
+        cols = Math.ceil(W / SPACING) + 1;
+        rows = Math.ceil(H / SPACING) + 1;
+        heat = new Float32Array(cols * rows);
+      }
+
+      function draw(now) {
+        raf = requestAnimationFrame(draw);
+        if (now - lastTime < FRAME_MS) return;
+        lastTime = now;
+
+        const len = heat.length;
+
+        // Update heat values
+        for (let i = 0; i < len; i++) {
+          const x = (i % cols) * SPACING;
+          const y = ((i / cols) | 0) * SPACING;
+          const dx = x - mx, dy = y - my;
+          const dist2 = dx * dx + dy * dy;
+          const target = dist2 < INFLUENCE * INFLUENCE
+            ? 1 - Math.sqrt(dist2) / INFLUENCE : 0;
+          const lr = target > heat[i] ? LERP_IN : LERP_OUT;
+          heat[i] += (target - heat[i]) * lr;
+        }
+
+        ctx.clearRect(0, 0, W, H);
+
+        // Batch: all dim dots in one path (fast)
+        ctx.beginPath();
+        ctx.fillStyle = 'rgba(30,38,50,0.7)';
+        for (let i = 0; i < len; i++) {
+          if (heat[i] < 0.02) {
+            const x = (i % cols) * SPACING;
+            const y = ((i / cols) | 0) * SPACING;
+            ctx.moveTo(x + BASE_R, y);
+            ctx.arc(x, y, BASE_R, 0, Math.PI * 2);
+          }
+        }
+        ctx.fill();
+
+        // Individual lit dots with color
+        for (let i = 0; i < len; i++) {
+          const t = heat[i];
+          if (t < 0.02) continue;
+          const x = (i % cols) * SPACING;
+          const y = ((i / cols) | 0) * SPACING;
+          const r = BASE_R + (MAX_R - BASE_R) * t * t;
+          ctx.beginPath();
+          ctx.arc(x, y, r, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(0,210,255,${(0.18 + 0.65 * t).toFixed(2)})`;
+          ctx.fill();
+        }
+      }
+
+      function start() { if (!raf) { lastTime = 0; raf = requestAnimationFrame(draw); } }
+      function stop()  { if (raf)  { cancelAnimationFrame(raf); raf = null; } }
+
+      resize();
+      window.addEventListener('resize', resize);
+      window.addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; });
+      window.addEventListener('mouseleave', () => { mx = -9999; my = -9999; });
+      document.addEventListener('visibilitychange', () => {
+        document.hidden ? stop() : start();
+      });
+      start();
+    })();
   </script>
 </body>
 </html>
