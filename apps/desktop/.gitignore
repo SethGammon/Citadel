@@ -1,0 +1,4 @@
+dist/
+dist-electron/
+node_modules/
+.planning/
