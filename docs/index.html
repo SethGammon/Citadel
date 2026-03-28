@@ -164,7 +164,7 @@
 
     #cmd-input {
       width: 100%;
-      padding: 22px 180px 22px 72px;
+      padding: 22px 240px 22px 72px;
       background: var(--surface);
       border: 1.5px solid var(--border);
       border-radius: 40px;
@@ -276,6 +276,10 @@
     .gen-meta {
       font-size: 11px; color: var(--dim);
       font-family: 'SF Mono', monospace;
+    }
+    .gen-desc {
+      font-size: 11px; color: var(--muted); margin-top: 5px;
+      line-height: 1.4; font-style: italic;
     }
     .gen-again {
       font-size: 10px; color: var(--gc); opacity: 0;
@@ -646,8 +650,8 @@
       padding: 20px 40px; display: flex; align-items: center;
       justify-content: space-between; color: var(--muted); font-size: 13px;
     }
-    footer a { color: var(--muted); text-decoration: none; }
-    footer a:hover { color: var(--text); }
+    footer a { color: var(--muted); text-decoration: none; border-bottom: 1px solid color-mix(in srgb, var(--muted) 35%, transparent); }
+    footer a:hover { color: var(--text); border-bottom-color: var(--text); }
 
     /* ─── Spinner ─── */
     @keyframes spin { to { transform: rotate(360deg); } }
@@ -821,7 +825,7 @@
     .scroll-cue:hover { opacity: 1 !important; color: var(--cyan); }
     @keyframes cue-drift {
       0%, 100% { transform: translateX(-50%) translateY(0); }
-      50%       { transform: translateX(-50%) translateY(5px); }
+      50%       { transform: translateX(-50%) translateY(10px); }
     }
     .scroll-cue.visible { animation: cue-drift 2s ease-in-out infinite; }
 
@@ -1078,6 +1082,18 @@
       .nav-star { display: none; }
     }
 
+    /* ─── Copy button ─── */
+    .copy-btn {
+      position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
+      font-size: 10px; padding: 3px 9px; border-radius: 4px;
+      background: var(--surface-2); border: 1px solid var(--border);
+      color: var(--muted); cursor: pointer; font-family: 'SF Mono', monospace;
+      transition: border-color 0.15s, color 0.15s, background 0.15s;
+      white-space: nowrap; z-index: 1;
+    }
+    .copy-btn:hover { border-color: var(--cyan); color: var(--cyan); background: color-mix(in srgb, var(--cyan) 6%, var(--surface-2)); }
+    .copy-btn.copied { border-color: var(--green); color: var(--green); background: color-mix(in srgb, var(--green) 6%, var(--surface-2)); }
+
     /* ─── Try bar ─── */
     .try-bar {
       padding: 12px 24px 16px;
@@ -1195,24 +1211,28 @@
         <span class="gen-icon">⚡</span>
         <div class="gen-name">Instant</div>
         <div class="gen-meta">~0 tokens · &lt;1ms</div>
+        <div class="gen-desc">regex match — no model call</div>
         <div class="gen-again">try another →</div>
       </button>
       <button class="gen-btn" style="--gc:var(--cyan)" onclick="generate('skill')">
         <span class="gen-icon">◆</span>
         <div class="gen-name">Skill</div>
         <div class="gen-meta">~0 tokens · &lt;10ms</div>
+        <div class="gen-desc">keyword match — skill dispatched directly</div>
         <div class="gen-again">try another →</div>
       </button>
       <button class="gen-btn" style="--gc:var(--orange)" onclick="generate('campaign')">
         <span class="gen-icon">⬡</span>
         <div class="gen-name">Campaign</div>
         <div class="gen-meta">~500 tokens · Archon</div>
+        <div class="gen-desc">LLM classifier → multi-phase execution</div>
         <div class="gen-again">try another →</div>
       </button>
       <button class="gen-btn" style="--gc:var(--purple)" onclick="generate('fleet')">
         <span class="gen-icon">⬢</span>
         <div class="gen-name">Fleet</div>
         <div class="gen-meta">~500 tokens · parallel</div>
+        <div class="gen-desc">LLM classifier → agents in parallel worktrees</div>
         <div class="gen-again">try another →</div>
       </button>
     </div>
@@ -1293,15 +1313,15 @@
           <div class="cl-dots" id="cl-dots"></div>
         </div>
         <div class="cl-dim">
-          <span class="cl-label">Multi-session</span>
+          <span class="cl-label">Spans sessions</span>
           <span class="cl-value accent" id="cl-persist">yes</span>
         </div>
         <div class="cl-dim">
-          <span class="cl-label">Parallel</span>
+          <span class="cl-label">Parallel fleet</span>
           <span class="cl-value" id="cl-parallel">no</span>
         </div>
         <div class="cl-dim">
-          <span class="cl-label">Taste required</span>
+          <span class="cl-label">Needs judgment</span>
           <span class="cl-value" id="cl-taste">yes</span>
         </div>
       </div>
@@ -1468,18 +1488,18 @@
       <div class="feature-grid">
         <div class="feature-point">
           <div class="feature-icon">⧫</div>
-          <div class="feature-title">Phase checkpoints</div>
-          <div class="feature-desc">Quality spot-checks run at the end of every phase before the next begins.</div>
+          <div class="feature-title">Checks at every phase</div>
+          <div class="feature-desc">A quality spot-check runs at the end of every phase. The next phase only starts when it passes.</div>
         </div>
         <div class="feature-point">
           <div class="feature-icon">◎</div>
-          <div class="feature-title">Circuit breakers</div>
-          <div class="feature-desc">After 3 consecutive failures, the campaign parks automatically and waits for human review.</div>
+          <div class="feature-title">Auto-pause on failure</div>
+          <div class="feature-desc">After 3 consecutive failures on the same approach, the campaign parks and waits for you.</div>
         </div>
         <div class="feature-point">
           <div class="feature-icon">◈</div>
-          <div class="feature-title">Regression guards</div>
-          <div class="feature-desc">Type baselines and test counts are captured before the campaign and verified after.</div>
+          <div class="feature-title">Nothing breaks silently</div>
+          <div class="feature-desc">Type baselines and test counts are captured before the campaign and verified after every build phase.</div>
         </div>
       </div>
       <div class="campaign-cta">
@@ -1858,7 +1878,7 @@
         return;
       }
       const r = route(val.trim());
-      liveBadge.textContent = `→ ${r.tool}`;
+      liveBadge.textContent = `→ T${r.tier} · ${r.tool} · ${r.tokens} tokens`;
       liveBadge.style.color = r.color;
       liveBadge.className = 'live-badge active';
       enterKey.classList.add('lit');
@@ -2525,6 +2545,34 @@
         setTimeout(fire, 3000 + Math.random() * 4000);
       }
       setTimeout(fire, 5000);
+    })();
+
+    // ─── Copy-to-clipboard for code blocks ────────────────────────────────
+    (function initCopyButtons() {
+      document.querySelectorAll('.install-code, .panel-code').forEach(block => {
+        const wrap = document.createElement('div');
+        wrap.style.cssText = 'position:relative;display:block';
+        block.parentNode.insertBefore(wrap, block);
+        wrap.appendChild(block);
+        block.style.paddingRight = '52px';
+        const btn = document.createElement('button');
+        btn.className = 'copy-btn';
+        btn.textContent = 'copy';
+        btn.addEventListener('click', e => {
+          e.stopPropagation();
+          navigator.clipboard.writeText(block.textContent.trim()).then(() => {
+            btn.textContent = 'copied!';
+            btn.classList.add('copied');
+            setTimeout(() => { btn.textContent = 'copy'; btn.classList.remove('copied'); }, 1600);
+          }).catch(() => {
+            const sel = window.getSelection();
+            const range = document.createRange();
+            range.selectNodeContents(block);
+            sel.removeAllRanges(); sel.addRange(range);
+          });
+        });
+        wrap.appendChild(btn);
+      });
     })();
 
     // ─── GitHub star count ─────────────────────────────────────────────────
