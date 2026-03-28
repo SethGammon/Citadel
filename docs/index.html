@@ -1140,6 +1140,16 @@
     .gen-btn { animation: card-breathe 5s ease-in-out infinite; }
     .gen-btn:hover, .gen-btn.busy { animation: none; }
 
+    /* ─── Cascade connector flow ─── */
+    @keyframes conn-flow {
+      0%, 100% { opacity: 0.3; }
+      50%       { opacity: 1; }
+    }
+    .cascade-connector-line { animation: conn-flow 2.8s ease-in-out infinite; }
+    .cascade-connector:last-of-type .cascade-connector-line { animation-delay: 1.4s; }
+    .cascade-connector-chevron { animation: conn-flow 2.8s ease-in-out infinite; }
+    .cascade-connector:last-of-type .cascade-connector-chevron { animation-delay: 1.4s; }
+
     /* ─── prefers-reduced-motion ─── */
     @media (prefers-reduced-motion: reduce) {
       .tier-row, .output-section, .result-panel,
@@ -1152,6 +1162,7 @@
       .tf-f1, .tf-f2, .tf-f3 { animation: none !important; width: 60% !important; }
       .gen-btn { animation: none !important; }
       .live-dot { animation: none !important; }
+      .cascade-connector-line, .cascade-connector-chevron { animation: none !important; opacity: 0.5 !important; }
     }
   </style>
 </head>
@@ -1165,7 +1176,7 @@
     <button class="nav-link" onclick="openPanel('hooks')">Hooks</button>
     <button class="nav-link" onclick="openPanel('campaigns')">Campaigns</button>
     <div class="nav-right">
-      <span class="nav-badge">v2.1</span>
+      <span class="nav-badge">v3</span>
       <a class="nav-star" id="nav-star" href="https://github.com/SethGammon/Citadel">★ Star on GitHub</a>
       <a class="nav-cta" href="#install-section" onclick="scrollToInstall(); return false;">Get Started</a>
     </div>
@@ -1939,7 +1950,7 @@
         statusEl.textContent = 'evaluating…';
         statusEl.style.color = 'var(--muted)';
 
-        const delay = i === 0 ? 480 : i === 2 ? 620 : 800;
+        const delay = i === 0 ? 360 : i === 2 ? 460 : 580;
         await sleep(delay);
 
         if (i === result.tier) {
@@ -2279,6 +2290,7 @@
           currentScreen = n;
           isTransitioning = false;
           updateScrollCue();
+          if (n === 1 && !window._statsAnimated) { window._statsAnimated = true; animateStats(); }
           if (n === 0) {
             const s2 = document.getElementById('screen-2');
             if (s2) s2.scrollTop = 0;
@@ -2514,6 +2526,67 @@
       } else {
         doScroll();
       }
+    }
+
+    // ─── Idle placeholder cycling ─────────────────────────────────────────
+    (function initPlaceholder() {
+      const hints = [
+        'Type any engineering task…',
+        'try: fix the typo on line 42',
+        'try: review the auth module',
+        'try: build me a recipe app',
+        'try: debug the login failure',
+        'try: migrate the platform to TypeScript',
+        'try: scaffold a dashboard component',
+        'try: write tests for UserService',
+      ];
+      let idx = 0, timer = null;
+      function rotate() {
+        if (document.hidden || input === document.activeElement || input.value.trim()
+            || document.body.classList.contains('mode-result')) {
+          timer = setTimeout(rotate, 3000); return;
+        }
+        idx = (idx + 1) % hints.length;
+        input.placeholder = hints[idx];
+        timer = setTimeout(rotate, 3200);
+      }
+      input.addEventListener('focus', () => {
+        clearTimeout(timer); timer = null;
+        input.placeholder = 'Type any engineering task…';
+      });
+      input.addEventListener('blur', () => {
+        if (!input.value.trim()) timer = setTimeout(rotate, 4000);
+      });
+      timer = setTimeout(rotate, 6000);
+    })();
+
+    // ─── Stats count-up on first screen-2 visit ────────────────────────────
+    function animateStats() {
+      const rows = document.querySelectorAll('.stat-num');
+      const targets = [33, 4, 14, 0]; // 0 = ~0 (special case)
+      rows.forEach((el, i) => {
+        const target = targets[i];
+        if (target === 0) {
+          el.style.opacity = '0';
+          setTimeout(() => {
+            el.style.transition = 'opacity 0.6s';
+            el.style.opacity = '1';
+          }, i * 160 + 200);
+          return;
+        }
+        el.textContent = '0';
+        const delay = i * 160;
+        const duration = 900;
+        const startTime = performance.now() + delay;
+        function tick(now) {
+          if (now < startTime) { requestAnimationFrame(tick); return; }
+          const progress = Math.min((now - startTime) / duration, 1);
+          const ease = 1 - Math.pow(1 - progress, 3);
+          el.textContent = Math.round(ease * target);
+          if (progress < 1) requestAnimationFrame(tick);
+        }
+        requestAnimationFrame(tick);
+      });
     }
 
     // ─── Live agent counter ────────────────────────────────────────────────
