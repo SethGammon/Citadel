@@ -1,7 +1,7 @@
 {
   "name": "citadel",
   "description": "Agent orchestration harness for Claude Code — campaign persistence, fleet coordination, intent routing",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "author": {
     "name": "SethGammon"
   },
