@@ -45,6 +45,9 @@ function main() {
     // Check for active campaigns and mark continuation point
     markCampaignContinuation();
 
+    // Clean up expired dynamic directories per organization manifest
+    cleanupDynamicDirectories();
+
     // Write doc sync queue entry (Tier 6 - processed by next session or doc-sync hook)
     queueDocSync();
 
@@ -75,6 +78,89 @@ function markCampaignContinuation() {
       break; // only one active campaign at a time
     }
   } catch { /* non-critical */ }
+}
+
+/**
+ * Clean up expired dynamic directories based on the organization manifest.
+ * Only runs cleanup for 'auto' policy and 'session'-scoped directories.
+ * Campaign-scoped cleanup happens when campaigns complete, not on session end.
+ *
+ * Respects cleanupPolicy:
+ *   - 'auto': clean silently
+ *   - 'prompt' or 'manual': skip (can't prompt at session end)
+ */
+function cleanupDynamicDirectories() {
+  try {
+    const config = health.readConfig();
+    const org = config.organization;
+    if (!org || !Array.isArray(org.dynamic)) return;
+
+    // Only auto-clean. Prompt/manual can't work at session-end (no user interaction).
+    if (org.cleanupPolicy !== 'auto') return;
+
+    for (const entry of org.dynamic) {
+      if (!entry.path || !entry.scope || !entry.cleanup) continue;
+
+      // Only clean session-scoped directories at session end
+      if (entry.scope !== 'session') continue;
+
+      const dirPath = path.join(PROJECT_ROOT, entry.path);
+      if (!fs.existsSync(dirPath)) continue;
+
+      const strategy = entry.cleanup;
+
+      if (strategy === 'empty-on-expire') {
+        // Delete contents but keep the directory
+        try {
+          const items = fs.readdirSync(dirPath);
+          for (const item of items) {
+            if (item.startsWith('.gitkeep') || item.startsWith('_TEMPLATE')) continue;
+            const itemPath = path.join(dirPath, item);
+            const stat = fs.statSync(itemPath);
+            if (stat.isDirectory()) {
+              fs.rmSync(itemPath, { recursive: true, force: true });
+            } else {
+              fs.unlinkSync(itemPath);
+            }
+          }
+        } catch { /* best effort */ }
+      } else if (strategy === 'archive-then-delete') {
+        // Move contents to archive, then empty
+        try {
+          const items = fs.readdirSync(dirPath).filter(i => !i.startsWith('.gitkeep') && !i.startsWith('_TEMPLATE'));
+          if (items.length === 0) continue;
+
+          const dateStr = new Date().toISOString().slice(0, 10);
+          const archiveDir = path.join(PROJECT_ROOT, '.planning', 'archive', dateStr, path.basename(entry.path.replace(/\/$/, '')));
+          fs.mkdirSync(archiveDir, { recursive: true });
+
+          for (const item of items) {
+            const src = path.join(dirPath, item);
+            const dest = path.join(archiveDir, item);
+            fs.renameSync(src, dest);
+          }
+        } catch { /* best effort */ }
+      } else if (strategy === 'delete') {
+        // Remove directory entirely, then recreate if it's a standard planning dir
+        try {
+          fs.rmSync(dirPath, { recursive: true, force: true });
+          // Recreate if it's a known planning directory
+          const relativePath = path.relative(PROJECT_ROOT, dirPath).replace(/\\/g, '/');
+          if (relativePath.startsWith('.planning/')) {
+            fs.mkdirSync(dirPath, { recursive: true });
+          }
+        } catch { /* best effort */ }
+      }
+      // 'ignore' strategy: do nothing
+    }
+
+    // Log cleanup
+    health.logTiming('session-end', 0, {
+      event: 'dynamic-cleanup',
+      policy: org.cleanupPolicy,
+      entries: org.dynamic.filter(e => e.scope === 'session').length,
+    });
+  } catch { /* non-critical -- never block session end */ }
 }
 
 function queueDocSync() {

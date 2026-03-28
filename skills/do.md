@@ -132,6 +132,7 @@ and any project-level custom skills in `.claude/skills/`.
 | "schedule", "recurring", "every N minutes", "cron", "set a reminder", "run periodically" | `/schedule` |
 | "merge review", "check merges", "any conflicts", "fleet conflicts", "pending branches", "safe to merge" | `/merge-review` |
 | "ascii diagram", "ascii art", "box diagram", "architecture diagram", "flow diagram", "draw a diagram", "text diagram", "sequence diagram" | `/ascii-diagram` |
+| "organize", "directory structure", "folder structure", "project structure", "file organization", "where should this go", "cleanup directories" | `/organize` |
 
 If ONE skill matches with high confidence → invoke it directly. Done.
 If MULTIPLE skills match → fall through to Tier 3.
@@ -237,6 +238,9 @@ QUALITY & VERIFICATION
 GITHUB & CI
   /triage [issue|pr]    GitHub issue and PR investigator
   /pr-watch [number]    Local PR auto-fix — watches CI, fixes failures, offers merge
+
+STRUCTURE & ORGANIZATION
+  /organize [--audit]   Directory convention scanner, enforcer, and cleanup
 
 UTILITIES
   /session-handoff      Session context transfer
