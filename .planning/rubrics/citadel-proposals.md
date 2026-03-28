@@ -2,8 +2,8 @@
 
 > Generated: 2026-03-28
 > Level 1 final state: .planning/rubrics/citadel-level-1-final.md
-> Status: AWAITING HUMAN APPROVAL
-> Do not modify the live rubric until proposals are approved.
+> Status: APPROVED — applied to citadel.md v2 (2026-03-28)
+> Modifications: readme_quality 10 (no dynamic rendering; pain point resonance), demo_page_effectiveness 10 (realistic output previews, no OAuth), test_coverage re-anchored to semantic correctness instead of retired, team_adoption_friction V4+ cap note added, skill_authoring_quality capped at 6-7.
 
 ---
 
