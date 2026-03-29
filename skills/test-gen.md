@@ -131,7 +131,7 @@ If no coverage tool is configured, skip this step — do not install one.
 
 Before delivering:
 
-1. **All tests pass.** Run the final test file one more time to confirm green. If any are `.skip`ped, the skip reason must be documented in the test.
+1. **All tests pass.** Run the final test file one more time to confirm green (use `node scripts/run-with-timeout.js 300 <test-cmd>` to prevent hangs). If any are `.skip`ped, the skip reason must be documented in the test.
 2. **No snapshot-only tests.** Snapshot tests are not a substitute for behavioral assertions. Every test must assert specific behavior.
 3. **No implementation coupling.** Tests should not break if the function's internal implementation changes but its behavior stays the same. Avoid asserting on: internal variable values, call counts of internal functions, execution order of internal steps.
 4. **No test interdependence.** Mentally verify: could any single test be run in isolation? If a test relies on state from a previous test, fix it.

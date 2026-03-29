@@ -67,8 +67,8 @@ refactoring is correct. If behavior needs to change, that is a separate step.
 
 Before touching any code, establish the current state of the world.
 
-1. **Typecheck**: Run the project's typecheck command (e.g., `npm run typecheck`,
-   `tsc --noEmit`, `mypy`, `cargo check`). Record the result.
+1. **Typecheck**: Run the project's typecheck command via timeout wrapper
+   (e.g., `node scripts/run-with-timeout.js 300 npm run typecheck`). Record the result.
    - If the baseline has errors, record them explicitly. These are NOT your
      responsibility — but you must not add to them.
    - Store the error count and the specific errors for comparison later.

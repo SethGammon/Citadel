@@ -148,8 +148,8 @@ It's the institutional memory between waves.
 
 After all waves:
 
-1. Run typecheck on the full project (all changes merged)
-2. Run tests if configured
+1. Run typecheck on the full project via `node scripts/run-with-timeout.js 300 <typecheck-cmd>`
+2. Run tests if configured (also use the timeout wrapper)
 3. Update session file status to `completed`
 4. Log session completion:
    ```bash
@@ -383,7 +383,7 @@ Spawn with `isolation: "worktree"` as normal. No scope overlap rules apply betwe
 
 After all agents complete, for each:
 1. Read the HANDOFF
-2. Run typecheck on that worktree's branch
+2. Run typecheck on that worktree's branch via `node scripts/run-with-timeout.js 300 <typecheck-cmd>`
 3. Record in the session file: what was built, typecheck result, key decisions
 
 Present a comparison table to the user:

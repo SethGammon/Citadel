@@ -196,7 +196,7 @@ After each phase completes:
 
 After each build phase:
 
-1. Run the project's typecheck command
+1. Run the project's typecheck command (use `node scripts/run-with-timeout.js 300` for safety)
 2. Compare error count to the campaign's baseline (recorded at campaign creation)
 3. Escalation ladder:
    - 1-2 new errors: fix them before continuing
@@ -216,8 +216,8 @@ If any found: fix before marking the phase complete.
 
 ### Step 5: VERIFY (after build phases)
 
-1. Run the project's typecheck command
-2. Run the project's test suite if configured
+1. Run the project's typecheck command via `node scripts/run-with-timeout.js 300 <typecheck-cmd>`
+2. Run the project's test suite if configured (also use the timeout wrapper)
 3. Verify that changes don't break existing functionality
 4. If verification fails: record the failure, decide whether to fix or skip
 
@@ -237,7 +237,7 @@ If you're running low on context or finishing a session:
 
 When all phases are done:
 
-1. Run final verification (typecheck, tests)
+1. Run final verification (typecheck, tests) via `node scripts/run-with-timeout.js 300`
 2. Update campaign status to `completed`
 3. Move campaign file to `.planning/campaigns/completed/`
 4. Release any scope claims

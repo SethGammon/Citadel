@@ -51,6 +51,16 @@
             "timeout": 5
           }
         ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node ${CLAUDE_PLUGIN_ROOT}/hooks_src/circuit-breaker.js",
+            "timeout": 5
+          }
+        ]
       }
     ],
     "PostToolUseFailure": [

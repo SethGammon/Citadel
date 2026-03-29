@@ -136,7 +136,7 @@ If the classification is wrong, the user can override:
 2. Invoke /prd in feature mode (reads codebase before asking questions, max 2 questions)
 3. User approves feature spec (one mandatory checkpoint)
 4. Invoke /architect in existing codebase mode:
-   - Phase 0 is always "Baseline" — run typecheck and tests, record counts
+   - Phase 0 is always "Baseline" — run typecheck and tests (via `node scripts/run-with-timeout.js 300`), record counts
    - File tree shows only new + modified files
    - Auto-approve if all conditions are machine-verifiable
 5. Create Archon campaign. Every phase end condition includes:

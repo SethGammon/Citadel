@@ -31,6 +31,17 @@ minimum set of rules needed to work safely in this project.
 
 3-5 bullets, under 150 words.
 
+## Command Execution
+
+- **Wrap long-running commands with the timeout utility.** When running tests,
+  builds, typechecks, or any command that could hang, use:
+  `node scripts/run-with-timeout.js 300 <command>`
+  This kills the process after 300s (adjustable) and writes the result to
+  `.planning/telemetry/last-command-result.json` for watchdog pickup.
+- Short commands (git status, ls, cat) do not need the wrapper.
+- If a command is expected to take longer than 300s, increase the limit:
+  `node scripts/run-with-timeout.js 600 <command>`
+
 ## Quality Standards
 
 - Keep files under 300 lines when practical

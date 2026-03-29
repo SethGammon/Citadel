@@ -145,12 +145,59 @@ function main() {
       PLUGIN_ROOT
     );
 
-    // 7. Daemon bootstrap — detect active daemon and prompt continuation
+    // 7. Watchdog — check for stale command results from a previous session
+    checkStaleCommandResult();
+
+    // 8. Daemon bootstrap — detect active daemon and prompt continuation
     checkDaemonState();
 
   } catch (err) {
     // Non-fatal — don't block session start
     process.exit(0);
+  }
+}
+
+/**
+ * Watchdog: check for stale command results from a previous session.
+ *
+ * If last-command-result.json exists and is older than 10 minutes,
+ * the previous session may have completed a command that wasn't seen.
+ * Surface it so the user knows what happened.
+ */
+function checkStaleCommandResult() {
+  try {
+    const resultPath = path.join(PROJECT_ROOT, '.planning', 'telemetry', 'last-command-result.json');
+    if (!fs.existsSync(resultPath)) return;
+
+    const result = JSON.parse(fs.readFileSync(resultPath, 'utf8'));
+    if (!result.timestamp) return;
+
+    const ageMs = Date.now() - new Date(result.timestamp).getTime();
+    const STALE_THRESHOLD = 10 * 60 * 1000; // 10 minutes
+
+    if (ageMs > STALE_THRESHOLD) {
+      const ageMins = Math.round(ageMs / 60000);
+      const exitCode = result.exitCode !== null && result.exitCode !== undefined ? result.exitCode : 'unknown';
+      const duration = result.durationSec || '?';
+      const cmd = (result.command || 'unknown').slice(0, 100);
+
+      const parts = [`[watchdog] A previous command completed ${ageMins}m ago but may not have been seen.`];
+      parts.push(`  Command: ${cmd}`);
+      parts.push(`  Exit code: ${exitCode}, duration: ${duration}s`);
+
+      if (result.timedOut) {
+        parts.push(`  NOTE: This command was killed by timeout after ${result.timeoutLimit}s.`);
+      }
+
+      parts.push(`  Check .planning/telemetry/last-command-result.json for details.`);
+
+      process.stdout.write(parts.join('\n') + '\n');
+
+      // Clean up so we don't warn again
+      fs.unlinkSync(resultPath);
+    }
+  } catch {
+    // Non-fatal — don't block session start
   }
 }
 
