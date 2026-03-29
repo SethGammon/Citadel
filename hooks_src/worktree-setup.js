@@ -57,25 +57,50 @@ function main(input) {
   }
 
   // For Python: create venv if requirements.txt exists
+  // Security: only run pip install if the requirements.txt is tracked by git
+  // (committed to the repository), not if it was written solely by an agent
+  // during this session. This prevents supply-chain attacks via agent-generated
+  // package lists. Set CITADEL_ALLOW_UNTRACKED_PIP=true to opt-out (e.g. greenfield).
   if (fs.existsSync(path.join(worktreePath, 'requirements.txt'))) {
     if (!fs.existsSync(path.join(worktreePath, '.venv'))) {
+      // Check whether requirements.txt is tracked in git
+      const allowUntrackedPip = process.env.CITADEL_ALLOW_UNTRACKED_PIP === 'true';
+      let reqTracked = false;
       try {
-        execFileSync('python', ['-m', 'venv', '.venv'], {
+        execFileSync('git', ['ls-files', '--error-unmatch', 'requirements.txt'], {
           cwd: worktreePath,
-          timeout: 60000,
-          encoding: 'utf8',
-          stdio: ['pipe', 'pipe', 'pipe'],
+          stdio: 'pipe',
+          timeout: 5000,
         });
-        const pipPath = process.platform === 'win32'
-          ? path.join('.venv', 'Scripts', 'pip')
-          : path.join('.venv', 'bin', 'pip');
-        execFileSync(pipPath, ['install', '-r', 'requirements.txt'], {
-          cwd: worktreePath,
-          timeout: 120000,
-          encoding: 'utf8',
-          stdio: ['pipe', 'pipe', 'pipe'],
-        });
-      } catch { /* non-critical */ }
+        reqTracked = true;
+      } catch {
+        reqTracked = false;
+      }
+
+      if (!reqTracked && !allowUntrackedPip) {
+        process.stderr.write(
+          '[worktree-setup] Skipping pip install: requirements.txt is not tracked by git. ' +
+          'Set CITADEL_ALLOW_UNTRACKED_PIP=true to allow installing untracked requirements.\n'
+        );
+      } else {
+        try {
+          execFileSync('python', ['-m', 'venv', '.venv'], {
+            cwd: worktreePath,
+            timeout: 60000,
+            encoding: 'utf8',
+            stdio: ['pipe', 'pipe', 'pipe'],
+          });
+          const pipPath = process.platform === 'win32'
+            ? path.join('.venv', 'Scripts', 'pip')
+            : path.join('.venv', 'bin', 'pip');
+          execFileSync(pipPath, ['install', '-r', 'requirements.txt'], {
+            cwd: worktreePath,
+            timeout: 120000,
+            encoding: 'utf8',
+            stdio: ['pipe', 'pipe', 'pipe'],
+          });
+        } catch { /* non-critical */ }
+      }
     }
   }
 

@@ -156,7 +156,11 @@ function checkCampaignScope(relativePath, toolName, _filePath) {
         // Only consider campaigns with Status: active
         if (/^Status:\s*active/im.test(text)) {
           campaignText = text;
-          campaignName = file.replace(/\.md$/, '');
+          // Sanitize campaign name before rendering into LLM-facing messages:
+          // strip non-alphanumeric chars (except hyphens/underscores) to prevent
+          // prompt injection via adversarial filenames.
+          const rawName = file.replace(/\.md$/, '');
+          campaignName = rawName.replace(/[^a-zA-Z0-9_\-]/g, '_');
           break;
         }
       } catch {

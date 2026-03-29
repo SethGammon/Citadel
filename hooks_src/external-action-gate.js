@@ -72,16 +72,24 @@ const BLOCKED_PATTERNS = [
 /**
  * Strip quoted strings and heredoc bodies so commit messages,
  * PR descriptions, and echo'd text don't trigger false positives.
+ *
+ * Security note: stripping is done defensively in multiple passes so that
+ * subshell expressions ($(...) and backticks) inside any quoting style are
+ * neutralised before the blocked-pattern regexes run.
  */
 function stripQuotedContent(cmd) {
   let stripped = cmd;
-  // Strip heredoc bodies: <<'DELIM' ... DELIM  and  << DELIM ... DELIM
+  // 1. Strip heredoc bodies: <<'DELIM' ... DELIM  and  << DELIM ... DELIM
   stripped = stripped.replace(/<<-?\s*'?(\w+)'?[^\n]*\n[\s\S]*?\n\s*\1\b/g, '');
-  // Strip $(...) subshells (often contain heredocs for commit messages)
+  // 2. Strip double-quoted subshells "$(...)" — most common false-positive source
   stripped = stripped.replace(/"\$\([\s\S]*?\)"/g, '""');
-  // Strip remaining double-quoted strings
+  // 3. Strip single-quoted subshells '$(...)' — must precede generic single-quote strip
+  stripped = stripped.replace(/'\$\([\s\S]*?\)'/g, "''");
+  // 4. Strip backtick subshells `...` (both quoted and unquoted)
+  stripped = stripped.replace(/`[^`]*`/g, '``');
+  // 5. Strip remaining double-quoted strings
   stripped = stripped.replace(/"(?:[^"\\]|\\.)*"/g, '""');
-  // Strip single-quoted strings
+  // 6. Strip single-quoted strings
   stripped = stripped.replace(/'(?:[^'\\]|\\.)*'/g, "''");
   return stripped;
 }

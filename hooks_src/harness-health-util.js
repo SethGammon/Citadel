@@ -272,6 +272,8 @@ function readTrustLevel() {
 // would need to add the tool to PATH instead.
 const PATH_META_RE = /[`$;|&\n\r\0]|\$\(/;
 const CMD_META_RE = /[`$;|&\n\r\0\\]|\$\(/;
+// Detect path traversal sequences: ../ or ..\ (both forward and back slash)
+const PATH_TRAVERSAL_RE = /\.\.[/\\]/;
 
 /** @returns {{ safe: boolean, violation: string|null }} */
 function _validateInput(value, label, regex) {
@@ -283,6 +285,13 @@ function _validateInput(value, label, regex) {
     return {
       safe: false,
       violation: `shell metacharacter ${JSON.stringify(match[0])} in ${label}: ${value.slice(0, 200)}`,
+    };
+  }
+  // For paths: also reject traversal sequences (../  or ..\)
+  if (label === 'path' && PATH_TRAVERSAL_RE.test(value)) {
+    return {
+      safe: false,
+      violation: `path traversal sequence in ${label}: ${value.slice(0, 200)}`,
     };
   }
   return { safe: true, violation: null };
