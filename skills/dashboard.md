@@ -45,6 +45,15 @@ exist, treat it as empty. Never crash on missing state.
   - Phase progress (search for `Phase N of M` or `## Phase` headings)
   - Most recent line starting with `- [` from the Decision Log
 
+**Cost Data:**
+- Read `.planning/telemetry/session-costs.jsonl` (if it exists)
+- For each line, parse as JSON: `{ campaign_slug, agent_count, duration_minutes, estimated_cost, override_cost }`
+- Group by `campaign_slug`. For each group:
+  - Count sessions
+  - Sum cost (use `override_cost` when non-null, else `estimated_cost`)
+  - Sum agents spawned and duration minutes
+- Also compute the grand total across all campaigns
+
 **Fleet Sessions:**
 - Glob `.planning/fleet/session-*.md`
 - For each file, read the first 30 lines to extract:
@@ -96,6 +105,12 @@ CAMPAIGNS
   {slug}: Phase {N}/{total} — {direction, max 60 chars, ellipsis if truncated}
   Last event: {most recent telemetry entry for this campaign, or "no telemetry"}
   (none active)
+
+COSTS
+  {campaign_slug}: ${total_cost} across {sessions} sessions ({agents_spawned} agents, {total_minutes} min)
+  {campaign_slug}: ${total_cost} across {sessions} sessions ({agents_spawned} agents, {total_minutes} min)
+  Total: ${grand_total} across {total_sessions} sessions
+  (no cost data recorded yet)
 
 FLEET SESSIONS
   {slug}: Wave {N} — {agent count} agents — {status}

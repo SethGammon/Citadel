@@ -225,3 +225,12 @@ Typecheck: PASS
 If the user provided a description, also include a one-line summary of what the
 generated file does. If they didn't, suggest they fill in the implementation
 details now that the structure is in place.
+
+```
+---HANDOFF---
+- Scaffolded: {name} ({type})
+- Created: {N} files, wired into {N} registration points
+- Conventions matched from: {exemplar names}
+- Reversibility: green -- new files only, delete to undo
+---
+```

@@ -3,13 +3,18 @@
 /**
  * post-edit.js — PostToolUse hook (runs on every Edit/Write)
  *
- * Language-adaptive per-file type checking:
- *   - TypeScript: tsc --noEmit on the changed file
- *   - Python: mypy or pyright on the changed file
- *   - Go: go vet on the package
- *   - Rust: cargo check (whole project, but fast with incremental)
+ * Verification Dispatch: hot-path lenses that run on every edit.
+ * Each lens is a lightweight check (<5ms budget) selected by file extension.
  *
- * Also runs lightweight performance lint and dependency-aware pattern detection.
+ * Lenses (hot path):
+ *   - programmatic: language-adaptive typecheck (tsc, mypy, go vet, cargo check)
+ *   - structural: file placement, naming conventions, import layer violations
+ *   - performance: transition-all, repeat:Infinity, confirm/alert/prompt
+ *
+ * Legacy checks (integrated as lenses):
+ *   - dependencyPatternLint → structural
+ *   - designManifestLint → visual (hot-path subset)
+ *   - docStalenessCheck → cross-reference (hot-path subset)
  *
  * Exit codes:
  *   0 = success (or non-checkable file, or non-Edit/Write tool)
@@ -75,22 +80,160 @@ function main() {
 
     const relativePath = path.relative(PROJECT_ROOT, filePath).replace(/\\/g, '/');
 
-    // Run performance lint, dependency pattern checks, and design manifest checks
-    performanceLint(filePath, relativePath);
-    dependencyPatternLint(filePath, relativePath);
-    designManifestLint(filePath, relativePath);
-    docStalenessCheck(filePath, relativePath);
+    // Determine which hot-path lenses apply to this file
+    const lenses = selectHotPathLenses(filePath, relativePath);
 
-    // Run type check
-    const exitCode = typeCheck(filePath, relativePath);
+    // Run selected lenses
+    let exitCode = 0;
+    for (const lens of lenses) {
+      const lensResult = runHotLens(lens, filePath, relativePath);
+      if (lensResult > exitCode) exitCode = lensResult;
+    }
 
     health.logTiming('post-edit', Date.now() - startTime, {
       file: relativePath,
+      lenses: lenses.join(','),
       typecheck: exitCode === 0 ? 'pass' : 'fail',
     });
 
     process.exit(exitCode);
   });
+}
+
+// ── Hot-Path Lens Dispatch ──────────────────────────────────────────────────
+
+/**
+ * Dispatch table: maps file extensions to the lenses that should run.
+ * Each lens is a lightweight check. The table is read from harness.json
+ * verification.hot if configured, otherwise uses these defaults.
+ */
+const DEFAULT_HOT_LENSES = {
+  '.ts':   ['programmatic', 'structural', 'performance'],
+  '.tsx':  ['programmatic', 'structural', 'performance'],
+  '.js':   ['structural', 'performance'],
+  '.jsx':  ['structural', 'performance'],
+  '.mjs':  ['performance'],
+  '.cjs':  ['performance'],
+  '.py':   ['programmatic', 'structural'],
+  '.go':   ['programmatic', 'structural'],
+  '.rs':   ['programmatic'],
+  '.css':  ['performance'],
+  '.scss': ['performance'],
+  '.md':   ['cross-reference'],
+};
+
+function selectHotPathLenses(filePath, relativePath) {
+  const config = health.readConfig();
+  const verification = config.verification || {};
+  const disabled = new Set(verification.disabled || []);
+  const ext = path.extname(filePath).toLowerCase();
+
+  // Use configured hot lenses or fall back to defaults
+  const candidates = DEFAULT_HOT_LENSES[ext] || [];
+
+  // Always include dependency and design checks for source files (they're fast)
+  const lenses = [...candidates];
+  if (/\.(ts|tsx|js|jsx)$/.test(filePath) && !lenses.includes('structural')) {
+    lenses.push('structural');
+  }
+  if (/\.(css|scss|tsx|jsx)$/.test(filePath) && !lenses.includes('visual')) {
+    lenses.push('visual');
+  }
+
+  return lenses.filter(l => !disabled.has(l));
+}
+
+function runHotLens(lens, filePath, relativePath) {
+  switch (lens) {
+    case 'programmatic':
+      return typeCheck(filePath, relativePath);
+    case 'structural':
+      structuralLint(filePath, relativePath);
+      dependencyPatternLint(filePath, relativePath);
+      return 0;
+    case 'performance':
+      performanceLint(filePath, relativePath);
+      return 0;
+    case 'visual':
+      designManifestLint(filePath, relativePath);
+      return 0;
+    case 'cross-reference':
+      docStalenessCheck(filePath, relativePath);
+      return 0;
+    default:
+      return 0;
+  }
+}
+
+// ── Structural Lint (hot-path) ──────────────────────────────────────────────
+
+/**
+ * Checks import layer boundaries for projects with layer architecture.
+ * Only fires if the project has a layer config in harness.json or uses
+ * common alias patterns (@kernel, @os, @domains).
+ */
+function structuralLint(filePath, relativePath) {
+  if (!/\.(ts|tsx|js|jsx)$/.test(filePath)) return;
+
+  let content;
+  try {
+    content = fs.readFileSync(filePath, 'utf8');
+  } catch {
+    return;
+  }
+
+  const warnings = [];
+
+  // Detect file's layer from path
+  const layer = detectLayer(relativePath);
+  if (!layer) return;
+
+  // Check import violations
+  const importRegex = /(?:import|from)\s+['"](@(?:kernel|os|domains|ui|canvas)[^'"]*)['"]/g;
+  let match;
+  while ((match = importRegex.exec(content)) !== null) {
+    const importedAlias = match[1];
+    const violation = checkLayerViolation(layer, importedAlias);
+    if (violation) {
+      warnings.push(violation);
+    }
+  }
+
+  if (warnings.length > 0) {
+    hookOutput('post-edit', 'warned',
+      `[structural] ${relativePath}:\n` + warnings.map(w => `  - ${w}`).join('\n') + '\n',
+      { file: relativePath, warnings, lens: 'structural' });
+  }
+}
+
+function detectLayer(relativePath) {
+  if (/^src\/kernel\//.test(relativePath)) return 'kernel';
+  if (/^src\/os\//.test(relativePath)) return 'os';
+  if (/^src\/domains\//.test(relativePath)) return 'domains';
+  if (/^src\/canvas\//.test(relativePath)) return 'canvas';
+  return null;
+}
+
+function checkLayerViolation(layer, importAlias) {
+  const importLayer = importAlias.split('/')[0].replace('@', '');
+
+  const rules = {
+    kernel: [], // kernel cannot import app layers
+    os: ['kernel'], // os can import kernel only
+    domains: ['kernel', 'os'], // domains can import kernel + os
+    canvas: ['kernel', 'os', 'ui'], // canvas can import kernel + os + design system
+  };
+
+  const allowed = rules[layer];
+  if (!allowed) return null;
+
+  // Same-layer imports are fine
+  if (importLayer === layer) return null;
+
+  if (!allowed.includes(importLayer)) {
+    return `Layer violation: ${layer} cannot import @${importLayer} (allowed: ${allowed.map(l => '@' + l).join(', ') || 'none'})`;
+  }
+  return null;
 }
 
 // ── Type Checking ────────────────────────────────────────────────────────────

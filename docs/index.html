@@ -164,7 +164,7 @@
 
     #cmd-input {
       width: 100%;
-      padding: 22px 180px 22px 72px;
+      padding: 22px 240px 22px 72px;
       background: var(--surface);
       border: 1.5px solid var(--border);
       border-radius: 40px;
@@ -276,6 +276,10 @@
     .gen-meta {
       font-size: 11px; color: var(--dim);
       font-family: 'SF Mono', monospace;
+    }
+    .gen-desc {
+      font-size: 11px; color: var(--muted); margin-top: 5px;
+      line-height: 1.4; font-style: italic;
     }
     .gen-again {
       font-size: 10px; color: var(--gc); opacity: 0;
@@ -646,8 +650,8 @@
       padding: 20px 40px; display: flex; align-items: center;
       justify-content: space-between; color: var(--muted); font-size: 13px;
     }
-    footer a { color: var(--muted); text-decoration: none; }
-    footer a:hover { color: var(--text); }
+    footer a { color: var(--muted); text-decoration: none; border-bottom: 1px solid color-mix(in srgb, var(--muted) 35%, transparent); }
+    footer a:hover { color: var(--text); border-bottom-color: var(--text); }
 
     /* ─── Spinner ─── */
     @keyframes spin { to { transform: rotate(360deg); } }
@@ -821,7 +825,7 @@
     .scroll-cue:hover { opacity: 1 !important; color: var(--cyan); }
     @keyframes cue-drift {
       0%, 100% { transform: translateX(-50%) translateY(0); }
-      50%       { transform: translateX(-50%) translateY(5px); }
+      50%       { transform: translateX(-50%) translateY(10px); }
     }
     .scroll-cue.visible { animation: cue-drift 2s ease-in-out infinite; }
 
@@ -1041,6 +1045,93 @@
     .screen-2 { overflow-y: auto; scrollbar-width: none; }
     .screen-2::-webkit-scrollbar { display: none; }
 
+    /* ─── Output Previews ─── */
+    .previews-section {
+      width: 100%; max-width: 700px;
+      padding: 48px 32px 0;
+      margin: 0 auto;
+    }
+    .previews-heading {
+      text-align: center; margin-bottom: 32px;
+    }
+    .previews-heading h2 {
+      font-size: 22px; font-weight: 600; color: var(--text);
+    }
+    .previews-heading p {
+      font-size: 14px; color: var(--muted); margin-top: 8px;
+    }
+    .preview-card {
+      padding: 0; border-radius: 10px; overflow: hidden;
+      border: 1.5px solid color-mix(in srgb, var(--preview-color, var(--border)) 30%, var(--border));
+      background: var(--surface);
+      margin-bottom: 20px;
+    }
+    .preview-card-header {
+      display: flex; align-items: center; gap: 10px;
+      padding: 12px 18px;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface-2);
+    }
+    .preview-card-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--preview-color, var(--muted));
+    }
+    .preview-card-label {
+      font-size: 12px; font-weight: 600;
+      color: var(--preview-color, var(--muted));
+      font-family: 'SF Mono', monospace;
+      letter-spacing: 0.5px;
+    }
+    .preview-card-context {
+      font-size: 11px; color: var(--dim);
+      margin-left: auto; font-family: 'SF Mono', monospace;
+    }
+    .preview-card-body {
+      padding: 18px 20px;
+      font-family: 'SF Mono', monospace;
+      font-size: 12.5px; line-height: 1.7;
+      color: var(--muted);
+      white-space: pre-wrap; word-break: break-word;
+    }
+    .preview-card-body .pv-cmd { color: var(--cyan); }
+    .preview-card-body .pv-label { color: var(--text); font-weight: 600; }
+    .preview-card-body .pv-dim { color: var(--dim); }
+    .preview-card-body .pv-green { color: var(--green); }
+    .preview-card-body .pv-orange { color: var(--orange); }
+    .preview-card-body .pv-purple { color: var(--purple); }
+
+    /* ─── Final CTA ─── */
+    .final-cta {
+      width: 100%; max-width: 700px;
+      margin: 0 auto; padding: 48px 32px 32px;
+      text-align: center;
+    }
+    .final-cta-label {
+      font-size: 14px; color: var(--muted); margin-bottom: 14px;
+    }
+    .final-cta-cmd {
+      display: inline-flex; align-items: center; gap: 12px;
+      padding: 14px 24px; border-radius: 10px;
+      background: var(--surface);
+      border: 1.5px solid color-mix(in srgb, var(--cyan) 35%, var(--border));
+      font-family: 'SF Mono', monospace; font-size: 14px;
+      color: var(--cyan); cursor: pointer;
+      transition: border-color 0.15s, box-shadow 0.15s;
+      position: relative;
+    }
+    .final-cta-cmd:hover {
+      border-color: var(--cyan);
+      box-shadow: 0 0 24px color-mix(in srgb, var(--cyan) 15%, transparent);
+    }
+    .final-cta-copy {
+      font-size: 10px; padding: 3px 9px; border-radius: 4px;
+      background: var(--surface-2); border: 1px solid var(--border);
+      color: var(--muted); cursor: pointer;
+      font-family: 'SF Mono', monospace;
+      transition: border-color 0.15s, color 0.15s;
+    }
+    .final-cta-copy:hover { border-color: var(--cyan); color: var(--cyan); }
+
     /* ─── Responsive ─── */
     @media (max-width: 760px) {
       nav { padding: 12px 20px; gap: 12px; }
@@ -1070,6 +1161,9 @@
       .install-left h2 { font-size: 22px; }
       .install-section { padding: 40px 16px; }
       .campaign-depth { padding: 40px 16px; margin-top: 32px; }
+      .previews-section { padding: 32px 16px 0; }
+      .final-cta { padding: 32px 16px 24px; }
+      .final-cta-cmd { font-size: 12px; padding: 12px 16px; }
       .fork-branches { flex-direction: column; }
       .fork-or-divider { display: block; }
     }
@@ -1077,6 +1171,18 @@
     @media (max-width: 540px) {
       .nav-star { display: none; }
     }
+
+    /* ─── Copy button ─── */
+    .copy-btn {
+      position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
+      font-size: 10px; padding: 3px 9px; border-radius: 4px;
+      background: var(--surface-2); border: 1px solid var(--border);
+      color: var(--muted); cursor: pointer; font-family: 'SF Mono', monospace;
+      transition: border-color 0.15s, color 0.15s, background 0.15s;
+      white-space: nowrap; z-index: 1;
+    }
+    .copy-btn:hover { border-color: var(--cyan); color: var(--cyan); background: color-mix(in srgb, var(--cyan) 6%, var(--surface-2)); }
+    .copy-btn.copied { border-color: var(--green); color: var(--green); background: color-mix(in srgb, var(--green) 6%, var(--surface-2)); }
 
     /* ─── Try bar ─── */
     .try-bar {
@@ -1124,6 +1230,16 @@
     .gen-btn { animation: card-breathe 5s ease-in-out infinite; }
     .gen-btn:hover, .gen-btn.busy { animation: none; }
 
+    /* ─── Cascade connector flow ─── */
+    @keyframes conn-flow {
+      0%, 100% { opacity: 0.3; }
+      50%       { opacity: 1; }
+    }
+    .cascade-connector-line { animation: conn-flow 2.8s ease-in-out infinite; }
+    .cascade-connector:last-of-type .cascade-connector-line { animation-delay: 1.4s; }
+    .cascade-connector-chevron { animation: conn-flow 2.8s ease-in-out infinite; }
+    .cascade-connector:last-of-type .cascade-connector-chevron { animation-delay: 1.4s; }
+
     /* ─── prefers-reduced-motion ─── */
     @media (prefers-reduced-motion: reduce) {
       .tier-row, .output-section, .result-panel,
@@ -1136,6 +1252,7 @@
       .tf-f1, .tf-f2, .tf-f3 { animation: none !important; width: 60% !important; }
       .gen-btn { animation: none !important; }
       .live-dot { animation: none !important; }
+      .cascade-connector-line, .cascade-connector-chevron { animation: none !important; opacity: 0.5 !important; }
     }
   </style>
 </head>
@@ -1149,7 +1266,7 @@
     <button class="nav-link" onclick="openPanel('hooks')">Hooks</button>
     <button class="nav-link" onclick="openPanel('campaigns')">Campaigns</button>
     <div class="nav-right">
-      <span class="nav-badge">v2.1</span>
+      <span class="nav-badge">v3</span>
       <a class="nav-star" id="nav-star" href="https://github.com/SethGammon/Citadel">★ Star on GitHub</a>
       <a class="nav-cta" href="#install-section" onclick="scrollToInstall(); return false;">Get Started</a>
     </div>
@@ -1195,24 +1312,28 @@
         <span class="gen-icon">⚡</span>
         <div class="gen-name">Instant</div>
         <div class="gen-meta">~0 tokens · &lt;1ms</div>
+        <div class="gen-desc">regex match — no model call</div>
         <div class="gen-again">try another →</div>
       </button>
       <button class="gen-btn" style="--gc:var(--cyan)" onclick="generate('skill')">
         <span class="gen-icon">◆</span>
         <div class="gen-name">Skill</div>
         <div class="gen-meta">~0 tokens · &lt;10ms</div>
+        <div class="gen-desc">keyword match — skill dispatched directly</div>
         <div class="gen-again">try another →</div>
       </button>
       <button class="gen-btn" style="--gc:var(--orange)" onclick="generate('campaign')">
         <span class="gen-icon">⬡</span>
         <div class="gen-name">Campaign</div>
         <div class="gen-meta">~500 tokens · Archon</div>
+        <div class="gen-desc">LLM classifier → multi-phase execution</div>
         <div class="gen-again">try another →</div>
       </button>
       <button class="gen-btn" style="--gc:var(--purple)" onclick="generate('fleet')">
         <span class="gen-icon">⬢</span>
         <div class="gen-name">Fleet</div>
         <div class="gen-meta">~500 tokens · parallel</div>
+        <div class="gen-desc">LLM classifier → agents in parallel worktrees</div>
         <div class="gen-again">try another →</div>
       </button>
     </div>
@@ -1293,15 +1414,15 @@
           <div class="cl-dots" id="cl-dots"></div>
         </div>
         <div class="cl-dim">
-          <span class="cl-label">Multi-session</span>
+          <span class="cl-label">Spans sessions</span>
           <span class="cl-value accent" id="cl-persist">yes</span>
         </div>
         <div class="cl-dim">
-          <span class="cl-label">Parallel</span>
+          <span class="cl-label">Parallel fleet</span>
           <span class="cl-value" id="cl-parallel">no</span>
         </div>
         <div class="cl-dim">
-          <span class="cl-label">Taste required</span>
+          <span class="cl-label">Needs judgment</span>
           <span class="cl-value" id="cl-taste">yes</span>
         </div>
       </div>
@@ -1458,6 +1579,70 @@
     </details>
   </div><!-- /cascade-section -->
 
+  <!-- Output previews — real Citadel output, not wireframes -->
+  <div class="previews-section">
+    <div class="previews-heading">
+      <h2>What you actually get</h2>
+      <p>Real output from real sessions. No wireframes, no mockups.</p>
+    </div>
+
+    <!-- Preview 1: /do routing -->
+    <div class="preview-card" style="--preview-color:var(--green)">
+      <div class="preview-card-header">
+        <div class="preview-card-dot"></div>
+        <div class="preview-card-label">ROUTING</div>
+        <div class="preview-card-context">/do review the auth module</div>
+      </div>
+      <div class="preview-card-body"><span class="pv-dim">Tier 2 keyword match</span>
+<span class="pv-label">Routing to</span> <span class="pv-cmd">/review</span> <span class="pv-dim">because input contains "review" (keyword match, 0 tokens)</span>
+
+<span class="pv-green">--- HANDOFF ---</span>
+<span class="pv-label">- 5-pass review complete</span>: auth module (src/auth/)
+- <span class="pv-orange">3 issues found</span>: 1 security (token expiry unchecked), 2 style
+- Security issue is blocking — fix before merge
+- No test regressions detected
+<span class="pv-green">---</span></div>
+    </div>
+
+    <!-- Preview 2: Campaign HANDOFF -->
+    <div class="preview-card" style="--preview-color:var(--orange)">
+      <div class="preview-card-header">
+        <div class="preview-card-dot"></div>
+        <div class="preview-card-label">CAMPAIGN</div>
+        <div class="preview-card-context">/archon — Phase 3 of 4</div>
+      </div>
+      <div class="preview-card-body"><span class="pv-dim">Phase 3: Build · auth-overhaul campaign</span>
+
+<span class="pv-orange">--- HANDOFF ---</span>
+<span class="pv-label">- Built OAuth2 integration</span> with PKCE flow (src/auth/oauth.ts)
+- Session middleware rewritten — JWT with refresh rotation
+- <span class="pv-green">typecheck: clean</span> · <span class="pv-green">tests: 47 pass, 0 fail</span> · <span class="pv-green">build: success</span>
+- Next: Phase 4 (verify) — security audit + integration test
+- Session resumes automatically — campaign state preserved to disk
+<span class="pv-orange">---</span></div>
+    </div>
+
+    <!-- Preview 3: Fleet wave coordination -->
+    <div class="preview-card" style="--preview-color:var(--purple)">
+      <div class="preview-card-header">
+        <div class="preview-card-dot"></div>
+        <div class="preview-card-label">FLEET</div>
+        <div class="preview-card-context">/fleet — Wave 2 of 3</div>
+      </div>
+      <div class="preview-card-body"><span class="pv-dim">Wave 2 complete · 3 agents · isolated worktrees</span>
+
+<span class="pv-purple">Agent A</span> <span class="pv-dim">(wt-fleet-a)</span>: migrated api/ to strict TypeScript <span class="pv-green">✓</span>
+<span class="pv-purple">Agent B</span> <span class="pv-dim">(wt-fleet-b)</span>: migrated components/ to strict TypeScript <span class="pv-green">✓</span>
+<span class="pv-purple">Agent C</span> <span class="pv-dim">(wt-fleet-c)</span>: migrated utils/ — <span class="pv-orange">1 conflict</span> with Agent A
+
+<span class="pv-label">Discovery relay</span>: Agent A found 12 implicit <span class="pv-cmd">any</span> casts in shared types
+  → relayed to Agents B and C before Wave 3
+
+<span class="pv-label">Merge status</span>: A <span class="pv-green">merged</span> · B <span class="pv-green">merged</span> · C <span class="pv-orange">pending conflict resolution</span>
+<span class="pv-dim">Wave 3 will resolve C's conflict and run final typecheck.</span></div>
+    </div>
+  </div><!-- /previews-section -->
+
   <!-- Campaign depth section -->
   <div class="campaign-depth">
     <div class="campaign-depth-inner">
@@ -1468,18 +1653,18 @@
       <div class="feature-grid">
         <div class="feature-point">
           <div class="feature-icon">⧫</div>
-          <div class="feature-title">Phase checkpoints</div>
-          <div class="feature-desc">Quality spot-checks run at the end of every phase before the next begins.</div>
+          <div class="feature-title">Checks at every phase</div>
+          <div class="feature-desc">A quality spot-check runs at the end of every phase. The next phase only starts when it passes.</div>
         </div>
         <div class="feature-point">
           <div class="feature-icon">◎</div>
-          <div class="feature-title">Circuit breakers</div>
-          <div class="feature-desc">After 3 consecutive failures, the campaign parks automatically and waits for human review.</div>
+          <div class="feature-title">Auto-pause on failure</div>
+          <div class="feature-desc">After 3 consecutive failures on the same approach, the campaign parks and waits for you.</div>
         </div>
         <div class="feature-point">
           <div class="feature-icon">◈</div>
-          <div class="feature-title">Regression guards</div>
-          <div class="feature-desc">Type baselines and test counts are captured before the campaign and verified after.</div>
+          <div class="feature-title">Nothing breaks silently</div>
+          <div class="feature-desc">Type baselines and test counts are captured before the campaign and verified after every build phase.</div>
         </div>
       </div>
       <div class="campaign-cta">
@@ -1491,7 +1676,7 @@
   <!-- Stats bar -->
   <div class="stat-bar">
     <div class="stat">
-      <div class="stat-num">33</div>
+      <div class="stat-num">34</div>
       <div class="stat-label">Skills</div>
       <div class="stat-caption">covering code quality, debugging, research, orchestration, and more</div>
     </div>
@@ -1545,6 +1730,15 @@
         </div>
         <a class="install-guide-link" href="#" onclick="openPanel('install'); return false;">Full install guide →</a>
       </div>
+    </div>
+  </div>
+
+  <!-- Final CTA — single copy-pasteable command -->
+  <div class="final-cta">
+    <div class="final-cta-label">One command. Any project.</div>
+    <div class="final-cta-cmd" onclick="navigator.clipboard.writeText('claude plugin add https://github.com/SethGammon/Citadel').then(()=>{this.querySelector('.final-cta-copy').textContent='copied!';setTimeout(()=>{this.querySelector('.final-cta-copy').textContent='copy'},1500)})" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}">
+      claude plugin add https://github.com/SethGammon/Citadel
+      <button class="final-cta-copy">copy</button>
     </div>
   </div>
 
@@ -1612,7 +1806,7 @@
   <!-- Skills panel -->
   <div class="side-panel" id="panel-skills">
     <div class="panel-header">
-      <span class="panel-title">Skills — 33 installed</span>
+      <span class="panel-title">Skills — 34 installed</span>
       <button class="panel-close" onclick="closePanel()">✕</button>
     </div>
     <div class="panel-body">
@@ -1858,7 +2052,7 @@
         return;
       }
       const r = route(val.trim());
-      liveBadge.textContent = `→ ${r.tool}`;
+      liveBadge.textContent = `→ T${r.tier} · ${r.tool} · ${r.tokens} tokens`;
       liveBadge.style.color = r.color;
       liveBadge.className = 'live-badge active';
       enterKey.classList.add('lit');
@@ -1919,7 +2113,7 @@
         statusEl.textContent = 'evaluating…';
         statusEl.style.color = 'var(--muted)';
 
-        const delay = i === 0 ? 480 : i === 2 ? 620 : 800;
+        const delay = i === 0 ? 360 : i === 2 ? 460 : 580;
         await sleep(delay);
 
         if (i === result.tier) {
@@ -2259,6 +2453,7 @@
           currentScreen = n;
           isTransitioning = false;
           updateScrollCue();
+          if (n === 1 && !window._statsAnimated) { window._statsAnimated = true; animateStats(); }
           if (n === 0) {
             const s2 = document.getElementById('screen-2');
             if (s2) s2.scrollTop = 0;
@@ -2496,6 +2691,67 @@
       }
     }
 
+    // ─── Idle placeholder cycling ─────────────────────────────────────────
+    (function initPlaceholder() {
+      const hints = [
+        'Type any engineering task…',
+        'try: fix the typo on line 42',
+        'try: review the auth module',
+        'try: build me a recipe app',
+        'try: debug the login failure',
+        'try: migrate the platform to TypeScript',
+        'try: scaffold a dashboard component',
+        'try: write tests for UserService',
+      ];
+      let idx = 0, timer = null;
+      function rotate() {
+        if (document.hidden || input === document.activeElement || input.value.trim()
+            || document.body.classList.contains('mode-result')) {
+          timer = setTimeout(rotate, 3000); return;
+        }
+        idx = (idx + 1) % hints.length;
+        input.placeholder = hints[idx];
+        timer = setTimeout(rotate, 3200);
+      }
+      input.addEventListener('focus', () => {
+        clearTimeout(timer); timer = null;
+        input.placeholder = 'Type any engineering task…';
+      });
+      input.addEventListener('blur', () => {
+        if (!input.value.trim()) timer = setTimeout(rotate, 4000);
+      });
+      timer = setTimeout(rotate, 6000);
+    })();
+
+    // ─── Stats count-up on first screen-2 visit ────────────────────────────
+    function animateStats() {
+      const rows = document.querySelectorAll('.stat-num');
+      const targets = [33, 4, 14, 0]; // 0 = ~0 (special case)
+      rows.forEach((el, i) => {
+        const target = targets[i];
+        if (target === 0) {
+          el.style.opacity = '0';
+          setTimeout(() => {
+            el.style.transition = 'opacity 0.6s';
+            el.style.opacity = '1';
+          }, i * 160 + 200);
+          return;
+        }
+        el.textContent = '0';
+        const delay = i * 160;
+        const duration = 900;
+        const startTime = performance.now() + delay;
+        function tick(now) {
+          if (now < startTime) { requestAnimationFrame(tick); return; }
+          const progress = Math.min((now - startTime) / duration, 1);
+          const ease = 1 - Math.pow(1 - progress, 3);
+          el.textContent = Math.round(ease * target);
+          if (progress < 1) requestAnimationFrame(tick);
+        }
+        requestAnimationFrame(tick);
+      });
+    }
+
     // ─── Live agent counter ────────────────────────────────────────────────
     (function liveAgentCounter() {
       const el = document.getElementById('live-agent-count');
@@ -2525,6 +2781,34 @@
         setTimeout(fire, 3000 + Math.random() * 4000);
       }
       setTimeout(fire, 5000);
+    })();
+
+    // ─── Copy-to-clipboard for code blocks ────────────────────────────────
+    (function initCopyButtons() {
+      document.querySelectorAll('.install-code, .panel-code').forEach(block => {
+        const wrap = document.createElement('div');
+        wrap.style.cssText = 'position:relative;display:block';
+        block.parentNode.insertBefore(wrap, block);
+        wrap.appendChild(block);
+        block.style.paddingRight = '52px';
+        const btn = document.createElement('button');
+        btn.className = 'copy-btn';
+        btn.textContent = 'copy';
+        btn.addEventListener('click', e => {
+          e.stopPropagation();
+          navigator.clipboard.writeText(block.textContent.trim()).then(() => {
+            btn.textContent = 'copied!';
+            btn.classList.add('copied');
+            setTimeout(() => { btn.textContent = 'copy'; btn.classList.remove('copied'); }, 1600);
+          }).catch(() => {
+            const sel = window.getSelection();
+            const range = document.createRange();
+            range.selectNodeContents(block);
+            sel.removeAllRanges(); sel.addRange(range);
+          });
+        });
+        wrap.appendChild(btn);
+      });
     })();
 
     // ─── GitHub star count ─────────────────────────────────────────────────

@@ -3,7 +3,8 @@
 /**
  * external-action-gate.js — PreToolUse hook (Bash)
  *
- * Blocks irreversible external actions that cannot be undone:
+ * Blocks irreversible external actions and secrets exfiltration:
+ *   - Reading .env files via Bash (cat/source — protect-files only guards the Read tool)
  *   - gh pr merge/close/delete
  *   - gh issue close/delete
  *   - gh release create, gh repo fork
@@ -44,6 +45,14 @@ function hookOutput(hookName, action, message, data = {}) {
 }
 
 const BLOCKED_PATTERNS = [
+  // Secrets exfiltration — protect-files only guards the Read tool, not Bash reads
+  { regex: /\bcat\s+.*\.env(\b|\.)/, label: 'cat .env (secrets)' },
+  { regex: /\bsource\s+.*\.env(\b|\.)/, label: 'source .env (secrets)' },
+  { regex: /\bhead\s+.*\.env(\b|\.)/, label: 'head .env (secrets)' },
+  { regex: /\btail\s+.*\.env(\b|\.)/, label: 'tail .env (secrets)' },
+  { regex: /\bgrep\b.*\.env(\b|\.)/, label: 'grep .env (secrets)' },
+  { regex: /\bless\s+.*\.env(\b|\.)/, label: 'less .env (secrets)' },
+  { regex: /\bmore\s+.*\.env(\b|\.)/, label: 'more .env (secrets)' },
   { regex: /\bgh\s+pr\s+merge\b/, label: 'gh pr merge' },
   { regex: /\bgh\s+pr\s+close\b/, label: 'gh pr close' },
   { regex: /\bgh\s+issue\s+close\b/, label: 'gh issue close' },

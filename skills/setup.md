@@ -293,12 +293,12 @@ Print this reference card:
 ```
 ┌──────────────────────────────────────────────────────┐
 │                                                      │
-│  HARNESS READY — 25 skills registered                │
+│  HARNESS READY — 34 skills registered                │
 │                                                      │
 │  /do [anything]           Route to the right tool    │
 │  /do status               Show active work           │
 │  /do continue             Resume where you left off  │
-│  /do --list               Show all 25 skills         │
+│  /do --list               Show all 34 skills         │
 │                                                      │
 │  CORE SKILLS                                         │
 │  /review                  5-pass code review         │

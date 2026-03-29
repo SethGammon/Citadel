@@ -1,5 +1,7 @@
 # Architecture
 
+> last-updated: 2026-03-25
+
 How the harness works, from intent to execution.
 
 ## The Orchestration Ladder

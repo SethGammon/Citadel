@@ -41,6 +41,7 @@ Do NOT use Fleet for:
 | `/fleet [path-to-spec]` | Read a spec file, decompose into streams |
 | `/fleet continue` | Resume from the last fleet session file |
 | `/fleet` (no args) | Health diagnostic → work queue → execute |
+| `/fleet --speculative N [direction]` | Try N different approaches to the same task in parallel — see Speculative Mode below |
 
 ## Protocol
 
@@ -82,6 +83,10 @@ For each wave:
 1. **Prepare context** for each agent:
    - CLAUDE.md content
    - `.claude/agent-context/rules-summary.md`
+   - **Map slice** (if `.planning/map/index.json` exists): run
+     `node scripts/map-index.js --query "<agent's scope keywords>" --max-files 15`
+     and inject the results as a `=== MAP SLICE ===` block. If the index does
+     not exist, skip silently.
    - Campaign-specific direction and scope
    - Discovery briefs from previous waves (if any)
 
@@ -339,6 +344,117 @@ Protocol:
 - **`.planning/` does not exist**: Create `.planning/fleet/` before starting. If `.planning/coordination/` is also absent, skip scope claim registration — it is optional infrastructure.
 - **Discovery compression script missing**: If `.citadel/scripts/compress-discovery.cjs` is not found, write raw HANDOFF excerpts to the briefs directory instead of compressed output.
 
+## Speculative Mode
+
+`/fleet --speculative N [direction]`
+
+Try N different approaches to the same task simultaneously. Each approach gets its own
+worktree and branch. When all finish, you have N implementations to compare. The user
+picks the winner; the others are archived (not deleted).
+
+**When to use:** Architecture decisions where the right approach is unclear, refactors
+with multiple valid strategies, performance optimizations you want to benchmark.
+
+**Protocol:**
+
+### Step 1: Decompose into N strategies
+
+Before spawning, enumerate N distinct approaches for the direction. Each approach must:
+- Target the exact same files and end goal
+- Use a meaningfully different strategy (not just style variations)
+- Be feasible to complete in a single agent session
+
+Example for `--speculative 3 "refactor auth middleware"`:
+- Strategy A: Extract into a class-based middleware with DI container
+- Strategy B: Functional composition with curried middleware
+- Strategy C: Keep flat functions, add a factory function for DI
+
+### Step 2: Spawn N agents in parallel
+
+Each agent gets:
+- The common direction (same for all)
+- Its strategy description (different per agent)
+- Its own branch name: `speculative/{session-slug}/{strategy-label}` (e.g., `speculative/auth-refactor/class-based`)
+- Instruction to set `branch` and `worktree_status: active` in its campaign frontmatter
+
+Spawn with `isolation: "worktree"` as normal. No scope overlap rules apply between speculative agents — they will ALL touch the same files. That's intentional.
+
+### Step 3: Collect and compare
+
+After all agents complete, for each:
+1. Read the HANDOFF
+2. Run typecheck on that worktree's branch
+3. Record in the session file: what was built, typecheck result, key decisions
+
+Present a comparison table to the user:
+
+| Strategy | Branch | Typecheck | Key Decision | Notable Tradeoffs |
+|----------|--------|-----------|--------------|-------------------|
+| Class-based | speculative/auth/class-based | ✓ | DI container | More boilerplate, easier to mock |
+| Functional | speculative/auth/functional | ✓ | Curried fns | Terse, harder to debug |
+| Factory fn | speculative/auth/factory | ✗ (3 errors) | flat + factory | Simple but type errors to fix |
+
+### Step 4: Archive losers, merge winner
+
+When the user picks a winner:
+1. **Winner**: Update campaign frontmatter `worktree_status: merged`, proceed with normal merge
+2. **Losers**: Update campaign frontmatter `worktree_status: archived`. Do NOT delete the branches — they live in git history as a record of the decision.
+
+```bash
+# Archive losers (do NOT delete — preserve in git history)
+git branch {loser-branch}  # already exists, just leave it
+# Optional: tag it for clarity
+git tag archive/{loser-branch} {loser-branch}
+```
+
+### Speculative session file additions
+
+The fleet session file gets a `## Speculative Comparison` section:
+
+```markdown
+## Speculative Comparison
+
+Direction: {shared direction}
+Strategies: {N}
+
+| Strategy | Branch | Status | Typecheck | Notes |
+|----------|--------|--------|-----------|-------|
+| class-based | speculative/auth/class-based | archived | pass | User preferred functional |
+| functional | speculative/auth/functional | merged | pass | Winner — cleanest API |
+| factory-fn | speculative/auth/factory-fn | archived | fail (3) | Type errors, not pursued |
+
+Winner: functional
+Merged: {ISO timestamp}
+```
+
+## Contextual Gates
+
+Before spawning agents, verify contextual appropriateness:
+
+### Disclosure
+State what's about to happen:
+- "Spawning {N} agents across {waves} waves in isolated worktrees. Estimated token budget: ~{tokens}K."
+- For speculative mode: "Running {N} parallel approaches to the same task. All will touch the same files."
+
+### Reversibility
+- **Green:** Single-wave fleet with < 3 agents
+- **Amber:** Multi-wave fleet (the default) -- each wave's merge is a separate commit
+- **Red:** Speculative mode (N parallel implementations of the same scope) or fleets that modify shared infrastructure
+
+Red actions require explicit confirmation regardless of trust level.
+
+### Proportionality
+Before spawning, check whether fleet is warranted:
+- If work queue has < 3 independent streams: downgrade to Marshal or Archon
+- If all streams touch the same directory: downgrade to sequential Archon phases
+- If estimated agents > 6: confirm with user (even trusted level)
+
+### Trust Gating
+Read trust level from `harness.json`:
+- **Novice** (0-4 sessions): Always confirm before spawning. Show agent count, scopes, and estimated cost.
+- **Familiar** (5-19 sessions): Confirm only for > 3 agents or speculative mode.
+- **Trusted** (20+ sessions): Auto-proceed for standard fleet. Confirm only for speculative mode or > 6 agents.
+
 ## Exit Protocol
 
 Update the session file, then output:
@@ -350,5 +466,6 @@ Update the session file, then output:
 - Discoveries: {key cross-agent findings}
 - Merge conflicts: {count and resolution}
 - Next: {remaining work if any}
+- Reversibility: amber -- multi-wave merges, revert each wave's merge commit
 ---
 ```

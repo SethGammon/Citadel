@@ -27,11 +27,117 @@ N+1 obsolete.
 /improve {target} --n=3      # Run exactly N loops then stop
 /improve {target} --axis={name}  # Force-attack a specific axis (skips scoring)
 /improve {target} --score-only   # Score and report, no attack
+/improve {target} --continue     # Resume from campaign state (used by daemon)
 /improve citadel             # Targets the entire Citadel product
 ```
 
 `target` is a slug that maps to `.planning/rubrics/{target}.md`.
 If no rubric exists, run Phase 0 first.
+
+---
+
+## Campaign Mode
+
+When invoked with `--n` or `--continue`, improve operates in **campaign mode** and
+maintains a campaign file that daemon can attach to. This is what makes improve
+daemonizable -- daemon restarts sessions, improve picks up where it left off.
+
+### Campaign file: `.planning/campaigns/improve-{target}.md`
+
+Created automatically on the first invocation with `--n`. Format:
+
+```markdown
+---
+version: 1
+id: "improve-{target}-{ISO-date-slug}"
+status: active
+type: improve
+target: {target}
+total_loops: {n or "unlimited"}
+completed_loops: 0
+current_level: {rubric level from frontmatter}
+estimated_cost_per_loop: 12
+started: "{ISO timestamp}"
+---
+
+# Campaign: Improve {target}
+
+Status: active
+Direction: Improve {target} for {n} loops at Level {level}
+
+## Loop History
+
+| Loop | Axis Attacked | Outcome | Score Movement |
+|------|---------------|---------|----------------|
+(populated after each loop)
+
+## Continuation State
+
+next_loop: 1
+last_scorecard_log: (none)
+last_outcome: (none)
+phase_within_loop: not-started
+level_up_triggered: false
+```
+
+### Campaign lifecycle
+
+**On each loop start (Phase 1):**
+- Update campaign: `phase_within_loop: scoring`
+
+**On selection (Phase 2):**
+- Update campaign: `phase_within_loop: selected-{axis_name}`
+
+**On attack start (Phase 3):**
+- Update campaign: `phase_within_loop: attacking-{axis_name}`
+
+**On verification (Phase 4):**
+- Update campaign: `phase_within_loop: verifying`
+
+**On loop completion (Phase 5/6):**
+- Increment `completed_loops`
+- Update `next_loop`, `last_scorecard_log`, `last_outcome`
+- Set `phase_within_loop: not-started`
+- Append to Loop History table
+
+**On exit (all loops complete):**
+- Set campaign `status: completed`
+- Move to `.planning/campaigns/completed/`
+
+**On level-up trigger:**
+- Set campaign `status: level-up-pending`
+- Set `level_up_triggered: true`
+- Daemon reads this status and pauses (does not retry)
+
+**On abort (security failure, unrecoverable regression):**
+- Set campaign `status: parked`
+- Daemon reads this and stops
+
+### The `--continue` flag
+
+When invoked as `/improve {target} --continue`:
+
+1. Read `.planning/campaigns/improve-{target}.md`
+2. If campaign doesn't exist: error -- "No improve campaign found. Start with `/improve {target} --n=N`."
+3. If `status` is not `active`: error -- "Campaign is {status}. Cannot continue."
+4. Read `completed_loops` and `total_loops`:
+   - If `completed_loops >= total_loops`: set status to completed, exit
+5. Read `phase_within_loop`:
+   - If `not-started`: begin next loop from Phase 1
+   - If `scoring` or `selected-*`: restart the current loop from Phase 1
+     (scoring is cheap to redo and avoids stale partial state)
+   - If `attacking-*`: restart the current loop from Phase 1
+     (attacks are not resumable mid-execution; re-score catches any partial work)
+   - If `verifying`: restart the current loop from Phase 1
+     (verification depends on complete attack output)
+6. Read `last_scorecard_log` to load the previous loop's scorecard for delta comparison
+7. Proceed with the normal loop protocol (Phase 1 onwards)
+
+**Design note:** `--continue` always restarts the current loop from Phase 1 if it was
+interrupted. This is intentional. Improve re-scores from scratch every loop anyway,
+so partial state from a crashed mid-loop session is worthless. The campaign file's
+value is tracking *which loop number we're on* and *whether the campaign is still active*,
+not mid-loop progress.
 
 ## Protocol
 
@@ -133,11 +239,18 @@ Rationale: {one sentence on why this axis now, not another}
 
 ### Phase 3: Attack
 
-Execute the improvement. Dispatch strategy depends on the axis category:
+Execute the improvement. Dispatch strategy depends on the axis category.
+
+**ISOLATION MANDATE:** When dispatching to `/experiment`, `/fleet`, or `/research-fleet`,
+always use the Agent tool with `isolation: "worktree"`. This is non-negotiable. The
+improve orchestrator's context window holds the rubric, scorecard, and loop state. If
+fleet or experiment run inline (same context), they compete for the same window and
+the session dies at nesting depth 3-4. Sub-agents in worktrees get their own context
+windows. The orchestrator only receives their HANDOFF results.
 
 **technical axes** (test_coverage, hook_reliability, api_surface_consistency):
 - Spawn `/experiment` for measurable improvements with before/after comparison
-- Use speculative worktrees for approaches that might conflict
+- Use speculative worktrees for approaches that might conflict (Agent + isolation: "worktree")
 - Run `node scripts/test-all.js` as the verification oracle
 
 **documentation axes** (documentation_coverage, documentation_accuracy):
@@ -271,14 +384,25 @@ directly to the live rubric. Human approval is required to move a proposal into 
 
 1. `--n` flag was set and N loops have completed: exit, report scorecard
 2. All axes >= 8.0: exit with "target has reached quality ceiling"
-3. No axis improved > 0.5 in either of the last 2 loops AND no programmatic cap is active AND at least 3 loops have completed: **trigger Level-Up Protocol** (not a normal exit — see below)
+3. No axis improved > 0.5 in either of the last 2 loops AND no programmatic cap is active AND at least 3 loops have completed: **trigger Level-Up Protocol** (not a normal exit -- see below)
 4. The user said stop: exit immediately
 
 **On Level-Up**: do not exit. Escalate. See Level-Up Protocol section.
 
 **On ceiling (all >= 8.0)**: report the final scorecard and recommend a Level-Up run to re-anchor for the next quality tier.
 
-**On normal loop**: return to Phase 1. Re-score everything from scratch. The previous scorecard is reference only — the new one is ground truth.
+**On normal loop**: return to Phase 1. Re-score everything from scratch. The previous scorecard is reference only -- the new one is ground truth.
+
+**Campaign mode exit handling:**
+
+In campaign mode, update the campaign file on every exit:
+
+- **n-complete** (all loops done): set `status: completed`, move to `completed/`
+- **ceiling** (all axes >= 8.0): set `status: completed`, move to `completed/`
+- **level-up-triggered**: set `status: level-up-pending` (daemon will pause, not retry)
+- **aborted** (security failure, unrecoverable regression): set `status: parked`
+- **plateau** (no improvement, not yet level-up): set `status: parked` with reason
+- **user-stopped**: set `status: paused` (daemon will see non-active status and stop)
 
 ---
 
@@ -347,14 +471,24 @@ Proposed Level {n+1} anchors:
 {axes that hit a structural ceiling with no meaningful level 2 version}
 ```
 
-**Step 3: Halt — human approval required**
+**Step 3: Halt -- human approval required**
 
-Do not self-approve. Do not continue looping. Report:
+Do not self-approve. Do not continue looping.
+
+**In campaign mode:** update the campaign file:
+- Set `status: level-up-pending`
+- Set `level_up_triggered: true`
+- Write to Continuation State: `awaiting: human approval of level-up proposals`
+- This status is specifically recognized by daemon -- it pauses instead of retrying
+
+Report:
 - What was achieved at this level (scorecard summary)
 - The proposals file location
 - What the expected new gains look like at the next level
 
-The loop resumes only when the human edits the live rubric with approved proposals. All loop logs are preserved. Level {n+1} loops continue incrementing the loop number (they do not reset to 1).
+The loop resumes only when the human edits the live rubric with approved proposals
+and sets the campaign status back to `active`. All loop logs are preserved.
+Level {n+1} loops continue incrementing the loop number (they do not reset to 1).
 
 **Step 4: Historical context for future evaluators**
 
@@ -382,6 +516,14 @@ This prevents evaluators from re-discovering the old floor and calling it good.
 
 **Security axis fails programmatic**: treat as a blocking issue. Do not loop. Halt and report. Security is the floor, not one axis among equals.
 
+**`--continue` with no campaign file**: error message, suggest starting with `--n`.
+
+**`--continue` with status `level-up-pending`**: do not resume. Report: "Campaign is waiting for human approval of level-up proposals at .planning/rubrics/{target}-proposals.md. Approve and set campaign status to `active` to resume."
+
+**`--continue` with status `completed`**: do not resume. Report final scorecard summary.
+
+**Campaign file exists but `--n` invoked**: read existing campaign. If active, resume it (treat as `--continue`). If completed/parked, create a new campaign with incremented slug.
+
 ---
 
 ## Quality Gates
@@ -395,8 +537,39 @@ This prevents evaluators from re-discovering the old floor and calling it good.
 - Any axis with a programmatic failure is capped at 5. This cannot be overridden.
 - **The loop never writes to the live rubric.** Proposed axis additions and re-anchorings go to `.planning/rubrics/{target}-proposals.md` only. Human approval is required to move anything into the live rubric. This cannot be bypassed.
 - Level-Up Protocol requires human approval before resuming. The loop halts at Step 3 and waits.
+- **Campaign mode:** campaign file must be updated after every phase transition and every loop completion. PreCompact depends on this for cross-session state preservation.
+- **Campaign mode:** level-up must set `status: level-up-pending`, not `parked` or `active`. Daemon recognizes this specific status and pauses cleanly instead of retrying or stopping.
 
 ---
+
+## Contextual Gates
+
+Before starting an improvement loop, verify contextual appropriateness:
+
+### Disclosure
+State what's about to happen:
+- "Running {N} improvement loops on {target}. Each loop: 3 evaluator agents + attack + verify (~$12/loop, ~${total} total)."
+- For `--continue`: "Resuming improve campaign at loop {n}/{total}. ${spent} spent so far."
+- For unlimited loops: "Running improvement loops until plateau or all axes >= 8.0. No fixed loop count."
+
+### Reversibility
+- **Green:** `--score-only` (no file modifications)
+- **Amber:** Standard improve loops (each loop commits separately, revertable per-loop)
+- **Red:** Level-up protocol (rewrites rubric anchors, changes the quality baseline permanently)
+
+Red actions require explicit confirmation regardless of trust level.
+
+### Proportionality
+Before starting, check whether improve is warranted:
+- If target has no rubric and user hasn't explicitly requested rubric creation: suggest `/review` first
+- If `--n=1` on a target already scoring > 8.0 on all axes: suggest specific axis with `--axis`
+- If estimated cost > $50: confirm with user regardless of trust level
+
+### Trust Gating
+Read trust level from `harness.json`:
+- **Novice** (0-4 sessions): Allow `--score-only` and `--n=1` only. Block `--n` > 1 and unlimited loops. Output: "Start with `--score-only` to see where you stand, or `--n=1` for a single improvement loop."
+- **Familiar** (5-19 sessions): Allow up to `--n=5`. Confirm for higher counts or unlimited.
+- **Trusted** (20+ sessions): No restrictions. Confirm only for unlimited loops or when estimated cost > $50.
 
 ## Exit Protocol
 
@@ -408,6 +581,7 @@ This prevents evaluators from re-discovering the old floor and calling it good.
 - Behavioral simulation: {PASS {wall_time} | FAIL | SKIPPED}
 - Proposed rubric additions: {count} — written to .planning/rubrics/{target}-proposals.md
 - Loop log: .planning/improvement-logs/{target}/loop-{n}.md
+- Reversibility: amber -- each loop commits separately, revert individual loops with git revert
 - Next recommended axis: {axis_name} (if not exiting)
 - Level-up snapshot: .planning/rubrics/{target}-level-{n}-final.md (if level-up triggered)
 ---

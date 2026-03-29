@@ -75,6 +75,32 @@ Break the direction into 3-8 phases:
 5. Write the campaign file to `.planning/campaigns/{slug}.md`
 6. Register a scope claim if `.planning/coordination/` exists
 
+### Step 2.5: DAEMONIZE? (new campaigns with 2+ estimated sessions)
+
+After creating the campaign, if the estimated session count is 2 or more:
+
+1. Compute a cost estimate:
+   - Read `.planning/telemetry/session-costs.jsonl` if it exists
+   - If there are prior sessions: use the average `estimated_cost` as the per-session estimate
+   - If no prior data: use `$3` as the default per-session estimate
+   - Total estimate = per-session cost * estimated sessions
+2. Ask one question (single sentence, not a wall of text):
+   ```
+   This is multi-session work (~{N} sessions, ~${total}). Run continuously? [y/n]
+   ```
+3. If **yes**:
+   - Write `.planning/daemon.json` with `status: "running"`, `campaignSlug`, `budget: {total * 2}` (2x estimated as safety margin), `costPerSession: {per-session estimate}`
+   - If RemoteTrigger is available: create chain + watchdog triggers (same as `/daemon start`)
+   - If RemoteTrigger is unavailable: write daemon.json only (the SessionStart hook bridge handles continuation)
+   - Log `daemon-start` to telemetry
+   - Output: "Daemon activated. Budget: ${budget}. Use `/daemon status` to check progress."
+4. If **no**: continue to Step 3 normally. Campaign exists, user continues manually.
+
+**Skip this step when:**
+- Resuming an existing campaign (daemon may already be running)
+- Campaign has only 1 estimated session
+- A daemon is already running (read `.planning/daemon.json`)
+
 ### Step 3: EXECUTE PHASES
 
 For each phase:
@@ -100,6 +126,9 @@ For each phase:
 3. **Delegate**: Spawn a sub-agent with full context injection:
    - CLAUDE.md content
    - `.claude/agent-context/rules-summary.md`
+   - **Map slice** (if `.planning/map/index.json` exists): run
+     `node scripts/map-index.js --query "<phase scope keywords>" --max-files 15`
+     and inject the results. If the index does not exist, skip silently.
    - Phase-specific direction and scope
    - Relevant decisions from the campaign's Decision Log
 4. **Verify end conditions**: Before marking a phase complete, check its end conditions:
@@ -286,6 +315,38 @@ Checkpoint refs are stored in the campaign Continuation State as:
 - **`.planning/campaigns/` does not exist**: Treat as no active campaigns. Proceed to directed or undirected mode without crashing.
 - **Sub-agent returns no HANDOFF**: Treat the phase as partial. Log what was observed, record it in the campaign file, and proceed to the next phase rather than hanging.
 
+## Contextual Gates
+
+Before executing a campaign, verify contextual appropriateness:
+
+### Disclosure
+State what's about to happen in one sentence:
+- New campaign: "This will create a {N}-phase campaign touching {scope}. Estimated {sessions} sessions (~${cost})."
+- Continue: "Resuming campaign {slug} at phase {current}/{total}."
+
+### Reversibility
+- **Green:** Single-phase campaigns with < 5 file changes
+- **Amber:** Multi-phase campaigns (the default) -- revert requires rolling back multiple commits
+- **Red:** Campaigns that modify CI/CD config, publish content, or push to remote
+
+Red actions require explicit confirmation regardless of trust level.
+
+### Proportionality
+After decomposing phases, compare estimated scope to input complexity:
+- If input is a single sentence and decomposition produces 5+ phases: downgrade to Marshal
+- If input mentions a single file and decomposition is cross-domain: narrow scope
+
+### Trust Gating
+Read trust level from `harness.json` (via `readTrustLevel()` in harness-health-util.js):
+- **Novice** (0-4 sessions): Confirm before starting any campaign. Show recovery instructions after each phase ("to undo: git revert HEAD~{N}").
+- **Familiar** (5-19 sessions): Confirm only for campaigns estimated > $10 or > 3 phases.
+- **Trusted** (20+ sessions): No confirmation for amber actions. Only red actions require confirmation.
+
+Step 2.5 (DAEMONIZE?) is additionally trust-gated:
+- **Novice**: Do NOT offer daemon activation. Skip Step 2.5 entirely.
+- **Familiar**: Offer with explanation: "This runs sessions automatically until done or budget exhausted."
+- **Trusted**: Offer with cost only: "Run continuously? (~${cost}) [y/n]"
+
 ## Exit Protocol
 
 Update the campaign file, then output:
@@ -296,5 +357,6 @@ Update the campaign file, then output:
 - Completed: {what was done this session}
 - Decisions: {key choices made}
 - Next: {what the next session should do}
+- Reversibility: amber -- multi-phase campaign, revert with git revert HEAD~{commits}
 ---
 ```

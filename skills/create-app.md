@@ -221,5 +221,6 @@ After the campaign completes and verification runs, output:
 - Status: {complete | partial | failed}
 - To run: {start command}
 - Next: {suggested next step, e.g., /postmortem or deploy command}
+- Reversibility: amber -- multi-tier creation, revert the creation commits
 ---
 ```

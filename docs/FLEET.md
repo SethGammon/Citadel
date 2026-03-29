@@ -1,5 +1,7 @@
 # Fleet — Parallel Campaign Orchestration
 
+> last-updated: 2026-03-24
+
 Fleet runs multiple campaigns simultaneously through coordinated waves,
 sharing discoveries between them.
 

@@ -84,11 +84,14 @@ If matched → execute directly. Done.
 
 Check for active campaigns or fleet sessions that match the input scope:
 
-1. Read `.planning/campaigns/` for files with `Status: active`
+1. Read `.planning/campaigns/` for files with `Status: active` or `status: active` in frontmatter
 2. Read `.planning/fleet/` for session files with `status: active` or `needs-continue`
-3. If input scope matches an active campaign → `/archon continue`
-4. If fleet session needs continuation → `/fleet continue`
-5. If input mentions a campaign by name → resume it
+3. **Improve campaigns (type: improve):** if the active campaign has `type: improve` in
+   frontmatter, route to `/improve {target} --continue` where `{target}` is the campaign's
+   `target` field. Do NOT route improve campaigns to archon -- improve is its own orchestrator.
+4. If input scope matches a non-improve active campaign → `/archon continue`
+5. If fleet session needs continuation → `/fleet continue`
+6. If input mentions a campaign by name → resume it (check type field for routing)
 
 If matched → resume the active work. Done.
 
@@ -132,7 +135,13 @@ and any project-level custom skills in `.claude/skills/`.
 | "schedule", "recurring", "every N minutes", "cron", "set a reminder", "run periodically" | `/schedule` |
 | "merge review", "check merges", "any conflicts", "fleet conflicts", "pending branches", "safe to merge" | `/merge-review` |
 | "ascii diagram", "ascii art", "box diagram", "architecture diagram", "flow diagram", "draw a diagram", "text diagram", "sequence diagram" | `/ascii-diagram` |
+| "improve", "improvement loop", "quality loop", "rubric", "score against", "run improvement", "improve citadel" | `/improve` |
 | "organize", "directory structure", "folder structure", "project structure", "file organization", "where should this go", "cleanup directories" | `/organize` |
+| "daemon", "continuous", "run overnight", "keep running", "24/7", "unattended", "run autonomously", "daemon start", "daemon stop", "daemon status" | `/daemon` |
+| "map", "index codebase", "codebase map", "structural index", "scan codebase", "map stats", "map query" | `/map` |
+| "watch", "watch files", "watch changes", "file sentinel", "monitor files", "watch start", "watch stop", "watch scan", "marker comments", "@citadel" | `/watch` |
+| "infra", "infrastructure", "what databases", "what systems", "docker-compose", "infra audit", "map infrastructure", "what does this connect to" | `/infra-audit` |
+| "workspace", "multi-repo", "cross-repo", "across repos", "multiple repos", "coordinate repos", "add redis and snowflake", "split into repos" | `/workspace` |
 
 If ONE skill matches with high confidence → invoke it directly. Done.
 If MULTIPLE skills match → fall through to Tier 3.
@@ -173,7 +182,34 @@ REQUIRES_TASTE: true | false (quality judgment beyond tests?)
 always makes this mistake") should route to `/create-skill`. A repeated pattern
 is a skill waiting to be extracted.
 
-### After Classification
+### Step 3.5: Proportionality Check
+
+After classification and before execution, verify the response is proportional to the input:
+
+**Downgrade triggers (apply in order):**
+
+| Condition | Action |
+|---|---|
+| Input < 20 words AND routed to Archon or Fleet | Downgrade to Marshal. Log: "Input too brief for campaign-level orchestration." |
+| Input mentions a single file AND routed to Fleet | Downgrade to Marshal or skill. Log: "Single-file scope doesn't warrant parallel agents." |
+| Estimated sessions > 5 AND user is Novice trust level | Cap at 3 sessions. Log: "Capping sessions for novice user. Run more to unlock higher budgets." |
+| Routed to Daemon AND user is Novice trust level | Block. Output: "Daemon mode requires familiarity with the harness. Complete a few sessions first." |
+| Estimated cost > $50 AND no explicit budget flag | Confirm with user regardless of trust level. |
+
+**Upgrade triggers:**
+
+| Condition | Action |
+|---|---|
+| Input complexity >= 4 AND routed to a bare skill | Suggest Marshal. "This looks complex enough for orchestration. Route to /marshal instead?" |
+| Input mentions "overnight" or "continuous" AND routed to Archon | Suggest daemon. "This sounds like continuous work. Want to run it as a daemon?" (skip if Novice) |
+
+**Trust level integration:**
+Read trust level from `harness.json` (via the `trust` object):
+- Compute level: novice (0-4 sessions), familiar (5-19), trusted (20+ with 2+ campaigns)
+- If `trust.override` is set, use that level
+- Apply the trust-gated rules from the tables above
+
+### Step 4: After Classification
 
 1. **Log the routing decision to telemetry** (cost: ~0, fire-and-forget):
    ```bash
@@ -208,6 +244,7 @@ ORCHESTRATION
   /marshal [direction]  Single-session orchestrator
   /archon [direction]   Multi-session campaigns
   /fleet [direction]    Parallel campaigns with coordination safety
+  /workspace [direction] Multi-repo campaign coordinator (fleet, one level up)
   /autopilot            Intake-to-delivery pipeline
 
 APP CREATION
@@ -231,6 +268,7 @@ RESEARCH & DEBUGGING
   /live-preview         Mid-build visual verification
 
 QUALITY & VERIFICATION
+  /improve [target]     Autonomous quality engine -- score, select, attack, verify, loop
   /design               Design manifest generator (extract or generate)
   /qa                   Browser QA via Playwright (optional dependency)
   /postmortem           Campaign postmortem from telemetry + git history
@@ -239,7 +277,12 @@ GITHUB & CI
   /triage [issue|pr]    GitHub issue and PR investigator
   /pr-watch [number]    Local PR auto-fix — watches CI, fixes failures, offers merge
 
-STRUCTURE & ORGANIZATION
+INFRASTRUCTURE
+  /infra-audit          Map current infrastructure from config files, flag opportunities
+  /workspace [direction] Coordinate campaigns across multiple repos
+
+MONITORING & ORGANIZATION
+  /watch [command]      File sentinel — detects changes and @citadel: markers, routes to skills
   /organize [--audit]   Directory convention scanner, enforcer, and cleanup
 
 UTILITIES

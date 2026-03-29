@@ -8,7 +8,7 @@
  * Stores last-check timestamp in .claude/issue-monitor-state.json (gitignored).
  */
 
-const { execSync, execFileSync } = require('child_process');
+const { execFileSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 
@@ -44,7 +44,7 @@ const REPO_SLUG_RE = /^[\w.-]{1,100}\/[\w.-]{1,100}$/;
 
 function getRepoSlug() {
   try {
-    const remote = execSync('git remote get-url origin', { encoding: 'utf8' }).trim();
+    const remote = execFileSync('git', ['remote', 'get-url', 'origin'], { encoding: 'utf8' }).trim();
     const match = remote.match(/github\.com[/:]([\w.-]+)\/([\w.-]+?)(?:\.git)?$/);
     if (!match) return null;
     const slug = `${match[1]}/${match[2]}`;
