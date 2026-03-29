@@ -8,6 +8,9 @@
 # Per-project scaffolded state (created by init-project hook)
 .citadel/
 
+# Desktop app (experimental, not production-ready)
+apps/
+
 # Coordination (ephemeral, per-session)
 .planning/coordination/instances/*.json
 .planning/coordination/claims/*.json
@@ -48,6 +51,18 @@ Thumbs.db
 .env
 .env.local
 .env.*.local
+
+# Improvement logs (operational data, not user-facing)
+.planning/improvement-logs/
+
+# Fleet session state (operational, not examples)
+.planning/fleet/session-*.md
+.planning/fleet/briefs/wave*.md
+
+# Daemon state
+.planning/daemon.json
+.planning/daemon-runs.log
+.planning/watch-state.json
 
 # Local planning notes (roadmaps, drafts — not for public repo)
 .planning/roadmap/
