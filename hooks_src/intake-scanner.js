@@ -31,6 +31,21 @@ const PROJECT_ROOT = health.PROJECT_ROOT;
 const INTAKE_DIR = path.join(PROJECT_ROOT, '.planning', 'intake');
 
 function main() {
+  try {
+    run();
+  } catch (err) {
+    // Non-critical hook: log the error but don't block the session
+    hookOutput('intake-scanner', 'error',
+      `[intake-scanner] Could not scan intake directory: ${err.message || 'unknown error'}. ` +
+      `This is non-critical — your session will continue normally. ` +
+      `If this persists, check that .planning/intake/ exists and contains valid .md files.`,
+      { error: err.message || 'unknown error' }
+    );
+    process.exit(0); // Non-critical: allow session to continue
+  }
+}
+
+function run() {
   health.increment('intake-scanner', 'count');
 
   if (!fs.existsSync(INTAKE_DIR)) {
@@ -47,7 +62,17 @@ function main() {
 
   const items = [];
   for (const file of files) {
-    const content = fs.readFileSync(path.join(INTAKE_DIR, file), 'utf8');
+    let content;
+    try {
+      content = fs.readFileSync(path.join(INTAKE_DIR, file), 'utf8');
+    } catch (err) {
+      // Skip unreadable files rather than crashing
+      hookOutput('intake-scanner', 'warned',
+        `[intake-scanner] Could not read ${file}: ${err.message}. Skipping.`,
+        { file, error: err.message }
+      );
+      continue;
+    }
     const titleMatch = content.match(/^title:\s*"?(.+?)"?\s*$/m);
     const statusMatch = content.match(/^status:\s*(\w+)/m);
     const status = statusMatch ? statusMatch[1] : 'pending';

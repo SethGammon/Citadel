@@ -93,26 +93,29 @@ function main() {
       });
 
       const lines = [
-        `[Circuit Breaker] ${THRESHOLD} consecutive tool failures detected (trip #${lifetimeTrips} this session).`,
-        `Last failed tool: ${toolName}`,
-        error ? `Last error: ${error}` : null,
+        `[Circuit Breaker] The "${toolName}" tool has failed ${THRESHOLD} times in a row (trip #${lifetimeTrips} this session).`,
+        error ? `  Error: ${error}` : null,
+        `  What this means: Citadel detected a repeated failure pattern and is suggesting you change approach.`,
       ];
 
       if (lifetimeTrips >= 5) {
         lines.push(
-          `WARNING: ${lifetimeTrips} circuit breaker trips this session. You are stuck in a failure loop.`,
-          `STOP trying variations of the same approach. Step back and:`,
-          `  - Re-read the relevant files from scratch`,
-          `  - Consider whether the approach is fundamentally wrong`,
-          `  - Try a completely different strategy, not a minor variation`,
+          ``,
+          `  WARNING: ${lifetimeTrips} trips this session. You are stuck in a failure loop.`,
+          `  STOP trying variations of the same approach. Step back and:`,
+          `  1. Re-read the relevant files from scratch — something may have changed`,
+          `  2. Consider whether the approach is fundamentally wrong`,
+          `  3. Try a completely different strategy, not a minor variation`,
+          `  4. If stuck: describe the problem to the user and ask for guidance`,
         );
       } else {
         lines.push(
-          `Consider a different approach:`,
-          `  - If editing: re-read the file first, the content may have changed`,
-          `  - If running commands: check if a prerequisite step was missed`,
-          `  - If searching: try broader/narrower patterns or different file paths`,
-          `  - If the same action keeps failing: try an alternative tool or approach`,
+          ``,
+          `  Try a different approach:`,
+          `  - "${toolName}" + Edit/Write failing? Re-read the file first — content may have changed`,
+          `  - "${toolName}" + Bash failing? Check if a prerequisite step was missed`,
+          `  - "${toolName}" + Grep/Glob failing? Try broader patterns or different paths`,
+          `  - Same tool keeps failing? Switch to an alternative tool or approach`,
         );
       }
 

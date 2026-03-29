@@ -1,5 +1,7 @@
 # Hooks
 
+> last-updated: 2026-03-25
+
 Hooks are shell scripts that fire automatically at lifecycle events in Claude Code.
 You never invoke them manually. They provide automated quality enforcement.
 

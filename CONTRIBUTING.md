@@ -38,7 +38,7 @@ Open an issue on [GitHub](https://github.com/SethGammon/Citadel/issues). Include
 
 ## Adding a New Skill
 
-Skills live in `skills/<name>/SKILL.md`. Every skill needs:
+Skills live in `skills/{name}.md` (flat files, not nested). Every skill needs:
 
 ```yaml
 ---
@@ -70,7 +70,7 @@ Hooks live in `hooks_src/`. Before adding one:
 ```
 citadel/
   .claude-plugin/       # Plugin manifest
-  skills/               # Built-in skill definitions (SKILL.md per skill)
+  skills/               # Built-in skill definitions ({name}.md per skill)
   agents/               # Sub-agent definitions
   hooks/
     hooks-template.json # Hook definitions (resolved by install-hooks.js)

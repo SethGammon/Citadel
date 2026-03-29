@@ -1,5 +1,7 @@
 # Campaigns
 
+> last-updated: 2026-03-20
+
 Campaigns are the persistence mechanism for multi-session work. They're the only
 state that survives across context windows.
 

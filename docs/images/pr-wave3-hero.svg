@@ -25,7 +25,7 @@
   <text x="600" y="112" text-anchor="middle" font-family="'Segoe UI',system-ui,sans-serif" font-size="38" font-weight="700" fill="#ffffff" letter-spacing="2">App Creation Pipeline</text>
 
   <!-- Subtitle stats -->
-  <text x="600" y="145" text-anchor="middle" font-family="'SF Mono','Cascadia Code',monospace" font-size="14" fill="#8892b0" letter-spacing="1">21 skills  |  5 tiers  |  spec to verified app</text>
+  <text x="600" y="145" text-anchor="middle" font-family="'SF Mono','Cascadia Code',monospace" font-size="14" fill="#8892b0" letter-spacing="1">33 skills  |  5 tiers  |  spec to verified app</text>
 
   <!-- Pipeline visualization -->
   <!-- Connection lines -->

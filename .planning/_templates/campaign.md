@@ -1,18 +1,29 @@
 ---
 version: 1
+id: "{uuid}"
 status: active
 started: "{ISO timestamp}"
+completed_at: null
 direction: "{one-line summary of the original user direction}"
 phase_count: 0
 current_phase: 1
+branch: null
+worktree_status: null
 ---
 <!-- FRONTMATTER GUIDE
-  version:       Do not change. Schema version for UI compatibility.
-  status:        Keep in sync with the "Status:" line below. Values: active | completed | parked | failed
-  started:       Set once at creation. ISO timestamp.
-  direction:     Single-line summary of the campaign goal. No newlines.
-  phase_count:   Update when adding phases. Count of rows in the Phases table.
-  current_phase: Update as phases advance. Matches the phase number currently in-progress.
+  version:        Do not change. Schema version for UI compatibility.
+  id:             Stable UUID. Set once at creation. Never change — used by UI for entity tracking across renames.
+  status:         Keep in sync with the "Status:" line below. Values: active | completed | parked | failed
+  started:        Set once at creation. ISO timestamp.
+  completed_at:   Set when status changes to completed or failed. ISO timestamp. null while active.
+  direction:      Single-line summary of the campaign goal. No newlines.
+  phase_count:    Update when adding phases. Count of rows in the Phases table.
+  current_phase:  Update as phases advance. Matches the phase number currently in-progress.
+  branch:         Git branch this campaign is executing on (e.g. "feat/auth-refactor"). null if working on main.
+  worktree_status: State of the campaign's associated worktree. Values: active | merged | archived | null.
+                  Set to "active" when campaign starts in a dedicated worktree.
+                  Set to "merged" when the branch has been merged to main.
+                  Set to "archived" when the branch is preserved but will not be merged (speculative loser).
 -->
 
 # Campaign: {Campaign Name}

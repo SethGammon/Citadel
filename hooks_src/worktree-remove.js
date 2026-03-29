@@ -5,16 +5,18 @@
  *
  * Fires when a git worktree is removed (fleet agent completes or is cleaned up).
  * Responsibilities:
- *   1. Log the worktree removal to telemetry
- *   2. Update the fleet session file to mark the agent as complete
- *   3. Queue a merge conflict check if the worktree had changes (Tier 9 prep)
- *   4. Clean up any scope claims the worktree's agent held
+ *   1. Check if branch maps to a persistent campaign (worktree_status: active) — if so, skip removal telemetry and exit
+ *   2. Log the worktree removal to telemetry
+ *   3. Update the fleet session file to mark the agent as complete
+ *   4. Queue a merge conflict check if the worktree had changes (Tier 9 prep)
+ *   5. Clean up any scope claims the worktree's agent held
  *
  * Fringe cases:
  * - Worktree removed without corresponding fleet session: log and skip
  * - Worktree had no commits: skip merge check, just clean up
  * - Multiple worktrees removed simultaneously: each runs independently, no coordination needed
  * - Scope claim file missing: skip cleanup (already released or never claimed)
+ * - Persistent worktree (campaign worktree_status: active): log skip and exit 0 — do not clean up
  */
 
 const fs = require('fs');
@@ -36,6 +38,16 @@ function main() {
     const branchName = event.branch || event.branch_name || null;
 
     health.increment('worktree-remove', 'count');
+
+    // Skip cleanup for persistent worktrees (campaigns with worktree_status: active).
+    // The campaign file is the source of truth — if the branch maps to an active
+    // persistent campaign, this removal event is spurious (e.g., session end cleanup)
+    // and the worktree should be left intact for the next session.
+    if (branchName && isPersistentWorktree(branchName)) {
+      process.stderr.write(`[worktree-remove] Branch "${branchName}" is a persistent worktree (worktree_status: active). Skipping cleanup.\n`);
+      process.exit(0);
+      return;
+    }
 
     // Log to telemetry
     health.logTiming('worktree-remove', 0, {
@@ -63,6 +75,38 @@ function main() {
 
     process.exit(0);
   });
+}
+
+/**
+ * Returns true if the given branch is owned by a persistent campaign
+ * (campaign frontmatter has worktree_status: active).
+ * Scans .planning/campaigns/ for a matching branch field.
+ */
+function isPersistentWorktree(branch) {
+  try {
+    const campaignsDir = path.join(PROJECT_ROOT, '.planning', 'campaigns');
+    if (!fs.existsSync(campaignsDir)) return false;
+    const files = fs.readdirSync(campaignsDir).filter(f => f.endsWith('.md') && !fs.statSync(path.join(campaignsDir, f)).isDirectory());
+    for (const file of files) {
+      const filePath = path.join(campaignsDir, file);
+      const content = fs.readFileSync(filePath, 'utf8');
+      // Extract YAML frontmatter (between first --- and second ---)
+      const fmMatch = content.match(/^---\n([\s\S]*?)\n---/);
+      if (!fmMatch) continue;
+      const fm = fmMatch[1];
+      // Check branch field matches
+      const branchMatch = fm.match(/^branch:\s*(.+)$/m);
+      if (!branchMatch) continue;
+      const fileBranch = branchMatch[1].trim().replace(/^["']|["']$/g, '');
+      if (fileBranch !== branch) continue;
+      // Check worktree_status is active
+      const statusMatch = fm.match(/^worktree_status:\s*(.+)$/m);
+      if (!statusMatch) continue;
+      const status = statusMatch[1].trim().replace(/^["']|["']$/g, '');
+      if (status === 'active') return true;
+    }
+  } catch { /* non-critical — if we can't read, assume ephemeral */ }
+  return false;
 }
 
 function queueMergeCheck(branch, worktree) {

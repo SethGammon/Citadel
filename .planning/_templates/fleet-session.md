@@ -1,7 +1,9 @@
 ---
 version: 1
+id: "{uuid}"
 status: active
 started: "{ISO timestamp}"
+completed_at: null
 direction: "{one-line summary}"
 wave_count: 0
 current_wave: 1
@@ -10,8 +12,10 @@ agents_complete: 0
 ---
 <!-- FRONTMATTER GUIDE
   version:         Do not change. Schema version for UI compatibility.
+  id:              Stable UUID. Set once at creation. Never change — used by UI for entity tracking across renames.
   status:          Keep in sync with the "Status:" line below. Values: active | completed | needs-continue | failed
   started:         Set once at creation. ISO timestamp.
+  completed_at:    Set when status changes to completed or failed. ISO timestamp. null while active.
   direction:       Single-line summary of the fleet session goal. No newlines.
   wave_count:      Update when adding waves. Total number of waves planned.
   current_wave:    Update as waves advance. Wave number currently executing.

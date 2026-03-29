@@ -1,5 +1,7 @@
 # Writing Skills
 
+> last-updated: 2026-03-24
+
 Skills are the building blocks of the harness. Each skill is a markdown protocol
 that loads into Claude's context when invoked, giving it domain-specific expertise.
 
@@ -160,7 +162,7 @@ the router matches it to user intent.
 
 ## Examples
 
-The harness ships with 25 built-in skills. Here are 6 core examples:
+The harness ships with 33 built-in skills. Here are 6 core examples:
 
 | Skill | Type | What It Does |
 |-------|------|-------------|

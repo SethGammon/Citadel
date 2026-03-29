@@ -138,6 +138,84 @@ function readCoordinationStats() {
   return { active_claims: claims, active_instances: instances };
 }
 
+// ── Cost observability ───────────────────────────────────────────────────────
+
+// Cost model constants (derived from Claude API pricing, Opus-class models)
+const BASE_SESSION_COST = 1.00;     // base overhead per session (context load, routing)
+const COST_PER_SUBAGENT = 0.50;     // per sub-agent spawn
+const COST_PER_MINUTE = 0.10;       // per minute of active agent time
+const SESSION_COST_FILE = 'session-costs.jsonl';
+
+/**
+ * Read per-session cost events from session-costs.jsonl.
+ * Each event is written by the session-end hook.
+ *
+ * @returns {Array<{timestamp:string, campaign_slug:string|null, session_id:string|null,
+ *   agent_count:number, duration_minutes:number, estimated_cost:number, override_cost:number|null}>}
+ */
+function readSessionCosts() {
+  return readJsonl(path.join(TELEMETRY_DIR, SESSION_COST_FILE));
+}
+
+/**
+ * Aggregate costs by campaign slug.
+ * Returns a map of campaign slug -> { sessions, total_cost, agents_spawned, total_minutes }.
+ * Sessions with no campaign_slug are grouped under "_unattached".
+ *
+ * When a session has override_cost (user-supplied real cost), that takes precedence
+ * over the estimated_cost.
+ *
+ * @returns {Object<string, {sessions:number, total_cost:number, agents_spawned:number, total_minutes:number}>}
+ */
+function readCostByCampaign() {
+  const events = readSessionCosts();
+  const result = {};
+
+  for (const e of events) {
+    const slug = e.campaign_slug || '_unattached';
+    if (!result[slug]) {
+      result[slug] = { sessions: 0, total_cost: 0, agents_spawned: 0, total_minutes: 0 };
+    }
+    const r = result[slug];
+    r.sessions++;
+    r.total_cost += (typeof e.override_cost === 'number' ? e.override_cost : (e.estimated_cost || 0));
+    r.agents_spawned += (e.agent_count || 0);
+    r.total_minutes += (e.duration_minutes || 0);
+  }
+
+  return result;
+}
+
+/**
+ * Get total estimated spend across all campaigns.
+ * @returns {{ total: number, by_campaign: Object, session_count: number }}
+ */
+function readTotalCost() {
+  const byCampaign = readCostByCampaign();
+  let total = 0;
+  let sessionCount = 0;
+
+  for (const slug of Object.keys(byCampaign)) {
+    total += byCampaign[slug].total_cost;
+    sessionCount += byCampaign[slug].sessions;
+  }
+
+  return { total: Math.round(total * 100) / 100, by_campaign: byCampaign, session_count: sessionCount };
+}
+
+/**
+ * Compute estimated cost for a single session based on agent activity.
+ * Used by session-end hook to log cost events.
+ *
+ * @param {number} agentCount - Number of sub-agents spawned this session
+ * @param {number} durationMinutes - Session duration in minutes
+ * @returns {number} Estimated cost in dollars (rounded to 2 decimal places)
+ */
+function estimateSessionCost(agentCount, durationMinutes) {
+  const cost = BASE_SESSION_COST + (agentCount * COST_PER_SUBAGENT) + (durationMinutes * COST_PER_MINUTE);
+  return Math.round(cost * 100) / 100;
+}
+
 // ── Token economics ───────────────────────────────────────────────────────────
 
 function readTokenEconomics() {
@@ -228,7 +306,14 @@ module.exports = {
   readTelemetryFileStats,
   readCoordinationStats,
   readTokenEconomics,
+  readSessionCosts,
+  readCostByCampaign,
+  readTotalCost,
+  estimateSessionCost,
   TOKENS_PER_TIER_RESOLUTION,
   TOKENS_PER_CIRCUIT_TRIP,
   TOKENS_PER_QUALITY_VIOLATION,
+  BASE_SESSION_COST,
+  COST_PER_SUBAGENT,
+  COST_PER_MINUTE,
 };

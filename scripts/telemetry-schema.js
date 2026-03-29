@@ -58,6 +58,10 @@ function validateAgentRunEvent(entry) {
     errors.push('session must be a string or null');
   }
 
+  if (entry.campaign_slug !== null && entry.campaign_slug !== undefined && typeof entry.campaign_slug !== 'string') {
+    errors.push('campaign_slug must be a string or null');
+  }
+
   if (entry.duration_ms !== null && entry.duration_ms !== undefined && typeof entry.duration_ms !== 'number') {
     errors.push('duration_ms must be a number or null');
   }
@@ -125,11 +129,99 @@ function validateHookTimingEvent(entry) {
   return { valid: errors.length === 0, errors };
 }
 
+// ── Session cost events (session-costs.jsonl) ────────────────────────────────
+
+/**
+ * Validate a session-cost event entry.
+ * Written by session-end hook to track per-session cost data.
+ * @param {object} entry
+ * @returns {{ valid: boolean, errors: string[] }}
+ */
+function validateSessionCostEvent(entry) {
+  const errors = [];
+
+  if (!entry || typeof entry !== 'object') {
+    return { valid: false, errors: ['entry must be an object'] };
+  }
+
+  if (typeof entry.timestamp !== 'string' || !entry.timestamp) {
+    errors.push('timestamp must be a non-empty string (ISO 8601)');
+  }
+
+  if (typeof entry.agent_count !== 'number' || entry.agent_count < 0) {
+    errors.push('agent_count must be a non-negative number');
+  }
+
+  if (typeof entry.duration_minutes !== 'number' || entry.duration_minutes < 0) {
+    errors.push('duration_minutes must be a non-negative number');
+  }
+
+  if (typeof entry.estimated_cost !== 'number' || entry.estimated_cost < 0) {
+    errors.push('estimated_cost must be a non-negative number');
+  }
+
+  // Optional fields
+  if (entry.campaign_slug !== null && entry.campaign_slug !== undefined && typeof entry.campaign_slug !== 'string') {
+    errors.push('campaign_slug must be a string or null');
+  }
+
+  if (entry.session_id !== null && entry.session_id !== undefined && typeof entry.session_id !== 'string') {
+    errors.push('session_id must be a string or null');
+  }
+
+  if (entry.override_cost !== null && entry.override_cost !== undefined && typeof entry.override_cost !== 'number') {
+    errors.push('override_cost must be a number or null');
+  }
+
+  return { valid: errors.length === 0, errors };
+}
+
+// ── Trust object (harness.json trust counters) ──────────────────────────────
+
+const TRUST_OVERRIDE_VALUES = ['novice', 'familiar', 'trusted'];
+
+/**
+ * Validate a trust object from harness.json config.
+ * @param {object} trust
+ * @returns {{ valid: boolean, errors: string[] }}
+ */
+function validateTrustObject(trust) {
+  const errors = [];
+
+  if (!trust || typeof trust !== 'object') {
+    return { valid: false, errors: ['trust must be an object'] };
+  }
+
+  const nonNegativeFields = [
+    'sessions_completed',
+    'campaigns_completed',
+    'campaigns_reverted',
+    'fleet_clean_merges',
+    'improve_loops_accepted',
+    'daemon_runs',
+  ];
+
+  for (const field of nonNegativeFields) {
+    if (typeof trust[field] !== 'number' || trust[field] < 0) {
+      errors.push(`${field} must be a non-negative number`);
+    }
+  }
+
+  if (trust.override !== null && trust.override !== undefined && !TRUST_OVERRIDE_VALUES.includes(trust.override)) {
+    errors.push(`override must be null or one of: ${TRUST_OVERRIDE_VALUES.join(', ')} -- got: ${trust.override}`);
+  }
+
+  return { valid: errors.length === 0, errors };
+}
+
 // ── Exports ───────────────────────────────────────────────────────────────────
 
 module.exports = {
   SCHEMA_VERSION,
   AGENT_RUN_EVENT_TYPES,
+  TRUST_OVERRIDE_VALUES,
   validateAgentRunEvent,
   validateHookTimingEvent,
+  validateSessionCostEvent,
+  validateTrustObject,
 };

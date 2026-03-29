@@ -9,6 +9,7 @@
  *   2. Update active campaign continuation state if mid-campaign
  *   3. Write a doc-sync queue entry if there are pending doc updates
  *   4. Mark any in-progress fleet agents as needing-continue
+ *   5. Update daemon.json if this was a daemon session (cron/scheduled task flow)
  *
  * This hook fires AFTER the session is done — it cannot send output to Claude.
  * It only writes state files for the next session to read.
@@ -42,17 +43,205 @@ function main() {
       session_id: event.session_id || null,
     });
 
+    // Log session cost data to telemetry
+    logSessionCost(event);
+
+    // Increment trust counters for contextual appropriateness
+    incrementTrustCounters();
+
     // Check for active campaigns and mark continuation point
     markCampaignContinuation();
 
     // Clean up expired dynamic directories per organization manifest
     cleanupDynamicDirectories();
 
+    // Update daemon state if this was a daemon-driven session
+    updateDaemonState();
+
     // Write doc sync queue entry (Tier 6 - processed by next session or doc-sync hook)
     queueDocSync();
 
     process.exit(0);
   });
+}
+
+/**
+ * Log session cost data to .planning/telemetry/session-costs.jsonl.
+ *
+ * Reads agent-runs.jsonl to count agents spawned this session,
+ * finds the active campaign slug, and computes an estimated cost.
+ * The daemon and dashboard read this file for real cost data.
+ */
+function logSessionCost(event) {
+  try {
+    const telemetryDir = path.join(PROJECT_ROOT, '.planning', 'telemetry');
+    if (!fs.existsSync(telemetryDir)) {
+      fs.mkdirSync(telemetryDir, { recursive: true });
+    }
+
+    const now = new Date();
+
+    // Count agent-start events from this session by scanning agent-runs.jsonl.
+    // We look at events from the last 4 hours (generous window for a single session).
+    const agentRunsPath = path.join(telemetryDir, 'agent-runs.jsonl');
+    let agentCount = 0;
+    let sessionStartTime = null;
+
+    if (fs.existsSync(agentRunsPath)) {
+      const lines = fs.readFileSync(agentRunsPath, 'utf8').split('\n').filter(Boolean);
+      const fourHoursAgo = new Date(now.getTime() - 4 * 60 * 60 * 1000).toISOString();
+
+      // Find the most recent session-start or campaign-start as session boundary
+      for (let i = lines.length - 1; i >= 0; i--) {
+        try {
+          const entry = JSON.parse(lines[i]);
+          if (!entry.timestamp || entry.timestamp < fourHoursAgo) break;
+          if (entry.event === 'agent-start') agentCount++;
+          if (!sessionStartTime && (entry.event === 'campaign-start' || entry.event === 'wave-start')) {
+            sessionStartTime = entry.timestamp;
+          }
+        } catch { /* skip malformed lines */ }
+      }
+    }
+
+    // Calculate duration in minutes
+    const startTime = sessionStartTime ? new Date(sessionStartTime) : new Date(now.getTime() - 10 * 60 * 1000);
+    const durationMinutes = Math.max(1, Math.round((now - startTime) / 60000));
+
+    // Find active campaign slug
+    let campaignSlug = null;
+    const campaignsDir = path.join(PROJECT_ROOT, '.planning', 'campaigns');
+    if (fs.existsSync(campaignsDir)) {
+      const files = fs.readdirSync(campaignsDir).filter(f => f.endsWith('.md'));
+      for (const f of files) {
+        try {
+          const content = fs.readFileSync(path.join(campaignsDir, f), 'utf8');
+          if (/^status:\s*active/mi.test(content) || /^Status:\s*active/mi.test(content)) {
+            campaignSlug = f.replace(/\.md$/, '');
+            break;
+          }
+        } catch { /* skip unreadable files */ }
+      }
+    }
+
+    // Compute estimated cost using the same model as telemetry-stats.js
+    const BASE_SESSION_COST = 1.00;
+    const COST_PER_SUBAGENT = 0.50;
+    const COST_PER_MINUTE = 0.10;
+    const estimatedCost = Math.round((BASE_SESSION_COST + (agentCount * COST_PER_SUBAGENT) + (durationMinutes * COST_PER_MINUTE)) * 100) / 100;
+
+    const costEntry = JSON.stringify({
+      schema: 1,
+      timestamp: now.toISOString(),
+      campaign_slug: campaignSlug,
+      session_id: event.session_id || null,
+      agent_count: agentCount,
+      duration_minutes: durationMinutes,
+      estimated_cost: estimatedCost,
+      override_cost: null,
+    });
+
+    fs.appendFileSync(path.join(telemetryDir, 'session-costs.jsonl'), costEntry + '\n', 'utf8');
+  } catch { /* non-critical -- never block session end */ }
+}
+
+/**
+ * Increment trust counters in harness.json for contextual appropriateness.
+ * Tracks sessions completed and campaigns completed this session.
+ * Non-critical -- wrapped in try/catch.
+ */
+function incrementTrustCounters() {
+  try {
+    const configPath = path.join(PROJECT_ROOT, '.claude', 'harness.json');
+    if (!fs.existsSync(configPath)) return; // trust isn't tracked without config
+
+    const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+    if (!config.trust) {
+      config.trust = {
+        sessions_completed: 0,
+        campaigns_completed: 0,
+        campaigns_reverted: 0,
+        fleet_clean_merges: 0,
+        improve_loops_accepted: 0,
+        daemon_runs: 0,
+        override: null,
+      };
+    }
+
+    // Always increment sessions_completed
+    config.trust.sessions_completed = (config.trust.sessions_completed || 0) + 1;
+
+    const fiveMinutesAgo = Date.now() - 5 * 60 * 1000;
+
+    // Check if a campaign completed this session
+    const completedDir = path.join(PROJECT_ROOT, '.planning', 'campaigns', 'completed');
+    if (fs.existsSync(completedDir)) {
+      const completedFiles = fs.readdirSync(completedDir).filter(f => f.endsWith('.md'));
+      for (const f of completedFiles) {
+        try {
+          const stat = fs.statSync(path.join(completedDir, f));
+          if (stat.mtimeMs >= fiveMinutesAgo) {
+            config.trust.campaigns_completed = (config.trust.campaigns_completed || 0) + 1;
+            break; // count at most one campaign completion per session
+          }
+        } catch { /* skip unreadable files */ }
+      }
+    }
+
+    // Check if a fleet session merged cleanly this session
+    const fleetDir = path.join(PROJECT_ROOT, '.planning', 'fleet');
+    if (fs.existsSync(fleetDir)) {
+      const fleetFiles = fs.readdirSync(fleetDir).filter(f => f.endsWith('.md'));
+      for (const f of fleetFiles) {
+        try {
+          const content = fs.readFileSync(path.join(fleetDir, f), 'utf8');
+          const stat = fs.statSync(path.join(fleetDir, f));
+          if (stat.mtimeMs >= fiveMinutesAgo && /status:\s*completed/i.test(content) && !/conflict/i.test(content)) {
+            config.trust.fleet_clean_merges = (config.trust.fleet_clean_merges || 0) + 1;
+            break;
+          }
+        } catch { /* skip unreadable files */ }
+      }
+    }
+
+    // Check if an improve loop completed this session
+    const improveLogsDir = path.join(PROJECT_ROOT, '.planning', 'improvement-logs');
+    if (fs.existsSync(improveLogsDir)) {
+      try {
+        const targets = fs.readdirSync(improveLogsDir).filter(d => {
+          try { return fs.statSync(path.join(improveLogsDir, d)).isDirectory(); } catch { return false; }
+        });
+        for (const target of targets) {
+          const loopFiles = fs.readdirSync(path.join(improveLogsDir, target)).filter(f => f.startsWith('loop-') && f.endsWith('.md'));
+          for (const lf of loopFiles) {
+            try {
+              const stat = fs.statSync(path.join(improveLogsDir, target, lf));
+              if (stat.mtimeMs >= fiveMinutesAgo) {
+                config.trust.improve_loops_accepted = (config.trust.improve_loops_accepted || 0) + 1;
+                break;
+              }
+            } catch { /* skip */ }
+          }
+        }
+      } catch { /* skip */ }
+    }
+
+    // Check if this was a daemon-driven session
+    const isNonInteractive = process.env.CLAUDE_NON_INTERACTIVE === '1';
+    if (isNonInteractive) {
+      const daemonPath = path.join(PROJECT_ROOT, '.planning', 'daemon.json');
+      if (fs.existsSync(daemonPath)) {
+        try {
+          const daemon = JSON.parse(fs.readFileSync(daemonPath, 'utf8'));
+          if (daemon.status === 'running') {
+            config.trust.daemon_runs = (config.trust.daemon_runs || 0) + 1;
+          }
+        } catch { /* skip */ }
+      }
+    }
+
+    fs.writeFileSync(configPath, JSON.stringify(config, null, 2) + '\n', 'utf8');
+  } catch { /* non-critical -- never block session end */ }
 }
 
 function markCampaignContinuation() {
@@ -78,6 +267,110 @@ function markCampaignContinuation() {
       break; // only one active campaign at a time
     }
   } catch { /* non-critical */ }
+}
+
+/**
+ * Update daemon.json after a daemon-driven session completes.
+ * In the cron/scheduled-task flow, there's no /daemon tick to do this --
+ * the session runs /do continue directly and exits. This hook fills that gap.
+ *
+ * Only fires when: daemon.json exists, status is "running", and the session
+ * was non-interactive (indicating a daemon tick, not a human typing /do continue).
+ */
+function updateDaemonState() {
+  try {
+    const daemonPath = path.join(PROJECT_ROOT, '.planning', 'daemon.json');
+    if (!fs.existsSync(daemonPath)) return;
+
+    const daemon = JSON.parse(fs.readFileSync(daemonPath, 'utf8'));
+    if (daemon.status !== 'running') return;
+
+    // Only auto-update for non-interactive sessions (cron/scheduled task).
+    // Interactive sessions where a human typed /do continue shouldn't
+    // silently increment the daemon's session counter.
+    // CLAUDE_NON_INTERACTIVE is set by the scheduled task script.
+    // process.argv won't contain the parent's -p flag -- hooks are child processes.
+    const isNonInteractive = process.env.CLAUDE_NON_INTERACTIVE === '1';
+    if (!isNonInteractive) return;
+
+    // Read the campaign to get the latest loop info
+    const slug = daemon.campaignSlug;
+    let loopSummary = 'session completed';
+    let campaignStatus = 'active';
+    if (slug) {
+      const campaignPath = path.join(PROJECT_ROOT, '.planning', 'campaigns', `${slug}.md`);
+      if (fs.existsSync(campaignPath)) {
+        const content = fs.readFileSync(campaignPath, 'utf8');
+        // Extract status
+        const statusMatch = content.match(/^status:\s*(.+)$/mi);
+        if (statusMatch) campaignStatus = statusMatch[1].trim();
+        // Extract last loop from the Loop History table
+        const rows = content.match(/\|\s*\d+\s*\|[^|]+\|[^|]+\|[^|]+\|/g);
+        if (rows && rows.length > 0) {
+          const lastRow = rows[rows.length - 1];
+          const cells = lastRow.split('|').filter(c => c.trim());
+          if (cells.length >= 4) {
+            loopSummary = `Loop ${cells[0].trim()}: ${cells[1].trim()} ${cells[3].trim()}`;
+          }
+        }
+      }
+    }
+
+    // Update daemon state
+    const now = new Date().toISOString();
+    daemon.sessionCount = (daemon.sessionCount || 0) + 1;
+
+    // Prefer real cost from session-costs.jsonl over flat estimate
+    let sessionCost = daemon.costPerSession || 12;
+    try {
+      const costFile = path.join(PROJECT_ROOT, '.planning', 'telemetry', 'session-costs.jsonl');
+      if (fs.existsSync(costFile)) {
+        const lines = fs.readFileSync(costFile, 'utf8').split('\n').filter(Boolean);
+        if (lines.length > 0) {
+          const latest = JSON.parse(lines[lines.length - 1]);
+          if (latest && typeof latest.estimated_cost === 'number') {
+            sessionCost = typeof latest.override_cost === 'number' ? latest.override_cost : latest.estimated_cost;
+          }
+        }
+      }
+    } catch { /* fall back to flat estimate */ }
+
+    daemon.estimatedSpend = (daemon.estimatedSpend || 0) + sessionCost;
+    daemon.lastTickAt = now;
+    daemon.lastTickStatus = 'completed';
+
+    // Append to log
+    if (!Array.isArray(daemon.log)) daemon.log = [];
+    daemon.log.push({
+      session: daemon.sessionCount,
+      timestamp: now,
+      status: 'completed',
+      phase: loopSummary.split(':')[0] || 'unknown',
+      summary: loopSummary,
+      estimatedCost: sessionCost,
+    });
+
+    // Check if campaign completed -- stop the daemon
+    if (campaignStatus === 'completed' || campaignStatus === 'parked') {
+      daemon.status = 'completed';
+      daemon.stoppedAt = now;
+      daemon.stopReason = `campaign-${campaignStatus}`;
+    }
+
+    // Check if campaign hit level-up -- pause the daemon
+    if (campaignStatus === 'level-up-pending') {
+      daemon.status = 'paused-level-up';
+    }
+
+    // Budget gate: stop if budget exhausted
+    if (typeof daemon.budget === 'number' && daemon.estimatedSpend >= daemon.budget) {
+      daemon.status = 'stopped';
+      daemon.stoppedAt = now;
+      daemon.stopReason = 'budget-exhausted';
+    }
+
+    fs.writeFileSync(daemonPath, JSON.stringify(daemon, null, 2) + '\n', 'utf8');
+  } catch { /* non-critical -- don't block session end */ }
 }
 
 /**

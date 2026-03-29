@@ -7,13 +7,17 @@
 [![Claude Code](https://img.shields.io/badge/Claude_Code-compatible-blueviolet.svg)](https://docs.anthropic.com/en/docs/claude-code)
 [![Interactive Demo](https://img.shields.io/badge/▶_Try_the_Router-00d2ff.svg)](https://sethgammon.github.io/Citadel/)
 
-*Autonomous engineering needs better infrastructure, not just better reasoning.*
+*Stop re-explaining your codebase every session. Start compounding what your agents learn.*
 
 </div>
 
 ## Why Citadel Exists
 
-Claude Code is powerful, but it forgets everything between sessions, can't coordinate parallel work, and has no way to learn from its own mistakes. I hit those walls building a 668K-line TypeScript platform with AI agents handling the work. Citadel is what I built to fix it: persistent memory, intelligent routing, and a skill system that turns one-off solutions into reusable capabilities.
+**Without Citadel**, every Claude Code session starts from zero. You re-explain architecture decisions. You re-discover that the auth module is fragile. You copy-paste the same review checklist. When a task is too big for one agent, you manually split it and lose context between the pieces. Your agents never get better at your codebase -- you just get better at prompting them.
+
+**With Citadel**, sessions resume where they left off. A `/do review` runs a structured 5-pass review that remembers what broke last time. A `/do overhaul the API layer` spawns parallel agents in isolated worktrees, shares discoveries between them, and merges the results. Skills you build once compound across every future session. The system learns from its own mistakes through campaign persistence and telemetry.
+
+The difference: CLAUDE.md tells Claude about your project. Citadel gives Claude the *infrastructure to work autonomously* -- routing, memory, safety hooks, and coordination that a `.md` file can't provide.
 
 ## Quickstart
 
@@ -94,11 +98,13 @@ Four tiers. Use the cheapest one that fits.
 
 **How is this different from CLAUDE.md?** — CLAUDE.md tells Claude about your project. Citadel tells Claude *how to work*: durable state, intelligent routing, automated safety, and native parallelism — the infrastructure layer that CLAUDE.md assumes someone else built.
 
-**Do I need to learn all 33 skills?** — No. Just use `/do` and describe what you want in plain English. The router picks the right skill. You can go months without ever typing a skill name directly.
+**Do I need to learn all 34 skills?** — No. Just use `/do` and describe what you want in plain English. The router picks the right skill. You can go months without ever typing a skill name directly.
 
 **What if `/do` routes to the wrong tool?** — Tell it. "Wrong tool" or "just do it yourself" and it adjusts. You can also invoke any skill directly: `/review`, `/archon`, etc. The router is a convenience, not a gate.
 
 **How much does it cost in tokens?** — Skills cost zero when not loaded. The `/do` router costs ~500 tokens only at Tier 3. Hooks add ~100 tokens per edit. The main cost is the work itself.
+
+**How is this different from CrewAI, LangChain, or Aider?** — Those are agent frameworks: they give you primitives for building agents from scratch. Citadel is an *operating system for an existing agent* (Claude Code). You don't write agent code -- you install a plugin and get routing, persistence, parallelism, and safety hooks on top of the agent you already use. If you're building a custom agent, use a framework. If you're using Claude Code and want it to work better, use Citadel.
 
 **Does this work on Windows?** — Yes. All hooks and scripts run on Node.js. As a plugin, it installs identically on all platforms.
 
@@ -106,7 +112,7 @@ Four tiers. Use the cheapest one that fits.
 
 - [**Interactive routing demo**](https://sethgammon.github.io/Citadel/) — type any task, watch the tier cascade animate
 - [Full install guide](QUICKSTART.md)
-- [Skills reference](docs/SKILLS.md) — all 33 skills with invocation and examples
+- [Skills reference](docs/SKILLS.md) — all 34 skills with invocation and examples
 - [Hooks reference](docs/HOOKS.md) — 14 event types, what each one enforces
 - [Campaign guide](docs/CAMPAIGNS.md) — persistent state, phases, AI amnesia prevention
 - [Fleet guide](docs/FLEET.md) — parallel agents, worktree isolation, discovery relay

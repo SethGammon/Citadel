@@ -1,74 +1,89 @@
-# Quickstart — Plugin Install Guide
+# Quickstart
 
-From install to first `/do` command in 2 minutes.
+From `git clone` to your first working `/do` command.
+
+## TL;DR
+
+```bash
+git clone https://github.com/SethGammon/Citadel.git ~/Citadel
+cd your-project && node ~/Citadel/scripts/install-hooks.js
+claude --plugin-dir ~/Citadel
+```
+
+Then in Claude Code:
+```
+/do setup
+/do review src/main.ts
+```
+
+Four commands. Clone, install hooks, launch, go.
+
+---
 
 ## Prerequisites
 
-- **[Claude Code](https://docs.anthropic.com/en/docs/claude-code)** — the CLI tool this harness extends
-- **[Node.js 18+](https://nodejs.org/)** — required for hooks and scripts
+- **[Claude Code](https://docs.anthropic.com/en/docs/claude-code)** -- the CLI this plugin extends
+- **[Node.js 18+](https://nodejs.org/)** -- required for hooks and scripts
 
-No API key setup needed — Citadel inherits Claude Code's authentication.
+No API key setup needed -- Citadel uses Claude Code's existing authentication.
 
-## 1. Install the plugin
+## 1. Clone and install hooks
 
 ```bash
-# Clone the repo
-git clone https://github.com/SethGammon/Citadel.git
+git clone https://github.com/SethGammon/Citadel.git ~/Citadel
 ```
 
-### Option A: Quick start (per-session)
+Then from **your project directory** (not the Citadel directory):
 
-Launch Claude Code with the plugin loaded:
 ```bash
-claude --plugin-dir /path/to/Citadel
+cd ~/your-project
+node ~/Citadel/scripts/install-hooks.js
 ```
 
-This loads the plugin for the current session. Use this to get started immediately.
+This writes resolved hook paths into your project's `.claude/settings.json`.
+It's idempotent -- safe to re-run after Citadel updates. Hooks are what give
+Citadel its quality enforcement, security protection, and campaign persistence.
 
-### Option B: Persistent install (all sessions)
+> **Why a separate hook install step?** Claude Code plugins can't yet resolve
+> relative paths in hook commands ([tracking issue](https://github.com/anthropics/claude-code/issues/24529)).
+> This script writes absolute paths as a workaround. Once the upstream fix lands,
+> this step goes away and hooks install automatically with the plugin.
 
-Inside Claude Code, register the marketplace and install:
+## 2. Launch with the plugin
+
+### Option A: Per-session (try it first)
+
+```bash
+claude --plugin-dir ~/Citadel
 ```
-/plugin marketplace add /path/to/Citadel
+
+Loads the plugin for this session only. Good for evaluation before committing.
+
+### Option B: Persistent (recommended)
+
+Inside Claude Code:
+```
+/plugin marketplace add ~/Citadel
 /plugin install citadel@citadel-local
 /reload-plugins
 ```
 
-This installs the plugin permanently — no flags needed on future sessions.
+> If `/plugin install` says "Plugin not found", launch with
+> `claude --plugin-dir ~/Citadel` first, then run the marketplace add
+> and install from inside that session.
 
-> **Troubleshooting:** If `/plugin install` says "Plugin not found", launch with `claude --plugin-dir /path/to/Citadel` first, then run the marketplace add and install from inside that session.
+## 3. Run setup and try it
 
-## 2. Install hooks into your project
+Open your project in Claude Code (with the plugin loaded):
 
-From your project directory, run:
-```bash
-node /path/to/Citadel/scripts/install-hooks.js
-```
-
-This resolves Citadel's hook paths and writes them into your project's `.claude/settings.json`. It's a one-time step per project and is idempotent (safe to re-run after Citadel updates).
-
-> **Why is this needed?** There's a [known bug](https://github.com/anthropics/claude-code/issues/24529) in Claude Code where `${CLAUDE_PLUGIN_ROOT}` doesn't expand in hook commands. This script works around it by writing resolved absolute paths. Once the bug is fixed upstream, this step will no longer be necessary.
-
-If you already have a `.claude/settings.json`, the installer merges Citadel's hooks with your existing settings — it won't overwrite your permissions, env vars, or MCP servers.
-
-## 3. Run setup
-
-Open your project in Claude Code, then:
 ```
 /do setup
 ```
 
-This will:
+This detects your language and framework, configures the typecheck hook for your stack,
+generates `.claude/harness.json`, and scaffolds the `.planning/` directory.
 
-- Detect your language and framework
-- Configure the typecheck hook for your stack
-- Generate `.claude/harness.json` with your settings
-- Scaffold the `.planning/` directory structure
-- Run a quick demo on your code
-
-## 4. Try these first
-
-Start simple and work up:
+Then try a command:
 
 ```
 /do review src/main.ts              # 5-pass code review
@@ -77,126 +92,111 @@ Start simple and work up:
 /do refactor the auth module        # Safe multi-file refactoring
 ```
 
-Or just describe what you want:
+Or describe what you want in plain English -- the `/do` router picks the right tool:
+
 ```
 /do fix the login bug
 /do what's wrong with the API
 /do build a caching layer
 ```
 
-The `/do` router classifies your intent and dispatches to the cheapest tool that can handle it. Most requests resolve without spending any extra tokens.
-
-## 5. Scale up when ready
-
-Once you're comfortable with skills, try orchestrators:
+## 4. Scale up when ready
 
 ```
 /marshal audit the codebase         # Multi-step, single session
 /archon build the payment system    # Multi-session campaign
-/fleet overhaul all three services  # Parallel agents
+/fleet overhaul all three services  # Parallel agents, shared discovery
+/improve citadel --n=5              # Autonomous quality loops
 ```
 
-Or build entire apps from a description:
-```
-/do build me a recipe sharing app   # Full pipeline: PRD → architecture → build → verify
-/do add auth to my app              # Feature addition to existing codebase
-```
+Or let `/do` escalate automatically -- it routes to orchestrators when the task requires it.
 
-Or let `/do` route to them automatically — it will escalate when the task requires it.
-
-## 6. Create your first custom skill
-
+Create custom skills to capture patterns you keep repeating:
 ```
 /create-skill
 ```
 
-It interviews you about patterns you keep repeating and generates a skill file in your project's `.claude/skills/` directory that captures your knowledge permanently.
+---
+
+## Troubleshooting
+
+**Hook not firing / "command not found" errors:**
+Hooks require absolute paths. Re-run `node /path/to/Citadel/scripts/install-hooks.js`
+from your project directory. This rewrites `.claude/settings.json` with resolved paths.
+
+**"[protect-files] Blocked" message:**
+Citadel prevented an edit to a protected file. The message names the specific file and
+the pattern that triggered the block. To allow the edit, remove the pattern from
+`protectedFiles` in `.claude/harness.json`.
+
+**"[Circuit Breaker] tool has failed N times" message:**
+A tool failed repeatedly. This is Citadel suggesting you try a different approach, not
+an error in Citadel itself. The message names the specific tool and shows the last error.
+Read the suggestions and switch strategy.
+
+**Campaign file in broken state:**
+If a campaign file in `.planning/campaigns/` has corrupted YAML frontmatter or invalid
+status, delete the file and restart the campaign. Campaign logs in `.planning/improvement-logs/`
+and `.planning/telemetry/` are preserved independently.
+
+**"/do setup" fails or produces empty harness.json:**
+Ensure you are running from your project root (not the Citadel plugin directory).
+Setup needs to detect your project's language and framework from files like
+`package.json`, `tsconfig.json`, or `Cargo.toml`.
+
+**Daemon won't start / "No active campaign" error:**
+The daemon attaches to an active campaign. Check `.planning/campaigns/` for a file
+with `Status: active`. If none exists, start work first with `/improve`, `/archon`,
+or `/fleet`, then attach the daemon.
+
+**Daemon is paused (level-up-pending):**
+An improve loop hit distribution saturation and needs human approval for the next
+quality level. Review the proposals at `.planning/rubrics/{target}-proposals.md`,
+edit the rubric with approved changes, and set the campaign status back to `active`.
+The daemon's watchdog will detect the change and resume automatically.
+
+---
 
 ## What's Next
 
 - Add your project's conventions to `CLAUDE.md` — the more specific, the better
-- Read [docs/SKILLS.md](docs/SKILLS.md) to understand how skills work
-- Drop a task description in `.planning/intake/` and run `/autopilot` for hands-off execution
-- Run `/do --list` to see all 25 installed skills
+- Run `/do --list` to see all 34 installed skills
+- Drop a task in `.planning/intake/` and run `/autopilot` for hands-off execution
+- [docs/SKILLS.md](docs/SKILLS.md) — full skills reference
+- [docs/CAMPAIGNS.md](docs/CAMPAIGNS.md) — multi-session campaign docs
+- [docs/migrating.md](docs/migrating.md) — migrating from copy-based install
 
-## What the plugin creates per-project
+---
 
-On first session start, the `init-project` hook auto-scaffolds:
+## What the plugin scaffolds per-project
+
+On first session start, the `init-project` hook creates:
 
 ```
 your-project/
   .planning/              # Campaign state, fleet sessions, intake, telemetry
-    _templates/           # Copied from plugin (campaign, fleet, intake templates)
-    campaigns/            # Active + completed campaign files
+    _templates/           # Campaign and fleet templates (copied from plugin)
+    campaigns/            # Active + completed campaigns
     fleet/                # Fleet session state + discovery briefs
     coordination/         # Multi-instance scope claims
     intake/               # Work items pending processing
-    telemetry/            # Agent run + hook timing logs
+    telemetry/            # Agent run + hook timing logs (JSONL, stays local)
   .citadel/
-    scripts/              # Utility scripts (synced from plugin on each session)
+    scripts/              # Utility scripts synced from plugin each session
     plugin-root.txt       # Pointer to plugin install location
   .claude/
     harness.json          # Project config (generated by /do setup)
     agent-context/        # Rules injected into sub-agents
 ```
 
-## Migrating from copy-based install
-
-If you previously installed Citadel by copying `.claude/`, `.planning/`, and `scripts/` into your project, follow these steps to switch to the plugin.
-
-### 1. Back up your project config
-
-These files are project-specific and should be kept:
-
-```bash
-# Keep these — they contain your project's state
-# .claude/harness.json     (project config from /do setup)
-# .planning/               (campaign state, fleet sessions, telemetry)
-# .claude/settings.local.json  (your personal hook config, if any)
-```
-
-### 2. Remove the copied harness files
-
-```bash
-# Remove Citadel's copied files (NOT your project config)
-rm -rf .claude/hooks/        # Hooks now live in the plugin
-rm -rf .claude/skills/       # Built-in skills now live in the plugin
-rm -rf .claude/agents/       # Agents now live in the plugin
-rm -rf scripts/              # Utility scripts are now synced to .citadel/scripts/
-rm -f .claude/settings.json  # Will be regenerated by install-hooks.js
-```
-
-Keep `.claude/harness.json` — it has your project's stack config. Keep `.planning/` — it has your campaign history.
-
-### 3. Install the plugin
-
-```bash
-git clone https://github.com/SethGammon/Citadel.git
-```
-
-In Claude Code:
-```
-/plugin marketplace add /path/to/Citadel
-/plugin install citadel@citadel-local
-```
-
-### 4. Update settings.local.json (if applicable)
-
-If you had opt-in hooks in `.claude/settings.local.json`, update the paths:
-
-| Before (copy-based) | After (plugin) |
-|---|---|
-| `node .claude/hooks/external-action-gate.js` | `node '${CLAUDE_PLUGIN_ROOT}/hooks_src/external-action-gate.js'` |
-| `node .claude/hooks/issue-monitor.js` | `node '${CLAUDE_PLUGIN_ROOT}/hooks_src/issue-monitor.js'` |
-
-### 5. Start a new session
-
-The `init-project` hook will auto-scaffold `.citadel/scripts/` and verify your `.planning/` directory on session start. Run `/do setup` to regenerate `harness.json` if needed.
-
 ## Telemetry
 
-The harness logs agent events, hook timing, and discovery compression to `.planning/telemetry/` (JSONL format, never leaves your machine).
+The harness logs agent events, hook timing, and discovery compression to
+`.planning/telemetry/` in JSONL format. Logs never leave your machine.
 
 ## Relationship to Superpowers
 
-[Superpowers](https://github.com/obra/superpowers) teaches your agent good methodology — brainstorm before coding, write tests first, review before shipping. Citadel gives it the infrastructure to execute that methodology at scale: campaign persistence, fleet coordination, lifecycle hooks, and telemetry. They are complementary.
+[Superpowers](https://github.com/obra/superpowers) teaches good methodology —
+brainstorm before coding, write tests first, review before shipping. Citadel gives
+it the infrastructure to execute that methodology at scale: campaign persistence,
+fleet coordination, lifecycle hooks, and telemetry. They are complementary.

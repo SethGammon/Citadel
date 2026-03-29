@@ -287,5 +287,6 @@ Key decisions:
 - {N} files modified, {N} created, {N} deleted
 - Typecheck and tests pass (no regressions)
 - {any follow-up suggestions}
+- Reversibility: green -- single atomic commit, revert with git revert HEAD
 ---
 ```

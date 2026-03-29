@@ -98,6 +98,11 @@ function readConfig() {
       auditLog: true,
       allowedOutOfScopeTools: [], // tools exempt from scope warnings
     },
+    verification: {
+      hot: ['programmatic', 'structural', 'performance'],
+      cold: ['performance', 'accessibility', 'adversarial', 'contractual', 'cross-reference'],
+      disabled: [],               // lens names to skip entirely
+    },
     preCompact: {
       handoffMode: 'auto',        // 'auto' | 'prompt' | 'off'
     },
@@ -105,6 +110,15 @@ function readConfig() {
       auto: true,                 // false to disable automatic doc sync
       audiences: ['user', 'org', 'agents'],
       exclude: [],
+    },
+    trust: {
+      sessions_completed: 0,
+      campaigns_completed: 0,
+      campaigns_reverted: 0,
+      fleet_clean_merges: 0,
+      improve_loops_accepted: 0,
+      daemon_runs: 0,
+      override: null,
     },
   };
 }
@@ -216,6 +230,40 @@ function logBlock(hook, action, detail) {
   } catch { /* telemetry should never break the hook */ }
 }
 
+/**
+ * Compute the trust level from harness config counters.
+ * @returns {{ level: 'novice'|'familiar'|'trusted', trust: object }}
+ */
+function readTrustLevel() {
+  const config = readConfig();
+  const defaults = {
+    sessions_completed: 0,
+    campaigns_completed: 0,
+    campaigns_reverted: 0,
+    fleet_clean_merges: 0,
+    improve_loops_accepted: 0,
+    daemon_runs: 0,
+    override: null,
+  };
+  const trust = { ...defaults, ...(config.trust || {}) };
+
+  // Explicit override takes priority
+  const validOverrides = ['novice', 'familiar', 'trusted'];
+  if (trust.override && validOverrides.includes(trust.override)) {
+    return { level: trust.override, trust };
+  }
+
+  // Compute from counters
+  let level = 'novice';
+  if (trust.sessions_completed >= 20 && trust.campaigns_completed >= 2) {
+    level = 'trusted';
+  } else if (trust.sessions_completed >= 5) {
+    level = 'familiar';
+  }
+
+  return { level, trust };
+}
+
 // ── Input Validation ────────────────────────────────────────────────────────
 
 // Paths allow backslash (Windows path separator).
@@ -287,6 +335,7 @@ module.exports = {
   logBlock,
   writeAuditLog,
   readConfig,
+  readTrustLevel,
   detectStack,
   getTypecheckConfig,
   validatePath,
