@@ -17,11 +17,11 @@ An agent orchestration harness for Claude Code. It coordinates multiple AI agent
 
 ## Why Citadel Exists
 
-**Without Citadel**, every Claude Code session starts from zero. You re-explain architecture decisions. You re-discover that the auth module is fragile. You copy-paste the same review checklist. When a task is too big for one agent, you manually split it and lose context between the pieces. Your agents never get better at your codebase -- you just get better at prompting them.
+**Without Citadel**, every Claude Code session starts from zero. You re-explain architecture decisions. You re-discover that the auth module is fragile. You copy-paste the same review checklist. When a task is too big for one agent, you manually split it and lose context between the pieces. Your agents never get better at your codebase — you just get better at prompting them.
 
 **With Citadel**, sessions resume where they left off. A `/do review` runs a structured 5-pass review that remembers what broke last time. A `/do overhaul the API layer` spawns parallel agents in isolated worktrees, shares discoveries between them, and merges the results. Skills you build once compound across every future session. The system learns from its own mistakes through campaign persistence and telemetry.
 
-The difference: CLAUDE.md tells Claude about your project. Citadel gives Claude the *infrastructure to work autonomously* -- routing, memory, safety hooks, and coordination that a `.md` file can't provide.
+The difference: CLAUDE.md tells Claude about your project. Citadel gives Claude the *infrastructure to work autonomously* — routing, memory, safety hooks, and coordination that a `.md` file can't provide.
 
 ## Quickstart
 
@@ -57,10 +57,10 @@ Say what you want. `/do` routes it to the cheapest tool that can handle it.
 
 Classification runs across four tiers, each cheaper than the last:
 
-1. **Pattern match** -- catches trivial commands with regex. Zero tokens, zero model calls, instant.
-2. **Session state** -- checks if you're mid-campaign and resumes it. Still zero tokens.
-3. **Keyword lookup** -- scans your input against installed skill keywords ("review", "test", "refactor") and routes directly. Still zero tokens.
-4. **LLM classification** -- only when tiers 1-3 don't match, a structured complexity analysis (~500 tokens) determines whether you need a single-step Marshal, a multi-session Archon, or a parallel Fleet.
+1. **Pattern match** — catches trivial commands with regex. Zero tokens, zero model calls, instant.
+2. **Session state** — checks if you're mid-campaign and resumes it. Still zero tokens.
+3. **Keyword lookup** — scans your input against installed skill keywords ("review", "test", "refactor") and routes directly. Still zero tokens.
+4. **LLM classification** — only when tiers 1-3 don't match, a structured complexity analysis (~500 tokens) determines whether you need a single-step Marshal, a multi-session Archon, or a parallel Fleet.
 
 Most requests resolve at tiers 1-3 for free. Tier 4 is the exception, not the default. You never have to choose the tool.
 
@@ -103,7 +103,7 @@ Four tiers. Use the cheapest one that fits.
 
 **Is this for me?** If you're running Claude Code on a real codebase and finding that agents lose context, repeat mistakes, or can't work in parallel, yes. If you're just starting out with Claude Code, get a few sessions in first and come back when the friction shows up.
 
-**How is this different from CLAUDE.md?** CLAUDE.md tells Claude about your project. Citadel tells Claude *how to work*: durable state, intelligent routing, automated safety, and native parallelism -- the infrastructure layer that CLAUDE.md assumes someone else built.
+**How is this different from CLAUDE.md?** CLAUDE.md tells Claude about your project. Citadel tells Claude *how to work*: durable state, intelligent routing, automated safety, and native parallelism — the infrastructure layer that CLAUDE.md assumes someone else built.
 
 **Do I need to learn all 40 skills?** No. Just use `/do` and describe what you want in plain English. The router picks the right skill. You can go months without ever typing a skill name directly.
 
@@ -111,13 +111,13 @@ Four tiers. Use the cheapest one that fits.
 
 **How much does it cost in tokens?** Citadel adds ~2.5% overhead to your session cost. Skills cost zero when not loaded. The `/do` router costs ~500 tokens only at Tier 4. Use `/cost` to see real token data and exact spend for any session or campaign.
 
-**How is this different from CrewAI, LangChain, or Aider?** Those are agent frameworks: they give you primitives for building agents from scratch. Citadel is an *operating system for an existing agent* (Claude Code). You don't write agent code -- you install a plugin and get routing, persistence, parallelism, and safety hooks on top of the agent you already use. If you're building a custom agent, use a framework. If you're using Claude Code and want it to work better, use Citadel.
+**How is this different from CrewAI, LangChain, or Aider?** Those are agent frameworks: they give you primitives for building agents from scratch. Citadel is an *operating system for an existing agent* (Claude Code). You don't write agent code — you install a plugin and get routing, persistence, parallelism, and safety hooks on top of the agent you already use. If you're building a custom agent, use a framework. If you're using Claude Code and want it to work better, use Citadel.
 
 **Does this work on Windows?** Yes. All hooks and scripts run on Node.js. As a plugin, it installs identically on all platforms.
 
 ## Learn More
 
-- [**Interactive routing demo**](https://sethgammon.github.io/Citadel/) -- type any task, watch the tier cascade animate
+- [**Interactive routing demo**](https://sethgammon.github.io/Citadel/) — type any task, watch the tier cascade animate
 - [Full install guide](QUICKSTART.md)
 - [Skills reference](docs/SKILLS.md) -- all 40 skills with invocation and examples
 - [Hooks reference](docs/HOOKS.md) -- 15 event types, what each one enforces
