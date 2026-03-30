@@ -83,6 +83,29 @@ function run(input) {
     process.exit(0);
   }
 
+  // Security: validate path for traversal and shell injection
+  const validation = health.validatePath(filePath);
+  if (!validation.safe) {
+    health.logBlock('protect-files', 'blocked', `${toolName} ${filePath} (${validation.violation})`);
+    hookOutput('protect-files', 'blocked',
+      `[protect-files] Blocked: ${validation.violation}`,
+      { file: filePath, tool: toolName, violation: validation.violation }
+    );
+    process.exit(2);
+  }
+
+  // Security: block absolute paths outside project root
+  const normalizedPath = path.normalize(path.resolve(filePath));
+  const normalizedRoot = path.normalize(PROJECT_ROOT);
+  if (!normalizedPath.startsWith(normalizedRoot + path.sep) && normalizedPath !== normalizedRoot) {
+    health.logBlock('protect-files', 'blocked', `${toolName} ${filePath} (outside project root)`);
+    hookOutput('protect-files', 'blocked',
+      `[protect-files] Blocked: ${filePath} is outside project root (${PROJECT_ROOT})`,
+      { file: filePath, tool: toolName, projectRoot: PROJECT_ROOT }
+    );
+    process.exit(2);
+  }
+
   const relativePath = path.relative(PROJECT_ROOT, filePath).split(path.sep).join('/');
 
   // Read events: only block .env files (secrets protection)
@@ -156,7 +179,11 @@ function checkCampaignScope(relativePath, toolName, _filePath) {
         // Only consider campaigns with Status: active
         if (/^Status:\s*active/im.test(text)) {
           campaignText = text;
-          campaignName = file.replace(/\.md$/, '');
+          // Sanitize campaign name before rendering into LLM-facing messages:
+          // strip non-alphanumeric chars (except hyphens/underscores) to prevent
+          // prompt injection via adversarial filenames.
+          const rawName = file.replace(/\.md$/, '');
+          campaignName = rawName.replace(/[^a-zA-Z0-9_\-]/g, '_');
           break;
         }
       } catch {

@@ -127,8 +127,23 @@ Four tiers. Use the cheapest one that fits.
 - [Hooks reference](docs/HOOKS.md) — 14 event types, what each one enforces
 - [Campaign guide](docs/CAMPAIGNS.md) — persistent state, phases, AI amnesia prevention
 - [Fleet guide](docs/FLEET.md) — parallel agents, worktree isolation, discovery relay
+- [Security model](SECURITY.md) — path traversal, shell injection, and defensive measures
 - [Contributing](CONTRIBUTING.md) — how to submit issues, PRs, and new skills
 - [External overview: "The Operating System for Autonomous Engineering"](https://repo-explainer.com/SethGammon/Citadel/) — third-party writeup on the architecture and philosophy
+
+## Testing
+
+```bash
+# Run full test suite (hooks + security + skills)
+node scripts/test-all.js
+
+# Individual test suites
+node scripts/test-security.js     # Path traversal, shell injection tests
+node hooks_src/smoke-test.js      # Hook validation
+node scripts/skill-lint.js        # Skill structure validation
+```
+
+All tests pass before merge. Security tests are mandatory — failures block CI.
 
 ## License
 

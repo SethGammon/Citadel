@@ -18,7 +18,7 @@
 
 const fs = require('fs');
 const path = require('path');
-const { execSync } = require('child_process');
+const { execFileSync } = require('child_process');
 
 // -- Constants ----------------------------------------------------------------
 
@@ -95,24 +95,29 @@ function writeState(state) {
 
 // -- Git helpers --------------------------------------------------------------
 
-function gitExec(cmd) {
+/**
+ * Execute a git command safely using execFileSync (array args — never shell-interpolated).
+ * @param {string[]} args - Git arguments as an array (e.g. ['diff', '--name-only', 'HEAD'])
+ * @returns {string} stdout, trimmed. Empty string on error.
+ */
+function gitExec(args) {
   try {
-    return execSync(cmd, { cwd: ROOT, encoding: 'utf8', stdio: ['pipe', 'pipe', 'pipe'] }).trim();
+    return execFileSync('git', args, { cwd: ROOT, encoding: 'utf8', stdio: ['pipe', 'pipe', 'pipe'] }).trim();
   } catch {
     return '';
   }
 }
 
 function getCurrentHead() {
-  return gitExec('git rev-parse HEAD');
+  return gitExec(['rev-parse', 'HEAD']);
 }
 
 function getChangedFiles(lastCommit) {
   const files = new Set();
 
-  // Committed changes since last scan
+  // Committed changes since last scan — lastCommit passed as array arg, never shell-interpolated
   if (lastCommit) {
-    const committed = gitExec(`git diff --name-only ${lastCommit} HEAD`);
+    const committed = gitExec(['diff', '--name-only', lastCommit, 'HEAD']);
     if (committed) {
       for (const f of committed.split('\n')) {
         if (f.trim()) files.add(f.trim());
@@ -120,7 +125,7 @@ function getChangedFiles(lastCommit) {
     }
   } else {
     // First run: last commit only
-    const firstRun = gitExec('git diff --name-only HEAD~1 HEAD');
+    const firstRun = gitExec(['diff', '--name-only', 'HEAD~1', 'HEAD']);
     if (firstRun) {
       for (const f of firstRun.split('\n')) {
         if (f.trim()) files.add(f.trim());
@@ -129,7 +134,7 @@ function getChangedFiles(lastCommit) {
   }
 
   // Unstaged changes
-  const unstaged = gitExec('git diff --name-only');
+  const unstaged = gitExec(['diff', '--name-only']);
   if (unstaged) {
     for (const f of unstaged.split('\n')) {
       if (f.trim()) files.add(f.trim());
@@ -137,7 +142,7 @@ function getChangedFiles(lastCommit) {
   }
 
   // Staged changes
-  const staged = gitExec('git diff --name-only --cached');
+  const staged = gitExec(['diff', '--name-only', '--cached']);
   if (staged) {
     for (const f of staged.split('\n')) {
       if (f.trim()) files.add(f.trim());
@@ -145,7 +150,7 @@ function getChangedFiles(lastCommit) {
   }
 
   // Untracked files (new files not yet committed)
-  const untracked = gitExec('git ls-files --others --exclude-standard');
+  const untracked = gitExec(['ls-files', '--others', '--exclude-standard']);
   if (untracked) {
     for (const f of untracked.split('\n')) {
       if (f.trim()) files.add(f.trim());
