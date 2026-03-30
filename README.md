@@ -27,8 +27,6 @@ The difference: CLAUDE.md tells Claude about your project. Citadel gives Claude 
 
 **Prerequisites:** [Claude Code](https://docs.anthropic.com/en/docs/claude-code) + [Node.js 18+](https://nodejs.org/)
 
-Citadel is a Claude Code **plugin** -- install once, works across all your projects. No per-project file copying.
-
 ```bash
 # 1. Clone Citadel
 git clone https://github.com/SethGammon/Citadel.git
@@ -36,26 +34,14 @@ git clone https://github.com/SethGammon/Citadel.git
 # 2. Launch Claude Code with the plugin loaded
 claude --plugin-dir /path/to/Citadel
 
-# 3. Install hooks into your project (one-time per project)
-node /path/to/Citadel/scripts/install-hooks.js
-
-# 4. Run setup
+# 3. Run setup (installs hooks, scaffolds project state)
 /do setup
 
-# 5. Try something
+# 4. Try something
 /do review src/main.ts
 ```
 
-For persistent plugin install across all sessions, use the marketplace method inside Claude Code:
-```
-/plugin marketplace add /path/to/Citadel
-/plugin install citadel@citadel-local
-/reload-plugins
-```
-
-> **Note:** The hook installer (step 3) is required until [a known upstream bug](https://github.com/anthropics/claude-code/issues/24529) is resolved. `/do setup` will also run this automatically.
-
-[Full install guide](QUICKSTART.md)
+[Full install guide with alternative methods](QUICKSTART.md)
 
 ## How It Works
 
@@ -103,6 +89,16 @@ Four tiers. Use the cheapest one that fits.
 </tr>
 </table>
 
+## What You Get
+
+**Cost transparency.** Citadel reads Claude Code's native session files for exact token counts and computes real cost from API pricing. You see what every session, campaign, and agent actually costs. Use `/cost` for a full breakdown or `/dashboard` for the overview. A real-time tracker alerts you at configurable spend thresholds without interrupting your work.
+
+**Safety hooks.** 15 lifecycle hooks run automatically. A consent system gates external actions (pushes, PRs, comments) with first-encounter choice -- always-ask, session-allow, or auto-allow. Protected branches can't be deleted. Path traversal and secrets exfiltration are blocked. A circuit breaker stops failure spirals before they burn tokens. All of this is configurable per-project in `harness.json`.
+
+**Campaign persistence.** Multi-session work survives context compression and session boundaries. Start an architecture overhaul today, close your laptop, pick it up tomorrow -- the campaign state, decisions, and progress are all preserved. `/do continue` resumes exactly where you left off.
+
+**Parallel coordination.** Fleet mode spawns multiple agents in isolated git worktrees, shares discoveries between them in real time, and merges results. One command, multiple agents, no conflicts.
+
 ## FAQ
 
 **Is this for me?** If you're running Claude Code on a real codebase and finding that agents lose context, repeat mistakes, or can't work in parallel, yes. If you're just starting out with Claude Code, get a few sessions in first and come back when the friction shows up.
@@ -129,21 +125,7 @@ Four tiers. Use the cheapest one that fits.
 - [Fleet guide](docs/FLEET.md) -- parallel agents, worktree isolation, discovery relay
 - [Security model](SECURITY.md) -- path traversal, shell injection, and defensive measures
 - [Contributing](CONTRIBUTING.md) -- how to submit issues, PRs, and new skills
-- [External overview: "The Operating System for Autonomous Engineering"](https://repo-explainer.com/SethGammon/Citadel/) -- third-party writeup on the architecture and philosophy
-
-## Testing
-
-```bash
-# Run full test suite (hooks + security + skills)
-node scripts/test-all.js
-
-# Individual test suites
-node scripts/test-security.js     # Path traversal, shell injection tests
-node hooks_src/smoke-test.js      # Hook validation
-node scripts/skill-lint.js        # Skill structure validation
-```
-
-All tests pass before merge. Security tests are mandatory -- failures block CI.
+- [External overview](https://repo-explainer.com/SethGammon/Citadel/) -- third-party writeup on the architecture and philosophy
 
 ## License
 
