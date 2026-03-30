@@ -4,6 +4,9 @@
 
 How the harness works, from intent to execution.
 
+For the compatibility-first plan to make Citadel runtime-agnostic, see
+[`docs/RUNTIME_AGNOSTIC_BACKLOG.md`](RUNTIME_AGNOSTIC_BACKLOG.md).
+
 ## The Orchestration Ladder
 
 ```
