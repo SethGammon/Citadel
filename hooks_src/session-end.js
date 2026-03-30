@@ -29,7 +29,7 @@ const health = require('./harness-health-util');
 let sessionTokens = null;
 try {
   const pluginRoot = path.resolve(__dirname, '..');
-  sessionTokens = require(path.join(pluginRoot, 'scripts', 'session-tokens'));
+  sessionTokens = require(path.join(pluginRoot, 'runtimes', 'claude-code', 'adapters', 'session-tokens'));
 } catch { /* session-tokens.js not available -- use estimation fallback */ }
 
 const PROJECT_ROOT = health.PROJECT_ROOT;

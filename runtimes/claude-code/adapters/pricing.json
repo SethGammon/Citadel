@@ -1,0 +1,9 @@
+{
+  "_version": "2025-05",
+  "_source": "https://docs.anthropic.com/en/docs/about-claude/models",
+  "_note": "Per million tokens, USD. Update when Anthropic changes pricing.",
+  "claude-opus-4-6":   { "input": 5.00,  "output": 25.00, "cacheCreation": 6.25,  "cacheRead": 0.50 },
+  "claude-sonnet-4-6": { "input": 3.00,  "output": 15.00, "cacheCreation": 3.75,  "cacheRead": 0.30 },
+  "claude-haiku-4-5":  { "input": 1.00,  "output": 5.00,  "cacheCreation": 1.25,  "cacheRead": 0.10 },
+  "_default":          { "input": 3.00,  "output": 15.00, "cacheCreation": 3.75,  "cacheRead": 0.30 }
+}

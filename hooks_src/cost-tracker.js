@@ -184,10 +184,10 @@ function run() {
     process.exit(0);
   }
 
-  // Load session-tokens module
+  // Load the Claude runtime token adapter
   let sessionTokens;
   try {
-    sessionTokens = require(path.join(PLUGIN_ROOT, 'scripts', 'session-tokens'));
+    sessionTokens = require(path.join(PLUGIN_ROOT, 'runtimes', 'claude-code', 'adapters', 'session-tokens'));
   } catch {
     process.exit(0); // module not available
   }

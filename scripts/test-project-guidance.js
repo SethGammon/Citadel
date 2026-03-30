@@ -6,8 +6,8 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 const { parseProjectSpec, validateProjectSpec } = require(path.join(__dirname, '..', 'core', 'project', 'load-project-spec'));
-const { renderClaudeGuidance } = require(path.join(__dirname, '..', 'core', 'project', 'render-claude-guidance'));
 const { renderCodexGuidance } = require(path.join(__dirname, '..', 'core', 'project', 'render-codex-guidance'));
+const { CLAUDE_GUIDANCE_TARGET, renderClaudeGuidance } = require(path.join(__dirname, '..', 'runtimes', 'claude-code', 'guidance', 'render'));
 
 function fail(message) {
   console.error(message);
@@ -28,6 +28,9 @@ function main() {
 
   if (!claude.includes('# Claude Harness')) {
     fail('Claude guidance renderer must emit the Claude Harness heading');
+  }
+  if (CLAUDE_GUIDANCE_TARGET.filePath !== 'CLAUDE.md') {
+    fail('Claude runtime guidance target must point to CLAUDE.md');
   }
   if (!codex.includes('## Citadel Project Guidance')) {
     fail('Codex guidance renderer must emit the Citadel Project Guidance section');

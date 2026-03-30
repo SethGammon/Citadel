@@ -18,7 +18,7 @@ const { getClaimStatus } = require('../core/coordination/claims');
 
 // Real token reader for enriched cost data
 let sessionTokens = null;
-try { sessionTokens = require('./session-tokens'); } catch { /* not available */ }
+try { sessionTokens = require('../runtimes/claude-code/adapters/session-tokens'); } catch { /* not available */ }
 
 const ROOT = process.env.CLAUDE_PROJECT_DIR || process.cwd();
 const PLANNING_DIR = path.join(ROOT, '.planning');

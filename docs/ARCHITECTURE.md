@@ -63,7 +63,8 @@ Automatic shell scripts that fire on lifecycle events:
 | `worktree-setup.js` | WorktreeCreate | Initialize worktrees for parallel agents |
 
 Hook definitions live in `hooks/hooks-template.json`. They are installed per-project
-via `scripts/install-hooks.js`, which resolves paths to absolute locations.
+via the Claude runtime adapter in `runtimes/claude-code/generators/install-hooks.js`,
+with `scripts/install-hooks.js` kept as the public entrypoint.
 One hook per lifecycle event (consolidate rather than chain).
 
 ## Campaign Files
