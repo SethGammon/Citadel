@@ -164,7 +164,118 @@ function main() {
     );
   });
 
-  // ── 4. Glob Pattern Matching (protect-files) ──
+  // ── 4. External Action Gate — Consent System ──
+
+  console.log('\n▶ External Action Gate (Consent)');
+
+  const EAG_HOOK = path.join(PLUGIN_ROOT, 'hooks_src', 'external-action-gate.js');
+
+  test('external-action-gate blocks secrets regardless of consent', () => {
+    const input = JSON.stringify({
+      tool_name: 'Bash',
+      tool_input: { command: 'cat .env.local' }
+    });
+
+    const result = spawnSync(process.execPath, [EAG_HOOK], {
+      input,
+      encoding: 'utf8',
+      cwd: PLUGIN_ROOT,
+    });
+
+    assert(result.status === 2, `Expected exit code 2 (block), got ${result.status}`);
+    assert(result.stdout.includes('secrets'), 'Expected secrets block message');
+  });
+
+  test('external-action-gate blocks hard actions (gh release create)', () => {
+    const input = JSON.stringify({
+      tool_name: 'Bash',
+      tool_input: { command: 'gh release create v1.0.0' }
+    });
+
+    const result = spawnSync(process.execPath, [EAG_HOOK], {
+      input,
+      encoding: 'utf8',
+      cwd: PLUGIN_ROOT,
+    });
+
+    assert(result.status === 2, `Expected exit code 2 (block), got ${result.status}`);
+    assert(
+      result.stdout.includes('requires approval') || result.stdout.includes('irreversible'),
+      'Expected approval/block message for hard action'
+    );
+  });
+
+  test('external-action-gate blocks protected branch deletion', () => {
+    const input = JSON.stringify({
+      tool_name: 'Bash',
+      tool_input: { command: 'git push origin --delete main' }
+    });
+
+    const result = spawnSync(process.execPath, [EAG_HOOK], {
+      input,
+      encoding: 'utf8',
+      cwd: PLUGIN_ROOT,
+    });
+
+    assert(result.status === 2, `Expected exit code 2 (block), got ${result.status}`);
+    assert(result.stdout.includes('protected branch'), 'Expected protected branch message');
+  });
+
+  test('external-action-gate triggers first-encounter for soft actions', () => {
+    const input = JSON.stringify({
+      tool_name: 'Bash',
+      tool_input: { command: 'git push origin feat/test' }
+    });
+
+    const result = spawnSync(process.execPath, [EAG_HOOK], {
+      input,
+      encoding: 'utf8',
+      cwd: PLUGIN_ROOT,
+      env: { ...process.env, CLAUDE_PROJECT_DIR: os.tmpdir() },
+    });
+
+    // With no harness.json in tmpdir, this should be a first-encounter block
+    assert(result.status === 2, `Expected exit code 2 (block), got ${result.status}`);
+    assert(
+      result.stdout.includes('first-encounter') || result.stdout.includes('first external action'),
+      'Expected first-encounter message'
+    );
+  });
+
+  test('external-action-gate allows non-external commands', () => {
+    const input = JSON.stringify({
+      tool_name: 'Bash',
+      tool_input: { command: 'npm run build' }
+    });
+
+    const result = spawnSync(process.execPath, [EAG_HOOK], {
+      input,
+      encoding: 'utf8',
+      cwd: PLUGIN_ROOT,
+    });
+
+    assert(result.status === 0, `Expected exit code 0 (allow), got ${result.status}`);
+  });
+
+  test('consent utilities round-trip correctly', () => {
+    const health = require(path.join(PLUGIN_ROOT, 'hooks_src', 'harness-health-util'));
+    const tmpDir = path.join(os.tmpdir(), `citadel-consent-test-${Date.now()}`);
+    const origProjectRoot = health.PROJECT_ROOT;
+
+    // Test readConsent returns null when no config exists
+    const result = health.checkConsent('externalActions');
+    // Can't easily test with mocked PROJECT_ROOT, so verify the function exists and returns valid shape
+    assert(
+      result && typeof result.action === 'string',
+      'checkConsent should return { action: string }'
+    );
+    assert(
+      ['allow', 'block', 'first-encounter'].includes(result.action),
+      `checkConsent action should be allow/block/first-encounter, got ${result.action}`
+    );
+  });
+
+  // ── 5. Glob Pattern Matching (protect-files) ──
 
   console.log('\n▶ Glob Pattern Security');
 

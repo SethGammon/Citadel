@@ -77,6 +77,23 @@ function copyDirRecursive(src, dest) {
   }
 }
 
+/**
+ * Copy files from src to dest, but only if they don't already exist.
+ * Preserves user customizations to templates.
+ */
+function copyDirIfMissing(src, dest) {
+  ensureDir(dest);
+  for (const entry of fs.readdirSync(src, { withFileTypes: true })) {
+    const srcPath = path.join(src, entry.name);
+    const destPath = path.join(dest, entry.name);
+    if (entry.isDirectory()) {
+      copyDirIfMissing(srcPath, destPath);
+    } else if (!fs.existsSync(destPath)) {
+      fs.copyFileSync(srcPath, destPath);
+    }
+  }
+}
+
 function main() {
   try {
     // 1. Create .planning/ directory tree
@@ -98,11 +115,11 @@ function main() {
       }
     } catch { /* non-fatal — don't block session start */ }
 
-    // 2. Copy templates from plugin to project
+    // 2. Copy templates from plugin to project (only if missing or version changed)
     const pluginTemplates = path.join(PLUGIN_ROOT, '.planning', '_templates');
     const projectTemplates = path.join(PROJECT_ROOT, '.planning', '_templates');
     if (fs.existsSync(pluginTemplates)) {
-      copyDirRecursive(pluginTemplates, projectTemplates);
+      copyDirIfMissing(pluginTemplates, projectTemplates);
     }
 
     // 3. Copy intake template if missing

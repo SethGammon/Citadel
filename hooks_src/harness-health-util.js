@@ -338,6 +338,164 @@ function writeAuditLog(event, data = {}) {
   } catch { /* audit log should never break a hook */ }
 }
 
+// ── Consent System ─────────────────────────────────────────────────────────
+
+/**
+ * First-Encounter Consent pattern.
+ *
+ * On the first occurrence of a protected action category, the hook pauses
+ * and informs the user what's about to happen. The user picks one of:
+ *   - "always-ask"        Block every time, require explicit approval
+ *   - "session-allow"     Allow for this session, ask fresh next session
+ *   - "auto-allow"        Trust the agent, never ask again for this category
+ *
+ * Preferences are stored in harness.json under "consent".
+ * Session-scoped allows use a timestamp file in PLUGIN_DATA_DIR.
+ *
+ * Categories:
+ *   - externalActions     git push, gh pr create/merge, gh issue comment, etc.
+ *   - daemonSpend         Autonomous multi-session spending
+ *   - fleetSpawn          Parallel agent spawning (cost multiplication)
+ */
+
+const CONSENT_CATEGORIES = ['externalActions', 'daemonSpend', 'fleetSpawn'];
+
+/**
+ * Read the consent preference for a category.
+ * @param {string} category - One of CONSENT_CATEGORIES
+ * @returns {'always-ask'|'session-allow'|'auto-allow'|null} null = first encounter
+ */
+function readConsent(category) {
+  const config = readConfig();
+  const consent = config.consent || {};
+  const pref = consent[category] || null;
+  if (!pref) return null;
+  if (!['always-ask', 'session-allow', 'auto-allow'].includes(pref)) return null;
+  return pref;
+}
+
+/**
+ * Write a consent preference for a category to harness.json.
+ * Creates harness.json if it doesn't exist.
+ * @param {string} category
+ * @param {'always-ask'|'session-allow'|'auto-allow'} preference
+ */
+function writeConsent(category, preference) {
+  const configPath = path.join(PROJECT_ROOT, '.claude', 'harness.json');
+  let config = {};
+  try {
+    if (fs.existsSync(configPath)) {
+      config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+    }
+  } catch { /* start fresh */ }
+
+  if (!config.consent) config.consent = {};
+  config.consent[category] = preference;
+
+  const dir = path.dirname(configPath);
+  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+  fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
+}
+
+/**
+ * Check if a session-scoped allow is active for a category.
+ * Session allows expire after 6 hours (covers long sessions but not overnight).
+ * @param {string} category
+ * @returns {boolean}
+ */
+function hasSessionAllow(category) {
+  const markerPath = path.join(PLUGIN_DATA_DIR, `consent-session-${category}.json`);
+  try {
+    if (!fs.existsSync(markerPath)) return false;
+    const marker = JSON.parse(fs.readFileSync(markerPath, 'utf8'));
+    const age = Date.now() - new Date(marker.timestamp).getTime();
+    const SIX_HOURS = 6 * 60 * 60 * 1000;
+    return age < SIX_HOURS;
+  } catch { return false; }
+}
+
+/**
+ * Grant a session-scoped allow for a category.
+ * @param {string} category
+ */
+function grantSessionAllow(category) {
+  const markerPath = path.join(PLUGIN_DATA_DIR, `consent-session-${category}.json`);
+  const dir = path.dirname(markerPath);
+  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+  fs.writeFileSync(markerPath, JSON.stringify({ category, timestamp: new Date().toISOString() }));
+}
+
+/**
+ * Grant a one-time approval for a specific action.
+ * Consumed on read (single-use). Expires after 120 seconds.
+ * Used by "always-ask" consent: hook blocks, user approves, Claude writes
+ * a one-time marker, retries, hook consumes the marker and allows.
+ * @param {string} category
+ */
+function grantOneTimeAllow(category) {
+  const markerPath = path.join(PLUGIN_DATA_DIR, `consent-onetime-${category}.json`);
+  const dir = path.dirname(markerPath);
+  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+  fs.writeFileSync(markerPath, JSON.stringify({ category, timestamp: new Date().toISOString() }));
+}
+
+/**
+ * Check and consume a one-time approval. Returns true if a fresh marker exists.
+ * The marker is deleted after reading (single-use).
+ * @param {string} category
+ * @returns {boolean}
+ */
+function consumeOneTimeAllow(category) {
+  const markerPath = path.join(PLUGIN_DATA_DIR, `consent-onetime-${category}.json`);
+  try {
+    if (!fs.existsSync(markerPath)) return false;
+    const marker = JSON.parse(fs.readFileSync(markerPath, 'utf8'));
+    // Always consume (delete) the marker
+    fs.unlinkSync(markerPath);
+    const age = Date.now() - new Date(marker.timestamp).getTime();
+    const TWO_MINUTES = 120 * 1000;
+    return age < TWO_MINUTES;
+  } catch {
+    try { fs.unlinkSync(markerPath); } catch { /* already gone */ }
+    return false;
+  }
+}
+
+/**
+ * Determine if a protected action should proceed based on consent.
+ *
+ * Returns:
+ *   - { action: 'allow' }           Proceed silently
+ *   - { action: 'first-encounter' } No preference set yet, hook should inform and block
+ *   - { action: 'block' }           User chose always-ask, hook should block
+ *
+ * @param {string} category
+ * @returns {{ action: 'allow'|'block'|'first-encounter' }}
+ */
+function checkConsent(category) {
+  const pref = readConsent(category);
+
+  // First encounter -- no preference stored yet
+  if (!pref) return { action: 'first-encounter' };
+
+  // Auto-allow -- user trusts the agent for this category
+  if (pref === 'auto-allow') return { action: 'allow' };
+
+  // Session-allow -- check if current session has been granted
+  if (pref === 'session-allow') {
+    if (hasSessionAllow(category)) return { action: 'allow' };
+    return { action: 'block' };
+  }
+
+  // Always-ask -- check for one-time approval (user approved in conversation)
+  if (pref === 'always-ask') {
+    if (consumeOneTimeAllow(category)) return { action: 'allow' };
+    return { action: 'block' };
+  }
+
+  return { action: 'block' };
+}
+
 module.exports = {
   increment,
   logTiming,
@@ -350,6 +508,14 @@ module.exports = {
   validatePath,
   validateCommand,
   securityWarning,
+  readConsent,
+  writeConsent,
+  hasSessionAllow,
+  grantSessionAllow,
+  grantOneTimeAllow,
+  consumeOneTimeAllow,
+  checkConsent,
+  CONSENT_CATEGORIES,
   PROJECT_ROOT,
   TELEMETRY_DIR,
   PLUGIN_DATA_DIR,
