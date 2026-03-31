@@ -12,6 +12,7 @@ const {
   readJson,
   writeJson,
 } = require('../../../core/hooks/install');
+const { selectSupportedClaudeHookEvents } = require('./hook-support');
 
 function resolveClaudeHooks(citadelRoot, hooksTemplatePath) {
   const raw = fs.readFileSync(hooksTemplatePath, 'utf8');
@@ -43,7 +44,19 @@ function installClaudeHooks(options = {}) {
 
   ensureDir(path.join(projectRoot, '.claude'));
 
-  const generated = resolveClaudeHooks(citadelRoot, hooksTemplatePath);
+  const resolved = resolveClaudeHooks(citadelRoot, hooksTemplatePath);
+  const compatibility = selectSupportedClaudeHookEvents({
+    templateEvents: Object.keys(resolved.hooks || {}),
+    hookProfile: options.hookProfile,
+    claudeVersion: options.claudeVersion,
+    claudeBin: options.claudeBin,
+  });
+  const generated = {
+    ...resolved,
+    hooks: Object.fromEntries(
+      Object.entries(resolved.hooks || {}).filter(([event]) => compatibility.supportedEvents.includes(event))
+    ),
+  };
   const existing = readJson(settingsPath, {});
   const mergedHooks = mergeHookMaps({
     existingHooks: existing.hooks || {},
@@ -68,6 +81,7 @@ function installClaudeHooks(options = {}) {
     hookCount: countGeneratedEntries(generated.hooks || {}),
     preservedCount: countPreservedHooks(mergedHooks, 'hooks_src/'),
     citadelRoot,
+    compatibility,
   };
 }
 

@@ -93,7 +93,7 @@ function countLines(sandboxDir, relPath) {
   return readJsonl(sandboxDir, relPath).length;
 }
 
-// ── Test runner ───────────────────────────────────────────────────────────────
+// ── Test runner ──────────────────────────────────────────────────────────────
 
 const results = [];
 
@@ -124,7 +124,7 @@ console.log('─'.repeat(40));
 let installDir = sandbox();
 
 test('install-hooks.js exits 0', () => {
-  const r = spawnSync('node', [path.join(CITADEL_ROOT, 'scripts', 'install-hooks.js'), installDir], {
+  const r = spawnSync('node', [path.join(CITADEL_ROOT, 'scripts', 'install-hooks.js'), installDir, '--hook-profile', 'latest'], {
     encoding: 'utf8', timeout: 10000,
   });
   if (r.status !== 0) return `exit ${r.status}: ${r.stderr.slice(0, 200)}`;
@@ -184,7 +184,7 @@ test('CLAUDE_CODE_SUBPROCESS_ENV_SCRUB injected', () => {
 
 cleanup(installDir);
 
-// ── Phase 2: Init project ─────────────────────────────────────────────────────
+// ── Phase 2: Init project ────────────────────────────────────────────────────
 
 console.log('\nPhase 2: Init project (SessionStart → init-project.js)');
 console.log('─'.repeat(40));
@@ -516,11 +516,11 @@ test('protect-files: hard-blocks on Restricted Files edit', () => {
   fs.rmSync(path.join(campaignsDir, 'test-restricted.md'));
 });
 
-// ── Cleanup ───────────────────────────────────────────────────────────────────
+// ── Cleanup ─────────────────────────────────────────────────────────────────
 
 cleanup(rDir);
 
-// ── Summary ───────────────────────────────────────────────────────────────────
+// ── Summary ──────────────────────────────────────────────────────────────────
 
 const passed = results.filter(r => r.passed).length;
 const failed = results.filter(r => !r.passed).length;

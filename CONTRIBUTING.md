@@ -26,6 +26,7 @@ Open an issue on [GitHub](https://github.com/SethGammon/Citadel/issues). Include
 **Cross-platform compatibility.** Citadel runs on Windows, macOS, and Linux. Before submitting:
 
 - Hook definitions live in `hooks/hooks-template.json` and are installed per-project via `scripts/install-hooks.js`
+- The Claude installer is compatibility-aware by default; use `--hook-profile latest` in tests or fixtures when you need the full modern hook surface deterministically
 - Do NOT hardcode `/bin/bash`, `/bin/sh`, or other Unix-only paths
 - Do NOT assume forward-slash path separators in Node scripts (use `path.join()`)
 - Test on your platform and note which platform you tested on in the PR
@@ -63,7 +64,8 @@ Hooks live in `hooks_src/`. Before adding one:
 3. Use `require('./harness-health-util')` for the project root path
 4. Use `process.env.CLAUDE_PROJECT_DIR || process.cwd()` for the user's project root
 5. Add your hook to `hooks/hooks-template.json` — the installer resolves `${CLAUDE_PLUGIN_ROOT}` at install time
-6. Run `node hooks_src/smoke-test.js` to make sure the smoke test picks it up
+6. If the hook requires a newer Claude Code event, update the compatibility gating in `runtimes/claude-code/generators/hook-support.js`
+7. Run `node hooks_src/smoke-test.js` to make sure the smoke test picks it up
 
 ## Plugin Directory Structure
 

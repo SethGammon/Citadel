@@ -33,11 +33,21 @@ You never invoke them manually. They provide automated quality enforcement.
 ## Configuration
 
 Hook definitions live in `hooks/hooks-template.json`. They are installed per-project
-via `scripts/install-hooks.js`, which resolves `${CLAUDE_PLUGIN_ROOT}` to absolute paths:
+via `scripts/install-hooks.js`, which resolves `${CLAUDE_PLUGIN_ROOT}` to absolute paths
+and filters out hook events unsupported by the installed Claude Code version:
 
 ```bash
 # From your project directory:
 node /path/to/Citadel/scripts/install-hooks.js
+```
+
+If Claude Code is unavailable on `PATH`, Citadel falls back to a safe compatibility
+profile and skips newer hook events instead of writing a broken `.claude/settings.json`.
+
+To force the full hook surface after upgrading Claude Code:
+
+```bash
+node /path/to/Citadel/scripts/install-hooks.js --hook-profile latest
 ```
 
 This writes resolved hooks into your project's `.claude/settings.json`:

@@ -37,17 +37,40 @@ withTempDir((projectRoot) => {
     },
   }, null, 2));
 
-  const result = installClaudeHooks({ citadelRoot, hooksTemplatePath, projectRoot });
+  const result = installClaudeHooks({ citadelRoot, hooksTemplatePath, projectRoot, hookProfile: 'latest' });
   const settings = JSON.parse(fs.readFileSync(result.settingsPath, 'utf8'));
 
   assert(settings.hooks.PreToolUse.length >= 2, 'claude install should merge generated and user hooks');
   assert.equal(settings.env.CLAUDE_CODE_SUBPROCESS_ENV_SCRUB, '1', 'claude install should inject subprocess scrub env');
   assert.equal(settings.permissions.allow[0], 'Read', 'claude install should preserve non-hook settings');
+  assert.equal(result.compatibility.hookProfile, 'latest', 'latest profile should be reported');
+});
+
+withTempDir((projectRoot) => {
+  const result = installClaudeHooks({
+    citadelRoot,
+    hooksTemplatePath,
+    projectRoot,
+    hookProfile: 'auto',
+    claudeVersion: '2.1.75',
+  });
+  const settings = JSON.parse(fs.readFileSync(result.settingsPath, 'utf8'));
+
+  assert(settings.hooks.SessionStart, 'legacy-compatible install should keep SessionStart');
+  assert(settings.hooks.SessionEnd, 'legacy-compatible install should keep SessionEnd');
+  assert(!settings.hooks.PostCompact, 'legacy-compatible install should omit PostCompact before 2.1.76');
+  assert(!settings.hooks.StopFailure, 'legacy-compatible install should omit StopFailure before 2.1.78');
+  assert(!settings.hooks.TaskCreated, 'legacy-compatible install should omit TaskCreated before 2.1.84');
+  assert(!settings.hooks.WorktreeCreate, 'legacy-compatible install should omit WorktreeCreate before 2.1.84');
+  assert(result.compatibility.skippedEvents.includes('PostCompact'), 'legacy-compatible install should report skipped events');
 });
 
 const translated = translateCodexHooks(hooksTemplate, '/tmp/codex-adapter.js');
 assert(translated.installed.length > 0, 'codex translation should install mapped hooks');
 assert(translated.skipped.length > 0, 'codex translation should record unmapped hooks');
+assert(translated.hooks.PreToolUse.some((entry) => entry.matcher === 'Edit'), 'codex translation should expand Edit matcher explicitly');
+assert(translated.hooks.PreToolUse.some((entry) => entry.matcher === 'Write'), 'codex translation should expand Write matcher explicitly');
+assert(!translated.hooks.PreToolUse.some((entry) => entry.matcher === 'Edit|Write'), 'codex translation should not leave pipe-delimited matchers');
 
 withTempDir((projectRoot) => {
   const outputPath = path.join(projectRoot, '.codex', 'hooks.json');
