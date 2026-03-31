@@ -1,0 +1,149 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node ${CITADEL_ROOT}/codex-adapter.js protect-files",
+            "statusMessage": "Citadel: protect-files",
+            "timeout": 5
+          }
+        ]
+      },
+      {
+        "matcher": "Read",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node ${CITADEL_ROOT}/codex-adapter.js protect-files",
+            "statusMessage": "Citadel: protect-files",
+            "timeout": 5
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node ${CITADEL_ROOT}/codex-adapter.js external-action-gate",
+            "statusMessage": "Citadel: external-action-gate",
+            "timeout": 5
+          }
+        ]
+      },
+      {
+        "matcher": "Edit|Write|Bash|Agent",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node ${CITADEL_ROOT}/codex-adapter.js governance",
+            "statusMessage": "Citadel: governance",
+            "timeout": 3
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node ${CITADEL_ROOT}/codex-adapter.js post-edit",
+            "statusMessage": "Citadel: post-edit",
+            "timeout": 30
+          }
+        ]
+      },
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node ${CITADEL_ROOT}/codex-adapter.js organize-enforce",
+            "statusMessage": "Citadel: organize-enforce",
+            "timeout": 5
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node ${CITADEL_ROOT}/codex-adapter.js circuit-breaker",
+            "statusMessage": "Citadel: circuit-breaker",
+            "timeout": 5
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node ${CITADEL_ROOT}/codex-adapter.js cost-tracker",
+            "statusMessage": "Citadel: cost-tracker",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node ${CITADEL_ROOT}/codex-adapter.js quality-gate",
+            "statusMessage": "Citadel: quality-gate",
+            "timeout": 10
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node ${CITADEL_ROOT}/codex-adapter.js session-end",
+            "statusMessage": "Citadel: session-end",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node ${CITADEL_ROOT}/codex-adapter.js init-project",
+            "statusMessage": "Citadel: init-project",
+            "timeout": 10
+          }
+        ]
+      },
+      {
+        "matcher": "compact",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node ${CITADEL_ROOT}/codex-adapter.js restore-compact",
+            "statusMessage": "Citadel: restore-compact",
+            "timeout": 5
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node ${CITADEL_ROOT}/codex-adapter.js intake-scanner",
+            "statusMessage": "Citadel: intake-scanner",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  }
+}

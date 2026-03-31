@@ -1,0 +1,36 @@
+{
+  "installedCount": 13,
+  "skippedCount": 9,
+  "installed": [
+    "PostToolUse:circuit-breaker",
+    "PostToolUse:cost-tracker",
+    "PostToolUse:organize-enforce",
+    "PostToolUse:post-edit",
+    "PreToolUse:external-action-gate",
+    "PreToolUse:governance",
+    "PreToolUse:protect-files",
+    "PreToolUse:protect-files",
+    "SessionStart:init-project",
+    "SessionStart:intake-scanner",
+    "SessionStart:restore-compact",
+    "Stop:quality-gate",
+    "Stop:session-end"
+  ],
+  "skipped": [
+    "PostCompact:post-compact",
+    "PostToolUseFailure:circuit-breaker",
+    "PreCompact:pre-compact",
+    "StopFailure:stop-failure",
+    "SubagentStop:subagent-stop",
+    "TaskCompleted:task-events",
+    "TaskCreated:task-events",
+    "WorktreeCreate:worktree-setup",
+    "WorktreeRemove:worktree-remove"
+  ],
+  "events": [
+    "PostToolUse",
+    "PreToolUse",
+    "SessionStart",
+    "Stop"
+  ]
+}

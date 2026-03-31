@@ -36,11 +36,13 @@ const POLICY_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-policy-core.js');
 const CLAUDE_RUNTIME_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-claude-runtime.js');
 const CODEX_RUNTIME_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-codex-runtime.js');
 const PROJECT_BOOTSTRAP_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-project-bootstrap.js');
+const COMPAT_FIXTURE_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-compat-fixtures.js');
+const BACKWARD_COMPAT_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-backward-compat.js');
 
 const STRICT = process.argv.includes('--strict');
 
 console.log('\nCitadel Full Test Suite\n' + '='.repeat(40));
-console.log('Running: hook smoke test + security tests + runtime contract test + runtime registry test + hook event test + skill lint + demo routing check + telemetry core check + coordination core check + hook installer check + campaign core check + discovery core check + policy core check + Claude runtime check + Codex runtime check + project bootstrap check\n');
+console.log('Running: hook smoke test + security tests + runtime contract test + runtime registry test + hook event test + skill lint + demo routing check + telemetry core check + coordination core check + hook installer check + campaign core check + discovery core check + policy core check + Claude runtime check + Codex runtime check + project bootstrap check + compat fixtures + backward compat\n');
 
 function run(label, scriptPath, extraArgs = []) {
   console.log(`\n> ${label}`);
@@ -75,6 +77,8 @@ const policyPassed = run('Policy Core Check', POLICY_TEST);
 const claudeRuntimePassed = run('Claude Runtime Check', CLAUDE_RUNTIME_TEST);
 const codexRuntimePassed = run('Codex Runtime Check', CODEX_RUNTIME_TEST);
 const projectBootstrapPassed = run('Project Bootstrap Check', PROJECT_BOOTSTRAP_TEST);
+const compatFixturePassed = STRICT ? run('Compatibility Fixtures', COMPAT_FIXTURE_TEST) : true;
+const backwardCompatPassed = run('Backward Compatibility', BACKWARD_COMPAT_TEST);
 
 console.log('\n' + '='.repeat(40));
 console.log('SUMMARY');
@@ -94,9 +98,11 @@ console.log(`  Policy core:        ${policyPassed ? 'PASS' : 'FAIL'}`);
 console.log(`  Claude runtime:     ${claudeRuntimePassed ? 'PASS' : 'FAIL'}`);
 console.log(`  Codex runtime:      ${codexRuntimePassed ? 'PASS' : 'FAIL'}`);
 console.log(`  Project bootstrap:  ${projectBootstrapPassed ? 'PASS' : 'FAIL'}`);
+if (STRICT) console.log(`  Compat fixtures:    ${compatFixturePassed ? 'PASS' : 'FAIL'}`);
+console.log(`  Backward compat:    ${backwardCompatPassed ? 'PASS' : 'FAIL'}`);
 console.log('');
 
-if (hooksPassed && securityPassed && contractsPassed && runtimeRegistryPassed && hookEventsPassed && skillsPassed && demoPassed && telemetryPassed && coordinationPassed && hookInstallerPassed && campaignPassed && discoveryPassed && policyPassed && claudeRuntimePassed && codexRuntimePassed && projectBootstrapPassed) {
+if (hooksPassed && securityPassed && contractsPassed && runtimeRegistryPassed && hookEventsPassed && skillsPassed && demoPassed && telemetryPassed && coordinationPassed && hookInstallerPassed && campaignPassed && discoveryPassed && policyPassed && claudeRuntimePassed && codexRuntimePassed && projectBootstrapPassed && compatFixturePassed && backwardCompatPassed) {
   console.log('All tests pass.\n');
   console.log('Next steps:');
   console.log('  node scripts/skill-bench.js --list      see benchmark scenarios');
@@ -121,7 +127,9 @@ const policyFail = !policyPassed ? 4096 : 0;
 const claudeRuntimeFail = !claudeRuntimePassed ? 8192 : 0;
 const codexRuntimeFail = !codexRuntimePassed ? 16384 : 0;
 const projectBootstrapFail = !projectBootstrapPassed ? 32768 : 0;
-const code = hookFail | securityFail | contractFail | runtimeRegistryFail | hookEventFail | skillFail | demoFail | telemetryFail | coordinationFail | hookInstallerFail | campaignFail | discoveryFail | policyFail | claudeRuntimeFail | codexRuntimeFail | projectBootstrapFail;
+const compatFixtureFail = !compatFixturePassed ? 65536 : 0;
+const backwardCompatFail = !backwardCompatPassed ? 131072 : 0;
+const code = hookFail | securityFail | contractFail | runtimeRegistryFail | hookEventFail | skillFail | demoFail | telemetryFail | coordinationFail | hookInstallerFail | campaignFail | discoveryFail | policyFail | claudeRuntimeFail | codexRuntimeFail | projectBootstrapFail | compatFixtureFail | backwardCompatFail;
 
 if (!hooksPassed) console.log('Hook smoke test failed. Fix hook issues before proceeding.');
 if (!securityPassed) console.log('Security tests failed. DO NOT SHIP - critical vulnerabilities present.');
@@ -139,5 +147,7 @@ if (!policyPassed) console.log('Policy core check failed. Fix policy regressions
 if (!claudeRuntimePassed) console.log('Claude runtime check failed. Fix runtime adapter regressions before shipping.');
 if (!codexRuntimePassed) console.log('Codex runtime check failed. Fix runtime adapter regressions before shipping.');
 if (!projectBootstrapPassed) console.log('Project bootstrap check failed. Fix canonical guidance bootstrap before shipping.');
+if (!compatFixturePassed) console.log('Compatibility fixture check failed. Run: node scripts/generate-fixtures.js --write');
+if (!backwardCompatPassed) console.log('Backward compatibility check failed. Legacy data formats may be broken.');
 console.log('');
 process.exit(code);
