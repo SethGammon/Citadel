@@ -127,6 +127,40 @@ Four tiers. Use the cheapest one that fits.
 - [Contributing](CONTRIBUTING.md) — how to submit issues, PRs, and new skills
 - [External overview](https://repo-explainer.com/SethGammon/Citadel/) — third-party writeup on the architecture and philosophy
 
+
+## Community & Growth
+
+Citadel is growing fast in the AI engineering community. Here's how to get involved:
+
+### GitHub Stars
+If Citadel is useful to you, a star is the easiest way to show support:
+
+[![Star on GitHub](https://img.shields.io/github/stars/SethGammon/Citadel?style=social)](https://github.com/SethGammon/Citadel)
+
+### Roadmap
+
+The project is actively developed. Key areas on the roadmap:
+
+- [x] Multi-provider support (Claude Code, Copilot, Gemini)
+- [x] Fleet mode with worktree isolation
+- [x] Campaign persistence
+- [ ] VS Code extension
+- [ ] Web dashboard for campaign management
+- [ ] Team collaboration features
+
+### Contributing
+
+Contributions are welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for how to:
+- Submit issues with bug reports or feature requests
+- Create pull requests for skills, hooks, or docs
+- Share your use cases and workflows
+
+### Share Your Setup
+
+Built something interesting with Citadel? Open an Issue to share your workflow — good setups get featured here.
+
+---
+
 ## License
 
 MIT
