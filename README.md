@@ -5,6 +5,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Node.js 18+](https://img.shields.io/badge/Node.js-18%2B-green.svg)](https://nodejs.org/)
 [![Claude Code](https://img.shields.io/badge/Claude_Code-compatible-blueviolet.svg)](https://docs.anthropic.com/en/docs/claude-code)
+[![Codex](https://img.shields.io/badge/Codex-compatible-5865F2.svg)](https://github.com/openai/codex)
 [![Interactive Demo](https://img.shields.io/badge/▶_Try_the_Router-00d2ff.svg)](https://sethgammon.github.io/Citadel/)
 
 *Stop re-explaining your codebase every session. Start compounding what your agents learn.*
@@ -13,7 +14,7 @@
 
 ## What Is Citadel
 
-An agent orchestration harness for Claude Code. It coordinates multiple AI agents in parallel, persists memory across sessions, and routes your intent to the cheapest execution path automatically. You install it as a plugin and it works on any codebase.
+An agent orchestration harness for Claude Code and OpenAI Codex. It coordinates multiple AI agents in parallel, persists memory across sessions, and routes your intent to the cheapest execution path automatically. You install it as a plugin and it works on any codebase, on either runtime.
 
 ## Why Citadel Exists
 
@@ -105,13 +106,15 @@ Four tiers. Use the cheapest one that fits.
 
 **How is this different from CLAUDE.md?** CLAUDE.md tells Claude about your project. Citadel tells Claude *how to work*: durable state, intelligent routing, automated safety, and native parallelism — the infrastructure layer that CLAUDE.md assumes someone else built.
 
-**Do I need to learn all 40 skills?** No. Just use `/do` and describe what you want in plain English. The router picks the right skill. You can go months without ever typing a skill name directly.
+**Do I need to learn all 41 skills?** No. Just use `/do` and describe what you want in plain English. The router picks the right skill. You can go months without ever typing a skill name directly.
 
 **What if `/do` routes to the wrong tool?** Tell it. "Wrong tool" or "just do it yourself" and it adjusts. You can also invoke any skill directly: `/review`, `/archon`, etc. The router is a convenience, not a gate.
 
 **How much does it cost in tokens?** Citadel adds ~2.5% overhead to your session cost. Skills cost zero when not loaded. The `/do` router costs ~500 tokens only at Tier 4. Use `/cost` to see real token data and exact spend for any session or campaign.
 
-**How is this different from CrewAI, LangChain, or Aider?** Those are agent frameworks: they give you primitives for building agents from scratch. Citadel is an *operating system for an existing agent* (Claude Code). You don't write agent code — you install a plugin and get routing, persistence, parallelism, and safety hooks on top of the agent you already use. If you're building a custom agent, use a framework. If you're using Claude Code and want it to work better, use Citadel.
+**How is this different from CrewAI, LangChain, or Aider?** Those are agent frameworks: they give you primitives for building agents from scratch. Citadel is an *operating system for an existing agent* (Claude Code or Codex). You don't write agent code — you install a plugin and get routing, persistence, parallelism, and safety hooks on top of the agent you already use. If you're building a custom agent, use a framework. If you're using Claude Code or Codex and want it to work better, use Citadel.
+
+**Does it work with OpenAI Codex?** Yes. The runtime layer (`packages/runtime-claude-code`, `packages/contracts`) abstracts over both runtimes. Skills, hooks, and campaigns are portable — the same `.planning/` state works whether you're running under Claude Code or Codex. Use `AGENTS.md` for Codex (parallel to `CLAUDE.md` for Claude Code).
 
 **Does this work on Windows?** Yes. All hooks and scripts run on Node.js. As a plugin, it installs identically on all platforms.
 
@@ -119,7 +122,7 @@ Four tiers. Use the cheapest one that fits.
 
 - [**Interactive routing demo**](https://sethgammon.github.io/Citadel/) — type any task, watch the tier cascade animate
 - [Full install guide](QUICKSTART.md) — plugin setup, alternative install methods, and troubleshooting
-- [Skills reference](docs/SKILLS.md) — all 40 skills with invocation and examples
+- [Skills reference](docs/SKILLS.md) — all 41 skills with invocation and examples
 - [Hooks reference](docs/HOOKS.md) — 15 event types, what each one enforces
 - [Campaign guide](docs/CAMPAIGNS.md) — persistent state, phases, AI amnesia prevention
 - [Fleet guide](docs/FLEET.md) — parallel agents, worktree isolation, discovery relay
