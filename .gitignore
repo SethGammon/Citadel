@@ -72,3 +72,18 @@ Thumbs.db
 # Local planning notes (roadmaps, drafts -- not for public repo)
 .planning/roadmap/
 CITADEL-STATE.md
+
+# Codex runtime state (local, like .citadel/)
+.codex/
+.codex-plugin/
+
+# Agent runtime state
+.agents/
+
+# JourneyKit distribution (private -- funnels users back to Citadel, not for public repo)
+.planning/journeykits/
+
+# Internal source analysis and private cloud/strategy docs
+_cc_source/
+Analysis-of-source.md
+docs/cloud-integration.md
