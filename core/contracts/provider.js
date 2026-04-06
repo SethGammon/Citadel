@@ -33,8 +33,8 @@ const PROVIDER_REGISTRY = Object.freeze([
     displayName: 'OpenAI',
     kind: 'managed-api',
     accessModes: Object.freeze(['api_key', 'hosted']),
-    runtimeIds: Object.freeze(['codex']),
-    notes: 'Primary API lane for Codex and OpenAI-compatible integrations.',
+    runtimeIds: Object.freeze(['codex', 'openai']),
+    notes: 'Primary API lane for Codex, OpenAI Responses API, and OpenAI-compatible integrations.',
   }),
   Object.freeze({
     id: 'google',

@@ -11,41 +11,41 @@ Defined in `core/contracts/capabilities.js`. Support levels: `full`, `partial`, 
 
 ## Matrix
 
-| Capability | Claude Code | Codex | Notes |
-|---|---|---|---|
-| `guidance` | Full | Full | CLAUDE.md / AGENTS.md projected from `.citadel/project.md` |
-| `skills` | Full | Partial | Codex skill format uses OpenAI YAML adapter |
-| `agents` | Full | Partial | Codex uses `.toml` format with model mapping |
-| `hooks` | Full | Full | Codex hooks translated via adapter script |
-| `workspace` | Full | Full | Both support project-level config |
-| `worktrees` | Full | None | Codex lacks git worktree support |
-| `approvals` | Full | Partial | Codex has limited hook-based approval flow |
-| `history` | Full | Partial | Claude Code exposes session JSONL; Codex uses API logs |
-| `telemetry` | Full | Full | Normalized events via `core/hooks/normalize-event.js` |
-| `mcp` | Full | None | Codex does not support MCP servers |
-| `surfaces` | Full | None | Desktop app reads Claude Code state only (for now) |
+| Capability | Claude Code | Codex | OpenAI | Notes |
+|---|---|---|---|---|
+| `guidance` | Full | Full | Full | CLAUDE.md / AGENTS.md projected from `.citadel/project.md` |
+| `skills` | Full | Partial | Partial | Codex uses YAML adapter; OpenAI uses Responses API reusable skills |
+| `agents` | Full | Partial | Partial | Codex uses `.toml`; OpenAI uses Responses API agent loop |
+| `hooks` | Full | Full | Partial | Codex hooks translated via adapter; OpenAI needs adapter for lifecycle parity |
+| `workspace` | Full | Full | Full | OpenAI Responses API provides shell tool + hosted container |
+| `worktrees` | Full | None | None | Neither Codex nor OpenAI provide native git worktree support |
+| `approvals` | Full | Partial | Partial | Both Codex and OpenAI need adapter-level policy handling |
+| `history` | Full | Partial | Partial | Claude Code exposes session JSONL; Codex uses API logs; OpenAI uses Responses API state |
+| `telemetry` | Full | Full | Partial | Normalized events via `core/hooks/normalize-event.js` |
+| `mcp` | Full | None | Partial | Codex does not support MCP; OpenAI has native tool support, MCP bridge possible |
+| `surfaces` | Full | None | Partial | OpenAI Responses API reusable skills map to Citadel surface |
 
 ## Hook Event Coverage
 
-Claude Code supports all 15 Citadel event types. Codex supports 5:
+Claude Code supports all 15 Citadel event types. Codex supports 5. OpenAI Responses API supports 4 natively (adapter extends coverage):
 
-| Citadel Event | Claude Code | Codex |
-|---|---|---|
-| `session_start` | SessionStart | SessionStart |
-| `pre_tool` | PreToolUse | PreToolUse |
-| `post_tool` | PostToolUse | PostToolUse |
-| `post_tool_failure` | PostToolUseFailure | (skipped) |
-| `user_prompt` | UserPromptSubmit | UserPromptSubmit |
-| `stop` | Stop | Stop |
-| `stop_failure` | StopFailure | (skipped) |
-| `session_end` | SessionEnd | mapped to Stop |
-| `pre_compact` | PreCompact | (skipped) |
-| `post_compact` | PostCompact | (skipped) |
-| `subagent_stop` | SubagentStop | (skipped) |
-| `task_created` | TaskCreated | (skipped) |
-| `task_completed` | TaskCompleted | (skipped) |
-| `worktree_create` | WorktreeCreate | (skipped) |
-| `worktree_remove` | WorktreeRemove | (skipped) |
+| Citadel Event | Claude Code | Codex | OpenAI |
+|---|---|---|---|
+| `session_start` | SessionStart | SessionStart | Agent loop start |
+| `pre_tool` | PreToolUse | PreToolUse | (via adapter) |
+| `post_tool` | PostToolUse | PostToolUse | (via adapter) |
+| `post_tool_failure` | PostToolUseFailure | (skipped) | (via adapter) |
+| `user_prompt` | UserPromptSubmit | UserPromptSubmit | Input message |
+| `stop` | Stop | Stop | Agent loop end |
+| `stop_failure` | StopFailure | (skipped) | (skipped) |
+| `session_end` | SessionEnd | mapped to Stop | Agent loop end |
+| `pre_compact` | PreCompact | (skipped) | Context compaction trigger |
+| `post_compact` | PostCompact | (skipped) | (skipped) |
+| `subagent_stop` | SubagentStop | (skipped) | (skipped) |
+| `task_created` | TaskCreated | (skipped) | (skipped) |
+| `task_completed` | TaskCompleted | (skipped) | (skipped) |
+| `worktree_create` | WorktreeCreate | (skipped) | (skipped) |
+| `worktree_remove` | WorktreeRemove | (skipped) | (skipped) |
 
 ## Codex Hook Translation
 
@@ -61,15 +61,16 @@ installed/skipped breakdown. Any change to hook coverage will be caught by
 
 ## Agent Model Mapping
 
-When projecting agents to Codex `.toml` format:
+When projecting agents to Codex `.toml` format or OpenAI Responses API:
 
-| Citadel Model | Codex Model |
-|---|---|
-| `opus` | `gpt-5.4` |
-| `sonnet` | `gpt-5.4-mini` |
-| `haiku` | `gpt-5.4-mini` |
+| Citadel Model | Codex Model | OpenAI Model |
+|---|---|---|
+| `opus` | `gpt-5.4` | `gpt-5.4` (configurable via `CITADEL_OPENAI_MODEL`) |
+| `sonnet` | `gpt-5.4-mini` | `gpt-5.4-mini` |
+| `haiku` | `gpt-5.4-mini` | `gpt-5.4-mini` |
 
-Defined in `core/agents/project-agent.js`.
+Defined in `core/agents/project-agent.js`. OpenAI model mapping is configurable
+via environment variables (see `packages/runtime-openai/README.md`).
 
 ## Guidance Projection
 

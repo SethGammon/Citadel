@@ -8,6 +8,7 @@ const { CIT_EVENT_ORDER } = require('./events');
 const RUNTIME_IDS = Object.freeze([
   'claude-code',
   'codex',
+  'openai',
   'unknown',
 ]);
 
