@@ -1,191 +1,247 @@
 ---
 name: setup
 description: >-
-  First-run experience for the harness. Asks about the project, detects the stack,
-  scaffolds the directory structure, configures hooks for the detected language,
-  runs one real task as a demo, and prints a reference card. Gets someone from
-  install to first /do command in 5 minutes.
+  First-run experience for the harness. Three modes: Recommended (guided,
+  ~3 min), Full Tour (guided + skill walkthrough, ~8 min), and Express
+  (zero questions, ~30 sec). Installs hooks first, detects stack, configures
+  harness.json, runs a live demo on real code, and prints a reference card.
 user-invocable: true
 auto-trigger: false
-last-updated: 2026-03-20
+trigger_keywords:
+  - setup
+  - first run
+  - configure harness
+  - install citadel
+  - getting started
+last-updated: 2026-04-06
 ---
 
 # /do setup — First-Run Experience
 
 ## Identity
 
-You are the setup wizard. You configure the harness for a new project.
-Your job is to make the first 5 minutes feel effortless — by the end,
-the user has a working harness, they've seen it operate on their code,
-and they know every command available.
+You are the setup wizard. Your job is to get someone from zero to a fully
+configured, hook-protected, skill-routed session in under 5 minutes — with
+hooks live before the first question is asked.
+
+The experience should feel like a competent colleague walking them through
+their own codebase, not a generic installer.
 
 ## Orientation
 
-Run `/do setup` on any new project to configure the harness. This is the
-first thing a user does after cloning the harness repo into their project.
+Run `/do setup` on any project after loading Citadel as a plugin. This
+configures the harness for the specific project — detecting the stack,
+installing hooks with resolved paths, registering skills, and optionally
+demonstrating the system on real code.
 
-This skill is invoked through the `/do` router — the first thing the user
-experiences IS the system they'll use for everything.
+Flag: `/do setup --express` skips mode selection and runs Express directly.
+
+---
 
 ## Protocol
 
-### Step 0: CHECK EXISTING CONFIG
+### Step 0: MODE SELECTION
 
-Before doing anything, check if `.claude/harness.json` already exists:
+Before anything else, present three modes. This is the only required
+interaction before hooks install.
 
 ```
-Read .claude/harness.json
+Welcome to Citadel.
+
+How would you like to get started?
+
+  [1] Recommended  — auto-detect your stack, install hooks, live demo  (~3 min)
+  [2] Full Tour    — everything in Recommended + guided skill walkthrough (~8 min)
+  [3] Express      — zero questions, auto-detect, hooks installed, done  (~30 sec)
+
+Press Enter for Recommended, or type 1, 2, or 3.
 ```
 
-**If it exists:**
-1. Output: "This project is already configured. Here's the current config:"
-2. Print the key fields: language, framework, packageManager, typecheck.command, registeredSkillCount
-3. Ask: "Would you like to re-run setup to update the configuration? (y/n)"
-4. If NO: output "Config unchanged. Use `/do` to start working." and stop.
-5. If YES: proceed with Step 1 (setup will update/overwrite harness.json).
+**If harness.json already exists with a full config**, present a fourth option:
 
-**If it doesn't exist:** proceed directly to Step 1.
-
-### Step 1: ORIENT (ask about the project)
-
-**Q1: Project description**
-Ask: "What's your project? One sentence is fine."
-- Purpose: seeds the project description in CLAUDE.md
-- If they skip: use the repo name from package.json, go.mod, or directory name
-
-**Q2: Stack detection**
-Auto-detect first by scanning the project root:
-- `tsconfig.json` → TypeScript
-- `package.json` (no tsconfig) → JavaScript
-- `requirements.txt` / `pyproject.toml` → Python
-- `go.mod` → Go
-- `Cargo.toml` → Rust
-- `pom.xml` / `build.gradle` → Java
-
-Also detect:
-- Framework: React, Vue, Svelte, Angular, Next.js, Django, Flask, FastAPI, Express
-- Package manager: npm, pnpm, yarn, bun, pip, cargo
-- Test framework: Jest, Vitest, Pytest, Go testing
-
-Confirm with user: "I detected [language] with [framework] using [package manager]. Correct?"
-If detection fails: ask "What's your primary language and framework?"
-
-**Q3: Pain point**
-Ask: "What's your biggest pain point with AI coding assistants right now?"
-Present options:
-- (a) Repetitive prompts — I keep explaining the same thing
-- (b) Quality issues — the agent breaks things
-- (c) Context loss — every new session starts from zero
-- (d) Scaling — it works for small tasks but not big ones
-- (e) Something else
-
-Purpose: determines which skill to demonstrate and which features to highlight.
-
-### Step 2: SCAFFOLD (verify and configure)
-
-The Citadel plugin's `init-project` hook automatically creates the `.planning/`
-directory structure, copies templates, and syncs utility scripts on session start.
-This step verifies the scaffold exists and generates project-specific configuration.
-
-1. Verify `.planning/` directory exists (the init-project hook should have created it)
-   - If missing: warn the user that the Citadel plugin may not be properly installed
-2. Verify `.citadel/scripts/` exists (utility scripts synced from plugin)
-   - If missing: same warning
-
-**Generate `.claude/harness.json`** based on detected stack:
-
-```json
-{
-  "language": "{detected}",
-  "framework": "{detected or null}",
-  "packageManager": "{detected}",
-  "typecheck": {
-    "command": "{language-appropriate command}",
-    "perFile": true
-  },
-  "test": {
-    "command": "{detected test command}",
-    "framework": "{detected test framework}"
-  },
-  "qualityRules": {
-    "builtIn": ["no-confirm-alert", "no-transition-all"],
-    "custom": []
-  },
-  "protectedFiles": [
-    ".claude/harness.json"
-  ],
-  "features": {
-    "intakeScanner": true,
-    "telemetry": true
-  },
-  "registeredSkills": ["{list of all skill directory names}"],
-  "registeredSkillCount": "{count of skill directories}",
-  "agentTimeouts": {
-    "skill": 600000,
-    "research": 900000,
-    "build": 1800000
-  }
-}
+```
+  [4] Update — reconfigure existing setup (current: {language}, {skillCount} skills)
 ```
 
-**Skill registry rebuild:** During setup, register all built-in skills from the
-Citadel plugin plus any custom skills in the project's `.claude/skills/` directory.
-Populate `registeredSkills` with every skill name and set `registeredSkillCount`
-to match. This is the full registry rebuild that `/do`'s Step 0 defers to.
+Store the chosen mode. Default to Recommended if no input.
 
-**Dependency pattern suggestions:** After detecting the stack, read `package.json`
-and check for common libraries that have known anti-patterns:
+**If `--express` flag was passed**: skip mode selection, run Express directly.
 
-| If Installed | Suggest Banning | Message |
-|---|---|---|
-| `@tanstack/react-query` | `fetch(`, `axios(`, `XMLHttpRequest` | Use tanstack query instead of raw fetch |
-| `zustand` | `React.createContext`, `useContext` | Use Zustand store instead of React Context |
-| `date-fns` | `new Date().toLocaleDateString`, `moment(` | Use date-fns for date formatting |
-| `zod` | `typeof `, `instanceof ` | Use Zod schemas for runtime validation |
+---
 
-For each match: **ask the user** before adding. Present the suggestion and let them
-accept or skip. Example: "I see @tanstack/react-query is installed. Want me to warn
-agents when they use raw fetch() instead? (y/n)"
+### Step 1: INSTALL HOOKS (all modes, always first)
 
-Add accepted patterns to the `dependencyPatterns` array in harness.json. Users can
-add their own patterns later — the format is documented in docs/HOOKS.md.
-
-**Language-specific typecheck configuration:**
-
-| Language | Command | Per-file? |
-|---|---|---|
-| TypeScript | `npx tsc --noEmit` | yes |
-| Python (mypy) | `mypy` | yes |
-| Python (pyright) | `pyright` | yes |
-| Go | `go vet ./...` | no (package-level) |
-| Rust | `cargo check` | no (project-level) |
-| JavaScript | (none) | no |
-| Java | (none) | no |
-
-If the language checker isn't installed, log a message:
-"Note: [mypy/pyright] not found. Install it for per-file type checking, or the
-typecheck hook will be skipped."
-
-**Canonical project spec first:**
-
-Before writing runtime guidance files, seed the canonical spec:
+**Run hook installer immediately** — before any other questions or detection.
+Hooks being live for the rest of the session is more important than anything else.
 
 ```bash
-node {citadel-root}/scripts/bootstrap-project-guidance.js --project-root {project-root}
+node {citadel-root}/scripts/install-hooks.js
 ```
 
-This creates `.citadel/project.md` when missing and generates both `CLAUDE.md`
-and `AGENTS.md` from the canonical spec. Treat `.citadel/project.md` as the
-source of truth going forward.
+Find `{citadel-root}`:
+1. Read `.citadel/plugin-root.txt` (written by init-project on session start)
+2. Fallback: use the directory containing this SKILL.md (Citadel plugin root)
 
-**CLAUDE.md — Merge, Never Overwrite:**
+The installer:
+- Reads `hooks/hooks-template.json`
+- Resolves absolute paths (workaround for anthropics/claude-code#24529)
+- Writes into this project's `.claude/settings.json`
+- Preserves existing non-Citadel settings
+- Is idempotent — safe to re-run
 
-If CLAUDE.md does NOT exist, generate a starter:
+**On success**, output a compact status line:
+```
+  ✓ {N} hooks installed (protect-files, external-gate, circuit-breaker, quality-gate + more)
+```
 
+**On failure** (script not found, permission error):
+- Output the error
+- Explain that hooks can be installed manually: `node /path/to/Citadel/scripts/install-hooks.js`
+- Continue with the rest of setup — hooks are important but setup should not abort
+
+---
+
+### Step 2: STACK DETECTION (all modes)
+
+Auto-detect by scanning the project root. Never ask what can be read.
+
+**Language detection (check in order):**
+| File | Language |
+|---|---|
+| `tsconfig.json` | TypeScript |
+| `package.json` (no tsconfig) | JavaScript |
+| `requirements.txt` or `pyproject.toml` | Python |
+| `go.mod` | Go |
+| `Cargo.toml` | Rust |
+| `pom.xml` or `build.gradle` | Java |
+
+**Framework detection (read package.json dependencies):**
+| Dependency | Framework |
+|---|---|
+| `next` | Next.js |
+| `react` (no next) | React |
+| `vue` | Vue |
+| `svelte` | Svelte |
+| `@angular/core` | Angular |
+| `express` | Express |
+| `fastify` | Fastify |
+
+**Package manager:**
+| File | Manager |
+|---|---|
+| `pnpm-lock.yaml` | pnpm |
+| `yarn.lock` | yarn |
+| `bun.lockb` | bun |
+| `package-lock.json` | npm |
+| `requirements.txt` | pip |
+| `Pipfile` | pipenv |
+
+**Test framework:**
+Read `package.json` devDependencies for `jest`, `vitest`, `mocha`, `jasmine`.
+Python: check for `pytest` in requirements.txt or pyproject.toml.
+
+**Typecheck config by language:**
+| Language | Command | Per-file |
+|---|---|---|
+| TypeScript | `npx tsc --noEmit` | yes |
+| Python + mypy | `mypy {file}` | yes |
+| Python + pyright | `pyright {file}` | yes |
+| Go | `go vet ./...` | no |
+| Rust | `cargo check` | no |
+| JavaScript | (none) | no |
+
+**Confirmation (Recommended + Full Tour only):**
+Output one line: `Detected: {language}{+ framework if any} · {packageManager} · {testFramework if any}`
+Then: `Correct? [y/n/edit]`
+- `y` or Enter: proceed
+- `n` or `edit`: ask for corrections inline
+- Express: skip confirmation entirely, use detected values
+
+---
+
+### Step 3: GENERATE CONFIG (all modes)
+
+Write `.claude/harness.json` using Node (not Write tool — harness.json is a
+protected file after first install):
+
+```javascript
+node -e "
+const fs = require('fs');
+const existing = fs.existsSync('.claude/harness.json')
+  ? JSON.parse(fs.readFileSync('.claude/harness.json', 'utf8'))
+  : {};
+
+// Count skills
+const skillDirs = fs.readdirSync('{citadelRoot}/skills', { withFileTypes: true })
+  .filter(d => d.isDirectory()).map(d => d.name);
+
+const config = {
+  language: '{detected}',
+  framework: '{detected or null}',
+  packageManager: '{detected}',
+  typecheck: { command: '{command}', perFile: {bool} },
+  test: { command: '{testCommand}', framework: '{testFramework}' },
+  qualityRules: { builtIn: ['no-confirm-alert', 'no-transition-all'], custom: [] },
+  protectedFiles: ['.claude/harness.json', '.claude/settings.json'],
+  features: { intakeScanner: true, telemetry: true },
+  registeredSkills: skillDirs,
+  registeredSkillCount: skillDirs.length,
+  agentTimeouts: { skill: 600000, research: 900000, build: 1800000 },
+  trust: {
+    sessionCount: existing.trust?.sessionCount || 0,
+    campaignCount: existing.trust?.campaignCount || 0,
+    level: existing.trust?.level || 'novice'
+  },
+  ...existing  // preserve consent, storage, policy
+};
+fs.writeFileSync('.claude/harness.json', JSON.stringify(config, null, 2));
+"
+```
+
+**Skill registry rebuild:** populate `registeredSkills` with every directory
+name under `{citadelRoot}/skills/` plus any custom skills in `.claude/skills/`.
+Set `registeredSkillCount` to match. This is the full rebuild `/do`'s Step 0 defers to.
+
+**Dependency pattern suggestions (Recommended + Full Tour only):**
+After writing harness.json, read `package.json` and check for known libraries:
+
+| If installed | Suggest warning | Message |
+|---|---|---|
+| `@tanstack/react-query` | raw `fetch(` / `axios` | Use tanstack query instead of raw fetch |
+| `zustand` | `React.createContext` | Use Zustand instead of React Context |
+| `date-fns` | `new Date().toLocaleDateString` | Use date-fns for date formatting |
+| `zod` | `typeof ` / `instanceof ` | Use Zod for runtime validation |
+
+For each match, ask before adding: `"I see {package} installed. Warn agents when they use {anti-pattern}? [y/n]"`
+Add accepted patterns to `dependencyPatterns` in harness.json.
+
+---
+
+### Step 4: CLAUDE.md + AGENTS.md (all modes)
+
+**Seed the canonical project spec:**
+```bash
+node {citadelRoot}/scripts/bootstrap-project-guidance.js --project-root {projectRoot}
+```
+This creates `.citadel/project.md` (source of truth) and generates `CLAUDE.md`
+and `AGENTS.md` from it. Safe to run — only creates files that don't exist.
+
+**Project description (Recommended + Full Tour only):**
+Ask: `"What's this project? One line is fine — or press Enter to use the package name."`
+- Use their answer (or package.json name) to seed the project description
+- If CLAUDE.md already exists with content, skip this question
+
+**CLAUDE.md merge rules:**
+- Does not exist → generate starter with detected stack + description
+- Exists, no `## Citadel Harness` section → append that section at the bottom only
+- Exists with `## Citadel Harness` already → skip, don't duplicate
+- NEVER overwrite or delete existing CLAUDE.md content
+
+Starter template:
 ```markdown
 # {Project Name}
 
-{User's one-sentence description}
+{Description}
 
 ## Stack
 - Language: {detected}
@@ -194,11 +250,10 @@ If CLAUDE.md does NOT exist, generate a starter:
 - Test framework: {detected}
 
 ## Conventions
-(Add your project's coding conventions, architecture rules, and patterns here.
-The more specific you are, the better the harness works.)
+(Add your coding conventions, architecture rules, and patterns here.)
 
 ## Architecture
-(Describe your project's directory structure and layer boundaries here.)
+(Describe your directory structure and layer boundaries here.)
 
 ## Citadel Harness
 
@@ -206,153 +261,241 @@ This project uses the [Citadel](https://github.com/SethGammon/Citadel) agent
 orchestration harness. Configuration is in `.claude/harness.json`.
 ```
 
-If CLAUDE.md ALREADY exists:
-1. Read the existing content
-2. Check if it contains `## Citadel Harness` or references to `harness.json`
-3. If missing: **append** a `## Citadel Harness` section at the bottom with harness
-   reference lines. NEVER overwrite or delete existing content.
-4. If already present: skip, don't duplicate
+---
 
-**Hooks — Install to Project:**
+### Step 5: OPTIONAL INTEGRATIONS (Recommended + Full Tour only)
 
-Citadel's plugin hooks require path resolution into the project's `.claude/settings.json`.
-This is necessary because `${CLAUDE_PLUGIN_ROOT}` variable expansion in hook commands
-has a known upstream bug (anthropics/claude-code#24529).
+Present as a group, not individually — one prompt:
 
-Run the hook installer to resolve paths:
-```bash
-node {citadel-root}/scripts/install-hooks.js
+```
+Optional integrations — choose any, or press Enter to skip all:
+
+  [g] GitHub    — scaffold Claude triage workflow for issues + PRs
+  [m] MCP       — create .mcp.json with common servers pre-configured
+  [b] Both
+  [s] Skip
+
 ```
 
-Where `{citadel-root}` is the absolute path to the Citadel plugin directory. To find it:
-1. Check `.citadel/plugin-root.txt` in the project (written by init-project if it ran)
-2. Or ask the user where they cloned Citadel
+**GitHub integration (if chosen):**
+1. Create `.github/workflows/` if missing
+2. Copy `.planning/_templates/claude-triage.yml` → `.github/workflows/claude-triage.yml` (skip if exists)
+3. Copy `.planning/_templates/REVIEW.md` → `REVIEW.md` (skip if exists)
+4. Output: `"Add ANTHROPIC_API_KEY to Settings > Secrets > Actions to activate."`
 
-The installer:
-- Reads `hooks/hooks-template.json` from Citadel
-- Replaces `${CLAUDE_PLUGIN_ROOT}` with the resolved absolute path
-- Writes working hooks into this project's `.claude/settings.json`
-- Preserves any existing non-Citadel settings (permissions, env, mcpServers)
-- Is idempotent — safe to re-run after Citadel updates
+**MCP integration (if chosen):**
+1. Copy `.planning/_templates/.mcp.json` → `.mcp.json` (skip if exists)
+2. Output: `"Edit .mcp.json to uncomment the servers you want."`
 
-After running, verify hooks are active by checking `.claude/settings.json` exists
-and contains hook definitions with absolute paths to Citadel's `hooks_src/` directory.
-
-### Step 2b: OPTIONAL INTEGRATIONS
-
-After generating harness.json, offer two optional integrations. These are
-quick yes/no prompts — don't block setup if the user skips them.
+**Skip**: move on silently.
 
 ---
 
-**Optional: GitHub Integration**
+### Step 6: LIVE DEMO (Recommended + Full Tour only)
 
-Ask: "Would you like to set up GitHub integration? This installs the Claude
-GitHub App and scaffolds a workflow so @claude can be mentioned in issues and
-PRs. (recommended)"
+**Find a target file:**
+Run `git diff --name-only HEAD~1 HEAD 2>/dev/null | head -5` to get recently changed files.
+Filter for source files (not lock files, not generated files).
+Pick the most recently changed source file. If no git history, use `find` to get recently modified files.
 
-If yes:
-1. Run `/install-github-app` (or direct the user to install from https://github.com/apps/claude)
-2. Create `.github/workflows/` in the project root if it doesn't exist
-3. Copy `.planning/_templates/claude-triage.yml` to `.github/workflows/claude-triage.yml`
-   - If the file already exists: skip and note "claude-triage.yml already present"
-4. Copy `.planning/_templates/REVIEW.md` to `REVIEW.md` in the project root
-   - If REVIEW.md already exists: skip and note "REVIEW.md already present"
-5. Output: "GitHub integration ready. Add `ANTHROPIC_API_KEY` to your repo's
-   GitHub Actions secrets (Settings > Secrets > Actions) to activate."
+**Pain point question:**
+```
+What's your biggest frustration with AI coding tools right now?
 
-If no: "Skipped. You can set this up later with `/install-github-app`."
+  [a] Repetitive context — I keep re-explaining my codebase
+  [b] Quality — the agent breaks things or misses issues
+  [c] Context loss — every new session starts from zero
+  [d] Scale — fine for small tasks, falls apart on big ones
+  [e] Something else / skip demo
 
----
+```
 
-**Optional: MCP Server Config**
+**Demo selection by pain point:**
 
-Ask: "Would you like to scaffold an MCP server configuration? This creates
-a `.mcp.json` with common servers pre-configured (GitHub, filesystem, git).
-All servers are commented out — you enable only what you need. (recommended for teams)"
-
-If yes:
-1. Copy `.planning/_templates/.mcp.json` to `.mcp.json` in the project root
-   - If `.mcp.json` already exists: skip and note ".mcp.json already present"
-2. Output: "`.mcp.json` created. Edit it to uncomment the servers you want.
-   See https://registry.modelcontextprotocol.io for available servers."
-
-If no: "Skipped. You can create `.mcp.json` manually at any time."
-
----
-
-### Step 3: DEMONSTRATE (run one real task)
-
-Pick a demo task based on the user's pain point:
-
-| Pain Point | Demo | What It Shows |
+| Pain point | Demo | Script |
 |---|---|---|
-| (a) Repetitive prompts | Run `/review` on a recently changed file | Skill loading, structured output |
-| (b) Quality issues | Run `/review` on a file with potential issues | Quality enforcement, specific findings |
-| (c) Context loss | Show the campaign file structure, explain persistence | Campaign system |
-| (d) Scaling | Run `/review` on the most complex file | Depth of analysis |
-| (e) Something else | Run `/review` on the most recently modified file | Safe default |
+| (a) Repetitive context | Run `/review` on the target file | "This review uses the harness.json config you just set up — it already knows your stack, conventions, and quality rules. You won't re-explain these." |
+| (b) Quality | Run `/review` on the target file | "The quality-gate hook just ran on every edit made during setup. Here's what that looks like on your code:" |
+| (c) Context loss | Show `.planning/` structure, explain campaigns | "Sessions now persist. Start a campaign today, close your laptop, resume tomorrow. The agent picks up exactly where it left off." |
+| (d) Scale | Run `/review` on the largest/most complex source file | "For bigger work: `/marshal` for multi-step single sessions, `/archon` for multi-day campaigns, `/fleet` for parallel agents with shared discovery." |
+| (e) / skip | Skip demo | Continue to reference card |
 
-Execute the demo on the user's actual code. Not a canned example.
+Execute the demo on real code. Show output. Don't summarize it — let it land.
 
-If the project has no source files yet (empty project), skip the demo and say:
-"Once you have some code, try `/review [file]` to see the harness in action."
+---
 
-### Step 4: ORIENT FORWARD (print reference card)
+### Step 7: FULL TOUR WALKTHROUGH (Full Tour only)
 
-Print this reference card:
+After the demo, walk through five skill families. For each, show one example
+relevant to their detected stack. This is not a lecture — it's a quick show-and-tell.
+
+**Family 1: Code Quality (2 min)**
+```
+/review [file]         — 5-pass review: correctness, security, perf, readability, consistency
+/test-gen [file]       — generate tests that actually run, matched to your test framework
+/systematic-debugging  — 4-phase root cause: observe → hypothesize → verify → fix
+```
+Show: Run `/review` on the file from Step 6 if not already done.
+
+**Family 2: Building (2 min)**
+```
+/scaffold [thing]      — generate new files matching your project's conventions
+/refactor [scope]      — safe multi-file refactoring with rollback checkpoints
+/create-skill          — capture a repeated pattern as a reusable skill
+```
+Show: Describe what scaffold would generate for their stack.
+
+**Family 3: Research (1 min)**
+```
+/research [question]   — structured investigation with confidence levels
+/research-fleet        — parallel scouts, multiple angles, synthesized findings
+/infra-audit           — maps infrastructure from config files
+```
+
+**Family 4: Orchestration (1 min)**
+```
+/marshal [thing]       — multi-step, one session, costs ~$2-5
+/archon [thing]        — multi-session campaign, survives context limits
+/fleet [thing]         — parallel agents in isolated git worktrees
+```
+Show: Explain the cost ladder. `/marshal` for anything that needs 3+ steps.
+`/archon` when the work spans days. `/fleet` when sub-tasks are independent.
+
+**Family 5: Observability (1 min)**
+```
+/dashboard             — live view of campaigns, costs, hooks value, queues
+/cost                  — session and campaign cost breakdown from real token data
+/learn                 — extract reusable patterns from a completed campaign
+```
+Show: Run `/dashboard` to show their live state.
+
+After the walkthrough:
+```
+That's the system. Everything routes through /do — you never have to choose
+the right tool. Just describe what you want and let the router decide.
+```
+
+---
+
+### Step 8: REFERENCE CARD (all modes)
+
+Print the reference card. Populate actual counts from detected config.
 
 ```
-┌──────────────────────────────────────────────────────┐
-│                                                      │
-│  HARNESS READY — 34 skills registered                │
-│                                                      │
-│  /do [anything]           Route to the right tool    │
-│  /do status               Show active work           │
-│  /do continue             Resume where you left off  │
-│  /do --list               Show all 34 skills         │
-│                                                      │
-│  CORE SKILLS                                         │
-│  /review                  5-pass code review         │
-│  /test-gen                Generate tests that run    │
-│  /doc-gen                 Generate documentation     │
-│  /refactor                Safe multi-file refactoring│
-│  /scaffold                Project-aware scaffolding  │
-│  /create-skill            Build your own skills      │
-│                                                      │
-│  RESEARCH & DEBUGGING                                │
-│  /research                Structured investigation   │
-│  /research-fleet          Parallel multi-scout       │
-│  /experiment              Metric-driven optimization │
-│  /systematic-debugging    Root cause analysis        │
-│                                                      │
-│  ORCHESTRATORS                                       │
-│  /marshal [thing]         Multi-step, one session    │
-│  /archon [thing]          Multi-session campaigns    │
-│  /fleet [thing]           Parallel campaigns         │
-│                                                      │
-│  NEXT STEPS                                          │
-│  1. Add your conventions to CLAUDE.md                │
-│  2. Try /do "review the most important file"         │
-│  3. Run /create-skill to capture a repeated pattern  │
-│                                                      │
-│  Docs: QUICKSTART.md, docs/SKILLS.md                 │
-│                                                      │
-└──────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────┐
+│                                                          │
+│  CITADEL READY                                           │
+│  {N} skills · {N} hooks live · {language}{+ framework}  │
+│                                                          │
+│  THE ONE COMMAND                                         │
+│  /do [anything]     Describe what you want in plain      │
+│                     English. The router handles the rest.│
+│                                                          │
+│  COMMON STARTING POINTS                                  │
+│  /do review [file]           5-pass code review          │
+│  /do fix [description]       Debug + fix                 │
+│  /do why is [thing] broken   Root cause analysis         │
+│  /do build [feature]         Scaffold + implement        │
+│  /do test [file]             Generate tests              │
+│  /do status                  What's happening            │
+│  /do continue                Resume active campaign      │
+│                                                          │
+│  WHEN TASKS GET BIGGER                                   │
+│  /marshal [thing]    Multi-step, one session             │
+│  /archon [thing]     Multi-session campaign              │
+│  /fleet [thing]      Parallel agents                     │
+│                                                          │
+│  WHAT'S NOW PROTECTING YOUR SESSION                      │
+│  ✓ protect-files      blocks edits to secrets + config  │
+│  ✓ external-gate      all pushes/PRs need your approval │
+│  ✓ circuit-breaker    stops failure spirals             │
+│  ✓ quality-gate       runs on every session stop        │
+│  ✓ telemetry          logging locally to .planning/     │
+│                                                          │
+│  NEXT STEPS                                              │
+│  1. Add your conventions to CLAUDE.md                    │
+│  2. /do --list    see all {N} skills                     │
+│  3. /create-skill capture a repeated pattern             │
+│  4. /improve [target]   autonomous quality loop          │
+│                                                          │
+│  docs/SKILLS.md · QUICKSTART.md · /do --list            │
+│                                                          │
+└──────────────────────────────────────────────────────────┘
 ```
+
+**Express mode**: print an abbreviated card (just THE ONE COMMAND section + WHAT'S NOW PROTECTING).
+
+---
+
+### Step 9: CLOSING LINE (all modes)
+
+Print the appropriate closing based on mode:
+
+**Express:**
+```
+Done. {N} hooks live, {N} skills registered.
+Type /do [anything] to start.
+```
+
+**Recommended:**
+```
+Setup complete. Citadel is configured for {language}{+ framework}.
+{N} hooks are protecting this session. {N} skills are registered.
+Type /do [anything] to get started — or /do --list to browse all skills.
+```
+
+**Full Tour:**
+```
+Tour complete. You've seen the full system.
+{N} hooks live · {N} skills registered · trust level: {level}
+
+The best next thing: /do "review the most important file in this codebase"
+```
+
+**Update:**
+```
+Configuration updated. {N} hooks reinstalled, {N} skills re-registered.
+Changes: {list what changed vs previous config}
+```
+
+---
+
+## Fringe Cases
+
+**Plugin not found (`.citadel/plugin-root.txt` missing):**
+Prompt: `"Where is Citadel installed? (e.g. ~/Citadel or C:/tools/Citadel)"`
+Use their answer for all subsequent path operations. Write it to `.citadel/plugin-root.txt`.
+
+**Project has no source files (empty repo):**
+Skip the demo entirely. Output: `"Once you have code, try /review [file] to see the harness in action."`
+
+**harness.json is protected and Write tool is blocked:**
+Use `node -e "..."` via Bash to write it directly — the Node script bypasses the Write hook, which is correct behavior since setup is the one authorized path to modify harness.json.
+
+**Existing CLAUDE.md with no blank line at end:**
+Append a newline before the `## Citadel Harness` section.
+
+**Stack detection fails entirely:**
+Fall back to asking: `"What's your primary language? (typescript / javascript / python / go / rust / other)"`
+
+**Re-running setup on a configured project (Update mode):**
+Show a diff of what would change. Don't silently overwrite. Let the user confirm each change.
+
+**`bootstrap-project-guidance.js` not found:**
+Skip it silently — CLAUDE.md/AGENTS.md generation falls back to the manual template.
+
+---
 
 ## Quality Gates
 
-- harness.json must be generated with correct language detection
-- Directory structure must be created without errors
-- If CLAUDE.md doesn't exist, one must be generated
-- The demo task must run successfully (or be skipped gracefully)
-- The reference card must be printed at the end
+- Hooks must be installed before any other step completes
+- harness.json must contain `registeredSkillCount` matching actual skill count
+- CLAUDE.md must not lose existing content
+- Demo must run on real user code, not a canned example
+- Reference card must show accurate skill and hook counts
+- Closing line must confirm hooks are live
 
 ## Exit Protocol
 
-After printing the reference card:
-"Setup complete. The harness is configured for {language} with {framework}.
-Type `/do [anything]` to get started."
-
-Do not output a HANDOFF block — this is the beginning, not the end.
+Do not output a HANDOFF block. Setup is the beginning.
+After the closing line, wait for the user's next command.

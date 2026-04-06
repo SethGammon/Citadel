@@ -6,7 +6,6 @@ From `git clone` to your first working `/do` command.
 
 ```bash
 git clone https://github.com/SethGammon/Citadel.git ~/Citadel
-cd your-project && node ~/Citadel/scripts/install-hooks.js
 claude --plugin-dir ~/Citadel
 ```
 
@@ -16,7 +15,7 @@ Then in Claude Code:
 /do review src/main.ts
 ```
 
-Four commands. Clone, install hooks, launch, go.
+Three commands. Clone, launch, go. `/do setup` handles everything else.
 
 ---
 
@@ -27,33 +26,20 @@ Four commands. Clone, install hooks, launch, go.
 
 No API key setup needed -- Citadel uses Claude Code's existing authentication.
 
-## 1. Clone and install hooks
+## 1. Clone Citadel
 
 ```bash
 git clone https://github.com/SethGammon/Citadel.git ~/Citadel
 ```
 
-Then from **your project directory** (not the Citadel directory):
-
-```bash
-cd ~/your-project
-node ~/Citadel/scripts/install-hooks.js
-```
-
-This writes resolved hook paths into your project's `.claude/settings.json`.
-It's idempotent -- safe to re-run after Citadel updates. Hooks are what give
-Citadel its quality enforcement, security protection, and campaign persistence.
-
-> **Why a separate hook install step?** Claude Code plugins can't yet resolve
-> relative paths in hook commands ([tracking issue](https://github.com/anthropics/claude-code/issues/24529)).
-> This script writes absolute paths as a workaround. Once the upstream fix lands,
-> this step goes away and hooks install automatically with the plugin.
+That's it. No build step, no `npm install`. Citadel runs directly on Node.js.
 
 ## 2. Launch with the plugin
 
 ### Option A: Per-session (try it first)
 
 ```bash
+cd ~/your-project
 claude --plugin-dir ~/Citadel
 ```
 
@@ -72,7 +58,7 @@ Inside Claude Code:
 > `claude --plugin-dir ~/Citadel` first, then run the marketplace add
 > and install from inside that session.
 
-## 3. Run setup and try it
+## 3. Run setup
 
 Open your project in Claude Code (with the plugin loaded):
 
@@ -80,10 +66,58 @@ Open your project in Claude Code (with the plugin loaded):
 /do setup
 ```
 
-This detects your language and framework, configures the typecheck hook for your stack,
-generates `.claude/harness.json`, and scaffolds the `.planning/` directory.
+### Choose your mode
 
-Then try a command:
+Setup opens with a mode selection — pick based on how much time you have:
+
+```
+  [1] Recommended  — auto-detect your stack, install hooks, live demo  (~3 min)
+  [2] Full Tour    — everything in Recommended + guided skill walkthrough (~8 min)
+  [3] Express      — zero questions, auto-detect, hooks installed, done  (~30 sec)
+```
+
+**Recommended** is the default. It walks you through stack confirmation, runs a
+live demo on your actual code, and ends with a reference card showing every
+command and what's now protecting your session.
+
+**Full Tour** adds a guided walkthrough of all five skill families after the demo.
+Good for your first time or when onboarding a teammate.
+
+**Express** skips every question. Detects your stack, installs hooks, registers
+skills, and exits in under 30 seconds. Good for quick starts on familiar stacks.
+
+You can also run `/do setup --express` to skip mode selection entirely.
+
+### What setup does
+
+In all modes, setup:
+
+1. **Installs hooks first** -- before any questions. 22 lifecycle hooks are written
+   into `.claude/settings.json` with resolved absolute paths. Hooks are live for
+   the rest of this session immediately.
+
+2. **Detects your stack** -- language, framework, package manager, test framework.
+   Reads `tsconfig.json`, `package.json`, lock files. No questions if detection succeeds.
+
+3. **Generates `.claude/harness.json`** -- your project config with skill registry,
+   typecheck settings, quality rules, and agent timeouts.
+
+4. **Scaffolds CLAUDE.md and AGENTS.md** -- creates them if missing, appends a
+   Citadel section if they exist. Never overwrites existing content.
+
+5. **Optional integrations** -- GitHub triage workflow + MCP server config, if you want them.
+
+6. **Runs a live demo** -- on a recently changed file in your repo (Recommended + Full Tour).
+
+> **Why does setup install hooks instead of a pre-step?**
+> Claude Code plugins can't yet resolve relative paths in hook commands
+> ([tracking issue](https://github.com/anthropics/claude-code/issues/24529)).
+> Setup runs `node /path/to/Citadel/scripts/install-hooks.js` to write absolute
+> paths directly into your project's `.claude/settings.json`. Once the upstream
+> fix lands, this step goes away and hooks install automatically with the plugin.
+> In the meantime, re-run `/do setup` after moving Citadel to a new location.
+
+### Try a command after setup
 
 ```
 /do review src/main.ts              # 5-pass code review
@@ -121,8 +155,14 @@ Create custom skills to capture patterns you keep repeating:
 ## Troubleshooting
 
 **Hook not firing / "command not found" errors:**
-Hooks require absolute paths. Re-run `node /path/to/Citadel/scripts/install-hooks.js`
-from your project directory. This rewrites `.claude/settings.json` with resolved paths.
+Re-run setup: `/do setup` (or use Update mode if already configured). Setup rewrites
+`.claude/settings.json` with freshly resolved absolute paths. If you moved Citadel
+to a new location, this is the fix.
+
+Alternatively, run directly from your project directory:
+```bash
+node /path/to/Citadel/scripts/install-hooks.js
+```
 
 **"[protect-files] Blocked" message:**
 Citadel prevented an edit to a protected file. The message names the specific file and
@@ -159,12 +199,12 @@ The daemon's watchdog will detect the change and resume automatically.
 
 ## What's Next
 
-- Add your project's conventions to `CLAUDE.md` — the more specific, the better
-- Run `/do --list` to see all 34 installed skills
+- Add your project's conventions to `CLAUDE.md` -- the more specific, the better
+- Run `/do --list` to see all 42 installed skills
 - Drop a task in `.planning/intake/` and run `/autopilot` for hands-off execution
-- [docs/SKILLS.md](docs/SKILLS.md) — full skills reference
-- [docs/CAMPAIGNS.md](docs/CAMPAIGNS.md) — multi-session campaign docs
-- [docs/migrating.md](docs/migrating.md) — migrating from copy-based install
+- [docs/SKILLS.md](docs/SKILLS.md) -- full skills reference
+- [docs/CAMPAIGNS.md](docs/CAMPAIGNS.md) -- multi-session campaign docs
+- [docs/migrating.md](docs/migrating.md) -- migrating from copy-based install
 
 ---
 
@@ -196,7 +236,7 @@ The harness logs agent events, hook timing, and discovery compression to
 
 ## Relationship to Superpowers
 
-[Superpowers](https://github.com/obra/superpowers) teaches good methodology —
+[Superpowers](https://github.com/obra/superpowers) teaches good methodology --
 brainstorm before coding, write tests first, review before shipping. Citadel gives
 it the infrastructure to execute that methodology at scale: campaign persistence,
 fleet coordination, lifecycle hooks, and telemetry. They are complementary.
