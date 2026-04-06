@@ -102,7 +102,7 @@ Four tiers. Use the cheapest one that fits.
 
 **Cost transparency.** Citadel reads Claude Code's native session files for exact token counts and computes real cost from API pricing. You see what every session, campaign, and agent actually costs. Use `/cost` for a full breakdown or `/dashboard` for the overview. A real-time tracker alerts you at configurable spend thresholds without interrupting your work.
 
-**Safety hooks.** 15 lifecycle hooks run automatically. A consent system gates external actions (pushes, PRs, comments) with first-encounter choice — always-ask, session-allow, or auto-allow. Protected branches can't be deleted. Path traversal and secrets exfiltration are blocked. A circuit breaker stops failure spirals before they burn tokens. All of this is configurable per-project in `harness.json`.
+**Safety hooks.** 22 hooks across 14 lifecycle events run automatically. A consent system gates external actions (pushes, PRs, comments) with first-encounter choice — always-ask, session-allow, or auto-allow. Protected branches can't be deleted. Path traversal and secrets exfiltration are blocked. A circuit breaker stops failure spirals before they burn tokens. All of this is configurable per-project in `harness.json`.
 
 **Campaign persistence.** Multi-session work survives context compression and session boundaries. Start an architecture overhaul today, close your laptop, pick it up tomorrow — the campaign state, decisions, and progress are all preserved. `/do continue` resumes exactly where you left off.
 
@@ -114,7 +114,7 @@ Four tiers. Use the cheapest one that fits.
 
 **How is this different from CLAUDE.md?** CLAUDE.md tells Claude about your project. Citadel tells Claude *how to work*: durable state, intelligent routing, automated safety, and native parallelism — the infrastructure layer that CLAUDE.md assumes someone else built.
 
-**Do I need to learn all 41 skills?** No. Just use `/do` and describe what you want in plain English. The router picks the right skill. You can go months without ever typing a skill name directly.
+**Do I need to learn all 42 skills?** No. Just use `/do` and describe what you want in plain English. The router picks the right skill. You can go months without ever typing a skill name directly.
 
 **What if `/do` routes to the wrong tool?** Tell it. "Wrong tool" or "just do it yourself" and it adjusts. You can also invoke any skill directly: `/review`, `/archon`, etc. The router is a convenience, not a gate.
 
@@ -130,8 +130,8 @@ Four tiers. Use the cheapest one that fits.
 
 - [**Interactive routing demo**](https://sethgammon.github.io/Citadel/) — type any task, watch the tier cascade animate
 - [Full install guide](QUICKSTART.md) — plugin setup, alternative install methods, and troubleshooting
-- [Skills reference](docs/SKILLS.md) — all 41 skills with invocation and examples
-- [Hooks reference](docs/HOOKS.md) — 15 event types, what each one enforces
+- [Skills reference](docs/SKILLS.md) — all 42 skills with invocation and examples
+- [Hooks reference](docs/HOOKS.md) — 14 event types, 22 hooks, what each one enforces
 - [Campaign guide](docs/CAMPAIGNS.md) — persistent state, phases, AI amnesia prevention
 - [Fleet guide](docs/FLEET.md) — parallel agents, worktree isolation, discovery relay
 - [Security model](SECURITY.md) — path traversal, shell injection, and defensive measures
