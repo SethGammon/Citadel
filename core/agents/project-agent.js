@@ -50,6 +50,9 @@ function ensureDir(dir) {
 
 function projectAgentToCodex(agentPath, targetBaseDir, options = {}) {
   const parsedAgent = loadAgent(agentPath);
+  if (parsedAgent.errors && parsedAgent.errors.length > 0) {
+    throw new Error(`Agent "${parsedAgent.name}" has validation errors: ${parsedAgent.errors.join(', ')}`);
+  }
   const targetPath = path.join(targetBaseDir, `${parsedAgent.frontmatter.name || parsedAgent.name}.toml`);
   const toml = renderCodexToml(parsedAgent);
 

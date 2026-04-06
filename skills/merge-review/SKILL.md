@@ -153,6 +153,32 @@ After producing the report, mark reviewed items in the queue:
 
 Write the updated queue back to `.planning/telemetry/merge-check-queue.jsonl`.
 
+### Step 8: Cleanup Merged Worktrees
+
+After updating the queue, look for any registered worktrees whose branches are
+now merged into HEAD (not just branches in the queue — check all worktrees):
+
+```bash
+git worktree list --porcelain
+```
+
+For each worktree (excluding the main one):
+1. Check if its branch is merged: `git branch --merged HEAD | grep "{branch}"`
+2. If merged AND the worktree is clean (no uncommitted changes):
+   - Run: `git worktree remove "{path}" --force`
+   - Run: `git branch -d "{branch}"`
+   - Report: "Cleaned up merged worktree: {branch}"
+
+Do this automatically — merged worktrees with no uncommitted changes are
+always safe to remove. No user confirmation needed.
+
+If any worktrees are removed, note the count in the output:
+```
+Cleaned up {N} merged worktree(s): {branch-names}
+```
+
+This keeps the desktop and repo clean without requiring a separate /houseclean run.
+
 ---
 
 ## Fringe Cases

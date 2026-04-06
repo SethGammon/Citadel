@@ -145,6 +145,7 @@ and any project-level custom skills in `.claude/skills/`.
 | "ascii diagram", "ascii art", "box diagram", "architecture diagram", "flow diagram", "draw a diagram", "text diagram", "sequence diagram" | `/ascii-diagram` |
 | "improve", "improvement loop", "quality loop", "rubric", "score against", "run improvement", "improve citadel" | `/improve` |
 | "organize", "directory structure", "folder structure", "project structure", "file organization", "where should this go", "cleanup directories" | `/organize` |
+| "houseclean", "house clean", "disk space", "free space", "drive full", "running out of space", "clean up disk", "clean worktrees", "disk audit", "storage audit", "move to another drive", "free up space", "c drive full", "orphaned worktrees" | `/houseclean` |
 | "daemon", "continuous", "run overnight", "keep running", "24/7", "unattended", "run autonomously", "daemon start", "daemon stop", "daemon status" | `/daemon` |
 | "map", "index codebase", "codebase map", "structural index", "scan codebase", "map stats", "map query" | `/map` |
 | "watch", "watch files", "watch changes", "file sentinel", "monitor files", "watch start", "watch stop", "watch scan", "marker comments", "@citadel" | `/watch` |
@@ -292,6 +293,7 @@ INFRASTRUCTURE
 MONITORING & ORGANIZATION
   /watch [command]      File sentinel — detects changes and @citadel: markers, routes to skills
   /organize [--audit]   Directory convention scanner, enforcer, and cleanup
+  /houseclean           Cross-drive storage audit: worktrees, AI caches, project artifacts
 
 UTILITIES
   /session-handoff      Session context transfer

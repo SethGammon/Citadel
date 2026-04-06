@@ -50,8 +50,8 @@ function normalizeToolName(toolName) {
 
 function normalizePathFields(toolInput) {
   const normalized = { ...(toolInput || {}) };
-  if (normalized.file_path) normalized.file_path = normalized.file_path.replace(/\\/g, '/');
-  if (normalized.path) normalized.path = normalized.path.replace(/\\/g, '/');
+  if (typeof normalized.file_path === 'string') normalized.file_path = normalized.file_path.replace(/\\/g, '/');
+  if (typeof normalized.path === 'string') normalized.path = normalized.path.replace(/\\/g, '/');
   return normalized;
 }
 

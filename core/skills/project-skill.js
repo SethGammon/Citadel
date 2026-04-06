@@ -27,6 +27,9 @@ function ensureDir(dir) {
 
 function projectSkillToCodex(sourceDir, targetBaseDir, skillName, options = {}) {
   const parsedSkill = loadSkill(sourceDir, skillName);
+  if (parsedSkill.errors && parsedSkill.errors.length > 0) {
+    throw new Error(`Skill "${skillName}" has validation errors: ${parsedSkill.errors.join(', ')}`);
+  }
   const targetDir = path.join(targetBaseDir, skillName);
   const targetSkillPath = path.join(targetDir, 'SKILL.md');
   const targetYamlPath = path.join(targetDir, 'agents', 'openai.yaml');

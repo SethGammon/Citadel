@@ -68,13 +68,18 @@ function getTier(label, policy) {
   return 'allow';
 }
 
+function escapeRegExp(str) {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
 function checkProtectedBranchDeletion(command, protectedBranches) {
   if (protectedBranches.length === 0) return null;
 
   for (const branch of protectedBranches) {
-    const pushDeleteRe = new RegExp(`\\bgit\\s+push\\s+.*--delete\\s+${branch}\\b`);
-    const pushColonRe = new RegExp(`\\bgit\\s+push\\s+\\S+\\s+:${branch}\\b`);
-    const branchDeleteRe = new RegExp(`\\bgit\\s+branch\\s+-[dD]\\s+${branch}\\b`);
+    const escaped = escapeRegExp(branch);
+    const pushDeleteRe = new RegExp(`\\bgit\\s+push\\s+.*--delete\\s+${escaped}\\b`);
+    const pushColonRe = new RegExp(`\\bgit\\s+push\\s+\\S+\\s+:${escaped}\\b`);
+    const branchDeleteRe = new RegExp(`\\bgit\\s+branch\\s+-[dD]\\s+${escaped}\\b`);
 
     if (pushDeleteRe.test(command) || pushColonRe.test(command) || branchDeleteRe.test(command)) {
       return branch;
@@ -131,6 +136,7 @@ module.exports = {
   SECRETS_PATTERNS,
   checkProtectedBranchDeletion,
   detectExternalAction,
+  escapeRegExp,
   getTier,
   readExternalActionPolicy,
   stripQuotedContent,
