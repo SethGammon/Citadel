@@ -10,6 +10,14 @@
 
 *Stop re-explaining your codebase every session. Start compounding what your agents learn.*
 
+---
+
+**[Follow on X](https://x.com/SethGammon)** for releases and updates · **[Join the discussion](https://github.com/SethGammon/Citadel/discussions)** · **[Watch releases](https://github.com/SethGammon/Citadel/releases)** to get notified
+
+*Building something with Citadel? [Drop a note in Discussions](https://github.com/SethGammon/Citadel/discussions) — use cases, questions, what's broken, what to build next.*
+
+---
+
 </div>
 
 ## What Is Citadel
@@ -42,7 +50,7 @@ claude --plugin-dir /path/to/Citadel
 /do review src/main.ts
 ```
 
-[Full install guide with alternative methods](QUICKSTART.md)
+[Full install guide with alternative methods](QUICKSTART.md) · [Share what you're building →](https://github.com/SethGammon/Citadel/discussions)
 
 ## How It Works
 
@@ -131,18 +139,17 @@ Four tiers. Use the cheapest one that fits.
 - [External overview](https://repo-explainer.com/SethGammon/Citadel/) — third-party writeup on the architecture and philosophy
 
 
-## Community & Growth
+## Community
 
-Citadel is growing fast in the AI engineering community. Here's how to get involved:
+- **[X / Twitter](https://x.com/SethGammon)** — follow for releases, updates, and what's being built
+- **[GitHub Discussions](https://github.com/SethGammon/Citadel/discussions)** — use cases, questions, requests, show and tell
+- **[GitHub Releases](https://github.com/SethGammon/Citadel/releases)** — hit Watch → Custom → Releases to get notified on every ship
 
-### GitHub Stars
-If Citadel is useful to you, a star is the easiest way to show support:
+Have a use case, a bug, or a workflow you want optimized? Open a Discussion. If you're using this in production, say so — it helps prioritize what gets built next.
 
 [![Star on GitHub](https://img.shields.io/github/stars/SethGammon/Citadel?style=social)](https://github.com/SethGammon/Citadel)
 
 ### Roadmap
-
-The project is actively developed. Key areas on the roadmap:
 
 - [x] Multi-runtime support (Claude Code + Codex CLI)
 - [x] Fleet mode with worktree isolation
@@ -162,7 +169,7 @@ Contributions are welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for how to:
 
 ### Share Your Setup
 
-Built something interesting with Citadel? Open an Issue to share your workflow — good setups get featured here.
+Built something interesting with Citadel? Open a Discussion to share your workflow — good setups get featured here.
 
 ---
 
