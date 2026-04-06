@@ -63,15 +63,12 @@ function translateCodexHooks(hooksTemplate, adapterScriptPath) {
 
     for (const entry of entries) {
       if (!entry.hooks) continue;
-      const codexEntry = {};
-      if (entry.matcher) codexEntry.matcher = entry.matcher;
 
-      codexEntry.hooks = [];
+      const hooks = [];
       for (const hook of entry.hooks) {
         const hookName = extractHookName(hook.command);
         if (!hookName) continue;
-
-        codexEntry.hooks.push({
+        hooks.push({
           type: 'command',
           command: `${adapterCmd} ${hookName}`,
           statusMessage: `Citadel: ${hookName}`,
@@ -80,7 +77,15 @@ function translateCodexHooks(hooksTemplate, adapterScriptPath) {
         installed.push({ hook: hookName, event: codexEvent });
       }
 
-      if (codexEntry.hooks.length > 0) codexHooks[codexEvent].push(codexEntry);
+      if (hooks.length === 0) continue;
+
+      // Expand pipe-delimited matchers into separate entries (e.g. "Edit|Write" → two entries)
+      const matchers = entry.matcher ? entry.matcher.split('|').map((m) => m.trim()).filter(Boolean) : [null];
+      for (const matcher of matchers) {
+        const codexEntry = { hooks };
+        if (matcher) codexEntry.matcher = matcher;
+        codexHooks[codexEvent].push(codexEntry);
+      }
     }
   }
 
