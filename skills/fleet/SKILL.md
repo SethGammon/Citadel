@@ -41,6 +41,7 @@ Do NOT use Fleet for:
 | `/fleet [path-to-spec]` | Read a spec file, decompose into streams |
 | `/fleet continue` | Resume from the last fleet session file |
 | `/fleet` (no args) | Health diagnostic → work queue → execute |
+| `/fleet --quick [task1]; [task2]` | Lightweight parallel mode for solo devs — 2+ tasks, single wave, auto-merge, no session file |
 | `/fleet --speculative N [direction]` | Try N different approaches to the same task in parallel — see Speculative Mode below |
 
 ## Protocol
@@ -427,6 +428,61 @@ Winner: functional
 Merged: {ISO timestamp}
 ```
 
+## Quick Mode
+
+`/fleet --quick [task1]; [task2]; [task3]`
+
+Lightweight parallel execution for solo developers. Designed for the common case:
+"I need to do A and B and they don't touch the same files."
+
+### What's different from standard fleet
+
+| Property | Standard Fleet | Quick Mode |
+|---|---|---|
+| Min streams | 3 | 2 |
+| Min complexity | 4 | 3 |
+| Waves | Multi-wave with discovery relay | Single wave only |
+| Session file | Written to `.planning/fleet/` | Skipped — results reported inline |
+| Discovery briefs | Compressed to `.planning/fleet/briefs/` | Skipped |
+| Merge | Per-wave confirmation | Auto-merge if no conflicts |
+| Scope claim | Written to coordination/ | Skipped |
+
+### Protocol
+
+1. Parse tasks from the `--quick` argument (semicolon-separated)
+2. Validate scope overlap — if any two tasks touch the same files, merge them or sequence them
+3. Spawn all agents simultaneously with `isolation: "worktree"`
+4. Collect results; auto-merge worktrees if no conflicts detected
+5. If merge conflict: surface to user, offer manual resolution
+6. Report results inline — no session file written unless the user asks
+
+### When /do routes here
+
+`/do` routes to `--quick` mode (not standard fleet) when:
+- Input contains "at the same time", "simultaneously", "in parallel", "both ... and"
+- Two or more clearly independent tasks are detected
+- Complexity is 3 (moderate), not 4+ (complex)
+- User chose "1" (yes once) or "2" (always) on the Fleet confirmation prompt
+
+### Entry from /do confirmation prompt
+
+When `/do` detects independent parallel tasks, it shows:
+
+```
+These look independent — I could run them in parallel:
+  1. {task description}
+  2. {task description}
+
+Run in parallel? [1=yes  2=always  3=no]
+```
+
+- **1 (yes):** Run `--quick` once. Preference not saved.
+- **2 (always):** Run `--quick`. Save `fleetSpawn: auto-allow` to harness.json — future parallel suggestions auto-proceed.
+- **3 (no):** Run sequentially. Save `fleetSpawn: always-ask` to harness.json if user says "don't ask again".
+
+Preferences are stored under `consent.fleetSpawn` in harness.json using the existing
+consent machinery (`readConsent`/`writeConsent` from harness-health-util.js).
+
 ## Contextual Gates
 
 Before spawning agents, verify contextual appropriateness:
@@ -445,7 +501,8 @@ Red actions require explicit confirmation regardless of trust level.
 
 ### Proportionality
 Before spawning, check whether fleet is warranted:
-- If work queue has < 3 independent streams: downgrade to Marshal or Archon
+- **Standard fleet:** work queue requires 3+ independent streams. Fewer → downgrade to Marshal or Archon.
+- **Quick mode:** 2+ tasks with non-overlapping scopes. No minimum complexity gate.
 - If all streams touch the same directory: downgrade to sequential Archon phases
 - If estimated agents > 6: confirm with user (even trusted level)
 

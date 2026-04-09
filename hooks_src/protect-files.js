@@ -29,6 +29,12 @@ const PROJECT_ROOT = health.PROJECT_ROOT;
 
 const CITADEL_UI = process.env.CITADEL_UI === 'true';
 
+// Development mode bypass — set CITADEL_DEV=true in .claude/settings.json env
+// when working on the harness itself. Disables custom protectedFiles patterns
+// but keeps .env secrets protection and path-traversal security checks active.
+// Safe to leave set during harness development sessions; remove when done.
+const CITADEL_DEV = process.env.CITADEL_DEV === 'true';
+
 function hookOutput(hookName, action, message, data = {}) {
   if (CITADEL_UI) {
     process.stdout.write(JSON.stringify({
@@ -124,20 +130,30 @@ function run(input) {
   }
 
   // Edit/Write events: check against protected patterns
+  // CITADEL_DEV=true bypasses custom patterns — for harness development only.
+  // Secrets (.env) and path-traversal checks above still apply.
   const config = health.readConfig();
   const protectedPatterns = config.protectedFiles || [
     '.claude/harness.json',
   ];
 
-  for (const pattern of protectedPatterns) {
-    if (matchPattern(relativePath, pattern)) {
-      health.logBlock('protect-files', 'blocked', `${toolName} ${relativePath} (pattern: ${pattern})`);
-      hookOutput('protect-files', 'blocked',
-        `[protect-files] Blocked: ${relativePath} is protected by pattern "${pattern}". ` +
-        `Remove the pattern from harness.json protectedFiles to allow edits.`,
-        { file: relativePath, pattern, tool: toolName }
-      );
-      process.exit(2); // Block the edit
+  if (CITADEL_DEV) {
+    hookOutput('protect-files', 'dev-bypass',
+      `[protect-files] Dev mode active — skipping pattern check for ${relativePath}`,
+      { file: relativePath, tool: toolName }
+    );
+  } else {
+    for (const pattern of protectedPatterns) {
+      if (matchPattern(relativePath, pattern)) {
+        health.logBlock('protect-files', 'blocked', `${toolName} ${relativePath} (pattern: ${pattern})`);
+        hookOutput('protect-files', 'blocked',
+          `[protect-files] Blocked: ${relativePath} is protected by pattern "${pattern}". ` +
+          `Set CITADEL_DEV=true in .claude/settings.json env for harness development, ` +
+          `or remove the pattern from harness.json protectedFiles to allow edits.`,
+          { file: relativePath, pattern, tool: toolName }
+        );
+        process.exit(2); // Block the edit
+      }
     }
   }
 

@@ -31,6 +31,57 @@ function parseBulletSection(content, sectionName) {
     .filter(Boolean);
 }
 
+/**
+ * Parse the Phases markdown table into structured objects.
+ *
+ * Expects a table with columns (in any order):
+ *   | # | Status | Type | Phase | Done When |
+ *
+ * Returns an array of phase objects. Rows that don't parse cleanly are skipped.
+ *
+ * @param {string} content - Full campaign file content
+ * @returns {Array<{number: number, status: string, type: string, name: string, doneWhen: string}>}
+ */
+function parsePhaseTable(content) {
+  const section = parseSection(content, 'Phases');
+  if (!section) return [];
+
+  const rows = section.split(/\r?\n/).filter(line => line.trim().startsWith('|'));
+  if (rows.length < 2) return [];
+
+  // First row is the header — extract column positions
+  const headerCells = rows[0].split('|').map(c => c.trim().toLowerCase());
+  const col = {
+    number: headerCells.indexOf('#'),
+    status: headerCells.indexOf('status'),
+    type: headerCells.indexOf('type'),
+    name: headerCells.findIndex(h => h === 'phase' || h === 'name'),
+    doneWhen: headerCells.findIndex(h => h.includes('done') || h.includes('when')),
+  };
+
+  // Second row is the separator — skip it
+  const dataRows = rows.slice(2);
+  const phases = [];
+
+  for (const row of dataRows) {
+    const cells = row.split('|').map(c => c.trim());
+    // cells[0] is empty (before first |), col indices from indexOf already
+    // account for this empty slot so use them directly — no +1 adjustment.
+    const get = (idx) => (idx >= 0 && idx < cells.length ? cells[idx] : '');
+    const num = parseInt(get(col.number), 10);
+    if (Number.isNaN(num)) continue;
+    phases.push({
+      number: num,
+      status: get(col.status) || 'pending',
+      type: get(col.type) || '',
+      name: get(col.name) || '',
+      doneWhen: get(col.doneWhen) || '',
+    });
+  }
+
+  return phases;
+}
+
 function parseCampaignContent(content, options = {}) {
   const slug = options.slug || null;
   const frontmatter = parseFrontmatter(content);
@@ -43,6 +94,7 @@ function parseCampaignContent(content, options = {}) {
     frontmatter,
     title: titleMatch ? titleMatch[1].trim() : slug,
     bodyStatus: bodyStatusMatch ? bodyStatusMatch[1].trim() : null,
+    phases: parsePhaseTable(content),
     claimedScope: parseBulletSection(content, 'Claimed Scope'),
     restrictedFiles: parseBulletSection(content, 'Restricted Files'),
   };
@@ -51,5 +103,6 @@ function parseCampaignContent(content, options = {}) {
 module.exports = {
   parseCampaignContent,
   parseFrontmatter,
+  parsePhaseTable,
   parseSection,
 };

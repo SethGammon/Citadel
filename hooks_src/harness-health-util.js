@@ -15,6 +15,26 @@ const TELEMETRY_DIR = path.join(PROJECT_ROOT, '.planning', 'telemetry');
 const HOOK_TIMING_FILE = path.join(TELEMETRY_DIR, 'hook-timing.jsonl');
 const AUDIT_LOG_FILE = path.join(TELEMETRY_DIR, 'audit.jsonl');
 
+// Debug mode — set CITADEL_DEBUG=true in .claude/settings.json env to enable.
+// Prints a one-line summary to stderr each time a hook fires or completes.
+// Follows the same opt-in pattern as CITADEL_UI.
+const CITADEL_DEBUG = process.env.CITADEL_DEBUG === 'true';
+
+/**
+ * Emit a debug line to stderr when CITADEL_DEBUG=true.
+ * Uses stderr (not stdout) so it doesn't interfere with hook exit codes or
+ * structured JSON output on stdout.
+ *
+ * @param {string} hook  - Hook file name (e.g. 'post-edit', 'circuit-breaker')
+ * @param {string} event - Lifecycle point: 'start', 'complete', 'skip', 'block', etc.
+ * @param {string} [detail] - Optional one-line context (file path, rule name, etc.)
+ */
+function debugLog(hook, event, detail = '') {
+  if (!CITADEL_DEBUG) return;
+  const suffix = detail ? ` — ${detail}` : '';
+  process.stderr.write(`[citadel:hook] ${hook} ${event}${suffix}\n`);
+}
+
 /**
  * Plugin-scoped data directory for mutable state that survives plugin updates.
  * Uses CLAUDE_PLUGIN_DATA env var when available (Claude Code >= recent release).
@@ -500,6 +520,7 @@ module.exports = {
   increment,
   logTiming,
   logBlock,
+  debugLog,
   writeAuditLog,
   readConfig,
   readTrustLevel,
@@ -519,4 +540,5 @@ module.exports = {
   PROJECT_ROOT,
   TELEMETRY_DIR,
   PLUGIN_DATA_DIR,
+  CITADEL_DEBUG,
 };

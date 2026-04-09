@@ -145,7 +145,14 @@ For each phase:
    node .citadel/scripts/telemetry-log.cjs --event agent-complete --agent {delegate-name} --session {campaign-slug} --status {success|partial|failed}
    ```
 6. **Record**: Update the campaign file:
-   - Mark the phase complete/partial/failed
+   - Mark the phase complete/partial/failed using `updatePhaseStatus`:
+     ```bash
+     node -e "
+       const {updatePhaseStatus} = require('./core/campaigns/update-campaign');
+       updatePhaseStatus('.planning/campaigns/{slug}.md', {N}, 'complete');
+     "
+     ```
+     Valid status values: `pending`, `in-progress`, `design-complete`, `complete`, `partial`, `failed`, `skipped`
    - Add entries to the Feature Ledger
    - Log any decisions to the Decision Log
 7. **Self-correct**: Run applicable checks from Step 4:
