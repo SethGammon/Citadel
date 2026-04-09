@@ -202,11 +202,14 @@ function logSessionCost(event) {
 
     // Output one-line session cost summary to terminal.
     // This fires AFTER the session -- stdout goes to the user's terminal, not Claude.
-    // Configurable via cost.sessionEndSummary in harness.json (default: true).
+    // Configurable via telemetry.sessionSummary in harness.json (default: "auto").
+    // Legacy key cost.sessionEndSummary also respected for backward compatibility.
     try {
       const config = health.readConfig();
+      const telemetryCfg = config?.telemetry || {};
       const costConfig = config?.cost || config?.policy?.costTracker || {};
-      const showSummary = costConfig.sessionEndSummary !== false;
+      const summaryMode = telemetryCfg.sessionSummary ?? (costConfig.sessionEndSummary === false ? 'off' : 'auto');
+      const showSummary = telemetryCfg.enabled !== false && summaryMode !== 'off';
 
       if (showSummary) {
         const cost = realCost !== null ? realCost : estimatedCost;

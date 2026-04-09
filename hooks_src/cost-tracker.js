@@ -67,12 +67,16 @@ function writeState(state) {
 function readPolicy() {
   try {
     const config = health.readConfig();
-    // Support both new `cost` section and legacy `policy.costTracker`
+    // Support new telemetry block, then cost section, then legacy policy.costTracker
+    const tel = config?.telemetry || {};
     const ct = config?.cost || config?.policy?.costTracker || {};
     const mode = ct.mode || 'api';
 
+    // telemetry.enabled=false or telemetry.costAlerts=false both disable alerts.
+    const telemetryEnabled = tel.enabled !== false && tel.costAlerts !== false;
+
     return {
-      enabled: mode !== 'off' && ct.enabled !== false,
+      enabled: telemetryEnabled && mode !== 'off' && ct.enabled !== false,
       mode, // 'api' | 'pro' | 'max' | 'off'
       thresholds: Array.isArray(ct.thresholds) ? ct.thresholds : DEFAULT_THRESHOLDS,
       checkIntervalMs: ct.checkIntervalMs || CHECK_INTERVAL_MS,

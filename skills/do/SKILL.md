@@ -139,6 +139,7 @@ and any project-level custom skills in `.claude/skills/`.
 | "triage", "open issues", "unlabeled issues", "review pr", "review prs", "investigate issue" | `/triage` |
 | "watch pr", "watch ci", "monitor pr", "fix ci", "ci failing", "pr failing", "auto-fix", "auto fix pr", "pr is red", "checks failing" | `/pr-watch` |
 | "dashboard", "what's happening", "what's going on", "show activity", "harness state", "show me status" | `/dashboard` |
+| "telemetry", "what did this cost", "session cost", "how much did that cost", "how much have I spent", "what hooks fired", "trust level", "show me telemetry", "spending", "session stats", "what telemetry" | `/telemetry` |
 | "learn", "extract patterns", "learn from that", "save what worked", "patterns from campaign" | `/learn` |
 | "schedule", "recurring", "every N minutes", "cron", "set a reminder", "run periodically" | `/schedule` |
 | "merge review", "check merges", "any conflicts", "fleet conflicts", "pending branches", "safe to merge" | `/merge-review` |
