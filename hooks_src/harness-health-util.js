@@ -113,6 +113,22 @@ function readConfig() {
     qualityRules: { builtIn: [], custom: [] },
     protectedFiles: ['.claude/harness.json'],
     features: { intakeScanner: true, telemetry: true },
+    telemetry: {
+      // Master switch. Setting false disables session summaries and cost alerts
+      // but NEVER disables safety hooks (protect-files, circuit-breaker, etc.).
+      enabled: true,
+      // "auto"   — show [session] summary line at session end (default)
+      // "always" — same as auto (reserved for future verbose mode)
+      // "off"    — suppress the session end summary
+      sessionSummary: 'auto',
+      // Whether to write hook execution timing to hook-timing.jsonl
+      hookTiming: true,
+      // Whether to write tool call entries to audit.jsonl
+      audit: true,
+      // Whether to fire cost threshold alerts mid-session.
+      // Thresholds are configured in policy.costTracker.thresholds.
+      costAlerts: true,
+    },
     policy: {
       scopeEnforcement: 'warn',   // 'warn' | 'block' | 'off'
       auditLog: true,

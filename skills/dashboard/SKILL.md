@@ -117,6 +117,10 @@ Data source indicator:
 - Count total lines in `.planning/telemetry/audit.jsonl` written today
 - Count entries in `hooks` array of `.claude/hooks-template.json` (or
   `.claude/hooks.json` if template not present); use 0 if neither exists
+- Read `.claude/harness.json` → `trust` object:
+  - `sessions_completed`, `campaigns_completed` counters
+  - Compute level: novice (sessions < 5), familiar (5-19), trusted (20+ with 2+ campaigns)
+  - If `trust.override` is set, use that and note "(override)"
 
 ### Step 2: FORMAT RELATIVE TIMESTAMPS
 
@@ -182,10 +186,12 @@ HEALTH
   Circuit breaker trips this session: {N}
   Audit entries today:                {N}
   Hooks installed:                    {N}
+  Trust level:                        {novice | familiar | trusted} ({N} sessions, {N} campaigns)
 
 QUICK COMMANDS
   /do continue    — resume active campaign
   /do rollback    — restore last checkpoint
+  /telemetry      — cost breakdown, hook activity, telemetry settings
   /triage prs     — review open PRs
   /pr-watch       — watch PR CI
   /learn          — extract patterns from last completed campaign
