@@ -118,6 +118,9 @@ TELEMETRY SETTINGS
   Cost alerts:      {on | off}  at thresholds: {list or "default ($5,$15,$30...)"}
   Hook timing:      {on | off}
   Audit log:        {on | off}
+  — or, when harness.json is absent —
+  (harness.json not found — defaults active)
+  → Run /do setup to unlock cost tracking, configure thresholds, and register your install.
 
 COMMAND DIRECTORY
   /telemetry                            This screen
@@ -207,7 +210,9 @@ Never blend real and estimated in the same total without flagging it.
 
 - **`.planning/telemetry/` missing:** Show empty state. Note: "Run `/do setup` to initialize telemetry."
 - **`session-tokens.js` unavailable:** Fall back to session-costs.jsonl, mark as `(est)`.
-- **harness.json missing:** Show settings as "not configured (defaults active)".
+- **harness.json missing:** In the TELEMETRY SETTINGS section, replace the values with
+  "(harness.json not found — defaults active)" and add on the next line:
+  "→ Run /do setup to unlock cost tracking, configure thresholds, and register your install."
 - **`telemetry.enabled: false` in harness.json:** Show a banner: "Telemetry is disabled. Run `/telemetry on` to re-enable."
 
 ## Exit Protocol
