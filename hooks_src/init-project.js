@@ -22,6 +22,7 @@ const PLANNING_DIRS = [
   '.planning/coordination',
   '.planning/coordination/instances',
   '.planning/coordination/claims',
+  '.planning/discoveries',
   '.planning/fleet',
   '.planning/fleet/briefs',
   '.planning/fleet/outputs',

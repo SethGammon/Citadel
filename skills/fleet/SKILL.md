@@ -52,6 +52,12 @@ Do NOT use Fleet for:
 2. Check `.planning/campaigns/` for active campaigns
 3. Check `.planning/coordination/claims/` for external claims
 4. Determine input mode: directed, spec-driven, continuing, or undirected
+5. **Load prior session context**: If `.planning/momentum.json` exists, run
+   ```bash
+   node .citadel/scripts/momentum-read.cjs
+   ```
+   and read the output. Use the active scopes and recurring decisions to inform
+   work queue prioritization. Skip silently if the file is absent or output is empty.
 
 ### Step 1b: LOG SESSION START
 
@@ -88,6 +94,11 @@ For each wave:
      `node scripts/map-index.js --query "<agent's scope keywords>" --max-files 15`
      and inject the results as a `=== MAP SLICE ===` block. If the index does
      not exist, skip silently.
+   - **Prior session context** (Wave 1 only): inject the momentum context block
+     from Step 1 as a `=== PRIOR SESSION CONTEXT ===` block. This surfaces
+     recurring decisions and active scopes from all prior Fleet sessions so
+     agents don't rediscover what's already known. Skip for Wave 2+ (they get
+     the within-session discovery relay instead, which is more specific).
    - Campaign-specific direction and scope
    - Discovery briefs from previous waves (if any)
 
@@ -116,6 +127,23 @@ For each wave:
    - Extract HANDOFF blocks
    - Run `node .citadel/scripts/compress-discovery.cjs` on each output
    - Write compressed briefs to `.planning/fleet/briefs/`
+
+6b. **Write persistent discovery records** for each agent (cross-session memory):
+   ```bash
+   node .citadel/scripts/discovery-write.cjs \
+     --session {session-slug} \
+     --agent {agent-name} \
+     --wave {wave-number} \
+     --status {success|partial|failed} \
+     --scope "{comma-separated-scope-dirs}" \
+     --handoff "{json-array-of-handoff-items}" \
+     --decisions "{json-array-of-decisions}" \
+     --files "{json-array-of-files-touched}" \
+     --failures "{json-array-of-failures}"
+   ```
+   Extract the values from the compressed brief and HANDOFF block. This is the
+   cross-session layer — these records persist beyond this session and inform
+   future Fleet sessions via momentum.json.
 
 7. **Log wave complete**:
    ```bash
@@ -156,7 +184,13 @@ After all waves:
    ```bash
    node .citadel/scripts/telemetry-log.cjs --event campaign-complete --agent fleet --session {session-slug}
    ```
-5. Output final HANDOFF
+5. **Update momentum** (cross-session synthesis):
+   ```bash
+   node .citadel/scripts/momentum-synthesize.cjs
+   ```
+   This aggregates all discovery records from this and prior sessions into
+   `.planning/momentum.json`. Future sessions will read this at Step 1.
+6. Output final HANDOFF
 
 ## Fleet Session File Format
 
