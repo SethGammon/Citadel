@@ -59,11 +59,14 @@ Do NOT use Fleet for:
    and read the output. Use the active scopes and recurring decisions to inform
    work queue prioritization. Skip silently if the file is absent or output is empty.
 
-### Step 1b: LOG SESSION START
+### Step 1b: LOG SESSION START + START WATCHER
 
 ```bash
 node .citadel/scripts/telemetry-log.cjs --event campaign-start --agent fleet --session {session-slug}
+node .citadel/scripts/momentum-watch-start.cjs
 ```
+
+The watcher runs in the background and re-synthesizes `momentum.json` within 500ms of any new discovery write. This means parallel Fleet sessions in other terminals share discoveries in near-real-time rather than waiting for session end. Safe to call if already running — only one watcher runs per project.
 
 ### Step 2: WORK QUEUE
 
@@ -94,11 +97,12 @@ For each wave:
      `node scripts/map-index.js --query "<agent's scope keywords>" --max-files 15`
      and inject the results as a `=== MAP SLICE ===` block. If the index does
      not exist, skip silently.
-   - **Prior session context** (Wave 1 only): inject the momentum context block
-     from Step 1 as a `=== PRIOR SESSION CONTEXT ===` block. This surfaces
-     recurring decisions and active scopes from all prior Fleet sessions so
-     agents don't rediscover what's already known. Skip for Wave 2+ (they get
-     the within-session discovery relay instead, which is more specific).
+   - **Prior session context** (all waves): re-read `momentum.json` fresh at each
+     wave boundary via `node .citadel/scripts/momentum-read.cjs` and inject as a
+     `=== PRIOR SESSION CONTEXT ===` block. Re-reading (rather than reusing the
+     Step 1 snapshot) picks up discoveries written by parallel Fleet sessions in
+     other terminals while this session has been running. If the output is empty,
+     skip silently.
    - Campaign-specific direction and scope
    - Discovery briefs from previous waves (if any)
 

@@ -44,12 +44,14 @@ repo. You are the outer loop.
    b. Verify each repo path exists and is a git repo
    c. Read each repo's `CLAUDE.md` for conventions
    d. Check each repo's `.planning/campaigns/` for active campaigns (avoid collisions)
-4. **Load prior session context**: If `.planning/momentum.json` exists in the primary repo, run
+4. **Load prior session context and start watcher**:
    ```bash
+   node .citadel/scripts/momentum-watch-start.cjs
    node .citadel/scripts/momentum-read.cjs
    ```
-   and read the output. Use active scopes and recurring decisions to inform work queue
-   prioritization across repos. Skip silently if absent or empty.
+   Start the discovery watcher first (idempotent — safe if already running). Then
+   read momentum context and use active scopes and recurring decisions to inform
+   work queue prioritization across repos. Skip momentum injection if output is empty.
 
 ### Step 2: DECOMPOSE
 
@@ -154,8 +156,10 @@ For each repo-campaign in this wave:
    - **If simple (1-2 steps):** spawn as `/marshal` or direct skill
 4. Inject cross-repo context:
    - Discovery briefs from prior waves (same as fleet's discovery relay)
-   - **Prior session context** (Wave 1 agents only): inject the momentum context block
-     from Step 1 as a `=== PRIOR SESSION CONTEXT ===` block. Skip for Wave 2+.
+   - **Prior session context** (all waves): re-read `momentum.json` fresh at each wave
+     boundary via `node .citadel/scripts/momentum-read.cjs` and inject as a
+     `=== PRIOR SESSION CONTEXT ===` block. Re-reading picks up discoveries written
+     by parallel sessions while this workspace has been running. Skip silently if empty.
    - Cross-repo contract specifications
    - Relevant sections of other repos' `CLAUDE.md` files
 5. Each agent runs in its own context (the target repo's working directory)
