@@ -66,6 +66,19 @@ Break the direction into 3-8 phases:
 | verify | Confirm everything works | Typecheck, tests, manual review |
 | prune | Remove dead code, clean up | Marshal with removal targets |
 
+**Effort budget by phase type** (use the `effort` parameter when invoking sub-agents):
+
+| Phase Type | Effort Level | Token Budget | Notes |
+|------------|-------------|--------------|-------|
+| audit      | low         | ~80K         | Read-heavy, minimal generation |
+| build      | high        | ~300K        | Full implementation, iterative |
+| refactor   | medium      | ~150K        | Structural changes, targeted scope |
+| design     | medium      | ~120K        | Planning + spec generation |
+| verify     | low         | ~60K         | Typecheck, test run, visual check |
+
+The `effort` parameter is GA as of April 2026. Prefer it over `budget_tokens` for all
+sub-agent invocations — it produces ~20–40% token reduction on fleet sessions.
+
 4. For each phase, write machine-verifiable end conditions:
    - Every phase MUST have at least one non-manual condition
    - Use condition types: `file_exists`, `command_passes`, `metric_threshold`, `visual_verify`, `manual`
@@ -231,6 +244,11 @@ If any found: fix before marking the phase complete.
 ### Step 6: CONTINUATION (before context runs low)
 
 If you're running low on context or finishing a session:
+> **Context restoration:** When resuming a campaign, use the Claude Code Compaction API
+> to restore session context. Do NOT read `.claude/compact-state.json` — that pattern
+> is deprecated in favour of server-side compaction (available on Opus 4.6+). If the
+> Compaction API is unavailable, fall back to reading the campaign file's Continuation
+> State section directly.
 
 1. Update the campaign file's Active Context section
 2. Write a detailed Continuation State:
@@ -246,6 +264,15 @@ When all phases are done:
 
 1. Run final verification (typecheck, tests) via `node scripts/run-with-timeout.js 300`
 2. Update campaign status to `completed`
+2.5. **Propagate knowledge** — link campaign learnings to the knowledge base:
+   ```bash
+   npm run propagate -- --campaign {slug}
+   ```
+   Replace `{slug}` with the campaign's slug identifier. This appends a dated
+   "## Related Work" entry to related `.planning/knowledge/` files, implementing
+   the Karpathy llm-wiki ingest pattern. If `npm run propagate` is unavailable,
+   add a TODO to LEARNINGS.md: `<!-- TODO: run npm run propagate -- --campaign {slug} -->`.
+
 3. Move campaign file to `.planning/campaigns/completed/`
 4. Release any scope claims
 5. Log campaign completion:

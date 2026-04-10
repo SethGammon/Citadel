@@ -22,35 +22,40 @@
 
 ## What Is Citadel
 
-An agent orchestration harness for Claude Code and OpenAI Codex. It coordinates multiple AI agents in parallel, persists memory across sessions, and routes your intent to the cheapest execution path automatically. You install it as a plugin and it works on any codebase, on either runtime.
+An agent orchestration harness for Claude Code and OpenAI Codex. It coordinates multiple AI agents in parallel, persists memory across sessions, and routes your intent to the cheapest execution path automatically. Citadel adapts itself to each runtime: plugin-first for Claude Code, generated project artifacts plus Codex-native config for Codex.
 
 ## Why Citadel Exists
 
-**Without Citadel**, every Claude Code session starts from zero. You re-explain architecture decisions. You re-discover that the auth module is fragile. You copy-paste the same review checklist. When a task is too big for one agent, you manually split it and lose context between the pieces. Your agents never get better at your codebase — you just get better at prompting them.
+**Without Citadel**, every agent session starts from zero. You re-explain architecture decisions. You re-discover that the auth module is fragile. You copy-paste the same review checklist. When a task is too big for one agent, you manually split it and lose context between the pieces. Your agents never get better at your codebase — you just get better at prompting them.
 
 **With Citadel**, sessions resume where they left off. A `/do review` runs a structured 5-pass review that remembers what broke last time. A `/do overhaul the API layer` spawns parallel agents in isolated worktrees, shares discoveries between them, and merges the results. Skills you build once compound across every future session. The system learns from its own mistakes through campaign persistence and telemetry.
 
-The difference: CLAUDE.md tells Claude about your project. Citadel gives Claude the *infrastructure to work autonomously* — routing, memory, safety hooks, and coordination that a `.md` file can't provide.
+The difference: `CLAUDE.md` and `AGENTS.md` tell the runtime about your project. Citadel gives the runtime the *infrastructure to work autonomously* — routing, memory, safety hooks, and coordination that a single guidance file can't provide.
 
 ## Quickstart
 
-**Prerequisites:** [Claude Code](https://docs.anthropic.com/en/docs/claude-code) + [Node.js 18+](https://nodejs.org/)
+**Prerequisites:** [Claude Code](https://docs.anthropic.com/en/docs/claude-code) or [Codex](https://github.com/openai/codex) + [Node.js 18+](https://nodejs.org/)
 
 ```bash
 # 1. Clone Citadel
 git clone https://github.com/SethGammon/Citadel.git
 
-# 2. Launch Claude Code with the plugin loaded
+# 2a. Claude Code runtime
 claude --plugin-dir /path/to/Citadel
 
-# 3. Run setup (installs hooks, scaffolds project state)
+# 2b. Codex runtime
+node /path/to/Citadel/scripts/codex-compat.js
+node /path/to/Citadel/scripts/install-hooks-codex.js
+codex
+
+# 3. In either runtime, run setup
 /do setup
 
 # 4. Try something
 /do review src/main.ts
 ```
 
-[Full install guide with alternative methods](QUICKSTART.md) · [Share what you're building →](https://github.com/SethGammon/Citadel/discussions)
+[Quickstart for both runtimes](QUICKSTART.md) · [Claude Code installation guide](docs/CLAUDE_INSTALLATION_GUIDE.md) · [Codex installation guide](docs/CODEX_INSTALLATION_GUIDE.md) · [Share what you're building →](https://github.com/SethGammon/Citadel/discussions)
 
 ## How It Works
 
@@ -100,7 +105,7 @@ Four tiers. Use the cheapest one that fits.
 
 ## What You Get
 
-**Cost transparency.** Citadel reads Claude Code's native session files for exact token counts and computes real cost from API pricing. You see what every session, campaign, and agent actually costs. Use `/cost` for a full breakdown or `/dashboard` for the overview. A real-time tracker alerts you at configurable spend thresholds without interrupting your work.
+**Cost transparency.** Citadel reads runtime-native session artifacts and computes real cost from API pricing. You see what every session, campaign, and agent actually costs. Use `/cost` for a full breakdown or `/dashboard` for the overview. A real-time tracker alerts you at configurable spend thresholds without interrupting your work.
 
 **Safety hooks.** 22 hooks across 14 lifecycle events run automatically. A consent system gates external actions (pushes, PRs, comments) with first-encounter choice — always-ask, session-allow, or auto-allow. Protected branches can't be deleted. Path traversal and secrets exfiltration are blocked. A circuit breaker stops failure spirals before they burn tokens. All of this is configurable per-project in `harness.json`.
 
@@ -110,9 +115,9 @@ Four tiers. Use the cheapest one that fits.
 
 ## FAQ
 
-**Is this for me?** If you're running Claude Code on a real codebase and finding that agents lose context, repeat mistakes, or can't work in parallel, yes. If you're just starting out with Claude Code, get a few sessions in first and come back when the friction shows up.
+**Is this for me?** If you're running Claude Code or Codex on a real codebase and finding that agents lose context, repeat mistakes, or can't work in parallel, yes. If you're just starting out with either runtime, get a few sessions in first and come back when the friction shows up.
 
-**How is this different from CLAUDE.md?** CLAUDE.md tells Claude about your project. Citadel tells Claude *how to work*: durable state, intelligent routing, automated safety, and native parallelism — the infrastructure layer that CLAUDE.md assumes someone else built.
+**How is this different from `CLAUDE.md` or `AGENTS.md`?** Those files tell the runtime about your project. Citadel tells the runtime *how to work*: durable state, intelligent routing, automated safety, and native parallelism — the infrastructure layer those files assume someone else built.
 
 **Do I need to learn all 42 skills?** No. Just use `/do` and describe what you want in plain English. The router picks the right skill. You can go months without ever typing a skill name directly.
 
@@ -124,12 +129,14 @@ Four tiers. Use the cheapest one that fits.
 
 **Does it work with OpenAI Codex?** Yes. The runtime layer (`packages/runtime-claude-code`, `packages/contracts`) abstracts over both runtimes. Skills, hooks, and campaigns are portable — the same `.planning/` state works whether you're running under Claude Code or Codex. Use `AGENTS.md` for Codex (parallel to `CLAUDE.md` for Claude Code).
 
-**Does this work on Windows?** Yes. All hooks and scripts run on Node.js. As a plugin, it installs identically on all platforms.
+**Does this work on Windows?** Yes. All hooks and scripts run on Node.js. The Claude plugin path and the Codex generated-artifact path both work cross-platform.
 
 ## Learn More
 
 - [**Interactive routing demo**](https://sethgammon.github.io/Citadel/) — type any task, watch the tier cascade animate
-- [Full install guide](QUICKSTART.md) — plugin setup, alternative install methods, and troubleshooting
+- [Quickstart](QUICKSTART.md) — first-run paths for both Claude Code and Codex
+- [Claude Code installation guide](docs/CLAUDE_INSTALLATION_GUIDE.md) — Claude-specific plugin setup and hooks
+- [Codex installation guide](docs/CODEX_INSTALLATION_GUIDE.md) — Codex-specific setup, hooks, and verification
 - [Skills reference](docs/SKILLS.md) — all 42 skills with invocation and examples
 - [Hooks reference](docs/HOOKS.md) — 14 event types, 22 hooks, what each one enforces
 - [Campaign guide](docs/CAMPAIGNS.md) — persistent state, phases, AI amnesia prevention
@@ -176,3 +183,4 @@ Built something interesting with Citadel? Open a Discussion to share your workfl
 ## License
 
 MIT
+

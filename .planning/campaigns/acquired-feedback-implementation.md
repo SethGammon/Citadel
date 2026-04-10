@@ -1,6 +1,6 @@
 ---
 slug: acquired-feedback-implementation
-status: active
+status: completed
 phase_count: 5
 current_phase: 1
 source: https://github.com/SethGammon/Citadel/discussions/96
@@ -12,7 +12,7 @@ source: https://github.com/SethGammon/Citadel/discussions/96
 Four pain points: campaign staleness, Windows path fragility, hook invisibility, Fleet
 inaccessibility for solo devs. Plus persistent 1/2/3 Fleet confirmation settings.
 
-Status: active
+Status: completed
 
 ## Phases
 
@@ -22,7 +22,7 @@ Status: active
 | 2 | complete | build | Campaign phase status parsing | parse-campaign + update-campaign unit tested |
 | 3 | complete | build | Fleet UX + persistent confirm settings | skill-lint fleet + do pass |
 | 4 | complete | build | Dashboard hook activity view | skill-lint dashboard passes |
-| 5 | in-progress | verify | Tests + PR draft | All tests pass, PR shown to user |
+| 5 | complete | verify | Tests + PR draft | All tests pass, PR shown to user |
 
 ## Phase End Conditions
 

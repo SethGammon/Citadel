@@ -59,6 +59,14 @@ Do NOT use Fleet for:
    and read the output. Use the active scopes and recurring decisions to inform
    work queue prioritization. Skip silently if the file is absent or output is empty.
 
+> **Wave context restoration:** Use the Claude Code Compaction API to restore fleet
+> session context at the start of each session. Do NOT read `.claude/compact-state.json`
+> — that pattern is deprecated in favour of server-side compaction (available on Opus 4.6+).
+> Fleet session files (`.planning/fleet/session-{slug}.md`) remain the source of truth
+> for inter-wave discovery relay; compaction handles agent memory, not campaign state.
+> If the Compaction API is unavailable, fall back to reading the fleet session file's
+> Continuation State directly.
+
 ### Step 1b: LOG SESSION START + START WATCHER
 
 ```bash
@@ -194,6 +202,17 @@ After all waves:
    ```
    This aggregates all discovery records from this and prior sessions into
    `.planning/momentum.json`. Future sessions will read this at Step 1.
+5.5. **Propagate knowledge** — for each campaign that completed this session, run:
+   ```bash
+   npm run propagate -- --campaign {slug}
+   ```
+   Run once per completed campaign slug (not per wave). This appends a dated
+   "## Related Work" entry to related `.planning/knowledge/` files, ensuring
+   discoveries from parallel campaigns propagate to the knowledge base rather
+   than staying siloed in completed campaign files. If multiple campaigns
+   completed, run the command for each slug. If `npm run propagate` is
+   unavailable, note each slug in the fleet session file under
+   `## Pending Propagation` for the next session to catch up.
 6. Output final HANDOFF
 
 ## Fleet Session File Format
@@ -257,6 +276,21 @@ Also check `.planning/coordination/claims/` for external claims.
 - Reserve ~300K tokens for Fleet's own context
 - Typical: 2-3 agents per wave
 - If budget exceeded: reduce agents per wave
+
+**Effort hints for wave agents** (use the `effort` parameter, not `budget_tokens`):
+
+- **Fleet scouts** (research, mapping, audit tasks): `effort: medium`, ~100K tokens each
+- **Execution agents** (build, refactor, implement tasks): `effort: high`, ~250K tokens each
+- **Verify agents** (typecheck, visual-verify, QA): `effort: low`, ~60K tokens each
+
+Wave budget math: a 700K-token wave cap typically accommodates:
+- 7 scout agents (7 × 100K) — for broad research waves
+- 2–3 execution agents (2–3 × 250K) — for focused build waves
+- Mixed: 1 execution + 3–4 scouts when both discovery and building are needed
+
+The `effort` parameter is GA as of April 2026 and produces ~20–40% token reduction
+compared to manually tuned `budget_tokens` values. Always prefer `effort` for new
+wave definitions.
 
 ## Quality Gates
 
