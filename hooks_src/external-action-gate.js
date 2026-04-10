@@ -23,7 +23,7 @@
  *
  * Exit codes:
  *   0 = allowed
- *   2 = blocked - agent must get user approval first
+ *   2 = blocked - message written to stderr so Claude Code surfaces it to the agent
  */
 
 const health = require('./harness-health-util');
@@ -34,6 +34,9 @@ const {
 
 const CITADEL_UI = process.env.CITADEL_UI === 'true';
 
+// For CITADEL_UI (desktop app): structured JSON to stdout.
+// For CLI: human-readable message to stderr — Claude Code includes stderr in the
+// hook error that the agent reads, so this is what surfaces as the block reason.
 function hookOutput(hookName, action, message, data = {}) {
   if (CITADEL_UI) {
     process.stdout.write(JSON.stringify({
@@ -44,7 +47,7 @@ function hookOutput(hookName, action, message, data = {}) {
       data,
     }));
   } else {
-    process.stdout.write(message);
+    process.stderr.write(message);
   }
 }
 
@@ -84,7 +87,8 @@ function run(input) {
     hookOutput(
       'external-action-gate',
       'blocked',
-      `[external-action-gate] Blocked: "${action.label}" reads secrets. This is always blocked.`,
+      `[Citadel] Blocked — secrets access: "${action.label}"\n` +
+      `Reading .env files and credentials is always blocked.\n`,
       { label: action.label, tier: action.tier }
     );
     process.exit(2);
@@ -95,8 +99,9 @@ function run(input) {
     hookOutput(
       'external-action-gate',
       'blocked',
-      `[external-action-gate] Blocked: "${action.branch}" is a protected branch and cannot be deleted. ` +
-      `This is configured in harness.json under policy.externalActions.protectedBranches.`,
+      `[Citadel] Blocked — protected branch: "${action.branch}"\n` +
+      `This branch is configured as protected in harness.json and cannot be deleted.\n` +
+      `To unprotect it, remove it from policy.externalActions.protectedBranches.\n`,
       { label: action.label, tier: action.tier }
     );
     process.exit(2);
@@ -109,8 +114,10 @@ function run(input) {
     hookOutput(
       'external-action-gate',
       'blocked',
-      `[external-action-gate] "${action.label}" requires approval. ` +
-      `Show the user the exact content and get confirmation before executing.`,
+      `[Citadel] Approval required — irreversible action: "${action.label}"\n` +
+      `Command: ${command.slice(0, 200)}\n\n` +
+      `This action cannot be undone. Please review the exact command above and explicitly\n` +
+      `confirm with the user before proceeding. Do not retry until confirmed.\n`,
       { label: action.label, tier: action.tier }
     );
     process.exit(2);
@@ -124,18 +131,21 @@ function run(input) {
     hookOutput(
       'external-action-gate',
       'first-encounter',
-      `[external-action-gate] This is your first external action ("${action.label}").\n` +
-      `Citadel can push branches, create PRs, and post comments on your behalf.\n\n` +
-      `How would you like to handle this going forward?\n` +
-      `  1. "always-ask"    - Ask me every time before any external action\n` +
-      `  2. "session-allow" - Allow for this session, ask again next session\n` +
-      `  3. "auto-allow"    - I trust the agent, don't ask again\n\n` +
-      `Tell the user these three options and ask which they prefer.\n` +
-      `Then write their choice to harness.json:\n` +
-      `  node -e "require('./hooks_src/harness-health-util').writeConsent('externalActions', '<choice>')"` +
-      `\nFor "session-allow", also run:\n` +
-      `  node -e "require('./hooks_src/harness-health-util').grantSessionAllow('externalActions')"` +
-      `\nThen retry the command.`,
+      `[Citadel] First external action — preference not set\n` +
+      `Action: ${action.label}  |  Command: ${command.slice(0, 120)}\n\n` +
+      `Citadel can push branches, create PRs, and post comments on your behalf.\n` +
+      `How would you like to handle this going forward?\n\n` +
+      `  1. Always ask       — pause and confirm every time (most control)\n` +
+      `  2. This session     — allow now, ask again next session (recommended)\n` +
+      `  3. Auto-allow       — never ask again (most autonomous)\n\n` +
+      `Recommendation: option 2 — "${action.label}" is reversible and this keeps\n` +
+      `you informed across sessions without blocking autonomous workflows.\n\n` +
+      `Ask the user which they prefer (1/2/3), then apply with:\n` +
+      `  1 → node -e "require('./hooks_src/harness-health-util').writeConsent('externalActions','always-ask')"\n` +
+      `  2 → node -e "require('./hooks_src/harness-health-util').writeConsent('externalActions','session-allow')" && \\\n` +
+      `      node -e "require('./hooks_src/harness-health-util').grantSessionAllow('externalActions')"\n` +
+      `  3 → node -e "require('./hooks_src/harness-health-util').writeConsent('externalActions','auto-allow')"\n\n` +
+      `Then retry the command automatically.\n`,
       { label: action.label, tier: action.tier, consent: 'first-encounter' }
     );
     process.exit(2);
@@ -148,22 +158,24 @@ function run(input) {
     hookOutput(
       'external-action-gate',
       'consent-block',
-      `[external-action-gate] New session: "${action.label}" needs approval.\n` +
-      `Your preference is "session-allow" -- approve this to allow external actions for this session.\n` +
-      `Ask the user for approval. If approved, run:\n` +
-      `  node -e "require('./hooks_src/harness-health-util').grantSessionAllow('externalActions')"` +
-      `\nThen retry.`,
+      `[Citadel] New session — external action needs approval\n` +
+      `Action: ${action.label}  |  Command: ${command.slice(0, 120)}\n\n` +
+      `Your preference is "session-allow". Approve to enable external actions for this session.\n\n` +
+      `Ask the user yes/no. If approved, run:\n` +
+      `  node -e "require('./hooks_src/harness-health-util').grantSessionAllow('externalActions')"\n` +
+      `Then retry the command automatically.\n`,
       { label: action.label, tier: action.tier, consent: 'session-renew' }
     );
   } else {
     hookOutput(
       'external-action-gate',
       'consent-block',
-      `[external-action-gate] "${action.label}" is an external action.\n` +
-      `Show the user the exact content and get approval before executing.\n` +
-      `After approval, run:\n` +
-      `  node -e "require('./hooks_src/harness-health-util').grantOneTimeAllow('externalActions')"` +
-      `\nThen retry the command.`,
+      `[Citadel] External action — approval required\n` +
+      `Action: ${action.label}  |  Command: ${command.slice(0, 120)}\n\n` +
+      `Your preference is "always-ask". Show the user the command above and ask for approval.\n\n` +
+      `If approved, run:\n` +
+      `  node -e "require('./hooks_src/harness-health-util').grantOneTimeAllow('externalActions')"\n` +
+      `Then retry the command automatically.\n`,
       { label: action.label, tier: action.tier, consent: 'always-ask' }
     );
   }

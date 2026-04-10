@@ -183,7 +183,7 @@ function main() {
     });
 
     assert(result.status === 2, `Expected exit code 2 (block), got ${result.status}`);
-    assert(result.stdout.includes('secrets'), 'Expected secrets block message');
+    assert(result.stderr.includes('secrets'), 'Expected secrets block message');
   });
 
   test('external-action-gate blocks hard actions (gh release create)', () => {
@@ -200,7 +200,7 @@ function main() {
 
     assert(result.status === 2, `Expected exit code 2 (block), got ${result.status}`);
     assert(
-      result.stdout.includes('requires approval') || result.stdout.includes('irreversible'),
+      result.stderr.includes('requires approval') || result.stderr.includes('irreversible'),
       'Expected approval/block message for hard action'
     );
   });
@@ -218,7 +218,7 @@ function main() {
     });
 
     assert(result.status === 2, `Expected exit code 2 (block), got ${result.status}`);
-    assert(result.stdout.includes('protected branch'), 'Expected protected branch message');
+    assert(result.stderr.includes('protected branch'), 'Expected protected branch message');
   });
 
   test('external-action-gate triggers first-encounter for soft actions', () => {
@@ -237,7 +237,7 @@ function main() {
     // With no harness.json in tmpdir, this should be a first-encounter block
     assert(result.status === 2, `Expected exit code 2 (block), got ${result.status}`);
     assert(
-      result.stdout.includes('first-encounter') || result.stdout.includes('first external action'),
+      result.stderr.includes('First external action') || result.stderr.includes('first-encounter'),
       'Expected first-encounter message'
     );
   });
