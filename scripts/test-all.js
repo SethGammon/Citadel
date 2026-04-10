@@ -34,6 +34,7 @@ const CAMPAIGN_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-campaign-core.js')
 const DISCOVERY_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-discovery-core.js');
 const DISCOVERY_WRITER_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-discovery-writer.js');
 const MOMENTUM_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-momentum-synthesizer.js');
+const MOMENTUM_WATCHER_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-momentum-watcher.js');
 const POLICY_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-policy-core.js');
 const CLAUDE_RUNTIME_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-claude-runtime.js');
 const CODEX_RUNTIME_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-codex-runtime.js');
@@ -77,6 +78,7 @@ const campaignPassed = run('Campaign Core Check', CAMPAIGN_TEST);
 const discoveryPassed = run('Discovery Core Check', DISCOVERY_TEST);
 const discoveryWriterPassed = run('Discovery Writer Check', DISCOVERY_WRITER_TEST);
 const momentumPassed = run('Momentum Synthesizer Check', MOMENTUM_TEST);
+const momentumWatcherPassed = run('Momentum Watcher Check', MOMENTUM_WATCHER_TEST);
 const policyPassed = run('Policy Core Check', POLICY_TEST);
 const claudeRuntimePassed = run('Claude Runtime Check', CLAUDE_RUNTIME_TEST);
 const codexRuntimePassed = run('Codex Runtime Check', CODEX_RUNTIME_TEST);
@@ -100,6 +102,7 @@ console.log(`  Campaign core:      ${campaignPassed ? 'PASS' : 'FAIL'}`);
 console.log(`  Discovery core:     ${discoveryPassed ? 'PASS' : 'FAIL'}`);
 console.log(`  Discovery writer:   ${discoveryWriterPassed ? 'PASS' : 'FAIL'}`);
 console.log(`  Momentum synth:     ${momentumPassed ? 'PASS' : 'FAIL'}`);
+console.log(`  Momentum watcher:   ${momentumWatcherPassed ? 'PASS' : 'FAIL'}`);
 console.log(`  Policy core:        ${policyPassed ? 'PASS' : 'FAIL'}`);
 console.log(`  Claude runtime:     ${claudeRuntimePassed ? 'PASS' : 'FAIL'}`);
 console.log(`  Codex runtime:      ${codexRuntimePassed ? 'PASS' : 'FAIL'}`);
@@ -108,7 +111,7 @@ if (STRICT) console.log(`  Compat fixtures:    ${compatFixturePassed ? 'PASS' : 
 console.log(`  Backward compat:    ${backwardCompatPassed ? 'PASS' : 'FAIL'}`);
 console.log('');
 
-if (hooksPassed && securityPassed && contractsPassed && runtimeRegistryPassed && hookEventsPassed && skillsPassed && demoPassed && telemetryPassed && coordinationPassed && hookInstallerPassed && campaignPassed && discoveryPassed && discoveryWriterPassed && momentumPassed && policyPassed && claudeRuntimePassed && codexRuntimePassed && projectBootstrapPassed && compatFixturePassed && backwardCompatPassed) {
+if (hooksPassed && securityPassed && contractsPassed && runtimeRegistryPassed && hookEventsPassed && skillsPassed && demoPassed && telemetryPassed && coordinationPassed && hookInstallerPassed && campaignPassed && discoveryPassed && discoveryWriterPassed && momentumPassed && momentumWatcherPassed && policyPassed && claudeRuntimePassed && codexRuntimePassed && projectBootstrapPassed && compatFixturePassed && backwardCompatPassed) {
   console.log('All tests pass.\n');
   console.log('Next steps:');
   console.log('  node scripts/skill-bench.js --list      see benchmark scenarios');
@@ -131,13 +134,14 @@ const campaignFail = !campaignPassed ? 1024 : 0;
 const discoveryFail = !discoveryPassed ? 2048 : 0;
 const discoveryWriterFail = !discoveryWriterPassed ? 4096 : 0;
 const momentumFail = !momentumPassed ? 8192 : 0;
-const policyFail = !policyPassed ? 16384 : 0;
-const claudeRuntimeFail = !claudeRuntimePassed ? 32768 : 0;
-const codexRuntimeFail = !codexRuntimePassed ? 65536 : 0;
-const projectBootstrapFail = !projectBootstrapPassed ? 131072 : 0;
-const compatFixtureFail = !compatFixturePassed ? 262144 : 0;
-const backwardCompatFail = !backwardCompatPassed ? 524288 : 0;
-const code = hookFail | securityFail | contractFail | runtimeRegistryFail | hookEventFail | skillFail | demoFail | telemetryFail | coordinationFail | hookInstallerFail | campaignFail | discoveryFail | discoveryWriterFail | momentumFail | policyFail | claudeRuntimeFail | codexRuntimeFail | projectBootstrapFail | compatFixtureFail | backwardCompatFail;
+const momentumWatcherFail = !momentumWatcherPassed ? 16384 : 0;
+const policyFail = !policyPassed ? 32768 : 0;
+const claudeRuntimeFail = !claudeRuntimePassed ? 65536 : 0;
+const codexRuntimeFail = !codexRuntimePassed ? 131072 : 0;
+const projectBootstrapFail = !projectBootstrapPassed ? 262144 : 0;
+const compatFixtureFail = !compatFixturePassed ? 524288 : 0;
+const backwardCompatFail = !backwardCompatPassed ? 1048576 : 0;
+const code = hookFail | securityFail | contractFail | runtimeRegistryFail | hookEventFail | skillFail | demoFail | telemetryFail | coordinationFail | hookInstallerFail | campaignFail | discoveryFail | discoveryWriterFail | momentumFail | momentumWatcherFail | policyFail | claudeRuntimeFail | codexRuntimeFail | projectBootstrapFail | compatFixtureFail | backwardCompatFail;
 
 if (!hooksPassed) console.log('Hook smoke test failed. Fix hook issues before proceeding.');
 if (!securityPassed) console.log('Security tests failed. DO NOT SHIP - critical vulnerabilities present.');
@@ -153,6 +157,7 @@ if (!campaignPassed) console.log('Campaign core check failed. Fix campaign regre
 if (!discoveryPassed) console.log('Discovery core check failed. Fix discovery relay regressions before shipping.');
 if (!discoveryWriterPassed) console.log('Discovery writer check failed. Fix discovery-writer regressions before shipping.');
 if (!momentumPassed) console.log('Momentum synthesizer check failed. Fix momentum synthesizer before shipping.');
+if (!momentumWatcherPassed) console.log('Momentum watcher check failed. Fix momentum watcher before shipping.');
 if (!policyPassed) console.log('Policy core check failed. Fix policy regressions before shipping.');
 if (!claudeRuntimePassed) console.log('Claude runtime check failed. Fix runtime adapter regressions before shipping.');
 if (!codexRuntimePassed) console.log('Codex runtime check failed. Fix runtime adapter regressions before shipping.');
