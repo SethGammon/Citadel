@@ -7,8 +7,7 @@
 .claude/settings.local.json
 
 # Per-project scaffolded state (created by init-project hook)
-.citadel/
-!.citadel/
+.citadel/*
 !.citadel/project.md
 !.citadel/project.template.md
 
