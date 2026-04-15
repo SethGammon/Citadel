@@ -11,7 +11,10 @@
     "telemetry:report": "node scripts/telemetry-report.cjs",
     "telemetry:log": "node scripts/telemetry-log.cjs",
     "compress:discovery": "node scripts/compress-discovery.cjs",
-    "test:hooks": "node hooks_src/smoke-test.js"
+    "test:hooks": "node hooks_src/smoke-test.js",
+    "watch:local": "node scripts/local-watch.js",
+    "daemon:local": "node scripts/local-daemon.js",
+    "schedule:local": "node scripts/local-schedule.js"
   },
   "keywords": [
     "claude",

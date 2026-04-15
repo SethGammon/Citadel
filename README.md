@@ -20,6 +20,13 @@
 
 </div>
 
+> **Heads-up on Anthropic's routine quota:** Claude Code accounts are limited to
+> **15 routine runs per rolling 24 hours** (`CronCreate` / `ScheduleWakeup` /
+> `RemoteTrigger`). A single `/watch` or `/daemon` can exhaust it quickly and
+> pause unrelated routines on your account. Citadel ships local, quota-free
+> runners for each of those features — see
+> [docs/ROUTINE-QUOTA.md](docs/ROUTINE-QUOTA.md).
+
 ## What Is Citadel
 
 An agent orchestration harness for Claude Code and OpenAI Codex. It coordinates multiple AI agents in parallel, persists memory across sessions, and routes your intent to the cheapest execution path automatically. Citadel adapts itself to each runtime: plugin-first for Claude Code, generated project artifacts plus Codex-native config for Codex.

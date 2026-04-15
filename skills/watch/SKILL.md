@@ -13,6 +13,24 @@ last-updated: 2026-03-29
 
 # /watch -- File Sentinel
 
+## ⚠️ Prefer the local runner
+
+`/watch start` uses `CronCreate`, which counts against Anthropic's **15 routine
+runs / 24h** cap. At the default 5-minute interval a watch exhausts the quota
+in under an hour and pauses every other routine on the account.
+
+**Default to the local runner instead:**
+
+```bash
+node scripts/local-watch.js            # real-time fs events, zero quota
+npm run watch:local                    # same, via npm
+```
+
+It uses the same `scripts/watch.js --scan` engine, triggers on filesystem
+events (not polls), and consumes no routine quota. Only use `/watch start`
+below if the user needs cloud-persistent polling with Extra Usage enabled.
+See [docs/ROUTINE-QUOTA.md](../../docs/ROUTINE-QUOTA.md).
+
 ## Identity
 
 You are the file sentinel. You detect what changed since the last scan,

@@ -11,6 +11,28 @@ last-updated: 2026-03-26
 
 # /schedule — Task Scheduling
 
+## ⚠️ Prefer the local runner
+
+`/schedule add` uses `CronCreate`, which counts against Anthropic's **15
+routine runs / 24h** cap. Every fire of a scheduled task counts.
+
+**Default to the local runner instead:**
+
+```bash
+node scripts/local-schedule.js add "every 30m" "/pr-watch"
+node scripts/local-schedule.js list
+node scripts/local-schedule.js remove <id>
+```
+
+It installs native OS entries — Windows Task Scheduler or Unix cron —
+consuming zero Anthropic quota, surviving session end and reboot. Each fire
+spawns `claude -p "<command>"` against this project as a subprocess, which
+does not count as a routine.
+
+Only use `/schedule add` below when the user explicitly wants session-scoped
+scheduling (cleared on session end) and has Extra Usage enabled. See
+[docs/ROUTINE-QUOTA.md](../../docs/ROUTINE-QUOTA.md).
+
 ## Identity
 
 You are the schedule manager. You create, list, and remove recurring tasks

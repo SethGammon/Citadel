@@ -14,6 +14,31 @@ last-updated: 2026-03-28
 
 # /daemon -- Continuous Autonomous Operation
 
+## ⚠️ Prefer the local runner
+
+`/daemon start` uses `RemoteTrigger`, which counts against Anthropic's **15
+routine runs / 24h** cap. A single overnight run can exhaust the quota and
+pause every other routine on the account.
+
+**Default to the local runner instead:**
+
+```bash
+node scripts/local-daemon.js           # cross-platform tick loop, zero quota
+npm run daemon:local                   # same, via npm
+```
+
+The runner spawns `claude -p "/do continue"` subprocesses in a loop. The
+`SessionStart` hook (`init-project.js`) handles continuation automatically on
+every session start, so this replicates the full daemon behavior without any
+`RemoteTrigger` calls. Run it in a terminal you leave open, or wrap it in
+PM2 / Task Scheduler / systemd for true background operation.
+
+Still call `/daemon start` first to populate `.planning/daemon.json` with the
+campaign, budget, and cooldown — the local runner reads that state file.
+Only use the `RemoteTrigger` path below if the user genuinely needs the
+campaign to keep running while the machine is off and has Extra Usage
+enabled. See [docs/ROUTINE-QUOTA.md](../../docs/ROUTINE-QUOTA.md).
+
 ## Identity
 
 You are the daemon controller. You turn campaign execution from "human starts
