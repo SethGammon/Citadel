@@ -11,27 +11,35 @@ last-updated: 2026-03-26
 
 # /schedule — Task Scheduling
 
-## ⚠️ Prefer the local runner
+## Default execution path (READ FIRST)
 
-`/schedule add` uses `CronCreate`, which counts against Anthropic's **15
-routine runs / 24h** cap. Every fire of a scheduled task counts.
+**`/schedule add` does NOT call `CronCreate` by default.** It shells out to
+`node scripts/local-schedule.js` which installs a native OS entry (Windows
+Task Scheduler or Unix cron). Only pass `--remote` to use Anthropic's routine
+system, and only after explicit user confirmation.
 
-**Default to the local runner instead:**
-
-```bash
-node scripts/local-schedule.js add "every 30m" "/pr-watch"
-node scripts/local-schedule.js list
-node scripts/local-schedule.js remove <id>
-```
-
-It installs native OS entries — Windows Task Scheduler or Unix cron —
-consuming zero Anthropic quota, surviving session end and reboot. Each fire
-spawns `claude -p "<command>"` against this project as a subprocess, which
-does not count as a routine.
-
-Only use `/schedule add` below when the user explicitly wants session-scoped
-scheduling (cleared on session end) and has Extra Usage enabled. See
+**Why:** `CronCreate` counts against the account-wide **15 routine runs / 24h**
+cap; every fire of the scheduled task counts. See
 [docs/ROUTINE-QUOTA.md](../../docs/ROUTINE-QUOTA.md).
+
+### Default flow — `/schedule add "<expr>" "<command>"` (no `--remote`)
+Run:
+```bash
+node scripts/local-schedule.js add "<expr>" "<command>"
+```
+Then report the returned ID and the removal command. This survives session
+end, machine reboot, and consumes zero routine quota. Use
+`/schedule list` and `/schedule remove {id}` (which also shell out to
+`local-schedule.js`) by default.
+
+### Opt-in routine flow — `/schedule add --remote ...`
+Only when `--remote` is explicitly passed:
+1. Confirm: "This will use `CronCreate`, which counts against your 15 routine
+   runs / 24h quota and is cleared at session end. Continue? (y/N)"
+2. On confirmation, run the `CronCreate`-based flow documented below.
+
+The rest of the protocol documents the full `CronCreate` flow for reference
+and for `--remote` invocations.
 
 ## Identity
 

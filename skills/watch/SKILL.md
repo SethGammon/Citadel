@@ -13,23 +13,47 @@ last-updated: 2026-03-29
 
 # /watch -- File Sentinel
 
-## ⚠️ Prefer the local runner
+## Default execution path (READ FIRST)
 
-`/watch start` uses `CronCreate`, which counts against Anthropic's **15 routine
-runs / 24h** cap. At the default 5-minute interval a watch exhausts the quota
-in under an hour and pauses every other routine on the account.
+**`/watch start` does NOT call `CronCreate` by default.** The local runner is
+the default. Only pass `--remote` to use Anthropic's routine system, and only
+after explicit user confirmation.
 
-**Default to the local runner instead:**
+**Why:** `CronCreate` counts against the account-wide **15 routine runs / 24h**
+cap. At the default 5-minute interval a watch exhausts the quota in under an
+hour and pauses every other routine on the account. See
+[docs/ROUTINE-QUOTA.md](../../docs/ROUTINE-QUOTA.md).
 
-```bash
-node scripts/local-watch.js            # real-time fs events, zero quota
-npm run watch:local                    # same, via npm
-```
+### Default flow — `/watch start` (no `--remote` flag)
+1. Do Steps 1 and 2 below (check existing watch, determine baseline commit).
+2. **Skip Step 3** — do NOT call `CronCreate`. Leave `cronId: null` in the
+   state file.
+3. Write the state file (Step 4) with `status: "watching"`.
+4. Output (instead of Step 5):
+   ```
+   Watch state created: .planning/watch-state.json
+     Baseline: {commit hash, first 7 chars}
 
-It uses the same `scripts/watch.js --scan` engine, triggers on filesystem
-events (not polls), and consumes no routine quota. Only use `/watch start`
-below if the user needs cloud-persistent polling with Extra Usage enabled.
-See [docs/ROUTINE-QUOTA.md](../../docs/ROUTINE-QUOTA.md).
+   To start real-time watching, run in a separate terminal:
+     npm run watch:local
+
+   It uses filesystem events (not polling), triggers scans on change, and
+   consumes zero Anthropic routine quota. Stop with Ctrl+C.
+
+   For cloud-persistent polling (machine off, user away):
+     /watch start --remote     (uses CronCreate, counts against 15/day cap)
+   ```
+
+### Opt-in routine flow — `/watch start --remote`
+Only when `--remote` is explicitly passed:
+1. Confirm: "This will use `CronCreate`, which counts against your 15 routine
+   runs / 24h quota. At a 5-minute interval this exhausts the quota in under
+   an hour. Continue? (y/N)"
+2. On confirmation, run the full Step 1–5 protocol below including Step 3's
+   `CronCreate` call.
+
+The rest of the protocol documents the full routine-path flow for reference
+and for `--remote` invocations.
 
 ## Identity
 
@@ -55,8 +79,9 @@ Do NOT use `/watch` for:
 
 | Command | Behavior |
 |---|---|
-| `/watch start` | Start watching (poll via CronCreate, default 5m interval) |
-| `/watch start --interval {N}m` | Set poll interval (default: 5m) |
+| `/watch start` | Default: create state, prompt user to run `npm run watch:local` (real-time, zero routine cost) |
+| `/watch start --remote` | Use `CronCreate` polling instead (counts against 15/day routine quota — requires confirmation) |
+| `/watch start --interval {N}m` | Set poll interval for `--remote` mode (default: 5m) |
 | `/watch stop` | Stop watching, tear down cron |
 | `/watch status` | Show watch state, last scan time, pending actions |
 | `/watch scan` | Run a single scan now (manual trigger) |
