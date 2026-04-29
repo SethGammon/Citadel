@@ -140,28 +140,109 @@ ${mcpSection}
   writeFile(path.join(PROJECT_ROOT, '.codex', 'config.toml'), toml);
 }
 
-function mcpServerToToml(name, config) {
-  let lines = [`[mcp_servers.${name}]`];
+// ---- MCP server translation -------------------------------------------------
+//
+// Claude Code's `.mcp.json` and Codex's `[mcp_servers.NAME]` TOML overlap on
+// most fields but diverge on a few. The translator below:
+//
+//   1. Maps shared fields directly (command, args, url, env, cwd).
+//   2. Maps Claude `headers` → Codex `http_headers`.
+//   3. Detects token-style env vars and emits `bearer_token_env_var` while
+//      ALSO keeping the env var in env (so the program can still read it
+//      directly if needed).
+//   4. Honors a `_codex` extension block on the server entry for Codex-only
+//      knobs (startup_timeout_sec, tool_timeout_sec, enabled_tools,
+//      disabled_tools, enabled, required, env_http_headers, etc.). Any
+//      key under `_codex` is emitted verbatim into the TOML, which means
+//      new Codex fields work the moment they're added to the config —
+//      no edit to this generator required.
+//   5. Surfaces unrecognized top-level keys as a warning so silent drops
+//      become visible.
+//
+// Future-proofing: when Claude or Codex adds new common keys, prefer
+// extending CLAUDE_TO_CODEX_MAP. When Codex adds new Codex-only knobs,
+// users can pass them through `_codex` immediately; we tighten the
+// generator on the next pass.
 
-  if (config.command) {
-    lines.push(`command = "${config.command}"`);
+const CLAUDE_TO_CODEX_MAP = {
+  command: 'command',
+  args: 'args',
+  url: 'url',
+  cwd: 'cwd',
+  env: 'env',
+  headers: 'http_headers',
+};
+
+function tomlEscape(str) {
+  return String(str).replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+}
+
+function tomlValue(value) {
+  if (value === null || value === undefined) return null;
+  if (typeof value === 'string') return `"${tomlEscape(value)}"`;
+  if (typeof value === 'number' || typeof value === 'boolean') return String(value);
+  if (Array.isArray(value)) {
+    if (value.length === 0) return '[]';
+    return '[' + value.map(tomlValue).filter((v) => v !== null).join(', ') + ']';
   }
-  if (config.args && config.args.length > 0) {
-    const argsStr = config.args.map(a => `"${a}"`).join(', ');
-    lines.push(`args = [${argsStr}]`);
+  if (typeof value === 'object') {
+    const inner = Object.entries(value)
+      .filter(([k]) => !k.startsWith('_'))
+      .map(([k, v]) => `${k} = ${tomlValue(v)}`)
+      .filter((line) => !line.endsWith(' = null'));
+    return '{ ' + inner.join(', ') + ' }';
   }
-  if (config.url) {
-    lines.push(`url = "${config.url}"`);
+  return null;
+}
+
+function mcpServerToToml(name, config) {
+  const lines = [`[mcp_servers.${name}]`];
+  const warnings = [];
+
+  // Map common fields (Claude shape → Codex shape)
+  for (const [claudeKey, codexKey] of Object.entries(CLAUDE_TO_CODEX_MAP)) {
+    if (!(claudeKey in config) || config[claudeKey] === null || config[claudeKey] === undefined) continue;
+    const value = config[claudeKey];
+    // Skip empty arrays/objects to keep the TOML tidy.
+    if (Array.isArray(value) && value.length === 0) continue;
+    if (typeof value === 'object' && !Array.isArray(value) && Object.keys(value).length === 0) continue;
+    const rendered = tomlValue(value);
+    if (rendered !== null) lines.push(`${codexKey} = ${rendered}`);
   }
-  if (config.env) {
-    for (const [k, v] of Object.entries(config.env)) {
+
+  // Token-style env detection: emit bearer_token_env_var as a hint to Codex
+  // for HTTP servers, but keep the env var in `env` (handled above) so stdio
+  // servers still see it.
+  if (config.env && typeof config.env === 'object') {
+    for (const k of Object.keys(config.env)) {
       if (k.startsWith('_')) continue;
-      // Map env vars to bearer_token_env_var if it looks like a token
-      if (k.toLowerCase().includes('token')) {
-        lines.push(`bearer_token_env_var = "${k}"`);
+      if (/token/i.test(k) && config.url) {
+        lines.push(`bearer_token_env_var = "${tomlEscape(k)}"`);
+        break; // only one bearer slot per server
       }
     }
   }
+
+  // Codex-only extensions: anything under `_codex` is emitted verbatim.
+  // This is the forward-compatibility hatch — when OpenAI ships a new
+  // [mcp_servers.*] field, users can set it without touching this script.
+  if (config._codex && typeof config._codex === 'object') {
+    for (const [k, v] of Object.entries(config._codex)) {
+      if (v === null || v === undefined) continue;
+      const rendered = tomlValue(v);
+      if (rendered !== null) lines.push(`${k} = ${rendered}`);
+    }
+  }
+
+  // Warn about unrecognized top-level keys so we notice when Claude's
+  // shape evolves.
+  const known = new Set([...Object.keys(CLAUDE_TO_CODEX_MAP), '_codex', 'type']);
+  for (const k of Object.keys(config)) {
+    if (k.startsWith('_')) continue;
+    if (!known.has(k)) warnings.push(`mcp_servers.${name}: unrecognized field "${k}" — not translated`);
+  }
+  for (const w of warnings) console.warn(`  warning: ${w}`);
+
   lines.push('');
   return lines.join('\n');
 }
@@ -221,6 +302,37 @@ function generatePluginManifest() {
 }
 
 // ---- 3. Translate agent definitions -----------------------------------------
+//
+// Agent bodies become `developer_instructions` strings inside TOML. Codex has
+// historically had a soft cap on how much instruction text it will load; we
+// truncate to keep TOML files reasonable. Two failure modes the previous
+// implementation hit:
+//
+//   1. The truncation happened silently — agents like `archon` (>4000 chars)
+//      lost load-bearing guidance with no console output.
+//   2. The 4000-char number was hardcoded, so when Codex raises its limit
+//      (or if it never had one for a particular agent) we couldn't relax it
+//      without editing this file.
+//
+// Now: configurable, observable, per-agent override.
+
+const DEFAULT_AGENT_MAX_CHARS = 4000;
+
+function getAgentMaxChars(fm) {
+  // Per-agent override via frontmatter takes precedence — useful for an agent
+  // whose definition really needs more room.
+  if (fm.codex_max_chars !== undefined) {
+    const n = Number(fm.codex_max_chars);
+    if (Number.isFinite(n) && n >= 0) return n;
+  }
+  // Project-wide override via env var.
+  const envVal = process.env.CITADEL_CODEX_AGENT_MAX_CHARS;
+  if (envVal !== undefined && envVal !== '') {
+    const n = Number(envVal);
+    if (Number.isFinite(n) && n >= 0) return n;
+  }
+  return DEFAULT_AGENT_MAX_CHARS;
+}
 
 function translateAgents() {
   console.log('Translating agent definitions...');
@@ -253,10 +365,20 @@ function agentToToml(fm, fullContent) {
   const bodyMatch = normalized.match(/^---\n[\s\S]*?\n---\n([\s\S]*)/);
   const body = bodyMatch ? bodyMatch[1].trim() : '';
 
-  // Truncate instructions to keep TOML manageable (Codex has its own limits)
-  const instructions = body.length > 4000
-    ? body.slice(0, 4000) + '\n\n[Truncated by Citadel adapter. See full definition in agents/ directory.]'
-    : body;
+  // Truncate instructions, but loudly. Set CITADEL_CODEX_AGENT_MAX_CHARS=0
+  // (or higher than the body length) to disable.
+  const maxChars = getAgentMaxChars(fm);
+  let instructions = body;
+  if (maxChars > 0 && body.length > maxChars) {
+    const droppedChars = body.length - maxChars;
+    console.warn(
+      `  warning: agent "${fm.name}" instructions truncated — dropped ${droppedChars} chars ` +
+      `(body=${body.length}, cap=${maxChars}). Set codex_max_chars in frontmatter or ` +
+      `CITADEL_CODEX_AGENT_MAX_CHARS env to raise the cap.`
+    );
+    instructions = body.slice(0, maxChars) +
+      `\n\n[Truncated by Citadel adapter — ${droppedChars} chars dropped. See agents/${fm.name}.md for the full definition.]`;
+  }
 
   // Map Citadel model names to Codex model names
   const modelMap = {
@@ -293,6 +415,37 @@ function agentToToml(fm, fullContent) {
 
 // ---- 4. Sync skills to Codex discovery path ---------------------------------
 
+// Files and directories that should never travel into .agents/skills/.
+// Everything else in a skill directory is copied — so when a skill grows
+// scripts/, references/, assets/, or __benchmarks__/, they show up in Codex
+// without further changes here.
+const SKILL_COPY_EXCLUDES = new Set([
+  'node_modules',
+  '.git',
+  '.DS_Store',
+  'Thumbs.db',
+  // 'agents' is excluded because we generate agents/openai.yaml ourselves;
+  // any hand-authored sibling under agents/ would be clobbered or would
+  // race the generator. If a skill needs a checked-in agents/ subtree,
+  // revisit this exclusion.
+  'agents',
+]);
+
+function copySkillTree(sourceDir, targetDir) {
+  if (DRY_RUN) {
+    console.log(`  [dry-run] Would copy skill tree: ${sourceDir} -> ${targetDir}`);
+    return;
+  }
+  // fs.cpSync requires Node 16.7+. The project documents Node 18+ as the
+  // minimum (see Codex install guide), so this is safe.
+  fs.cpSync(sourceDir, targetDir, {
+    recursive: true,
+    force: true,
+    errorOnExist: false,
+    filter: (src) => !SKILL_COPY_EXCLUDES.has(path.basename(src)),
+  });
+}
+
 function syncSkills() {
   console.log('Syncing skills to .agents/skills/...');
 
@@ -309,17 +462,17 @@ function syncSkills() {
 
   let synced = 0;
   for (const skillName of skillDirs) {
-    const sourcePath = path.join(sourceDir, skillName, 'SKILL.md');
+    const sourceSkillDir = path.join(sourceDir, skillName);
+    const sourcePath = path.join(sourceSkillDir, 'SKILL.md');
     const targetDir  = path.join(targetBase, skillName);
-    const targetPath = path.join(targetDir, 'SKILL.md');
 
-    // Copy SKILL.md
-    if (!DRY_RUN) {
-      ensureDir(targetDir);
-      fs.copyFileSync(sourcePath, targetPath);
-    }
+    // Copy the entire skill directory (SKILL.md + scripts/, references/,
+    // assets/, __benchmarks__/, etc.). Excluded names from SKILL_COPY_EXCLUDES
+    // are skipped at every depth via the filter callback.
+    copySkillTree(sourceSkillDir, targetDir);
 
-    // Generate openai.yaml from frontmatter
+    // Generate openai.yaml from frontmatter — written after the copy so
+    // it overlays anything that might have slipped in.
     const content = fs.readFileSync(sourcePath, 'utf8');
     const fm = parseFrontmatter(content);
     if (fm.name || fm.description) {
@@ -329,7 +482,7 @@ function syncSkills() {
     synced++;
   }
 
-  console.log(`  ${synced} skills synced.`);
+  console.log(`  ${synced} skills synced (full directory tree).`);
 }
 
 function generateOpenAIYaml(skillDir, fm) {
