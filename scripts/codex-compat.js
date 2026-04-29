@@ -302,6 +302,37 @@ function generatePluginManifest() {
 }
 
 // ---- 3. Translate agent definitions -----------------------------------------
+//
+// Agent bodies become `developer_instructions` strings inside TOML. Codex has
+// historically had a soft cap on how much instruction text it will load; we
+// truncate to keep TOML files reasonable. Two failure modes the previous
+// implementation hit:
+//
+//   1. The truncation happened silently — agents like `archon` (>4000 chars)
+//      lost load-bearing guidance with no console output.
+//   2. The 4000-char number was hardcoded, so when Codex raises its limit
+//      (or if it never had one for a particular agent) we couldn't relax it
+//      without editing this file.
+//
+// Now: configurable, observable, per-agent override.
+
+const DEFAULT_AGENT_MAX_CHARS = 4000;
+
+function getAgentMaxChars(fm) {
+  // Per-agent override via frontmatter takes precedence — useful for an agent
+  // whose definition really needs more room.
+  if (fm.codex_max_chars !== undefined) {
+    const n = Number(fm.codex_max_chars);
+    if (Number.isFinite(n) && n >= 0) return n;
+  }
+  // Project-wide override via env var.
+  const envVal = process.env.CITADEL_CODEX_AGENT_MAX_CHARS;
+  if (envVal !== undefined && envVal !== '') {
+    const n = Number(envVal);
+    if (Number.isFinite(n) && n >= 0) return n;
+  }
+  return DEFAULT_AGENT_MAX_CHARS;
+}
 
 function translateAgents() {
   console.log('Translating agent definitions...');
@@ -334,10 +365,20 @@ function agentToToml(fm, fullContent) {
   const bodyMatch = normalized.match(/^---\n[\s\S]*?\n---\n([\s\S]*)/);
   const body = bodyMatch ? bodyMatch[1].trim() : '';
 
-  // Truncate instructions to keep TOML manageable (Codex has its own limits)
-  const instructions = body.length > 4000
-    ? body.slice(0, 4000) + '\n\n[Truncated by Citadel adapter. See full definition in agents/ directory.]'
-    : body;
+  // Truncate instructions, but loudly. Set CITADEL_CODEX_AGENT_MAX_CHARS=0
+  // (or higher than the body length) to disable.
+  const maxChars = getAgentMaxChars(fm);
+  let instructions = body;
+  if (maxChars > 0 && body.length > maxChars) {
+    const droppedChars = body.length - maxChars;
+    console.warn(
+      `  warning: agent "${fm.name}" instructions truncated — dropped ${droppedChars} chars ` +
+      `(body=${body.length}, cap=${maxChars}). Set codex_max_chars in frontmatter or ` +
+      `CITADEL_CODEX_AGENT_MAX_CHARS env to raise the cap.`
+    );
+    instructions = body.slice(0, maxChars) +
+      `\n\n[Truncated by Citadel adapter — ${droppedChars} chars dropped. See agents/${fm.name}.md for the full definition.]`;
+  }
 
   // Map Citadel model names to Codex model names
   const modelMap = {
