@@ -149,7 +149,7 @@ persistence = "save-all"
 
 # Shell environment
 [shell_environment_policy]
-inherit = "core"
+inherit = "all"
 set = { ${shellEnvVars} }
 exclude = ["*SECRET*", "*TOKEN*", "*KEY*"]
 ${mcpSection}${windowsSection}`;
