@@ -41,4 +41,40 @@ try {
   fs.rmSync(tmpProject, { recursive: true, force: true });
 }
 
+// Codex Stop hook contract: plain text stdout from inner hooks must be
+// redirected to stderr (Codex rejects non-JSON stdout for Stop). JSON passes
+// through unchanged. Non-Stop events keep their plain-text stdout.
+const hooksDir = path.join(__dirname, '..', 'hooks_src');
+const plainHook = path.join(hooksDir, 'test-fixture-plain-stop.js');
+const jsonHook = path.join(hooksDir, 'test-fixture-json-stop.js');
+fs.writeFileSync(plainHook, "process.stdout.write('plain text from hook');\n");
+fs.writeFileSync(jsonHook, "process.stdout.write(JSON.stringify({decision:'block',reason:'keep going'}));\n");
+
+try {
+  const stopPlain = spawnSync(process.execPath, [adapterPath, 'test-fixture-plain-stop'], {
+    cwd: path.join(__dirname, '..'),
+    input: JSON.stringify({ hook_event_name: 'Stop' }),
+    encoding: 'utf8',
+  });
+  assert.equal(stopPlain.stdout, '', 'Stop hook plain text should not leak to stdout');
+  assert(stopPlain.stderr.includes('plain text from hook'), 'Stop hook plain text should be redirected to stderr');
+
+  const stopJson = spawnSync(process.execPath, [adapterPath, 'test-fixture-json-stop'], {
+    cwd: path.join(__dirname, '..'),
+    input: JSON.stringify({ hook_event_name: 'Stop' }),
+    encoding: 'utf8',
+  });
+  assert(stopJson.stdout.includes('"decision":"block"'), 'Stop hook JSON output should pass through stdout');
+
+  const nonStop = spawnSync(process.execPath, [adapterPath, 'test-fixture-plain-stop'], {
+    cwd: path.join(__dirname, '..'),
+    input: JSON.stringify({ hook_event_name: 'PostToolUse' }),
+    encoding: 'utf8',
+  });
+  assert(nonStop.stdout.includes('plain text from hook'), 'Non-Stop events should keep plain-text stdout behaviour');
+} finally {
+  fs.rmSync(plainHook, { force: true });
+  fs.rmSync(jsonHook, { force: true });
+}
+
 console.log('codex runtime tests passed');
