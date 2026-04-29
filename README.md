@@ -12,20 +12,9 @@
 
 ---
 
-**[Follow on X](https://x.com/SethGammon)** for releases and updates · **[Join the discussion](https://github.com/SethGammon/Citadel/discussions)** · **[Watch releases](https://github.com/SethGammon/Citadel/releases)** to get notified
-
-*Building something with Citadel? [Drop a note in Discussions](https://github.com/SethGammon/Citadel/discussions) — use cases, questions, what's broken, what to build next.*
-
----
+**[Follow on X](https://x.com/SethGammon)** for updates · **[Join the discussion](https://github.com/SethGammon/Citadel/discussions)**
 
 </div>
-
-> **Heads-up on Anthropic's routine quota:** Claude Code accounts are limited to
-> **15 routine runs per rolling 24 hours** (`CronCreate` / `ScheduleWakeup` /
-> `RemoteTrigger`). A single `/watch` or `/daemon` can exhaust it quickly and
-> pause unrelated routines on your account. Citadel ships local, quota-free
-> runners for each of those features — see
-> [docs/ROUTINE-QUOTA.md](docs/ROUTINE-QUOTA.md).
 
 ## What Is Citadel
 
@@ -62,7 +51,7 @@ codex
 /do review src/main.ts
 ```
 
-[Quickstart for both runtimes](QUICKSTART.md) · [Claude Code installation guide](docs/CLAUDE_INSTALLATION_GUIDE.md) · [Codex installation guide](docs/CODEX_INSTALLATION_GUIDE.md) · [Share what you're building →](https://github.com/SethGammon/Citadel/discussions)
+[Quickstart for both runtimes](QUICKSTART.md) · [Claude Code installation guide](docs/CLAUDE_INSTALLATION_GUIDE.md) · [Codex installation guide](docs/CODEX_INSTALLATION_GUIDE.md)
 
 ## How It Works
 
@@ -155,9 +144,8 @@ Four tiers. Use the cheapest one that fits.
 
 ## Community
 
-- **[X / Twitter](https://x.com/SethGammon)** — follow for releases, updates, and what's being built
+- **[X / Twitter](https://x.com/SethGammon)** — follow for updates and what's being built
 - **[GitHub Discussions](https://github.com/SethGammon/Citadel/discussions)** — use cases, questions, requests, show and tell
-- **[GitHub Releases](https://github.com/SethGammon/Citadel/releases)** — hit Watch → Custom → Releases to get notified on every ship
 
 Have a use case, a bug, or a workflow you want optimized? Open a Discussion. If you're using this in production, say so — it helps prioritize what gets built next.
 
@@ -176,14 +164,10 @@ Have a use case, a bug, or a workflow you want optimized? Open a Discussion. If 
 
 ### Contributing
 
-Contributions are welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for how to:
+Contributions are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for how to:
 - Submit issues with bug reports or feature requests
 - Create pull requests for skills, hooks, or docs
 - Share your use cases and workflows
-
-### Share Your Setup
-
-Built something interesting with Citadel? Open a Discussion to share your workflow — good setups get featured here.
 
 ---
 
