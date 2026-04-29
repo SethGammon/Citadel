@@ -34,6 +34,38 @@ try {
 
 const PROJECT_ROOT = health.PROJECT_ROOT;
 
+// Idempotency guard. In Claude Code this hook fires once at SessionEnd. In
+// Codex, the bridge maps SessionEnd → Stop because Codex has no native
+// SessionEnd event, so without a guard the hook would fire on every turn.
+// We mark which session_id has already run and short-circuit re-fires.
+//
+// The guard is keyed on session_id, not runtime. That means it works
+// uniformly across Claude Code (where it's a no-op) and Codex (where it
+// actually prevents duplicate fires) — and if Codex ever ships a real
+// SessionEnd event, the same code keeps working without changes.
+function alreadyFiredForSession(sessionId) {
+  if (!sessionId) return false; // can't guard without an id; allow through
+  try {
+    const markerPath = path.join(PROJECT_ROOT, '.planning', 'telemetry', 'session-end.lock');
+    if (!fs.existsSync(markerPath)) return false;
+    const content = fs.readFileSync(markerPath, 'utf8').trim();
+    // Marker holds the most recent session_id that ran session-end.
+    // If it matches, we've already fired for this session.
+    return content === sessionId;
+  } catch {
+    return false; // on any error, allow the hook to fire
+  }
+}
+
+function recordFiredForSession(sessionId) {
+  if (!sessionId) return;
+  try {
+    const telemetryDir = path.join(PROJECT_ROOT, '.planning', 'telemetry');
+    if (!fs.existsSync(telemetryDir)) fs.mkdirSync(telemetryDir, { recursive: true });
+    fs.writeFileSync(path.join(telemetryDir, 'session-end.lock'), sessionId, 'utf8');
+  } catch { /* non-critical */ }
+}
+
 function main() {
   let input = '';
   process.stdin.setEncoding('utf8');
@@ -42,12 +74,21 @@ function main() {
     let event = {};
     try { event = JSON.parse(input); } catch { /* partial input ok */ }
 
+    const sessionId = event.session_id || null;
+
+    // Idempotency: skip if we've already run for this session_id.
+    // This is what makes the hook safe under Codex's SessionEnd→Stop collapse.
+    if (alreadyFiredForSession(sessionId)) {
+      process.exit(0);
+    }
+    recordFiredForSession(sessionId);
+
     health.increment('session-end', 'count');
 
     // Log session end
     health.logTiming('session-end', 0, {
       event: 'session-end',
-      session_id: event.session_id || null,
+      session_id: sessionId,
     });
 
     // Log session cost data to telemetry
