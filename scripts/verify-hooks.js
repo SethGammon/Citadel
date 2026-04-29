@@ -209,11 +209,19 @@ test('.planning/ directory tree created', () => {
   if (missing.length) return `missing dirs: ${missing.join(', ')}`;
 });
 
-test('.citadel/scripts/ populated', () => {
+test('.citadel/scripts/ populated with delegates', () => {
   const scripts = path.join(initDir, '.citadel', 'scripts');
   if (!fs.existsSync(scripts)) return '.citadel/scripts/ not created';
   const files = fs.readdirSync(scripts);
   if (files.length === 0) return '.citadel/scripts/ is empty';
+  // Each file should be a thin delegate (reads plugin-root.txt, not a verbatim copy)
+  const delegateMarker = 'plugin-root.txt';
+  const nonDelegate = files.filter(f => {
+    if (!f.endsWith('.js') && !f.endsWith('.cjs')) return false;
+    const content = fs.readFileSync(path.join(scripts, f), 'utf8');
+    return !content.includes(delegateMarker);
+  });
+  if (nonDelegate.length > 0) return `non-delegate scripts found: ${nonDelegate.join(', ')}`;
 });
 
 test('.citadel/plugin-root.txt written', () => {

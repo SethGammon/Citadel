@@ -95,6 +95,25 @@ function copyDirIfMissing(src, dest) {
   }
 }
 
+/**
+ * Generate a thin delegate wrapper that forwards execution to the real script
+ * in the Citadel install. This avoids copying scripts that import from
+ * ../core/ and ../runtimes/ — paths that only exist inside the Citadel repo.
+ */
+function generateDelegate(scriptName) {
+  return (
+    "#!/usr/bin/env node\n" +
+    "'use strict';\n" +
+    "const { spawnSync } = require('child_process');\n" +
+    "const fs = require('fs');\n" +
+    "const path = require('path');\n" +
+    "const pluginRoot = fs.readFileSync(path.join(__dirname, '..', 'plugin-root.txt'), 'utf8').trim();\n" +
+    "const real = path.join(pluginRoot, 'scripts', " + JSON.stringify(scriptName) + ");\n" +
+    "const r = spawnSync(process.execPath, [real, ...process.argv.slice(2)], { stdio: 'inherit', env: process.env });\n" +
+    "process.exit(r.status ?? 0);\n"
+  );
+}
+
 function main() {
   try {
     // 1. Create .planning/ directory tree
@@ -131,6 +150,12 @@ function main() {
     }
 
     // 4. Sync utility scripts to .citadel/scripts/ (version-gated to avoid unnecessary I/O)
+    //
+    // Scripts are generated as thin delegates rather than copied verbatim.
+    // Copied scripts import from ../core/ and ../runtimes/ which only exist
+    // inside the Citadel install, not inside the target project. Delegates
+    // read plugin-root.txt at runtime and spawn the real script via the
+    // Citadel install, so imports always resolve correctly.
     if (shouldSyncScripts()) {
       const pluginScripts = path.join(PLUGIN_ROOT, 'scripts');
       const projectScripts = path.join(PROJECT_ROOT, '.citadel', 'scripts');
@@ -138,9 +163,9 @@ function main() {
         ensureDir(projectScripts);
         for (const file of fs.readdirSync(pluginScripts)) {
           if (file.endsWith('.js') || file.endsWith('.cjs')) {
-            fs.copyFileSync(
-              path.join(pluginScripts, file),
-              path.join(projectScripts, file)
+            fs.writeFileSync(
+              path.join(projectScripts, file),
+              generateDelegate(file)
             );
           }
         }
