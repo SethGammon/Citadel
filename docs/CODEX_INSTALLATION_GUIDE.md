@@ -109,7 +109,7 @@ Codex should now see the generated `AGENTS.md` guidance and the `.codex/` runtim
 Once Codex is open in the project, run:
 
 ```text
-/do setup
+$do setup
 ```
 
 This is the project bootstrap step for the harness itself. For Codex projects it is expected to create or refresh project-level guidance and state such as:
@@ -138,7 +138,7 @@ AGENTS.md
 Then run a simple command in Codex:
 
 ```text
-/do --list
+$do --list
 ```
 
 If installation is working, Codex should discover the Citadel skills and the project should contain the generated state directories.
@@ -146,7 +146,7 @@ If installation is working, Codex should discover the Citadel skills and the pro
 You can also try:
 
 ```text
-/do review src/main.ts
+$do review src/main.ts
 ```
 
 Use any real file in your project for the first command.
@@ -186,7 +186,7 @@ Re-run:
 node /path/to/Citadel/scripts/codex-compat.js
 ```
 
-If the file still does not appear, create it by running `/do setup` inside Codex after the compatibility artifacts exist.
+If the file still does not appear, create it by running `$do setup` inside Codex after the compatibility artifacts exist.
 
 ### You changed or pulled new Citadel code
 
@@ -202,9 +202,9 @@ node /path/to/Citadel/scripts/install-hooks-codex.js
 After installation, these are the fastest checks:
 
 ```text
-/do setup
-/do --list
-/do review path/to/file
+$do setup
+$do --list
+$do review path/to/file
 ```
 
 If those work, Citadel is installed for Codex and ready for normal use.
