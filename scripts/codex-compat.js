@@ -293,6 +293,37 @@ function agentToToml(fm, fullContent) {
 
 // ---- 4. Sync skills to Codex discovery path ---------------------------------
 
+// Files and directories that should never travel into .agents/skills/.
+// Everything else in a skill directory is copied — so when a skill grows
+// scripts/, references/, assets/, or __benchmarks__/, they show up in Codex
+// without further changes here.
+const SKILL_COPY_EXCLUDES = new Set([
+  'node_modules',
+  '.git',
+  '.DS_Store',
+  'Thumbs.db',
+  // 'agents' is excluded because we generate agents/openai.yaml ourselves;
+  // any hand-authored sibling under agents/ would be clobbered or would
+  // race the generator. If a skill needs a checked-in agents/ subtree,
+  // revisit this exclusion.
+  'agents',
+]);
+
+function copySkillTree(sourceDir, targetDir) {
+  if (DRY_RUN) {
+    console.log(`  [dry-run] Would copy skill tree: ${sourceDir} -> ${targetDir}`);
+    return;
+  }
+  // fs.cpSync requires Node 16.7+. The project documents Node 18+ as the
+  // minimum (see Codex install guide), so this is safe.
+  fs.cpSync(sourceDir, targetDir, {
+    recursive: true,
+    force: true,
+    errorOnExist: false,
+    filter: (src) => !SKILL_COPY_EXCLUDES.has(path.basename(src)),
+  });
+}
+
 function syncSkills() {
   console.log('Syncing skills to .agents/skills/...');
 
@@ -309,17 +340,17 @@ function syncSkills() {
 
   let synced = 0;
   for (const skillName of skillDirs) {
-    const sourcePath = path.join(sourceDir, skillName, 'SKILL.md');
+    const sourceSkillDir = path.join(sourceDir, skillName);
+    const sourcePath = path.join(sourceSkillDir, 'SKILL.md');
     const targetDir  = path.join(targetBase, skillName);
-    const targetPath = path.join(targetDir, 'SKILL.md');
 
-    // Copy SKILL.md
-    if (!DRY_RUN) {
-      ensureDir(targetDir);
-      fs.copyFileSync(sourcePath, targetPath);
-    }
+    // Copy the entire skill directory (SKILL.md + scripts/, references/,
+    // assets/, __benchmarks__/, etc.). Excluded names from SKILL_COPY_EXCLUDES
+    // are skipped at every depth via the filter callback.
+    copySkillTree(sourceSkillDir, targetDir);
 
-    // Generate openai.yaml from frontmatter
+    // Generate openai.yaml from frontmatter — written after the copy so
+    // it overlays anything that might have slipped in.
     const content = fs.readFileSync(sourcePath, 'utf8');
     const fm = parseFrontmatter(content);
     if (fm.name || fm.description) {
@@ -329,7 +360,7 @@ function syncSkills() {
     synced++;
   }
 
-  console.log(`  ${synced} skills synced.`);
+  console.log(`  ${synced} skills synced (full directory tree).`);
 }
 
 function generateOpenAIYaml(skillDir, fm) {
