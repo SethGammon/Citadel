@@ -173,9 +173,12 @@ function main() {
       writeVersionFile(PLUGIN_ROOT, PROJECT_ROOT);
     }
 
-    // 5. Copy agent-context if missing
+    // 5. Copy agent-context template if missing.
+    // Source lives in templates/agent-context/ (runtime-neutral).
+    // Destination is .claude/agent-context/ for Claude sessions.
+    // Codex equivalent would go to .codex/agent-context/ when that runtime is added.
+    const pluginAgentContext = path.join(PLUGIN_ROOT, 'templates', 'agent-context');
     const agentContext = path.join(PROJECT_ROOT, '.claude', 'agent-context');
-    const pluginAgentContext = path.join(PLUGIN_ROOT, '.claude', 'agent-context');
     if (!fs.existsSync(agentContext) && fs.existsSync(pluginAgentContext)) {
       copyDirRecursive(pluginAgentContext, agentContext);
     }

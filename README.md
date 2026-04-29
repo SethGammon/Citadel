@@ -115,7 +115,7 @@ Four tiers. Use the cheapest one that fits.
 
 **How is this different from `CLAUDE.md` or `AGENTS.md`?** Those files tell the runtime about your project. Citadel tells the runtime *how to work*: durable state, intelligent routing, automated safety, and native parallelism — the infrastructure layer those files assume someone else built.
 
-**Do I need to learn all 42 skills?** No. Just use `/do` and describe what you want in plain English. The router picks the right skill. You can go months without ever typing a skill name directly.
+**Do I need to learn all 43 skills?** No. Just use `/do` and describe what you want in plain English. The router picks the right skill. You can go months without ever typing a skill name directly.
 
 **What if `/do` routes to the wrong tool?** Tell it. "Wrong tool" or "just do it yourself" and it adjusts. You can also invoke any skill directly: `/review`, `/archon`, etc. The router is a convenience, not a gate.
 
@@ -133,7 +133,7 @@ Four tiers. Use the cheapest one that fits.
 - [Quickstart](QUICKSTART.md) — first-run paths for both Claude Code and Codex
 - [Claude Code installation guide](docs/CLAUDE_INSTALLATION_GUIDE.md) — Claude-specific plugin setup and hooks
 - [Codex installation guide](docs/CODEX_INSTALLATION_GUIDE.md) — Codex-specific setup, hooks, and verification
-- [Skills reference](docs/SKILLS.md) — all 42 skills with invocation and examples
+- [Skills reference](docs/SKILLS.md) — all 43 skills with invocation and examples
 - [Hooks reference](docs/HOOKS.md) — 14 event types, 22 hooks, what each one enforces
 - [Campaign guide](docs/CAMPAIGNS.md) — persistent state, phases, AI amnesia prevention
 - [Fleet guide](docs/FLEET.md) — parallel agents, worktree isolation, discovery relay
