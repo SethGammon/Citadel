@@ -110,13 +110,21 @@ function generateConfigToml() {
     }
   }
 
-  // On Windows, PowerShell 5 startup fails in some environments (error 8009001d).
-  // Point Codex at Git Bash if available so shell commands don't hit the PS loader.
+  // On Windows, PowerShell 5 fails to load its managed runtime in some environments
+  // (error 8009001d). Emit the [windows] agent_shell override and set SHELL in the
+  // env policy so both the Codex shell selector and any sub-invocations use Git Bash.
   let shellEnvVars = 'CITADEL_RUNTIME = "codex"';
+  let windowsSection = '';
   if (process.platform === 'win32') {
     const gitBash = 'C:/Program Files/Git/bin/bash.exe';
     if (fs.existsSync(gitBash)) {
       shellEnvVars += `, SHELL = "${gitBash}"`;
+      windowsSection = `
+# Route Codex shell execution through Git Bash instead of PowerShell on Windows.
+# Prevents "Loading managed Windows PowerShell failed with error 8009001d" errors.
+[windows]
+agent_shell = "git-bash"
+`;
     }
   }
 
@@ -144,8 +152,7 @@ persistence = "save-all"
 inherit = "core"
 set = { ${shellEnvVars} }
 exclude = ["*SECRET*", "*TOKEN*", "*KEY*"]
-${mcpSection}
-`;
+${mcpSection}${windowsSection}`;
 
   writeFile(path.join(PROJECT_ROOT, '.codex', 'config.toml'), toml);
 }
