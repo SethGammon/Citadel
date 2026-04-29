@@ -140,28 +140,109 @@ ${mcpSection}
   writeFile(path.join(PROJECT_ROOT, '.codex', 'config.toml'), toml);
 }
 
-function mcpServerToToml(name, config) {
-  let lines = [`[mcp_servers.${name}]`];
+// ---- MCP server translation -------------------------------------------------
+//
+// Claude Code's `.mcp.json` and Codex's `[mcp_servers.NAME]` TOML overlap on
+// most fields but diverge on a few. The translator below:
+//
+//   1. Maps shared fields directly (command, args, url, env, cwd).
+//   2. Maps Claude `headers` → Codex `http_headers`.
+//   3. Detects token-style env vars and emits `bearer_token_env_var` while
+//      ALSO keeping the env var in env (so the program can still read it
+//      directly if needed).
+//   4. Honors a `_codex` extension block on the server entry for Codex-only
+//      knobs (startup_timeout_sec, tool_timeout_sec, enabled_tools,
+//      disabled_tools, enabled, required, env_http_headers, etc.). Any
+//      key under `_codex` is emitted verbatim into the TOML, which means
+//      new Codex fields work the moment they're added to the config —
+//      no edit to this generator required.
+//   5. Surfaces unrecognized top-level keys as a warning so silent drops
+//      become visible.
+//
+// Future-proofing: when Claude or Codex adds new common keys, prefer
+// extending CLAUDE_TO_CODEX_MAP. When Codex adds new Codex-only knobs,
+// users can pass them through `_codex` immediately; we tighten the
+// generator on the next pass.
 
-  if (config.command) {
-    lines.push(`command = "${config.command}"`);
+const CLAUDE_TO_CODEX_MAP = {
+  command: 'command',
+  args: 'args',
+  url: 'url',
+  cwd: 'cwd',
+  env: 'env',
+  headers: 'http_headers',
+};
+
+function tomlEscape(str) {
+  return String(str).replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+}
+
+function tomlValue(value) {
+  if (value === null || value === undefined) return null;
+  if (typeof value === 'string') return `"${tomlEscape(value)}"`;
+  if (typeof value === 'number' || typeof value === 'boolean') return String(value);
+  if (Array.isArray(value)) {
+    if (value.length === 0) return '[]';
+    return '[' + value.map(tomlValue).filter((v) => v !== null).join(', ') + ']';
   }
-  if (config.args && config.args.length > 0) {
-    const argsStr = config.args.map(a => `"${a}"`).join(', ');
-    lines.push(`args = [${argsStr}]`);
+  if (typeof value === 'object') {
+    const inner = Object.entries(value)
+      .filter(([k]) => !k.startsWith('_'))
+      .map(([k, v]) => `${k} = ${tomlValue(v)}`)
+      .filter((line) => !line.endsWith(' = null'));
+    return '{ ' + inner.join(', ') + ' }';
   }
-  if (config.url) {
-    lines.push(`url = "${config.url}"`);
+  return null;
+}
+
+function mcpServerToToml(name, config) {
+  const lines = [`[mcp_servers.${name}]`];
+  const warnings = [];
+
+  // Map common fields (Claude shape → Codex shape)
+  for (const [claudeKey, codexKey] of Object.entries(CLAUDE_TO_CODEX_MAP)) {
+    if (!(claudeKey in config) || config[claudeKey] === null || config[claudeKey] === undefined) continue;
+    const value = config[claudeKey];
+    // Skip empty arrays/objects to keep the TOML tidy.
+    if (Array.isArray(value) && value.length === 0) continue;
+    if (typeof value === 'object' && !Array.isArray(value) && Object.keys(value).length === 0) continue;
+    const rendered = tomlValue(value);
+    if (rendered !== null) lines.push(`${codexKey} = ${rendered}`);
   }
-  if (config.env) {
-    for (const [k, v] of Object.entries(config.env)) {
+
+  // Token-style env detection: emit bearer_token_env_var as a hint to Codex
+  // for HTTP servers, but keep the env var in `env` (handled above) so stdio
+  // servers still see it.
+  if (config.env && typeof config.env === 'object') {
+    for (const k of Object.keys(config.env)) {
       if (k.startsWith('_')) continue;
-      // Map env vars to bearer_token_env_var if it looks like a token
-      if (k.toLowerCase().includes('token')) {
-        lines.push(`bearer_token_env_var = "${k}"`);
+      if (/token/i.test(k) && config.url) {
+        lines.push(`bearer_token_env_var = "${tomlEscape(k)}"`);
+        break; // only one bearer slot per server
       }
     }
   }
+
+  // Codex-only extensions: anything under `_codex` is emitted verbatim.
+  // This is the forward-compatibility hatch — when OpenAI ships a new
+  // [mcp_servers.*] field, users can set it without touching this script.
+  if (config._codex && typeof config._codex === 'object') {
+    for (const [k, v] of Object.entries(config._codex)) {
+      if (v === null || v === undefined) continue;
+      const rendered = tomlValue(v);
+      if (rendered !== null) lines.push(`${k} = ${rendered}`);
+    }
+  }
+
+  // Warn about unrecognized top-level keys so we notice when Claude's
+  // shape evolves.
+  const known = new Set([...Object.keys(CLAUDE_TO_CODEX_MAP), '_codex', 'type']);
+  for (const k of Object.keys(config)) {
+    if (k.startsWith('_')) continue;
+    if (!known.has(k)) warnings.push(`mcp_servers.${name}: unrecognized field "${k}" — not translated`);
+  }
+  for (const w of warnings) console.warn(`  warning: ${w}`);
+
   lines.push('');
   return lines.join('\n');
 }
