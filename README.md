@@ -150,6 +150,7 @@ Four tiers. Use the cheapest one that fits.
 - [Fleet guide](docs/FLEET.md) — parallel agents, worktree isolation, discovery relay
 - [Security model](SECURITY.md) — path traversal, shell injection, and defensive measures
 - [Contributing](CONTRIBUTING.md) — how to submit issues, PRs, and new skills
+- [Community projects](COMMUNITY.md) — third-party skills and extensions built on Citadel
 - [External overview](https://repo-explainer.com/SethGammon/Citadel/) — third-party writeup on the architecture and philosophy
 
 
