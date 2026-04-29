@@ -34,8 +34,26 @@ function main() {
       encoding: 'utf8',
     });
 
-    if (result.stdout) process.stdout.write(result.stdout);
-    if (result.stderr) process.stderr.write(result.stderr);
+    const stdout = result.stdout || '';
+    const stderr = result.stderr || '';
+
+    // Codex's Stop hook spec requires JSON on stdout (or empty stdout) when
+    // exit is 0 — plain text is rejected. Inner hooks (quality-gate, session-end)
+    // emit human-readable text by default. Route non-JSON Stop output to stderr
+    // so Codex still logs the message without rejecting the hook contract.
+    if (envelope.native_event_name === 'Stop' && stdout.trim().length > 0) {
+      let isJson = false;
+      try { JSON.parse(stdout); isJson = true; } catch { /* not JSON */ }
+      if (isJson) {
+        process.stdout.write(stdout);
+      } else {
+        process.stderr.write(stdout);
+      }
+    } else if (stdout) {
+      process.stdout.write(stdout);
+    }
+
+    if (stderr) process.stderr.write(stderr);
     process.exit(typeof result.status === 'number' ? result.status : 0);
   });
 }
