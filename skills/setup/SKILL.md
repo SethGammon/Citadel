@@ -40,6 +40,54 @@ Flag: `/do setup --express` skips mode selection and runs Express directly.
 
 ## Protocol
 
+### Step -1: ARCHIVE DETECTION (all modes, before anything else)
+
+Check whether a previous unharness left an archive in this project:
+
+```bash
+ls docs/citadel/ 2>/dev/null
+```
+
+If `docs/citadel/` exists and contains any `.md` files with `citadel-archive: true` in their
+frontmatter, read the first line of each to extract the `exported-at` date, then prompt once:
+
+```
+Found a Citadel archive from {exported-at date}.
+  Campaigns: {N}  Postmortems: {N}  Backlog items: {N}  Research: {N}
+
+Restore history into .planning/ during setup? [Y/n]
+```
+
+- **Y or Enter**: set `restoreArchive = true`. After hooks are installed in Step 1,
+  restore the archive (see ARCHIVE RESTORE below).
+- **n**: skip silently, proceed with fresh setup.
+
+If no archive is found, skip this step entirely — no output.
+
+**ARCHIVE RESTORE** (runs after Step 1 if `restoreArchive = true`):
+
+For each archive file in `docs/citadel/`:
+
+| File | Restore to |
+|---|---|
+| `campaigns.md` | Split sections back into `.planning/campaigns/completed/{name}.md` |
+| `postmortems.md` | Split sections back into `.planning/postmortems/{name}.md` |
+| `research.md` | Split sections back into `.planning/research/{name}.md` |
+| `backlog.md` | Split sections back into `.planning/intake/{name}.md` |
+| `discoveries.md` | Split sections back into `.planning/discoveries/{name}.md` |
+| `project.md` | Strip frontmatter, write to `.citadel/project.md` |
+| `harness.json.md` | Strip frontmatter, write to `.claude/harness.json` |
+
+Splitting: each `## Section Title` in the archive file becomes one restored file.
+Strip the frontmatter block (`---` ... `---`) before writing restored files.
+
+After restore, output one line:
+```
+  ✓ Archive restored — {N} campaigns, {N} postmortems, {N} backlog items
+```
+
+---
+
 ### Step 0: MODE SELECTION
 
 Before anything else, present three modes. This is the only required
