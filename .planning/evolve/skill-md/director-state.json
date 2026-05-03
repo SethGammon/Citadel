@@ -2,31 +2,35 @@
   "target": "skill-md",
   "mode": "budget",
   "budget": 50,
-  "cumulative_spend": 39,
+  "cumulative_spend": 42,
   "cycle": 5,
-  "current_phase": "checkpoint",
-  "velocity_history": [1.0, 1.17, 1.17, 0.73],
-  "halt_status": null,
+  "current_phase": "complete",
+  "velocity_history": [1.0, 1.17, 1.17, 0.73, 0.5],
+  "halt_status": "budget-ceiling",
   "started": "2026-05-03T00:00:00Z",
   "level_up_triggered": false,
-  "continuation": {
-    "last_cycle_digest": ".planning/evolve/skill-md/cycle-4-digest.md",
-    "axes_below_8": ["orientation_precision"],
-    "axes_at_8_plus": ["protocol_completeness", "density", "fringe_accuracy", "escalation_guidance", "output_completeness"],
-    "cycle4_estimated_scores": {
-      "protocol_completeness": 8.0,
-      "density": 8.2,
-      "escalation_guidance": 8.5,
-      "fringe_accuracy": 8.0,
-      "orientation_precision": 7.5,
-      "output_completeness": 8.5
-    },
-    "remaining_gaps": {
-      "orientation_precision": "all skills have orientation sections; some may be vague -- check with grep for 'Don't use when' lines that don't name specific skills; 7.5 score suggests real gap here",
-      "density": "setup (2419), organize (2321), daemon (2370) may have redundant sections; diminishing returns -- only attack if clear dead weight found via scout",
-      "escalation_guidance": "5 remaining skills may lack contextual gates -- recheck with grep after cycle 3/4 cross-pollination"
-    },
-    "velocity_trajectory": "velocity dropped 1.17 -> 0.73 in cycle 4 (expected, entering perceptual territory). Halt if cycle 5 velocity < 0.2. Budget remaining ~$11 -- small targeted cycle only.",
-    "note": "Cycle 4 complete. All axes now at 8.0+ except orientation_precision (7.5). Cycle 5 should focus on orientation_precision: check which skills have vague Don't-use-when, add named neighbors where missing. This is a low-cost targeted fix."
-  }
+  "final_estimated_scores": {
+    "protocol_completeness": 8.0,
+    "density": 8.2,
+    "escalation_guidance": 8.5,
+    "fringe_accuracy": 8.0,
+    "orientation_precision": 8.0,
+    "output_completeness": 8.5
+  },
+  "commits": [
+    "41b7eeb: cycle1 -- H-FA-01/H-OP-01 fringe+orientation for session-handoff/evolve",
+    "a6af0a0: cycle1 -- H-OP-01 fleet orientation + scaffold neighbors",
+    "9938f41: cycle1 -- H-OC-01 marshal HANDOFF + research reversibility",
+    "e00f392: cycle1/cross-pollinate -- postmortem/learn/organize orientation + archon hung-agent",
+    "f200fda: cycle1 -- digest + artifacts",
+    "89e32ab: cycle2 -- H-OP-02/H-FA-02/H-EG-02/H-OC-02 -- 25 skills",
+    "17c9f8a: cycle2/cross-pollinate -- P-06 contextual-gates to telemetry/verify/research-fleet/qa",
+    "abb37ba: cycle2 -- digest + artifacts",
+    "7f59daa: cycle3 -- H-D-03/H-EG-03/H-OC-03 -- 32 skills (Identity removal + contextual gates)",
+    "ed6c584: cycle3 -- digest + artifacts",
+    "00aabef: cycle4 -- H-FA-04/H-PC-04/H-D-04 -- lint guards + protocol gaps + density pruning",
+    "c26a014: cycle4 -- digest + artifacts",
+    "00073a9: cycle5 -- H-OP-05 -- Don't-use-when to 9 high-traffic skills"
+  ],
+  "reversibility": "red -- 13 commits across 45 skill files; revert range: git revert 00073a9^..00073a9 (cycle5) or git revert 00aabef^..00aabef (cycle4), etc. per cycle"
 }
