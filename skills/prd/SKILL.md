@@ -13,6 +13,8 @@ effort: high
 
 ## When to Use
 
+**Don't use when:** architecture is already defined and you need implementation (use /architect then /archon); adding a small feature to an existing app (use /marshal directly).
+
 - User describes an app or feature to build (greenfield or feature mode)
 - Before any Archon campaign for a new project or feature
 

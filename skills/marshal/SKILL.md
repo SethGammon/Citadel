@@ -20,9 +20,7 @@ Use Marshal when the task is:
 - Spans multiple skills but doesn't need campaign persistence
 - Too complex for a single skill but doesn't need Archon/Fleet
 
-Do NOT use Marshal for:
-- Single-file edits (use the skill directly or do it yourself)
-- Multi-session work (use Archon)
+**Don't use when:** the task spans multiple sessions (use /archon); work decomposes into 3+ parallel streams (use /fleet); you only need research with no action (use /research).
 - Parallel execution (use Fleet)
 
 ## Commands

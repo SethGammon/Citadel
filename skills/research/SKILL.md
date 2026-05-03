@@ -20,6 +20,8 @@ last-updated: 2026-03-21
 - Checking if a pattern used in the codebase has known issues
 - Any time you need external information before making a decision
 
+**Don't use when:** the question has 3+ independent sub-questions (use /research-fleet for parallel scouts); you need to act on findings immediately (use /marshal which calls /research internally).
+
 ## Protocol
 
 ### Step 1: FORMULATE

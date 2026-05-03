@@ -20,6 +20,8 @@ you want CI watch/fix behavior from the terminal without switching to web or mob
 
 ## When to Use
 
+**Don't use when:** monitoring local file changes (use /watch); reviewing code quality (use /review); triaging multiple issues at once (use /triage).
+
 - `/pr-watch` — watch the PR for the current branch
 - `/pr-watch 42` — watch PR #42 specifically
 - After `/triage` creates a fix PR and you want to stay in the terminal

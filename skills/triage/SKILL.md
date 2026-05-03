@@ -15,6 +15,8 @@ last-updated: 2026-03-24
 
 ## When to Use
 
+**Don't use when:** fixing a specific already-diagnosed issue (use /marshal); monitoring a single PR's CI (use /pr-watch); reviewing code quality outside of GitHub issues (use /review).
+
 - `/triage` — triage all open, unlabeled issues
 - `/triage 10` — investigate issue #10 specifically
 - `/triage pr 13` — review PR #13

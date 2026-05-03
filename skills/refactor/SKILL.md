@@ -31,7 +31,7 @@ Use `/refactor` when you need to:
 - Merge related files into one
 - Change a function signature and update all call sites
 
-Do NOT use for: adding features, fixing bugs, deleting dead code, formatting/style changes.
+**Don't use when:** debugging a specific bug (use /systematic-debugging); adding new features (use /marshal or /scaffold); deleting dead code (use /marshal for a targeted cleanup).
 
 **Behavior does not change.** Tests pass before and after, no new type errors — the refactoring is correct.
 

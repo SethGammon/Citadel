@@ -13,6 +13,8 @@ effort: high
 
 ## When to Use
 
+**Don't use when:** you already have an architecture and want to implement it (use /marshal or /archon); you need a PRD first (use /prd before /architect).
+
 - After /prd produces an approved PRD (greenfield or feature mode)
 - When the user has a clear direction + existing codebase (no PRD needed)
 - When /do routes a build request

@@ -15,6 +15,7 @@ last-updated: 2026-03-20
 ## Orientation
 
 Use `/do` when the user wants something done but doesn't know (or care) which tool handles it.
+**Don't use when:** you know the destination — invoke /marshal, /archon, /fleet, or any skill directly.
 
 ## Commands
 
