@@ -13,6 +13,12 @@ last-updated: 2026-03-26
 
 # /learn — Campaign Pattern Extractor
 
+## Orientation
+
+**Use when:** You have a completed campaign and want to extract successful patterns, failed patterns, key decisions, and quality rule candidates into the knowledge base.
+
+**Don't use when:** You want a structured incident analysis first (use `/postmortem` — run it before `/learn`), you need a context transfer for the next session (use `/session-handoff`), or you haven't completed a campaign yet (nothing to extract).
+
 ## When to Use
 
 - After any completed campaign (auto-triggered by /postmortem)

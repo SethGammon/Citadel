@@ -268,6 +268,7 @@ Park the campaign when:
 - **`git stash` fails during checkpoint**: Log `checkpoint-phase-N: none` and continue.
 - **`.planning/campaigns/` missing**: Treat as no active campaigns. Proceed to directed/undirected mode.
 - **Sub-agent returns no HANDOFF**: Treat phase as partial. Log observations, proceed to next phase.
+- **Sub-agent hangs and never returns**: After 30 minutes without a response, abort the phase, log `phase-timeout` in the campaign Decision Log, and proceed to Recovery. Never let a hung phase block the entire campaign.
 
 ## Contextual Gates
 

@@ -12,11 +12,11 @@ effort: medium
 
 # /postmortem — Campaign Postmortem Generator
 
-## Identity
+## Orientation
 
-/postmortem reads the artifacts a campaign produced and generates a structured
-postmortem. It doesn't require the user to remember what happened. The data
-is already in the campaign file, telemetry, and git history.
+**Use when:** A campaign just completed and you want a structured analysis of what broke, what safety systems caught, and what patterns emerged. Also for ad-hoc incident analysis from recent git history.
+
+**Don't use when:** You want to preserve session context for the next conversation (use `/session-handoff`), extract reusable patterns from findings into the knowledge base (use `/learn`), or score and improve quality iteratively (use `/improve`).
 
 ## When to Use
 
@@ -141,22 +141,7 @@ Write to `.planning/postmortems/postmortem-{slug}-{date}.md`:
 
 ### Step 4: HANDOFF
 
-```
----HANDOFF---
-- Postmortem: {name}
-- Document: .planning/postmortems/postmortem-{slug}-{date}.md
-- Failures documented: {count}
-- Safety catches: {count}
-- Recommendations: {count}
----
-```
-
-After displaying the HANDOFF block, output the following prompt to the user:
-
-```
-Run /learn after reviewing this postmortem to extract patterns into the knowledge base:
-  /learn {campaign-slug}
-```
+Output the HANDOFF block from the Exit Protocol, then suggest: `Run /learn {campaign-slug} to extract patterns into the knowledge base.`
 
 ## What /postmortem Does NOT Do
 
@@ -191,6 +176,7 @@ Run /learn after reviewing this postmortem to extract patterns into the knowledg
 - Failures documented: {count}
 - Safety catches: {count}
 - Recommendations: {count}
+- Reversibility: green — one file written to .planning/postmortems/; git rm to undo
 ---
 ```
 

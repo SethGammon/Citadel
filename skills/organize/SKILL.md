@@ -27,6 +27,12 @@ last-updated: 2026-03-28
 
 # /organize -- Project Organization Health
 
+## Orientation
+
+**Use when:** Auditing whether source files are in the right architectural layers, detecting loose files and misplaced assets, or configuring directory manifests and cleanup policies for a project.
+
+**Don't use when:** You want a structural map of code relationships and module dependencies (use `/map`), you're moving logic between modules (use `/refactor`), or you need to execute a single organizational task without a health audit (use `/marshal`).
+
 ## Commands
 
 | Command | Behavior |
