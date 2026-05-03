@@ -197,44 +197,33 @@ After moving, record in `.claude/harness.json`:
 ```
 
 #### Claude conversation history (`.claude/projects`)
-Cannot be relocated. Options: archive inactive project subdirectories to a backup drive (Claude recreates on reopen), or test symlinking carefully.
+Cannot be relocated. Archive inactive subdirectories to a backup drive, or test symlinking.
 
 ---
 
 ## Fringe Cases
 
-**macOS/Linux:** Replace PowerShell with `du -sh`, `df -h`. Paths shift from `C:\Users\username\` to `~/`.
-
-**Worktree removed but branch still exists:** `git branch -d {branch}` after `git worktree remove`.
-
-**Ollama in use:** Stop the service before moving model files.
-
-**Junction already exists at target:** `cmd /c rmdir "C:\...\tool-dir"` (does NOT delete contents), then recreate.
-
-**No other drives available:** In order — clear caches (npm, pip, temp), delete rebuildable artifacts (node_modules, .venv, dist), then `ollama list` and `ollama rm {model}` for unused models.
+**macOS/Linux:** Use `du -sh`, `df -h`. Paths shift to `~/`.
+**Worktree removed but branch exists:** `git branch -d {branch}` after `git worktree remove`.
+**Ollama in use:** Stop before moving model files.
+**Junction already exists:** `cmd /c rmdir "C:\...\tool-dir"` (no contents deleted), then recreate.
+**No other drives:** Clear caches first (npm, pip, temp), then rebuildable artifacts, then unused Ollama models.
 
 ---
 
 ## Citadel Infrastructure Integration
 
-After running /houseclean, update `.claude/harness.json`:
-```json
-{
-  "storage": {
-    "projects_root": "F:/Projects",
-    "ai_tools": {
-      "ollama_models": "F:/.ollama/models",
-      "gemini_home": "F:/.gemini",
-      "npm_cache": "F:/npm-cache"
-    },
-    "last_audit": "2026-04-03"
-  }
-}
-```
-
-Future /houseclean runs read this section to verify migrations are still in place.
+After running /houseclean, update `.claude/harness.json` `storage` section with `projects_root`, `ai_tools` paths, and `last_audit` date. Future runs verify migrations are still in place.
 
 ---
+
+## Contextual Gates
+
+**Disclosure:** "Auditing all drives. Will present deletion suggestions — nothing deleted without your confirmation."
+**Reversibility:** amber — deletes files and directories if user confirms; undo requires git or manual recovery for non-git files
+**Trust gates:**
+- Any: view audit findings and suggestions
+- Familiar (5+ sessions): confirms deletions before executing; novices should review suggestions carefully before confirming
 
 ## Quality Gates
 
@@ -261,5 +250,6 @@ Future /houseclean runs read this section to verify migrations are still in plac
 - Pending user action: {Y} GB (AI tools to move, projects to migrate)
 - C: free space now: {Z} GB
 - harness.json storage section: updated / not updated
+- Reversibility: amber — deleted files require git or manual recovery; moved files can be moved back manually
 ---
 ```

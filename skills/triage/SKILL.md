@@ -86,9 +86,9 @@ $GH pr list --repo <owner/repo> --state open --json number,title,author,createdA
 
 1. Read the full diff — not just the PR description.
 2. Check for regressions against closed issues and recent commits.
-3. Check for conflicts with in-flight work (same files as open PRs or recent commits).
+3. Check for conflicts with in-flight work (same files as open PRs).
 4. Verify the approach: correct solution, not overly complex.
-5. Check cross-platform: Unix assumptions, Windows path handling, `$CLAUDE_PROJECT_DIR` (broken on Windows, see #10).
+5. Check cross-platform: Unix assumptions, Windows path handling.
 6. Check conventions against existing project patterns.
 7. Check for scope creep beyond the PR title.
 
@@ -259,6 +259,13 @@ To watch this PR automatically:
 ---
 ```
 
+## Contextual Gates
+
+**Disclosure:** "Triaging GitHub issues and PRs. Read-only — no changes made without showing you first."
+**Reversibility:** green — investigation is read-only; any GitHub actions (labels, comments, PRs) shown to user for approval before posting
+**Trust gates:**
+- Any: view triage report; all external actions require explicit approval
+
 ## Quality Gates
 
 - [ ] Every issue has a classification (type + severity for bugs)
@@ -285,16 +292,13 @@ To watch this PR automatically:
 - Label without investigating
 - Auto-fix when root cause is unclear
 - Close issues without explanation
-- Ask reporter for info that's in the codebase
 - Guess at fixes — verify by reading code and running checks
 
 ## gh CLI Notes
 
-- Windows path: `"/c/Program Files/GitHub CLI/gh.exe"`
-- Always use `--repo <owner/repo>`
+- Windows: `"/c/Program Files/GitHub CLI/gh.exe"` — always pass `--repo <owner/repo>`
 - Comments: `$GH issue comment <number> --repo <owner/repo> --body "..."`
 - Labels: `$GH issue edit <number> --repo <owner/repo> --add-label "bug,high"`
-- PRs: `$GH pr create --repo <owner/repo> --title "..." --body "..."`
 
 ## Exit Protocol
 
@@ -304,5 +308,6 @@ To watch this PR automatically:
 - Auto-fixed: <list of issue numbers with PR links>
 - Needs attention: <list of issues requiring human decision>
 - New labels applied: <count>
+- Reversibility: green — investigation read-only; auto-fix PRs can be closed/reverted if unwanted
 ---
 ```

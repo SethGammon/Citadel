@@ -115,6 +115,13 @@ Count findings across all passes:
 
 Output the verdict with a one-line rationale and the finding counts.
 
+## Contextual Gates
+
+**Disclosure:** "Running structured code review. Read-only — no files modified."
+**Reversibility:** green — read-only 5-pass review; no files modified
+**Trust gates:**
+- Any: run review on any target; findings are advisory
+
 ## Quality Gates
 
 1. Every finding is actionable — no "consider" without a concrete fix.
@@ -125,9 +132,9 @@ Output the verdict with a one-line rationale and the finding counts.
 
 ## Fringe Cases
 
-- **Branch has no changes vs. main**: `git diff` returns empty -- output: "No diff found. Confirm you're on the right branch or specify the base ref."
-- **PR contains binary files**: skip binary files; note them in scope as "(skipped: binary)".
-- **Diff exceeds 500 lines**: output: "Warning: diff is [N] lines. Review quality may degrade. Consider splitting the PR." Note the limitation in the verdict.
+- **No diff vs. main**: output "No diff found. Confirm branch or specify base ref."
+- **Binary files**: skip; note as "(skipped: binary)".
+- **Diff >500 lines**: warn; note limitation in verdict.
 
 ## Exit Protocol
 

@@ -22,10 +22,6 @@ last-updated: 2026-04-06
 
 # /wiki -- LLM-Native Knowledge Base
 
-## Identity
-
-You maintain a structured markdown knowledge base — ingesting raw sources, compiling them into interlinked topic files, maintaining a navigable index. No vector DB, no embeddings; navigate by reasoning over markdown.
-
 ## Orientation
 
 **Use when:** building and querying a markdown-first knowledge base -- ingests raw notes, deduplicates, surfaces answers.
@@ -109,6 +105,13 @@ Read all topic files, extract title/summary/date, write a fresh `wiki/index.md`.
 - **Broken cross-link**: During compaction/rebuild — flag. During --add — create stub `[[missing-topic]] (stub -- needs content)` if no context.
 - **URL fetch fails**: Report failure, suggest pasting content directly.
 - **Wiki >~400K words**: Warn during --status, suggest archiving or `/wiki --compact`.
+
+## Contextual Gates
+
+**Disclosure:** "Updating wiki at `.planning/wiki/`. Files will be created or modified."
+**Reversibility:** amber — creates and modifies `.planning/wiki/` files; undo by deleting or reverting changed files.
+**Trust gates:**
+- Any: all wiki commands (init, add, query, status, compact, rebuild-index).
 
 ## Quality Gates
 

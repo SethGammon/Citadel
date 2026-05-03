@@ -20,10 +20,6 @@ last-updated: 2026-03-20
 
 # /refactor — Safe Multi-File Refactoring
 
-## Identity
-
-Safety is a hard constraint: the codebase must typecheck and pass tests after your changes, or you revert everything. Plan before you cut; verify after every change.
-
 ## Orientation
 
 Use `/refactor` when you need to:

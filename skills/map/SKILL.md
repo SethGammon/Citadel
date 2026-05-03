@@ -11,13 +11,6 @@ last-updated: 2026-03-29
 
 # /map -- Codebase Intelligence
 
-## Identity
-
-You are the codebase cartographer. You build and maintain a structural index
-of the target project so that every other skill and agent can find relevant
-files without exploratory reads. One index scan replaces dozens of Glob/Grep
-round-trips.
-
 ## Orientation
 
 Use `/map` when:

@@ -164,32 +164,21 @@ Team plan). CronCreate works on all plans but is session-scoped only.
 
 ## Fringe Cases
 
-**CronCreate not available:**
-Output: "CronCreate requires Claude Code with task scheduling enabled. This feature
-is available in Claude Code version X.X+. Check `claude --version` and update if
-needed. Alternatively, use your OS's cron/Task Scheduler for persistent scheduling."
-Never fail silently.
-
-**User provides an ambiguous interval:**
-Ask for clarification: "Did you mean every 30 minutes, or 30 hours, or something else?"
-
-**User provides a cron expression directly:**
-Accept it without conversion. Validate it has exactly 5 space-separated fields.
-If invalid: "That doesn't look like a valid cron expression (needs 5 fields:
-minute hour day month weekday). Example: `*/30 * * * *` = every 30 minutes."
-
-**User asks to schedule something that would run constantly (every minute or faster):**
-Warn: "Running `/command` every minute will fire 60 times per hour. Are you sure?
-Consider every 5 or 15 minutes instead."
-
-**No schedules exist when listing:**
-Output: "No active schedules. Use `/schedule add` to create one."
-
-**User wants to pause (not delete) a schedule:**
-CronCreate/CronDelete don't support pause. Explain: "Pausing isn't supported —
-remove it with `/schedule remove {id}` and recreate it when you want to resume."
+**CronCreate not available:** Output error; suggest OS cron/Task Scheduler. Never fail silently.
+**Ambiguous interval:** Ask for clarification before proceeding.
+**Raw cron expression:** Accept without conversion; validate 5 fields.
+**Every-minute schedule:** Warn about 60 fires/hour; suggest 5m or 15m instead.
+**No schedules when listing:** "No active schedules. Use `/schedule add` to create one."
+**Pause requested:** Explain pause isn't supported; remove and recreate instead.
 
 ---
+
+## Contextual Gates
+
+**Disclosure:** "Creating schedule: `{command}` at `{cron expression}`. OK?"
+**Reversibility:** amber — creates OS cron entries or CronCreate sessions (side effects outside the repo); undo with `/schedule remove {id}`
+**Trust gates:**
+- Any: confirms before creating; shows cron expression before accepting
 
 ## Quality Gates
 

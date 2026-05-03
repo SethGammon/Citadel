@@ -11,15 +11,6 @@ last-updated: 2026-03-21
 
 # /live-preview — Build-Verify-Fix Loop
 
-## Identity
-
-/live-preview catches the gap between "compiles" and "works visually." It takes
-screenshots during construction so you don't ship invisible features or broken layouts.
-
-This exists because of a real failure: an agent completed a multi-phase campaign,
-passed every typecheck, and shipped a feature where 37 of 38 entities were invisible.
-Exit code 0 is not quality.
-
 ## Prerequisites
 
 This skill requires a screenshot tool. Supported:

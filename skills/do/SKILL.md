@@ -12,12 +12,6 @@ last-updated: 2026-03-20
 
 # /do — Unified Intent Router
 
-## Identity
-
-You are the single entry point for all work. The user says what they want.
-You figure out which orchestrator or skill handles it. No more choosing between
-`/marshal`, `/archon`, `/fleet`, or individual skills.
-
 ## Orientation
 
 Use `/do` when the user wants something done but doesn't know (or care) which
@@ -258,6 +252,13 @@ Direct invocation always works: `/marshal`, `/archon`, `/fleet`, `/[skill-name]`
 - **Multiple skills match at Tier 2**: Carry candidates to Tier 3 per Tier 2 disambiguation rule above.
 - **User input is empty or whitespace**: Respond with the `--list` output and a prompt to provide a direction.
 - **Routed skill not found**: Report "Skill not found" and fall back to Marshal as the safe default.
+
+## Contextual Gates
+
+**Disclosure:** "Routing to [skill]. See that skill's contextual gates for reversibility."
+**Reversibility:** depends on routed skill — check the routed skill's reversibility
+**Trust gates:**
+- Any: routing and dispatch; inherits trust gates from the routed skill.
 
 ## Quality Gates
 

@@ -160,22 +160,21 @@ QUICK COMMANDS
 
 ### Step 4: FRINGE CASE HANDLING
 
-**`.planning/` missing:** Show dashboard with all zeros and "(none active)"; add `NOTE: .planning/ not found. Run /do setup to initialize harness state.`
-
+**`.planning/` missing:** All zeros, "(none active)"; add "Run /do setup to initialize."
 **harness.json missing or malformed:** Show "not configured" for hooks count; do not crash.
+**Malformed campaign file:** Skip it; note `(N campaign file(s) skipped — malformed)`.
+**Large telemetry files:** Read last 50 lines only.
+**Missing timestamps:** Fall back to file modification time; display entry without timestamp if unavailable.
+**All campaigns completed:** Note "No active campaigns" at top of CAMPAIGNS section.
+**All fleet sessions idle:** Note "No active fleet sessions" under FLEET SESSIONS.
+**Mixed state:** Proceed with whatever state exists; note each missing directory inline.
 
-**Malformed campaign file:** Skip it; note `(N campaign file(s) skipped — malformed)` in CAMPAIGNS.
+## Contextual Gates
 
-**Large telemetry files:** Read last 50 lines only; note "Showing last 50 events per log file."
-
-**Missing timestamps:** Fall back to file modification time; if unavailable, display entry without timestamp.
-
-## Fringe Cases
-
-- **No `.planning/` directory**: render the dashboard with all sections showing "(none active)" and zero counts; append: "No campaigns or fleet sessions found. Run /setup first, or start a campaign with /marshal or /fleet."
-- **All campaigns completed**: show each campaign with its final status and completion date; note "No active campaigns — all campaigns are completed." at the top of the CAMPAIGNS section.
-- **All fleet sessions idle or empty**: show the FLEET SESSIONS section with the idle sessions listed; note "No active fleet sessions. Start a fleet campaign with /fleet."
-- **Mixed state (some dirs present, some missing)**: proceed with whatever state exists; note each missing directory inline, e.g. "(fleet: .planning/fleet/ not found)" under the relevant section.
+**Disclosure:** "Displaying harness dashboard. No files modified."
+**Reversibility:** green — read-only; no files modified
+**Trust gates:**
+- Any: view the full dashboard
 
 ## Quality Gates
 

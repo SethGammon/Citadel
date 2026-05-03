@@ -12,12 +12,6 @@ effort: high
 
 # /qa — Browser QA Verification
 
-## Identity
-
-/qa tests your app the way a user would: by actually using it. It launches a
-browser, navigates to pages, clicks buttons, fills forms, and verifies that
-interactions work. Screenshots catch visual bugs. QA catches interaction bugs.
-
 ## Dependency: Playwright
 
 /qa requires Playwright. It's an optional dependency.

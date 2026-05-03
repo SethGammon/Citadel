@@ -11,12 +11,6 @@ effort: max
 
 # /create-app — From Description to Verified Application
 
-## Identity
-
-/create-app is the full pipeline from "I want an app that does X" to a verified,
-working application. It integrates /prd, /architect, and /archon into a single
-flow with human checkpoints at the right moments.
-
 ## Orientation
 
 **Use when:** building a new app from scratch -- full scaffold, design system, and feature set from a single description.

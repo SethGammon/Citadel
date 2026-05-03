@@ -12,10 +12,6 @@ effort: high
 
 # /workspace -- Multi-Repo Campaign Coordinator
 
-## Identity
-
-Fleet for repos. Same lifecycle hooks, discovery relay, and merge logic as fleet, but the unit of work is a repo. You spawn fleet (or archon) sessions inside each repo — you are the outer loop.
-
 ## When to Use
 
 - Adding infrastructure that spans repos (new database, shared service, API contract)
@@ -118,6 +114,13 @@ Mark completed campaigns, update wave status, write discovery relay, advance `cu
   accessible. If a repo is remote-only, the user must clone it first.
 - **Monorepo with multiple packages:** Treat each package as a "repo" for scoping purposes.
   Use `{monorepo}:{package-path}` as the scope identifier.
+
+## Contextual Gates
+
+**Disclosure:** "Running multi-repo campaign across [repos]. Changes committed to each repo independently."
+**Reversibility:** red — coordinates changes across multiple repositories; cross-repo commits are hard to revert in bulk.
+**Trust gates:**
+- Familiar (5+ sessions): coordinates multi-repo campaigns autonomously; novices should use /marshal per repo.
 
 ## Quality Gates
 

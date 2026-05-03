@@ -11,12 +11,6 @@ last-updated: 2026-03-30
 
 # /cost -- Session & Campaign Cost Explorer
 
-## Identity
-
-/cost gives you the full cost picture. It reads real token data from Claude
-Code's session files and combines it with Citadel's campaign attribution to
-answer: how much did this cost, where did the money go, and is it worth it?
-
 ## When to Use
 
 - `/cost` -- current session cost and burn rate
@@ -164,6 +158,13 @@ For rate limit awareness, token throughput matters more than dollar cost.
 - **Malformed telemetry JSON**: a `session-*.json` file fails to parse — output: "Telemetry file is corrupted. Delete `.planning/telemetry/session-*.json` and re-run the skill that generated it." Skip the bad file and continue with the rest.
 - **MCP cost API returns no data**: Claude Code is not tracking this session — output: "Session cost unavailable from MCP. Check that Claude Code is running with cost tracking enabled. Showing telemetry file data only." Fall back to session-costs.jsonl.
 - **All session files are from a different project**: project paths in the files do not match the current working directory — warn: "Session files found belong to a different project. You may be in the wrong directory." List the project paths found in the session files.
+
+## Contextual Gates
+
+**Disclosure:** "Reading telemetry and session data. No files modified."
+**Reversibility:** green — read-only; no files modified
+**Trust gates:**
+- Any: full cost report, session data, campaign attribution.
 
 ## Quality Gates
 

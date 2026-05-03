@@ -27,15 +27,7 @@ you want CI watch/fix behavior from the terminal without switching to web or mob
 
 ## Cloud Alternative
 
-If you have the Claude GitHub App installed, cloud auto-fix in Claude Code web or
-mobile is more resilient — it survives your machine sleeping or going offline. To use it:
-
-1. Open the PR in Claude Code web (claude.ai/code) or the mobile app
-2. Claude will ask "Would you like me to watch this PR for CI results?"
-3. Toggle **Auto fix** ON — fixes CI failures and review comments automatically
-4. Optionally toggle **Auto merge** to merge once all checks pass
-
-Use `/pr-watch` for in-terminal sessions; use cloud auto-fix when you want to walk away.
+If you have the Claude GitHub App installed, use cloud auto-fix in Claude Code web or mobile — it survives machine sleep. Toggle **Auto fix** ON in the PR view. Use `/pr-watch` for in-terminal sessions.
 
 ## Inputs
 
@@ -184,6 +176,14 @@ Trigger the circuit breaker and stop the loop when:
 - The failure log is empty or unreadable — can't determine root cause
 - PR is closed or merged by someone else during the watch
 
+## Contextual Gates
+
+**Disclosure:** "Watching PR [#N]. Will notify on CI changes; may push fix commits if auto-fix is enabled."
+**Reversibility:** amber — may push fix commits to the PR branch; undo with `git revert <commit>` on the pushed commits
+**Trust gates:**
+- Any: monitor-only mode (observe CI status without pushing)
+- Familiar (5+ sessions): auto-push fixes; novices should run in monitor-only mode and apply fixes manually
+
 ## Quality Gates
 
 - [ ] Every fix commit is targeted — only changes what's needed to green the check
@@ -203,11 +203,11 @@ Trigger the circuit breaker and stop the loop when:
 
 ## Fringe Cases
 
-- **`gh` is not authenticated**: Output authentication instructions and exit. Do not attempt API calls. Message: "gh CLI is not authenticated. Run: `gh auth login` and follow the prompts."
-- **PR is already merged or closed**: Exit cleanly. Output: "PR #<N> is already merged/closed. Nothing to watch." Do not error.
-- **CI has no checks configured**: Note the absence and offer to merge. Output: "No CI checks found on PR #<N>. The PR has no automated checks — offer to merge if the user confirms."
-- **gh CLI not installed**: Output install instructions. Windows: download from cli.github.com. Other: `brew install gh` or the platform package manager.
-- **PR branch has been deleted**: Exit cleanly with a message indicating the branch is gone and the PR cannot be auto-fixed.
+- **`gh` not authenticated**: "Run `gh auth login` and follow the prompts." Exit.
+- **PR already merged/closed**: "PR #<N> is already closed/merged." Exit cleanly.
+- **No CI checks**: Note absence; offer to merge if user confirms.
+- **gh CLI not installed**: Output install instructions (cli.github.com / `brew install gh`).
+- **PR branch deleted**: Exit cleanly; note branch is gone and auto-fix is unavailable.
 
 ## Exit Protocol
 
@@ -218,5 +218,6 @@ Trigger the circuit breaker and stop the loop when:
 - Final status: green | circuit-break | user-exited | already-merged
 - Checks resolved: <list of check names that went from failing to passing>
 - Checks still failing: <list, if circuit-break>
+- Reversibility: amber — fix commits pushed to PR branch; undo with `git revert <commit>` per fix commit
 ---
 ```

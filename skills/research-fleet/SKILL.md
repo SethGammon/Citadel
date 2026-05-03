@@ -12,16 +12,6 @@ last-updated: 2026-03-21
 
 # /research-fleet — Parallel Multi-Scout Research
 
-## Identity
-
-/research-fleet is /research scaled to parallel execution. Instead of one agent
-running 2-4 queries sequentially, multiple scout agents investigate different
-angles simultaneously. Each scout produces independent findings. Between waves,
-findings are compressed into a unified brief.
-
-Use this when the question is broad enough that multiple perspectives would
-produce better results than depth on a single thread.
-
 ## When to Use Over /research
 
 - Evaluating multiple competing technologies or approaches

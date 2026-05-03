@@ -11,13 +11,6 @@ last-updated: 2026-03-21
 
 # /systematic-debugging — Root Cause Before Fix
 
-## Identity
-
-/systematic-debugging enforces one rule: NO FIXES WITHOUT ROOT CAUSE INVESTIGATION FIRST.
-
-Most debugging failures come from guessing. This skill forces a structured approach:
-observe → hypothesize → verify → fix. The fix is always the last step, never the first.
-
 ## Orientation
 
 **Use when:** root cause is unknown and premature fixes keep failing -- enforces observe -> hypothesize -> verify before touching code.
@@ -103,6 +96,14 @@ Three failed fixes in a row means you're guessing, not debugging.
 - **Symptom fixing** — patching the output without understanding the cause
 - **Fix cascades** — one bad fix creating three new bugs
 - **Silent regressions** — fixing one path while breaking another
+
+## Contextual Gates
+
+**Disclosure:** "Debugging [symptom]. Phases 1-3 read-only; will confirm before applying fixes in Phase 4."
+**Reversibility:** amber — Phase 4 applies targeted fixes to source files; undo with `git checkout` on modified files. Phases 1-3 are read-only.
+**Trust gates:**
+- Any: investigation (Phases 1-3).
+- Familiar (5+ sessions): applying fixes (Phase 4).
 
 ## Quality Gates
 

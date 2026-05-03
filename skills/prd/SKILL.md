@@ -11,11 +11,6 @@ effort: high
 
 # /prd — Product Requirements Document Generator
 
-## Identity
-
-/prd converts "I want an app that does X" into a structured document that Archon
-can execute. It does NOT build anything. It produces the spec that drives the build.
-
 ## When to Use
 
 - User describes an app or feature to build (greenfield or feature mode)

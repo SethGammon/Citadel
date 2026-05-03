@@ -80,6 +80,13 @@ Run only the generated file. For each failure: determine root cause — test bug
 
 If a coverage tool is configured, run it for the target file. Add tests for meaningful uncovered branches. Skip if no coverage tool exists — do not install one.
 
+## Contextual Gates
+
+**Disclosure:** "Generating tests for [target]. Creates new test files; no existing files modified."
+**Reversibility:** green — creates new test files only; delete the generated test files to undo
+**Trust gates:**
+- Any: generate tests for any target file or directory
+
 ## Quality Gates
 
 1. All tests pass — final run with `node scripts/run-with-timeout.js 300 <test-cmd>`. Skips must have documented reasons.

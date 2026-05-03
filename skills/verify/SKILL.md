@@ -12,13 +12,6 @@ last-updated: 2026-03-27
 
 # /verify — Hook Pipeline Self-Test
 
-## Identity
-
-/verify confirms the Citadel hook pipeline is working correctly in the current
-session. Unlike the offline tools (verify-hooks.js, integration-test.js), this
-runs inside a real Claude Code session — actual tool calls trigger actual hook
-dispatch. No synthetic payloads.
-
 Use this when:
 - Hooks were recently updated and you want a live sanity check
 - Something feels wrong (tools seem too slow, quality-gate not firing)

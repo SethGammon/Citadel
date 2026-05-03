@@ -457,6 +457,13 @@ Changes: {list what changed vs previous config}
 
 ---
 
+## Contextual Gates
+
+**Disclosure:** "Configuring Citadel for this project. Will modify `.claude/settings.json` and install hooks."
+**Reversibility:** amber — writes `.claude/settings.json`, installs hooks, creates `.planning/`; undo by running `/unharness`
+**Trust gates:**
+- Any: first-run configuration; expected to modify settings and install hooks
+
 ## Quality Gates
 
 - Hooks must be installed before any other step completes

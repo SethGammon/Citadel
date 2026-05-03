@@ -132,6 +132,13 @@ Next: review .planning/knowledge/ and promote useful rules to CLAUDE.md for perm
 
 **Zero extractable patterns:** Write knowledge files with empty sections and note "campaign may have been too brief." Do not skip file creation.
 
+## Contextual Gates
+
+**Disclosure:** "Extracting learnings to `.planning/evolve/{target}/`. Creates new files only."
+**Reversibility:** green — writes to `.planning/knowledge/{slug}-*.md` only; delete those files to undo
+**Trust gates:**
+- Any: run on any completed campaign
+
 ## Quality Gates
 
 - Never invent patterns not supported by evidence in the source files

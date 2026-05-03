@@ -386,6 +386,14 @@ Summary: {N} directories cleaned, {M} archived, {K} skipped
 - **Dynamic dir doesn't exist yet:** Keep the entry in the manifest. Don't warn about missing dynamic dirs.
 - **Archive directory grows large:** If `.planning/archive/` exceeds 50MB, warn and suggest manual pruning.
 
+## Contextual Gates
+
+**Disclosure:** "Running project health scan. Phase 3 (cleanup) may move files — will confirm scope before executing."
+**Reversibility:** amber — may move files or rename directories in cleanup phase; undo with `git checkout -- .` or `git revert`
+**Trust gates:**
+- Any: run scan and view report (Phases 1-2)
+- Familiar (5+ sessions): Phase 3 file moves execute autonomously; novices should stop after Phase 2 (report only)
+
 ## Quality Gates
 
 - [ ] All three passes ran -- never skip a pass
@@ -407,6 +415,7 @@ Summary: {N} directories cleaned, {M} archived, {K} skipped
 - {N} roots, {M} placement rules, {K} dynamic directories configured
 - Top findings: {1-2 most impactful issues from hygiene/bloat passes}
 - Enforcement: {"advisory (unlocked)" | "blocking (locked)"}
+- Reversibility: amber — file moves undoable with `git checkout -- .`; harness.json changes undoable with `git revert`
 - Next: Run `/organize --lock` when confident, `/organize --audit` to recheck
 ---
 ```

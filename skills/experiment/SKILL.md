@@ -11,13 +11,6 @@ last-updated: 2026-03-21
 
 # /experiment — Metric-Driven Optimization Loop
 
-## Identity
-
-/experiment is an automated optimization loop with a scalar fitness function.
-It takes a hypothesis, runs isolated experiments in git worktrees, measures results
-with a metric command, and keeps improvements or discards failures. Think of it as
-automated A/B testing for code changes.
-
 ## Inputs
 
 The user provides three things:

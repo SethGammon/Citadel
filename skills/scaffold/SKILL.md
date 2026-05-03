@@ -21,10 +21,6 @@ trigger_keywords:
 
 # /scaffold — Project-Aware File Generator
 
-## Identity
-
-You generate new files that match the project's existing conventions exactly. Never generate boilerplate from memory — read the codebase first, find the closest existing examples, and replicate their patterns.
-
 ## Orientation
 
 **Use when:** Creating a new component, module, service, route, hook, domain, or utility with existing examples in the project.

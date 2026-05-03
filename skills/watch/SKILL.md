@@ -262,37 +262,35 @@ Cron poll: silent.
 ## Integration Points
 
 - **Intake pipeline:** Writes to `.planning/intake/` for `/autopilot`.
-- **Intent router:** Routes marker actions through `/do` — never invokes skills directly.
+- **Intent router:** Routes markers through `/do` — never invokes skills directly.
 - **Daemon:** `/daemon` can start a watch alongside a campaign.
-- **Session-start hook:** `init-project.js` can trigger a scan on session start if state has `status: "watching"`.
+- **Session-start hook:** `init-project.js` triggers a scan if state is `"watching"`.
 
 ---
 
 ## Fringe Cases
 
-**`.planning/` missing:** Create `.planning/` and `.planning/intake/` on first scan.
-
-**Not a git repo:** Fall back to timestamp detection. Warn once: "Not a git repo. Using file modification times."
-
+**`.planning/` missing:** Create on first scan.
+**Not a git repo:** Fall back to timestamp detection; warn once.
 **No files changed:** Update stats, exit silently.
-
-**Unknown action:** Treat as intake item, preserve raw action in metadata.
-
-**Deleted file:** Skip marker scanning. Write intake item noting deletion.
-
-**Large diff (100+ files):** Cap at 50 files per scan, queue rest. Log: "Large changeset ({N} files). Scanning first 50."
-
-**Binary files:** Skip during marker scanning (detect via `git diff --numstat`).
-
+**Unknown action:** Treat as intake item, preserve raw action.
+**Deleted file:** Skip marker scanning; write intake item noting deletion.
+**Large diff (100+ files):** Cap at 50 per scan, queue rest.
+**Binary files:** Skip during marker scanning.
 **Corrupted state:** Reset to defaults, preserve `processedMarkers` if readable.
-
 **CronCreate not available:** Warn and suggest manual `/watch scan`.
-
-**Scan overlap:** If `lastScanTime` is within last 60 seconds, skip. Warn if scan duration exceeds interval.
-
-**Marker removed:** On each scan, verify processed markers still exist at recorded location. Remove stale entries from `processedMarkers`.
+**Scan overlap:** Skip if `lastScanTime` within last 60 seconds.
+**Marker removed:** Remove stale entries from `processedMarkers` on each scan.
 
 ---
+
+## Contextual Gates
+
+**Disclosure:** "Starting file watch on [paths]. Triggers [skill] on change. Stop with Ctrl+C."
+**Reversibility:** amber — runs sentinel that triggers other skills on file change; triggered skills may modify files; stop with Ctrl+C and run `/watch stop`
+**Trust gates:**
+- Any: start watch and view scan reports
+- Familiar (5+ sessions): triggered skills run autonomously on file change; novices should use with caution and review dispatched actions
 
 ## Quality Gates
 

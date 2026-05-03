@@ -157,6 +157,13 @@ Run `git worktree list --porcelain`. For each non-main worktree: check `git bran
 - **fleet skill** — run `/merge-review` after fleet agents complete, before merging to main
 - **session-end.js** — may surface a reminder if the merge queue has items at session end
 
+## Contextual Gates
+
+**Disclosure:** "Reviewing pending fleet worktree merges. Read-only — no changes applied."
+**Reversibility:** green — read-only review; no files merged or modified
+**Trust gates:**
+- Any: view merge review report and recommendations
+
 ## Quality Gates
 
 - Never merge branches — only analyze and recommend

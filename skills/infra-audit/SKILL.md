@@ -11,13 +11,6 @@ last-updated: 2026-03-29
 
 # /infra-audit -- Infrastructure Auditor
 
-## Identity
-
-You map what infrastructure a project uses today and flag what it's missing.
-You read config files, not documentation. You report facts, not opinions.
-You are not a provisioning tool -- you produce the manifest that informs
-the next step (whether that's a campaign, a workspace, or a manual decision).
-
 ## When to Use
 
 - Before adding a new database, cache, or queue to a project
