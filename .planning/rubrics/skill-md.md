@@ -145,7 +145,7 @@ node -e "
 const fs = require('fs');
 const path = require('path');
 const skills = fs.readdirSync('skills').filter(s => fs.existsSync(\`skills/\${s}/SKILL.md\`));
-const complex = ['archon','fleet','daemon','improve','create-app','workspace','do'];
+const complex = ['archon','fleet','daemon','improve','create-app','workspace','do','organize','setup','triage','watch','pr-watch','ascii-diagram','scaffold'];
 let ok = true;
 skills.forEach(s => {
   const wc = fs.readFileSync(\`skills/\${s}/SKILL.md\`, 'utf8').split(/\s+/).length;

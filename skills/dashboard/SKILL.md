@@ -12,12 +12,6 @@ last-updated: 2026-03-26
 
 # /dashboard — Harness Observability Dashboard
 
-## Identity
-
-/dashboard reads the live state of the harness and presents it in a single,
-readable snapshot. No wall of JSON. No scrolling through log files. One
-command, one screen, full picture.
-
 ## When to Use
 
 - "What's happening?" / "Status?" / "What's going on?"
@@ -47,27 +41,10 @@ exist, treat it as empty. Never crash on missing state.
 
 **Cost Data (two sources, prefer real):**
 
-Source 1 -- Real token data (primary):
-- Run `node scripts/session-tokens.js --today` and `node scripts/session-tokens.js --all`
-- If the script exists and produces output, use its numbers (they read Claude Code's
-  native session JSONL files for exact token counts and compute cost from API pricing).
-
-Source 2 -- Session costs JSONL (fallback, also provides campaign attribution):
-- Read `.planning/telemetry/session-costs.jsonl` (if it exists)
-- For each line, parse as JSON
-- Cost priority: `real_cost` > `override_cost` > `estimated_cost`
-- Group by `campaign_slug`. For each group:
-  - Count sessions
-  - Sum best available cost
-  - Sum agents spawned and duration minutes
-- Compute grand total across all campaigns
-
-Live session:
-- Read `.planning/telemetry/cost-tracker-state.json` for current session burn rate
-
-Data source indicator:
-- If `real_cost` fields are present in session-costs.jsonl entries, note "(real)"
-- If only `estimated_cost`, note "(est)" so users know accuracy level
+- Primary: run `node scripts/session-tokens.js --today` and `--all` — reads Claude Code's native session JSONL for exact token counts
+- Fallback: read `.planning/telemetry/session-costs.jsonl`; cost priority `real_cost` > `override_cost` > `estimated_cost`; group by `campaign_slug`, sum cost/agents/minutes, compute grand total
+- Live session: read `.planning/telemetry/cost-tracker-state.json` for burn rate
+- Label real data "(real)" and estimates "(est)"
 
 **Fleet Sessions:**
 - Glob `.planning/fleet/session-*.md`
@@ -85,16 +62,8 @@ Data source indicator:
 
 **Recent Hook Activity (separate from general telemetry):**
 - Read last 20 lines of `.planning/telemetry/hook-timing.jsonl`
-- For each entry with `event: "timing"`, extract:
-  - `hook` — which hook fired (e.g., `post-edit`, `circuit-breaker`)
-  - `duration_ms` — execution time in milliseconds
-  - `timestamp` — convert to relative time
-  - `outcome` — derive from context: if `duration_ms` is present and no matching
-    error entry in `hook-errors.jsonl`, outcome is `pass`; if a block entry exists
-    for the same hook within 1 second, outcome is `block`
-- For entries with `event: "counter"` (from `increment()`), extract metric name
-  as the "event" column with count context
-- This section makes silently-firing hooks visible without digging through raw files
+- For `event: "timing"` entries: extract `hook`, `duration_ms`, `timestamp` (relative), and `outcome` (pass if no matching error in hook-errors.jsonl within 1s; block if a block entry exists)
+- For `event: "counter"` entries: extract metric name as the "event" column with count context
 
 **Pending Queues:**
 - Count lines in `.planning/telemetry/doc-sync-queue.jsonl` (or 0 if missing)
@@ -124,19 +93,11 @@ Data source indicator:
 
 ### Step 2: FORMAT RELATIVE TIMESTAMPS
 
-Convert ISO timestamps to human-readable relative time:
-- < 60 seconds ago: "just now"
-- < 60 minutes ago: "{N} min ago"
-- < 24 hours ago: "{N} hr ago"
-- >= 24 hours ago: "{N} days ago"
-
-If a timestamp is unparseable, display it as-is without crashing.
+Convert ISO timestamps: <60s → "just now" | <60min → "{N} min ago" | <24h → "{N} hr ago" | else → "{N} days ago". Display unparseable timestamps as-is.
 
 ### Step 3: RENDER DASHBOARD
 
-Output the following format verbatim, substituting real values.
-Omit sections that are entirely empty only if explicitly noted below.
-Always show the section header even when the content is "(none active)".
+Output verbatim, substituting real values. Always show section headers even when content is "(none active)".
 
 ```
 === Citadel Dashboard ===
@@ -199,28 +160,15 @@ QUICK COMMANDS
 
 ### Step 4: FRINGE CASE HANDLING
 
-**If .planning/ does not exist:**
-Show the dashboard with all counts as 0 and all lists as "(none active)" or
-"(no telemetry recorded yet)". Add a note below the dashboard:
+**`.planning/` missing:** Show dashboard with all zeros and "(none active)"; add `NOTE: .planning/ not found. Run /do setup to initialize harness state.`
 
-```
-NOTE: .planning/ not found. Run /do setup to initialize harness state.
-```
+**harness.json missing or malformed:** Show "not configured" for hooks count; do not crash.
 
-**If harness.json is missing or malformed:**
-Show "not configured" for hooks count. Do not crash.
+**Malformed campaign file:** Skip it; note `(N campaign file(s) skipped — malformed)` in CAMPAIGNS.
 
-**If a campaign file is malformed markdown:**
-Skip that file. Log `(1 campaign file skipped — malformed)` in the CAMPAIGNS
-section if any were skipped.
+**Large telemetry files:** Read last 50 lines only; note "Showing last 50 events per log file."
 
-**If telemetry files are very large:**
-Only read the last 50 lines of each telemetry file. This caps read cost
-regardless of file size. Note: "Showing last 50 events per log file."
-
-**If timestamps are missing from telemetry entries:**
-Use the file's modification time as a fallback. If that's also unavailable,
-display the entry without a timestamp.
+**Missing timestamps:** Fall back to file modification time; if unavailable, display entry without timestamp.
 
 ## Quality Gates
 

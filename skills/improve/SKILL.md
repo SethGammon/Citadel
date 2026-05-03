@@ -368,13 +368,13 @@ When the loop resumes after a level-up, every evaluator in Phase 1c receives:
 
 - Phase 0 requires human approval. No exceptions.
 - Phase 4 regression check must run. No committing without it.
-- Phase 4 behavioral simulation result must appear in the loop log for applicable axes. A behavioral FAIL blocks commit regardless of perceptual score.
+- Phase 4 behavioral simulation result must appear in the loop log for applicable axes. Behavioral FAIL blocks commit regardless of perceptual score.
 - Phase 5 loop log must be written. Even on abort, even on no-change.
-- Perceptual scoring requires all three evaluators on the main scorecard (Phase 1). A single evaluator is acceptable for Phase 4 spot-check only.
+- Perceptual scoring: all three evaluators required for Phase 1. Single evaluator acceptable for Phase 4 spot-check only.
 - Selection formula must be shown in output.
 - Any axis with a programmatic failure is capped at 5. Cannot be overridden.
-- **The loop never writes to the live rubric.** Proposed additions go to `.planning/rubrics/{target}-proposals.md` only. Human approval required.
-- Level-Up Protocol requires human approval before resuming.
+- **The loop never writes to the live rubric.** Proposals go to `.planning/rubrics/{target}-proposals.md` only. Human approval required.
+- Level-Up Protocol requires human approval before resuming
 - **Campaign mode:** campaign file must be updated after every phase transition and every loop completion.
 - **Campaign mode:** level-up must set `status: level-up-pending`, not `parked` or `active`.
 
@@ -382,29 +382,13 @@ When the loop resumes after a level-up, every evaluator in Phase 1c receives:
 
 ## Contextual Gates
 
-### Disclosure
-State what's about to happen:
-- "Running {N} improvement loops on {target}. Each loop: 3 evaluator agents + attack + verify (~$12/loop, ~${total} total)."
-- For `--continue`: "Resuming improve campaign at loop {n}/{total}. ${spent} spent so far."
-- For unlimited loops: "Running improvement loops until plateau or all axes >= 8.0. No fixed loop count."
+**Disclosure:** State loop count, target, per-loop cost (~$12), total estimate. For `--continue`: loops remaining and spend so far. For unlimited: state exit conditions (plateau or all axes >= 8.0).
 
-### Reversibility
-- **Green:** `--score-only` (no file modifications)
-- **Amber:** Standard improve loops (each loop commits separately, revertable per-loop)
-- **Red:** Level-up protocol (rewrites rubric anchors, changes the quality baseline permanently)
+**Reversibility:** Green = `--score-only` | Amber = standard loops (each commits separately) | Red = level-up (rewrites rubric anchors permanently). Red requires explicit confirmation.
 
-Red actions require explicit confirmation regardless of trust level.
+**Proportionality:** No rubric + no explicit request → suggest `/review`. All axes > 8.0 + `--n=1` → suggest `--axis`. Cost > $50 → confirm.
 
-### Proportionality
-- If target has no rubric and user hasn't explicitly requested rubric creation: suggest `/review` first
-- If `--n=1` on a target already scoring > 8.0 on all axes: suggest specific axis with `--axis`
-- If estimated cost > $50: confirm with user regardless of trust level
-
-### Trust Gating
-Read trust level from `harness.json`:
-- **Novice** (0-4 sessions): Allow `--score-only` and `--n=1` only. Block `--n` > 1 and unlimited loops.
-- **Familiar** (5-19 sessions): Allow up to `--n=5`. Confirm for higher counts or unlimited.
-- **Trusted** (20+ sessions): No restrictions. Confirm only for unlimited loops or cost > $50.
+**Trust gating:** Novice (0-4): `--score-only` / `--n=1` only. Familiar (5-19): up to `--n=5`. Trusted (20+): no cap; confirm unlimited or cost > $50.
 
 ## Exit Protocol
 

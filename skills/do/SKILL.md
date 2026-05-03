@@ -216,51 +216,21 @@ After classification and before execution, verify the response is proportional t
 
 **Fleet auto-decomposition — 1/2/3 confirmation prompt:**
 
-When `/do` detects two or more tasks with non-overlapping file scopes and complexity >= 3,
-check the stored Fleet preference before routing:
+When 2+ independent tasks detected (non-overlapping scopes, complexity >= 3, not already routed to full Fleet), read `consent.fleetSpawn` from harness.json:
+- `auto-allow` → route directly to `/fleet --quick`
+- `always-ask` or `null` → show prompt: "These look independent — run in parallel? [1=yes  2=always  3=no]"
+  - 1: route to `--quick`, preference unchanged
+  - 2: route to `--quick`, write `writeConsent('fleetSpawn', 'auto-allow')`
+  - 3: run sequentially; if "don't ask again", write `always-ask`
 
-Read `consent.fleetSpawn` from harness.json via `readConsent('fleetSpawn')`:
-- `auto-allow` → skip prompt, route directly to `/fleet --quick`
-- `always-ask` or `null` (first encounter) → show the prompt below
+`readConsent`/`writeConsent` are in `hooks_src/harness-health-util.js`.
 
-```
-These look independent — I could run them in parallel:
-  1. {task A description}
-  2. {task B description}
-
-Run in parallel? [1=yes  2=always  3=no]
-```
-
-Handle the response:
-- **1 (yes once):** Route to `/fleet --quick`. Preference unchanged.
-- **2 (always):** Route to `/fleet --quick`. Write preference: `writeConsent('fleetSpawn', 'auto-allow')`.
-- **3 (no):** Run sequentially. If user adds "don't ask again", write `writeConsent('fleetSpawn', 'always-ask')`.
-
-`readConsent` and `writeConsent` are in `hooks_src/harness-health-util.js`. Import them via
-`require('../hooks_src/harness-health-util')` when running as a Node script, or reference
-them conceptually when routing as an LLM skill (use `node -e "..."` to read/write via Bash).
-
-This check only fires when:
-- Two or more independent tasks detected (different files/domains)
-- Complexity is 3+ (not trivial single-step work)
-- Not already routed to full Fleet (complexity 4+)
-
-**Trust level integration:**
-Read trust level from `harness.json` (via the `trust` object):
-- Compute level: novice (0-4 sessions), familiar (5-19), trusted (20+ with 2+ campaigns)
-- If `trust.override` is set, use that level
-- Apply the trust-gated rules from the tables above
+**Trust level:** Read from `harness.json` `trust` object. Levels: novice (0-4 sessions), familiar (5-19), trusted (20+ with 2+ campaigns). `trust.override` takes precedence.
 
 ### Step 4: After Classification
 
-1. **Log the routing decision to telemetry** (cost: ~0, fire-and-forget):
-   ```bash
-   node .citadel/scripts/telemetry-log.cjs --event agent-complete --agent do-router --session routing --status success --meta '{"tier":N,"target":"[skill-name]","input_chars":M}'
-   ```
-   Where:
-   - `N` = the tier number that matched (0, 1, 2, or 3)
-   - `[skill-name]` = the target skill or orchestrator being invoked (e.g., "marshal", "archon", "commit")
-   - `M` = character count of the user's input (use `input.length` conceptually — approximate is fine)
+1. **Log routing decision** (fire-and-forget):
+   `node .citadel/scripts/telemetry-log.cjs --event agent-complete --agent do-router --session routing --status success --meta '{"tier":N,"target":"[skill]","input_chars":M}'`
 
    Use `.citadel/scripts/telemetry-log.cjs` (the project-local copy). If it doesn't exist, skip logging silently — never block routing on telemetry failure.
 

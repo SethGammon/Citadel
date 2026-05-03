@@ -13,16 +13,6 @@ last-updated: 2026-03-26
 
 # /learn — Campaign Pattern Extractor
 
-## Identity
-
-/learn turns completed campaigns into institutional knowledge. It reads the
-artifacts left behind — campaign files, postmortems, audit logs — and
-extracts what worked, what failed, what decisions were made, and what should
-become permanent quality rules.
-
-It writes to `.planning/knowledge/` so future campaigns and agents can
-benefit from hard-won lessons without repeating them.
-
 ## When to Use
 
 - After any completed campaign (auto-triggered by /postmortem)
@@ -80,187 +70,61 @@ benefit from hard-won lessons without repeating them.
 
 ### Step 3: EXTRACT PATTERNS
 
-Analyze gathered sources and extract four categories:
+Extract four categories from gathered sources:
 
-#### A. Successful Patterns
-Approaches, tool sequences, or architectural decisions that demonstrably worked.
-Evidence: phases completed without rework, postmortem "patterns" section positives,
-commit sequences that proceeded without reverts.
+**A. Successful Patterns** — approaches/decisions that demonstrably worked (phases completed without rework, postmortem positives, unrevert commits). Per pattern: name, description, evidence (phase/commit/log), applicability.
 
-For each pattern:
-- Name: short descriptive label
-- Description: what was done
-- Evidence: which phase/commit/log entry supports this
-- Applicability: when this pattern applies (file type, domain, task type)
+**B. Failed Patterns (Anti-patterns)** — what was tried and failed (rework phases, circuit breaker trips, quality gate blocks, reverted commits). Per anti-pattern: name, description, failure mode, evidence, avoidance.
 
-#### B. Failed Patterns (Anti-patterns)
-What was tried and failed, with context for why.
-Evidence: phases that needed rework, circuit breaker trips, quality gate blocks,
-reverted commits, "What Broke" entries in postmortem.
+**C. Key Decisions** — from campaign Decision Log or inferred from phase descriptions. Per decision: what was decided, rationale, outcome (completed vs. rework).
 
-For each anti-pattern:
-- Name: short descriptive label
-- Description: what was done
-- Failure mode: what went wrong
-- Evidence: which hook/gate/commit caught it
-- Avoidance: how to avoid this pattern
-
-#### C. Key Decisions
-Architectural or approach decisions from the campaign's Decision Log.
-If no Decision Log exists, extract from phase descriptions and commit messages.
-
-For each decision:
-- Decision: what was decided
-- Rationale: why (from the log, or inferred from context)
-- Outcome: did it work out? (completed vs. rework)
-
-#### D. Quality Rule Candidates
-Patterns that tripped quality gates OR recurring anti-patterns that could be
-caught automatically. Only generate a rule if:
-- The pattern is a clear, specific regex (not a vague principle)
-- It would apply to a specific file pattern
-- It occurred more than once OR was severe enough to warrant a rule
-
-For each rule candidate:
-- Proposed regex pattern
-- File pattern it applies to (e.g., `**/*.ts`, `src/domains/**`)
-- Message to show when triggered
-- Confidence: high | medium | low (skip low-confidence rules)
+**D. Quality Rule Candidates** — only generate a rule if: specific regex (not vague principle), applies to a specific file pattern, occurred more than once or was severe. Per candidate: regex, file pattern, trigger message, confidence (high/medium/low — skip low).
 
 ### Step 4: WRITE KNOWLEDGE FILES
 
-**Create `.planning/knowledge/{slug}-patterns.md`:**
+Create `.planning/knowledge/{slug}-patterns.md` with sections: header (extracted date, campaign path, postmortem path or "none"), `## Successful Patterns` (name, description, evidence, applicability per pattern), `## Key Decisions` (table: decision | rationale | outcome).
 
-```markdown
-# Patterns: {Campaign Name}
+Create `.planning/knowledge/{slug}-antipatterns.md` with sections: header, `## Failed Patterns` (name, what was done, failure mode, evidence, avoidance per pattern).
 
-> Extracted: {ISO date}
-> Campaign: {path to campaign file}
-> Postmortem: {path, or "none"}
-
-## Successful Patterns
-
-### {N}. {Pattern Name}
-- **Description:** {what was done}
-- **Evidence:** {source}
-- **Applies when:** {applicability}
-
-## Key Decisions
-
-| Decision | Rationale | Outcome |
-|----------|-----------|---------|
-| {decision} | {rationale} | {outcome} |
-```
-
-**Create `.planning/knowledge/{slug}-antipatterns.md`:**
-
-```markdown
-# Anti-patterns: {Campaign Name}
-
-> Extracted: {ISO date}
-> Campaign: {path to campaign file}
-
-## Failed Patterns
-
-### {N}. {Anti-pattern Name}
-- **What was done:** {description}
-- **Failure mode:** {what went wrong}
-- **Evidence:** {source}
-- **How to avoid:** {avoidance}
-```
-
-If `.planning/knowledge/` does not exist, create it.
+Create `.planning/knowledge/` if it does not exist.
 
 ### Step 5: APPEND QUALITY RULES
 
-For each high- or medium-confidence quality rule candidate:
+For each high/medium-confidence rule candidate:
+1. Read `.claude/harness.json` (create with `{}` if missing)
+2. Initialize `qualityRules.custom` to `[]` if absent
+3. Skip if a rule with the same `pattern` already exists
+4. Append: `{ "name": "auto-{slug}-{N}", "pattern": "{regex}", "filePattern": "{glob}", "message": "Learned from campaign {slug}: {message}" }`
+5. Write updated harness.json
 
-1. Read `.claude/harness.json` (create it if missing with `{}`)
-2. Check if `qualityRules.custom` array exists; initialize to `[]` if not
-3. For each candidate rule:
-   a. Check if a rule with the same `pattern` already exists in the array
-   b. If it already exists: skip it (do not duplicate)
-   c. If it's new: append:
-      ```json
-      {
-        "name": "auto-{slug}-{N}",
-        "pattern": "{regex}",
-        "filePattern": "{file glob}",
-        "message": "Learned from campaign {slug}: {message}"
-      }
-      ```
-4. Write the updated harness.json back
-
-If harness.json doesn't exist: create it with only the qualityRules section:
-```json
-{
-  "qualityRules": {
-    "custom": [
-      { ... }
-    ]
-  }
-}
-```
-
-Skip vague or low-confidence patterns entirely — a bad rule that fires on
-innocent code is worse than no rule.
+Skip low-confidence rules — a bad rule firing on innocent code is worse than no rule.
 
 ### Step 6: OUTPUT SUMMARY
 
 ```
 === /learn: {Campaign Slug} ===
-
-Sources read:
-  Campaign:   {file path}
-  Postmortem: {file path, or "not found"}
-  Audit entries: {N} matched
-
-Extracted:
-  Successful patterns: {N}
-  Anti-patterns:       {N}
-  Key decisions:       {N}
-  Quality rule candidates: {N total} ({M} added, {K} skipped — already exist or low confidence)
-
-Knowledge files written:
-  .planning/knowledge/{slug}-patterns.md
-  .planning/knowledge/{slug}-antipatterns.md
-
-Quality rules appended to .claude/harness.json: {M}
-{  "name": "auto-{slug}-1", "pattern": "...", ... }   ← one line per rule added
-
-Next: review .planning/knowledge/ and promote useful rules to your project's
-      CLAUDE.md or coding-style rules for permanent enforcement.
+Sources: campaign {path} | postmortem {path or "not found"} | {N} audit entries matched
+Extracted: {N} patterns | {N} anti-patterns | {N} decisions | {N} rule candidates ({M} added, {K} skipped)
+Files: .planning/knowledge/{slug}-patterns.md, {slug}-antipatterns.md
+Rules added to harness.json: {M} (one line per rule)
+Next: review .planning/knowledge/ and promote useful rules to CLAUDE.md for permanent enforcement.
 ```
 
 ## Fringe Case Handling
 
-**No completed campaigns:**
-Output the "no completed campaigns" message and stop. Do not attempt to
-read nonexistent files.
+**No completed campaigns:** Output message and stop.
 
-**Campaign file has no Decision Log section:**
-Extract decisions from phase descriptions instead. Note in the output:
-"Decision Log not found — decisions inferred from phase descriptions."
+**No Decision Log:** Extract decisions from phase descriptions; note "inferred from phase descriptions" in output.
 
-**harness.json doesn't exist:**
-Create it with just the qualityRules section. Do not invent other harness
-configuration fields.
+**harness.json missing:** Create with only the qualityRules section; do not invent other fields.
 
-**Pattern already exists in qualityRules:**
-Skip the duplicate silently. Count it in "skipped — already exist".
+**Duplicate rule:** Skip silently; count in "skipped — already exist".
 
-**Postmortem doesn't exist:**
-Run without it. Note "Postmortem not found — proceeding without it" in the
-summary output. Do not fail.
+**Postmortem missing:** Proceed without it; note in summary.
 
-**Telemetry file is very large:**
-Only read the last 200 lines. This is sufficient for pattern extraction
-without large read costs.
+**Large telemetry file:** Read last 200 lines only.
 
-**Campaign has zero patterns (very short or trivial campaign):**
-Write the knowledge files with empty sections and a note:
-"No extractable patterns found — campaign may have been too brief."
-Do not skip file creation.
+**Zero extractable patterns:** Write knowledge files with empty sections and note "campaign may have been too brief." Do not skip file creation.
 
 ## Quality Gates
 
