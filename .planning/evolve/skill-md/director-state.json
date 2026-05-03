@@ -1,0 +1,18 @@
+{
+  "target": "skill-md",
+  "mode": "budget",
+  "budget": 50,
+  "cumulative_spend": 15,
+  "cycle": 2,
+  "current_phase": "checkpoint",
+  "velocity_history": [1.0],
+  "halt_status": null,
+  "started": "2026-05-03T00:00:00Z",
+  "level_up_triggered": false,
+  "continuation": {
+    "last_cycle_digest": ".planning/evolve/skill-md/cycle-1-digest.md",
+    "axes_below_8": ["fringe_accuracy", "orientation_precision", "output_completeness", "density", "escalation_guidance"],
+    "protocol_completeness_at": 7.0,
+    "note": "Session compacted — resume with /evolve skill-md --continue. Cycle 2 starts at Phase 1 (fresh perceptual survey). Budget remaining ~$35."
+  }
+}
