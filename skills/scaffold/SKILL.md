@@ -29,7 +29,7 @@ You generate new files that match the project's existing conventions exactly. Ne
 
 **Use when:** Creating a new component, module, service, route, hook, domain, or utility with existing examples in the project.
 
-**Do NOT use when:** The file has no precedent, you're modifying existing files, or the project has no conventions yet.
+**Do NOT use when:** The file has no precedent (use `/marshal` for unconstrained generation), you're modifying existing files (use `/refactor`), or the project has no conventions yet.
 
 **Needs:** target type, name, and optional description.
 

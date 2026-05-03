@@ -14,6 +14,12 @@ last-updated: 2026-03-21
 
 Use for 3+ independent work streams that can run simultaneously in isolated worktrees. Do NOT use for single-file scope, linear work, or when a marshal or skill suffices.
 
+## Orientation
+
+**Use when:** Running 2+ independent work streams in parallel — tasks with non-overlapping file scopes that can execute simultaneously.
+
+**Don't use when:** Work must execute sequentially or accumulate findings across phases (use `/archon`), a single orchestrated session is enough (use `/marshal`), or the task is simple enough for a bare skill.
+
 ## Commands
 
 | Command | Behavior |
