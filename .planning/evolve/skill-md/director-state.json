@@ -2,32 +2,32 @@
   "target": "skill-md",
   "mode": "budget",
   "budget": 50,
-  "cumulative_spend": 23,
-  "cycle": 3,
+  "cumulative_spend": 33,
+  "cycle": 4,
   "current_phase": "checkpoint",
-  "velocity_history": [1.0, 1.17],
+  "velocity_history": [1.0, 1.17, 1.17],
   "halt_status": null,
   "started": "2026-05-03T00:00:00Z",
   "level_up_triggered": false,
   "continuation": {
-    "last_cycle_digest": ".planning/evolve/skill-md/cycle-2-digest.md",
-    "axes_below_8": ["protocol_completeness", "density", "escalation_guidance", "fringe_accuracy", "orientation_precision", "output_completeness"],
-    "axes_near_8": ["escalation_guidance", "fringe_accuracy", "orientation_precision", "output_completeness"],
-    "cycle2_estimated_scores": {
+    "last_cycle_digest": ".planning/evolve/skill-md/cycle-3-digest.md",
+    "axes_below_8": ["protocol_completeness", "density", "fringe_accuracy", "orientation_precision"],
+    "axes_at_8_plus": ["escalation_guidance", "output_completeness"],
+    "cycle3_estimated_scores": {
       "protocol_completeness": 7.0,
-      "density": 6.0,
-      "escalation_guidance": 7.5,
+      "density": 7.5,
+      "escalation_guidance": 8.5,
       "fringe_accuracy": 7.5,
       "orientation_precision": 7.5,
-      "output_completeness": 7.5
+      "output_completeness": 8.5
     },
     "remaining_gaps": {
-      "escalation_guidance": "~17 skills still missing contextual gates (archon, autopilot, daemon, do, fleet, improve, organize, refactor, scaffold, setup, systematic-debugging, triage, unharness, watch, wiki, workspace + others)",
-      "output_completeness": "same skills missing reversibility in HANDOFF",
-      "density": "do (2481), improve (2475), fleet (2447), daemon (2330) — identity prose + redundant sections; Identity sections in research-fleet, verify, qa still present",
-      "protocol_completeness": "needs perceptual scoring to find coverage gaps"
+      "fringe_accuracy": "evolve and organize have lint WARNs for missing .planning/ guards (P-05 pattern) -- quick fix, 2 files",
+      "density": "do (2485), improve (2476), fleet (2448) near complex limit -- look for redundant sections not Identity prose",
+      "protocol_completeness": "no structural check can find gaps -- needs perceptual survey of 5 complex skills (archon, fleet, do, evolve, improve)",
+      "orientation_precision": "all skills have orientation; some may have vague 'Don't use when' without named neighbors -- check with grep"
     },
-    "patterns_ready_to_apply": ["P-08 identity-prose-is-dead-weight: apply to remaining skills with Identity sections"],
-    "note": "Cycle 2 complete. Velocity 1.17 (healthy). Budget remaining ~$27. Cycle 3 starts at Phase 1. Priority: (1) density -- attack Identity sections in complex orchestrators; (2) escalation_guidance -- extend contextual gates to remaining 17 skills; (3) run perceptual scoring panel to get real scores and identify protocol_completeness gaps."
+    "velocity_note": "Velocity 1.17 for 2nd consecutive cycle. Approaching structural ceiling. Cycle 4 targets harder perceptual gaps -- expect velocity drop to 0.5-0.8.",
+    "note": "Cycle 3 complete. Budget remaining ~$17. Cycle 4 should: (1) fix 2 lint WARNs for fringe_accuracy; (2) perceptual scout of protocol_completeness gaps; (3) targeted density trim of do/improve/fleet. Keep cycle 4 targeted -- avoid large fleet to preserve budget."
   }
 }
