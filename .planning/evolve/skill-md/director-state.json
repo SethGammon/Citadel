@@ -2,17 +2,32 @@
   "target": "skill-md",
   "mode": "budget",
   "budget": 50,
-  "cumulative_spend": 15,
-  "cycle": 2,
+  "cumulative_spend": 23,
+  "cycle": 3,
   "current_phase": "checkpoint",
-  "velocity_history": [1.0],
+  "velocity_history": [1.0, 1.17],
   "halt_status": null,
   "started": "2026-05-03T00:00:00Z",
   "level_up_triggered": false,
   "continuation": {
-    "last_cycle_digest": ".planning/evolve/skill-md/cycle-1-digest.md",
-    "axes_below_8": ["fringe_accuracy", "orientation_precision", "output_completeness", "density", "escalation_guidance"],
-    "protocol_completeness_at": 7.0,
-    "note": "Session compacted — resume with /evolve skill-md --continue. Cycle 2 starts at Phase 1 (fresh perceptual survey). Budget remaining ~$35."
+    "last_cycle_digest": ".planning/evolve/skill-md/cycle-2-digest.md",
+    "axes_below_8": ["protocol_completeness", "density", "escalation_guidance", "fringe_accuracy", "orientation_precision", "output_completeness"],
+    "axes_near_8": ["escalation_guidance", "fringe_accuracy", "orientation_precision", "output_completeness"],
+    "cycle2_estimated_scores": {
+      "protocol_completeness": 7.0,
+      "density": 6.0,
+      "escalation_guidance": 7.5,
+      "fringe_accuracy": 7.5,
+      "orientation_precision": 7.5,
+      "output_completeness": 7.5
+    },
+    "remaining_gaps": {
+      "escalation_guidance": "~17 skills still missing contextual gates (archon, autopilot, daemon, do, fleet, improve, organize, refactor, scaffold, setup, systematic-debugging, triage, unharness, watch, wiki, workspace + others)",
+      "output_completeness": "same skills missing reversibility in HANDOFF",
+      "density": "do (2481), improve (2475), fleet (2447), daemon (2330) — identity prose + redundant sections; Identity sections in research-fleet, verify, qa still present",
+      "protocol_completeness": "needs perceptual scoring to find coverage gaps"
+    },
+    "patterns_ready_to_apply": ["P-08 identity-prose-is-dead-weight: apply to remaining skills with Identity sections"],
+    "note": "Cycle 2 complete. Velocity 1.17 (healthy). Budget remaining ~$27. Cycle 3 starts at Phase 1. Priority: (1) density -- attack Identity sections in complex orchestrators; (2) escalation_guidance -- extend contextual gates to remaining 17 skills; (3) run perceptual scoring panel to get real scores and identify protocol_completeness gaps."
   }
 }

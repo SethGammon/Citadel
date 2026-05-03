@@ -36,3 +36,26 @@
 **Delta:** contributed to H-FA-01 delta
 **Applies to:** Any skill whose protocol reads from `.planning/campaigns/`, `.planning/fleet/`, `.planning/telemetry/`, or similar
 **Confidence:** high — confirmed in session-handoff; lint rule `[WARN] guards .planning/ access when used` independently detects this gap
+
+## Cycle 2 Patterns
+
+### P-06: contextual-gates-classification
+**Axis class:** escalation_guidance
+**Mechanism:** Skills that declare reversibility as green/amber/red with a specific undo command score higher on escalation_guidance than skills with no gates at all. The color+undo pair is the minimum viable gate — evaluators can verify it is testable (not vague). Absence scores 0; vague prose scores 3; typed classification scores 7+.
+**Delta:** +1.5 estimated across 13 skills (9 attacked + 4 cross-pollinated: telemetry, verify, research-fleet, qa)
+**Applies to:** Any skill that creates files, modifies source, or writes external state
+**Confidence:** high — pattern applied to 13 skills, all passed lint; read-only skills uniformly green; multi-file modifiers uniformly amber
+
+### P-07: fringe-from-real-modes
+**Axis class:** fringe_accuracy
+**Mechanism:** Fringe cases must derive from real observed failure modes (missing dirs, malformed state, missing tool, API unavailability) — not hypothetical scenarios. Each case must include a specific user-facing message or action, not just "handle it." Hypothetical cases don't move the evaluator's score.
+**Delta:** +1.0 estimated across 4 skills (cost, dashboard, refactor, review)
+**Applies to:** Any skill adding a Fringe Cases section
+**Confidence:** medium — confirmed in 4 skills this cycle; need 2+ more instances to promote to high
+
+### P-08: identity-prose-is-dead-weight
+**Axis class:** density
+**Mechanism:** "Identity" sections that describe what the skill does in first-person prose ("You are the X manager...") are always dead weight — they restate the frontmatter description and the agent's execution context. Removing them frees word budget for load-bearing protocol without changing behavior.
+**Delta:** contributing to density for schedule (trimmed Identity → fell back under 1200-word limit)
+**Applies to:** Any skill with an "## Identity" section that restates the frontmatter description
+**Confidence:** medium — confirmed in schedule and partially in research-fleet (Identity section present); need broader attack to confirm at high
