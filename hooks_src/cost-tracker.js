@@ -42,6 +42,9 @@ const CHECK_INTERVAL_MS = 3 * 60 * 1000; // 3 minutes
 // Default thresholds in dollars
 const DEFAULT_THRESHOLDS = [5, 15, 30, 50, 75, 100, 150, 200, 300, 500];
 
+// Phase length warning threshold (minutes). Research: failure rate 4x-increases beyond 35 min.
+const PHASE_WARN_MINUTES = 35;
+
 const CITADEL_UI = process.env.CITADEL_UI === 'true';
 
 // ── State management ─────────────────────────────────────────────────────────
@@ -244,12 +247,20 @@ function run() {
     budgetAlert = checkCampaignBudget(cost);
   }
 
-  // Save state regardless (includes budget tracking)
+  // Phase length warning: fire once when session first exceeds 35 min.
+  // Research (Morph, 2026): failure rate 4x-increases beyond this boundary.
+  const phaseLengthWarned = state?.sessionId === sessionId && state?.phaseLengthWarned === true;
+  const phaseLengthAlert = (durationMin >= PHASE_WARN_MINUTES && !phaseLengthWarned)
+    ? `[phase] ${durationMin} min -- consider /compact to reset context and reduce task failure risk`
+    : null;
+
+  // Save state regardless (includes budget and phase tracking)
   writeState({
     lastCheckMs: now,
     sessionId,
     lastThresholdIndex: currentThresholdIndex,
     lastBudgetPct: budgetAlert ? (budgetAlert.includes('exceeded') ? 100 : 80) : (state?.lastBudgetPct || 0),
+    phaseLengthWarned: phaseLengthAlert ? true : (state?.phaseLengthWarned || false),
     cost,
     durationMin,
     burnRate: Math.round(burnRate * 100) / 100,
@@ -260,7 +271,7 @@ function run() {
   // Determine what to output
   const crossedNewThreshold = currentThresholdIndex > lastIndex;
 
-  if (!crossedNewThreshold && !budgetAlert) {
+  if (!crossedNewThreshold && !budgetAlert && !phaseLengthAlert) {
     process.exit(0);
   }
 
@@ -308,12 +319,16 @@ function run() {
     messages.push(budgetAlert);
   }
 
+  if (phaseLengthAlert) {
+    messages.push(phaseLengthAlert);
+  }
+
   const output = messages.join('\n');
 
   if (CITADEL_UI) {
     process.stdout.write(JSON.stringify({
       hook: 'cost-tracker',
-      action: crossedNewThreshold ? 'threshold' : 'budget-alert',
+      action: crossedNewThreshold ? 'threshold' : (budgetAlert ? 'budget-alert' : 'phase-length'),
       message: output,
       timestamp: new Date().toISOString(),
       data: {
@@ -324,6 +339,7 @@ function run() {
         messages: tokens.messages,
         subagents: result.subagents.length,
         budgetAlert: budgetAlert || null,
+        phaseLengthAlert: phaseLengthAlert || null,
       },
     }));
   } else {

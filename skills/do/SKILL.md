@@ -276,83 +276,11 @@ protocol and output format.
 
 ## /do --list
 
-List all installed skills (Citadel built-in + project custom):
-
-```
-=== Installed Skills ===
-
-ORCHESTRATION
-  /do [intent]          Universal router
-  /marshal [direction]  Single-session orchestrator
-  /archon [direction]   Multi-session campaigns
-  /fleet [direction]    Parallel campaigns with coordination safety
-  /workspace [direction] Multi-repo campaign coordinator (fleet, one level up)
-  /autopilot            Intake-to-delivery pipeline
-
-APP CREATION
-  /prd                  Product requirements document
-  /architect            Implementation architecture from PRD
-  /create-app           End-to-end app creation (5 tiers, greenfield or existing codebase)
-
-SKILLS
-  /review               5-pass structured code review
-  /test-gen             Generate tests that actually run
-  /doc-gen              Documentation generation (3 modes)
-  /refactor             Safe multi-file refactoring
-  /scaffold             Project-aware scaffolding
-  /create-skill         Create new skills from patterns
-
-RESEARCH & DEBUGGING
-  /research             Structured investigation with findings
-  /research-fleet       Parallel multi-scout research
-  /experiment           Metric-driven optimization loops
-  /systematic-debugging Root cause analysis (4-phase)
-  /live-preview         Mid-build visual verification
-
-QUALITY & VERIFICATION
-  /improve [target]     Autonomous quality engine -- score, select, attack, verify, loop
-  /design               Design manifest generator (extract or generate)
-  /qa                   Browser QA via Playwright (optional dependency)
-  /postmortem           Campaign postmortem from telemetry + git history
-
-GITHUB & CI
-  /triage [issue|pr]    GitHub issue and PR investigator
-  /pr-watch [number]    Local PR auto-fix — watches CI, fixes failures, offers merge
-
-INFRASTRUCTURE
-  /infra-audit          Map current infrastructure from config files, flag opportunities
-  /workspace [direction] Coordinate campaigns across multiple repos
-
-MONITORING & ORGANIZATION
-  /watch [command]      File sentinel — detects changes and @citadel: markers, routes to skills
-  /organize [--audit]   Directory convention scanner, enforcer, and cleanup
-  /houseclean           Cross-drive storage audit: worktrees, AI caches, project artifacts
-
-UTILITIES
-  /session-handoff      Session context transfer
-  /setup                First-run harness configuration
-  /schedule [action]    Manage recurring tasks (CronCreate/Delete/List)
-  /merge-review         Fleet worktree merge conflict analysis
-  /ascii-diagram        Perfectly aligned ASCII diagrams via character grid
-  /do rollback          Restore to last campaign checkpoint (git stash pop)
-
-OBSERVABILITY & LEARNING
-  /dashboard            Real-time harness dashboard — campaigns, events, health
-  /learn                Extract patterns from completed campaigns into knowledge base
-
-Direct invocation (/skill-name) always bypasses the router.
-```
+Output a grouped skill list drawn from the system reminder's available skills. Group by category (Orchestration, App Creation, Code Quality, Research & Debugging, GitHub & CI, Infrastructure, Monitoring, Utilities, Observability). For each skill, show `/name  — one-line description`. Include a footer: "Direct invocation (/skill-name) always bypasses the router."
 
 ## Escape Hatches
 
-Direct invocation ALWAYS works and bypasses the router:
-- `/marshal [thing]` — force Marshal
-- `/archon [thing]` — force Archon
-- `/fleet [thing]` — force Fleet
-- `/[skill-name]` — force specific skill
-
-The router is additive, not a gate. Power users who know what they want
-should use direct invocation.
+Direct invocation always works: `/marshal`, `/archon`, `/fleet`, `/[skill-name]`. The router is additive, not a gate.
 
 ## Fringe Cases
 

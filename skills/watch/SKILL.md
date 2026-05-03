@@ -4,8 +4,9 @@ description: >-
   File sentinel that monitors the working directory for changes and marker
   comments, then auto-triggers appropriate skills. Poll-based via git diff
   against the last scan commit. Writes intake items for batch processing and
-  routes marker actions through /do. Designed for ephemeral Claude Code
-  sessions where filesystem watchers are not viable.
+  routes marker actions through /do. Use for automatic reactions to file
+  changes; do NOT use for one-off inspection or tasks needing human judgment
+  per file.
 user-invocable: true
 auto-trigger: false
 last-updated: 2026-03-29
@@ -13,32 +14,27 @@ last-updated: 2026-03-29
 
 # /watch -- File Sentinel
 
+Use when the user wants automatic reactions to file changes or marker comments (`@citadel:`).
+Do NOT use for one-off file inspection or tasks that need human judgment per file.
+
 ## Default execution path (READ FIRST)
 
-**`/watch start` does NOT call `CronCreate` by default.** The local runner is
-the default. Only pass `--remote` to use Anthropic's routine system, and only
-after explicit user confirmation.
-
-**Why:** `CronCreate` counts against the account-wide **15 routine runs / 24h**
-cap. At the default 5-minute interval a watch exhausts the quota in under an
-hour and pauses every other routine on the account. See
-[docs/ROUTINE-QUOTA.md](../../docs/ROUTINE-QUOTA.md).
+**`/watch start` does NOT call `CronCreate` by default.** Only pass `--remote`
+to use Anthropic's routine system, and only after explicit user confirmation.
+`CronCreate` counts against the **15 routine runs / 24h** cap — at the default
+5-minute interval a watch exhausts the quota in under an hour.
 
 ### Default flow — `/watch start` (no `--remote` flag)
 1. Do Steps 1 and 2 below (check existing watch, determine baseline commit).
-2. **Skip Step 3** — do NOT call `CronCreate`. Leave `cronId: null` in the
-   state file.
+2. **Skip Step 3** — do NOT call `CronCreate`. Leave `cronId: null` in state.
 3. Write the state file (Step 4) with `status: "watching"`.
-4. Output (instead of Step 5):
+4. Output:
    ```
    Watch state created: .planning/watch-state.json
      Baseline: {commit hash, first 7 chars}
 
    To start real-time watching, run in a separate terminal:
      npm run watch:local
-
-   It uses filesystem events (not polling), triggers scans on change, and
-   consumes zero Anthropic routine quota. Stop with Ctrl+C.
 
    For cloud-persistent polling (machine off, user away):
      /watch start --remote     (uses CronCreate, counts against 15/day cap)
@@ -49,38 +45,14 @@ Only when `--remote` is explicitly passed:
 1. Confirm: "This will use `CronCreate`, which counts against your 15 routine
    runs / 24h quota. At a 5-minute interval this exhausts the quota in under
    an hour. Continue? (y/N)"
-2. On confirmation, run the full Step 1–5 protocol below including Step 3's
-   `CronCreate` call.
-
-The rest of the protocol documents the full routine-path flow for reference
-and for `--remote` invocations.
-
-## Identity
-
-You are the file sentinel. You detect what changed since the last scan,
-find marker comments that request specific actions, and dispatch work to
-the right skill or queue it for batch processing. You do not do the work
-yourself -- you detect and route.
-
-## Orientation
-
-Use `/watch` when:
-- The user wants automatic reactions to file changes (tests on test edits,
-  doc staleness checks on doc changes, review on marker comments)
-- A daemon or autopilot pipeline needs a change-detection feed
-- The team uses `@citadel:` marker comments to request actions inline
-
-Do NOT use `/watch` for:
-- One-off file inspection (just read the file)
-- Continuous real-time filesystem monitoring (Claude Code sessions are ephemeral)
-- Tasks that need human judgment per file (use `/review` directly)
+2. On confirmation, run the full Step 1–5 protocol including `CronCreate`.
 
 ## Commands
 
 | Command | Behavior |
 |---|---|
-| `/watch start` | Default: create state, prompt user to run `npm run watch:local` (real-time, zero routine cost) |
-| `/watch start --remote` | Use `CronCreate` polling instead (counts against 15/day routine quota — requires confirmation) |
+| `/watch start` | Default: create state, prompt user to run `npm run watch:local` |
+| `/watch start --remote` | Use `CronCreate` polling (counts against 15/day quota — requires confirmation) |
 | `/watch start --interval {N}m` | Set poll interval for `--remote` mode (default: 5m) |
 | `/watch stop` | Stop watching, tear down cron |
 | `/watch status` | Show watch state, last scan time, pending actions |
@@ -104,11 +76,9 @@ Do NOT use `/watch` for:
 1. Run `git rev-parse HEAD` to get the current commit hash
 2. If not a git repo: fall back to timestamp-based detection (store current
    time as `lastScanTime`, skip commit-based diffing)
-3. Store this as `lastScanCommit` -- the first scan will diff against this
+3. Store this as `lastScanCommit`
 
-#### Step 3: Create poll schedule
-
-Use CronCreate to set up recurring scans:
+#### Step 3: Create poll schedule (--remote only)
 
 ```
 CronCreate:
@@ -128,7 +98,7 @@ Write `.planning/watch-state.json`:
   "lastScanCommit": "abc1234",
   "lastScanTime": null,
   "interval": "5m",
-  "cronId": "{id from step 3}",
+  "cronId": "{id from step 3 or null}",
   "pendingActions": [],
   "processedMarkers": [],
   "stats": {
@@ -140,114 +110,64 @@ Write `.planning/watch-state.json`:
 }
 ```
 
-#### Step 5: Confirm
+#### Step 5: Confirm (--remote only)
 
-Output:
 ```
 Watch started.
   Interval:  every {N}m
   Baseline:  {commit hash, first 7 chars}
   State:     .planning/watch-state.json
-
-The sentinel will scan for changes every {N} minutes and:
-  - Route @citadel: marker comments to the appropriate skill
-  - Queue unmarked changes as intake items for /autopilot
-  - Auto-trigger test runs when test files change
-  - Flag doc staleness when source files change near docs
-
-Use `/watch scan` for an immediate scan.
-Use `/watch stop` to halt.
 ```
 
 ---
 
 ### /watch stop
 
-1. Read `.planning/watch-state.json`. If it doesn't exist or `status` is not
-   `"watching"`: "No watch is active."
-2. Delete the cron schedule:
-   ```
-   CronDelete: {cronId}
-   ```
-   If the cron ID is missing or deletion fails, continue gracefully.
-3. Update state file:
-   ```json
-   {
-     "status": "stopped",
-     "cronId": null
-   }
-   ```
-   Preserve all other fields (stats, lastScanCommit, etc.).
+1. Read `.planning/watch-state.json`. If missing or not `"watching"`: "No watch is active."
+2. `CronDelete: {cronId}` — if cronId is missing or deletion fails, continue.
+3. Update state: `"status": "stopped", "cronId": null`. Preserve all other fields.
 4. Output:
    ```
    Watch stopped.
-     Scans completed:     {stats.scansRun}
-     Markers found:       {stats.markersFound}
+     Scans completed:      {stats.scansRun}
+     Markers found:        {stats.markersFound}
      Intake items created: {stats.intakeItemsCreated}
-     Skills dispatched:   {stats.skillsDispatched}
+     Skills dispatched:    {stats.skillsDispatched}
    ```
 
 ---
 
 ### /watch status
 
-1. Read `.planning/watch-state.json`. If it doesn't exist:
-   "No watch configured. Use `/watch start` to begin."
-2. Output:
-   ```
-   Watch: {status}
-     Last scan:      {lastScanTime or "never"}
-     Last commit:    {lastScanCommit, first 7 chars}
-     Interval:       {interval}
-     Pending actions: {pendingActions.length}
-     Stats:
-       Scans run:         {stats.scansRun}
-       Markers found:     {stats.markersFound}
-       Intake items:      {stats.intakeItemsCreated}
-       Skills dispatched: {stats.skillsDispatched}
-   ```
-3. If `pendingActions` is non-empty, list each:
-   ```
-   Pending:
-     [{action}] {file}:{line} -- {description}
-   ```
+1. If `.planning/watch-state.json` missing: "No watch configured. Use `/watch start` to begin."
+2. Output state fields: status, lastScanTime, lastScanCommit, interval, pendingActions.length, stats.
+3. If `pendingActions` non-empty, list each: `[{action}] {file}:{line} -- {description}`
 
 ---
 
 ### /watch scan
 
-This is the core detection and dispatch loop. Runs on every poll tick or
-when invoked manually.
-
 #### Step 1: Load state
 
 1. Read `.planning/watch-state.json`
-2. If it doesn't exist: create a default state with `lastScanCommit` from
-   `git rev-parse HEAD` and `status: "watching"`. This allows `/watch scan`
-   to work as a standalone one-shot without `/watch start`.
+2. If missing: create default state with `lastScanCommit` from `git rev-parse HEAD` and `status: "watching"`.
 
 #### Step 2: Detect changed files
 
 **Git mode (primary):**
-1. Run `git diff --name-only {lastScanCommit} HEAD` to get files changed
-   since the last scan
-2. Also run `git diff --name-only` (unstaged) and `git diff --name-only --cached`
-   (staged) to catch uncommitted work
+1. `git diff --name-only {lastScanCommit} HEAD` (committed changes)
+2. `git diff --name-only` (unstaged) and `git diff --name-only --cached` (staged)
 3. Merge and deduplicate all three lists
-4. Filter out files matching `.gitignore` (git diff handles this automatically
-   for committed changes; for unstaged, use `git ls-files --others --ignored --exclude-standard`
-   to identify ignored files and exclude them)
 
 **Fallback mode (no git):**
-1. Walk the working directory using `find . -newer {timestamp_file} -type f`
+1. `find . -newer {timestamp_file} -type f`
 2. Exclude `node_modules/`, `.git/`, `.planning/`, `dist/`, `build/`
-3. This is less precise but functional for non-git projects
 
 If no files changed: update `lastScanTime` and `stats.scansRun`, exit early.
 
 #### Step 3: Scan for marker comments
 
-For each changed file, read its contents and search for marker patterns:
+Search changed files for:
 
 | Pattern | Languages |
 |---|---|
@@ -256,64 +176,41 @@ For each changed file, read its contents and search for marker patterns:
 | `/* @citadel: {action} {description} */` | CSS, multi-line C-style |
 | `<!-- @citadel: {action} {description} -->` | HTML, Markdown |
 
-Extract from each match:
-- `action`: the first word after `@citadel:` (e.g., `review`, `test`, `fix`)
-- `description`: everything after the action word
-- `file`: the file path
-- `line`: the line number where the marker was found
-
 **Action-to-skill mapping:**
 
-| Action | Skill | Description |
-|---|---|---|
-| `review` | `/review` | Request a code review of this file or section |
-| `test` | `/test-gen` | Generate tests for this code |
-| `fix` | `/systematic-debugging` | Investigate and fix a bug described in the marker |
-| `document` | `/doc-gen` | Generate or update documentation |
-| `refactor` | `/refactor` | Refactor the marked code |
-| `todo` | intake item | Add to intake queue for batch processing |
+| Action | Skill |
+|---|---|
+| `review` | `/review` |
+| `test` | `/test-gen` |
+| `fix` | `/systematic-debugging` |
+| `document` | `/doc-gen` |
+| `refactor` | `/refactor` |
+| `todo` | intake item |
 
-Unknown actions are treated as intake items with the action preserved as metadata.
+Unknown actions become intake items with the action preserved as metadata.
 
-**Deduplication:** Compare each marker against `processedMarkers` in the state
-file (stored as `"{file}:{line}:{action}"` strings). Skip markers that have
-already been processed. This prevents re-dispatching the same marker on every
-scan. A marker is removed from `processedMarkers` when the file is modified
-again (the line content changed).
+**Deduplication:** Compare against `processedMarkers` (stored as `"{file}:{line}:{action}"`). Skip already-processed markers. Remove from `processedMarkers` when the file is modified again.
 
 #### Step 4: Classify unmarked changes
-
-For changed files without markers, classify by file type and location:
 
 | File pattern | Auto-action |
 |---|---|
 | `*.test.*`, `*.spec.*`, `__tests__/*` | Queue: "run tests" intake item |
 | `*.md` in `docs/` or project root | Queue: "doc staleness check" intake item |
-| `src/**/*.ts`, `src/**/*.tsx` | Queue: "changed source" intake item (informational) |
+| `src/**/*.ts`, `src/**/*.tsx` | Queue: "changed source" intake item |
 | `package.json`, `tsconfig.json` | Queue: "config change" intake item (high priority) |
 
 #### Step 5: Dispatch markers
 
-For each new (non-duplicate) marker:
+For each new marker:
+1. `/do {action} in {file} at line {line}: {description}`
+2. Log dispatch, add to `processedMarkers`, increment `stats.skillsDispatched`
 
-1. Route through `/do` with context:
-   ```
-   /do {action} in {file} at line {line}: {description}
-   ```
-2. Log the dispatch to the state file
-3. Add to `processedMarkers`
-4. Increment `stats.skillsDispatched`
-
-**Batch limit:** Dispatch at most 5 marker actions per scan. If more exist,
-queue the remainder in `pendingActions` for the next scan. This prevents a
-single scan from consuming the entire session context.
+**Batch limit:** Dispatch at most 5 per scan. Queue overflow in `pendingActions`.
 
 #### Step 6: Write intake items
 
-For each classified change (unmarked files + overflow markers), write an
-intake item to `.planning/intake/`:
-
-Filename: `watch-{timestamp}-{index}.md`
+Filename: `watch-{timestamp}-{index}.md` in `.planning/intake/`
 
 ```markdown
 ---
@@ -332,147 +229,81 @@ Classification: {test change|doc change|source change|config change|marker overf
 Detected by /watch scan at {ISO timestamp}.
 ```
 
-**Deduplication:** Before writing, check if an intake item already exists for
-this file with the same classification (glob `.planning/intake/watch-*` and
-grep for the file path). Skip if a duplicate exists.
-
-Increment `stats.intakeItemsCreated` for each new item written.
+Before writing, check for duplicates (glob `.planning/intake/watch-*`, grep for file path).
 
 #### Step 7: Update state
 
-Update `.planning/watch-state.json`:
-- `lastScanCommit`: `git rev-parse HEAD` (current HEAD)
+- `lastScanCommit`: `git rev-parse HEAD`
 - `lastScanTime`: current ISO timestamp
-- `stats.scansRun`: increment
-- `stats.markersFound`: add count of new markers found this scan
-- `pendingActions`: any overflow actions not dispatched this scan
-- `processedMarkers`: append newly processed markers
+- Increment `stats.scansRun`, `stats.markersFound`
+- Update `pendingActions` and `processedMarkers`
 
 #### Step 8: Report
 
-If running interactively (manual `/watch scan`), output:
+Manual scan:
 ```
 Scan complete.
-  Files changed:    {N}
-  Markers found:    {new markers} ({total processed} total)
+  Files changed:      {N}
+  Markers found:      {new} ({total} total)
   Actions dispatched: {N} (batch limit: 5)
-  Intake items:     {N} written to .planning/intake/
-  Pending actions:  {N} (will dispatch on next scan)
+  Intake items:       {N} written to .planning/intake/
+  Pending actions:    {N}
 ```
 
-If running from a cron poll, output nothing (silent operation).
+Cron poll: silent.
 
 ---
 
 ## Integration Points
 
-- **Intake pipeline:** Writes items to `.planning/intake/` for consumption by
-  `/autopilot`. Items include file context and classification metadata.
-- **Intent router:** Routes marker actions through `/do`, which handles skill
-  dispatch. Watch never invokes skills directly.
-- **Daemon:** `/daemon` can start a watch alongside a campaign. The watch feeds
-  intake items that the daemon's campaign can consume.
-- **Session-start hook:** The `init-project.js` hook can trigger a scan on
-  session start if `.planning/watch-state.json` has `status: "watching"`.
-  This catches changes made between sessions.
+- **Intake pipeline:** Writes to `.planning/intake/` for `/autopilot`.
+- **Intent router:** Routes marker actions through `/do` — never invokes skills directly.
+- **Daemon:** `/daemon` can start a watch alongside a campaign.
+- **Session-start hook:** `init-project.js` can trigger a scan on session start if state has `status: "watching"`.
 
 ---
 
 ## Fringe Cases
 
-**`.planning/` does not exist:**
-Create `.planning/` and `.planning/intake/` on first scan. Do not require
-`/do setup` -- watch should be lightweight enough to bootstrap its own state
-directory.
+**`.planning/` missing:** Create `.planning/` and `.planning/intake/` on first scan.
 
-**Not a git repo:**
-Fall back to timestamp-based change detection. Warn on first scan:
-"Not a git repo. Using file modification times for change detection. This is
-less precise and does not respect .gitignore automatically."
+**Not a git repo:** Fall back to timestamp detection. Warn once: "Not a git repo. Using file modification times."
 
-**No files changed since last scan:**
-Update stats and exit silently. This is the normal case for most polls.
+**No files changed:** Update stats, exit silently.
 
-**Marker comment has an unknown action:**
-Treat as an intake item with the raw action preserved in metadata. Do not
-error -- unknown actions may be handled by custom skills the user has installed.
+**Unknown action:** Treat as intake item, preserve raw action in metadata.
 
-**File was deleted between scans:**
-Skip marker scanning for deleted files. Write an intake item noting the
-deletion if the file was previously tracked.
+**Deleted file:** Skip marker scanning. Write intake item noting deletion.
 
-**Very large diff (100+ files):**
-Cap marker scanning at the first 50 changed files per scan. Queue the rest
-for the next scan. Log: "Large changeset detected ({N} files). Scanning first
-50 this cycle."
+**Large diff (100+ files):** Cap at 50 files per scan, queue rest. Log: "Large changeset ({N} files). Scanning first 50."
 
-**Binary files in the diff:**
-Skip binary files during marker scanning. Detect via `git diff --numstat`
-(binary files show `-` for additions/deletions).
+**Binary files:** Skip during marker scanning (detect via `git diff --numstat`).
 
-**watch-state.json is corrupted or missing required fields:**
-Reset to defaults. Preserve `processedMarkers` if readable to avoid
-re-dispatching old markers. Log: "Watch state was corrupted. Reset to defaults."
+**Corrupted state:** Reset to defaults, preserve `processedMarkers` if readable.
 
-**CronCreate not available:**
-Warn: "CronCreate is not available. `/watch start` requires session-scoped
-scheduling. Use `/watch scan` for manual one-shot scans instead."
+**CronCreate not available:** Warn and suggest manual `/watch scan`.
 
-**Multiple scans overlap (slow scan + fast interval):**
-The cron interval should be longer than scan duration. If a scan takes longer
-than expected, log a warning: "Scan took {N}s (interval is {M}m). Consider
-increasing the interval." The state file's `lastScanTime` acts as a soft
-lock -- if `lastScanTime` is within the last 60 seconds, skip the scan.
+**Scan overlap:** If `lastScanTime` is within last 60 seconds, skip. Warn if scan duration exceeds interval.
 
-**Marker removed from file:**
-On each scan, check if previously processed markers still exist at their
-recorded file:line location. If the marker was removed (user addressed the
-action), remove it from `processedMarkers`. This keeps the processed list
-from growing unbounded.
+**Marker removed:** On each scan, verify processed markers still exist at recorded location. Remove stale entries from `processedMarkers`.
 
 ---
 
 ## Quality Gates
 
-- Scan must complete in under 10 seconds for repos up to 100K lines
-- Must not create duplicate intake items for the same file and classification
-- Must not re-dispatch markers that have already been processed
-- Must respect `.gitignore` (automatic in git mode, manual exclusion list in fallback mode)
-- Batch limit of 5 dispatches per scan must be enforced -- never consume the
-  full session context on a single scan
-- State file must be updated atomically at the end of each scan, not
-  incrementally during the scan (prevents partial state on crash)
-- Must work on Windows, macOS, and Linux (Node.js fs + git CLI, no
-  platform-specific filesystem watchers)
-- CronCreate failure must not leave watch in an inconsistent state
+- Scan completes in under 10 seconds for repos up to 100K lines
+- No duplicate intake items for the same file and classification
+- No re-dispatched already-processed markers
+- Batch limit of 5 dispatches per scan enforced
+- State file updated atomically at end of scan
+- Works on Windows, macOS, Linux (Node.js fs + git CLI)
+- CronCreate failure does not leave watch in inconsistent state
 
 ## Exit Protocol
 
-### After `/watch start`:
-Output the confirmation block. No HANDOFF -- the watch runs in the background.
-
-### After `/watch stop`:
-Output the stop summary with lifetime stats.
-
-### After `/watch scan` (manual):
-Output the scan report with counts.
-
-### After `/watch scan` (cron):
-Silent. Updates state file only.
-
-### After `/watch status`:
-Output current state. Wait for next command.
-
-### On error:
-Output a clear message with fix. Never leave cron running if state is
-inconsistent -- clean up on error.
-
-```
----HANDOFF---
-- Built: skills/watch/SKILL.md -- file sentinel skill with poll-based change detection
-- Commands: start, stop, status, scan with git diff against stored commit hash
-- Detection: marker comments (@citadel: action) in 4 comment styles + file classification
-- Dispatch: markers route through /do (batch limit 5), unmarked changes become intake items
-- Integration: feeds .planning/intake/ for /autopilot, bridges with /daemon and session-start hook
----
-```
+- **`/watch start`:** Output confirmation block. No HANDOFF.
+- **`/watch stop`:** Output stop summary with lifetime stats.
+- **`/watch scan` (manual):** Output scan report with counts.
+- **`/watch scan` (cron):** Silent.
+- **`/watch status`:** Output current state.
+- **On error:** Clear message with fix. Never leave cron running if state is inconsistent.

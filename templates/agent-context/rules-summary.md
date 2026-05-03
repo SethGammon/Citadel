@@ -31,6 +31,12 @@ minimum set of rules needed to work safely in this project.
 
 3-5 bullets, under 150 words.
 
+## Context Efficiency
+
+- **For large files, use `smart_read` instead of native Read.** Files over 300 lines are automatically compressed to head/tail/structural-index, saving significant context. For targeted reads where you know the line range, native Read with offset/limit is fine.
+- **For verbose commands, use `smart_bash` instead of native Bash.** Commands like typecheck, build, test runs, and recursive finds can produce thousands of lines. `smart_bash` extracts errors, head, and tail -- typically 10-50x smaller than raw output.
+- Keep sessions under 35 minutes when possible. After 35 minutes, run /compact before continuing to reset context and reduce failure risk (Morph, 2026: failure rate 4x-increases beyond this boundary).
+
 ## Command Execution
 
 - **Wrap long-running commands with the timeout utility.** When running tests,

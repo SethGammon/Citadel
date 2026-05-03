@@ -3,7 +3,8 @@ name: triage
 description: >-
   GitHub issue and PR investigator. Pulls open issues/PRs, classifies them, searches
   the codebase for root cause or reviews contributed code, proposes fixes with file:line
-  references, and optionally implements fixes. Handles both issues and pull requests.
+  references, and optionally implements fixes. Use for investigating GitHub issues and
+  reviewing PRs; do NOT use for general code review unrelated to GitHub issues.
 user-invocable: true
 auto-trigger: false
 effort: high
@@ -11,10 +12,6 @@ last-updated: 2026-03-24
 ---
 
 # Triage — GitHub Issue & PR Investigator
-
-You are the project's triage system. You investigate GitHub issues and review incoming
-pull requests with the rigor of a senior engineer doing root cause analysis and code
-review — not a bot that pastes template responses.
 
 ## When to Use
 
@@ -31,7 +28,7 @@ review — not a bot that pastes template responses.
 | Input | Source | Required |
 |-------|--------|----------|
 | Issue/PR number | Argument (e.g., `/triage 10`, `/triage pr 13`) | No — omit to triage all open |
-| Mode | `pr` prefix for PRs (e.g., `/triage pr 13`, `/triage prs`) | No — defaults to issues |
+| Mode | `pr` prefix for PRs | No — defaults to issues |
 | Repo | Auto-detected from git remote | Yes (auto) |
 | gh CLI | `"/c/Program Files/GitHub CLI/gh.exe"` on Windows, `gh` elsewhere | Yes (auto) |
 
@@ -39,53 +36,41 @@ review — not a bot that pastes template responses.
 
 ### Phase 0 — Environment Setup
 
-1. Detect the GitHub repo from `git remote get-url origin`
-2. Extract `owner/repo` from the remote URL
-3. Verify `gh` auth status
-4. Determine the gh CLI path:
-   - Windows: `"/c/Program Files/GitHub CLI/gh.exe"`
-   - Other: `gh`
-5. Store as `$GH` for all subsequent commands
+1. Detect repo from `git remote get-url origin`, extract `owner/repo`
+2. Verify `gh` auth status
+3. Set `$GH`: Windows → `"/c/Program Files/GitHub CLI/gh.exe"`, other → `gh`
 
 ### Phase 1 — Issue Intake
 
-**Single issue mode** (`/triage 10`):
+**Single issue** (`/triage 10`):
 ```
 $GH issue view <number> --repo <owner/repo> --json number,title,body,labels,state,comments,createdAt,updatedAt,author,assignees
 ```
 
-**Batch mode** (`/triage` or `/triage --batch`):
+**Batch** (`/triage` or `--batch`):
 ```
 $GH issue list --repo <owner/repo> --state open --json number,title,labels,createdAt,updatedAt --limit 50
 ```
+Filter to untriaged: issues with no labels, or missing priority/type label.
 
-Filter to untriaged: issues with no labels, or issues missing a priority/type label.
-
-**Stale mode** (`/triage --stale`):
+**Stale** (`--stale`):
 ```
 $GH issue list --repo <owner/repo> --state open --json number,title,labels,createdAt,updatedAt --limit 100
 ```
 Filter to issues with no activity in 14+ days.
 
-Output: list of issues to investigate, sorted by age (oldest first).
-
-**Single PR mode** (`/triage pr 13`):
+**Single PR** (`/triage pr 13`):
 ```
 $GH pr view <number> --repo <owner/repo> --json number,title,body,author,state,files,commits,comments,createdAt,headRefName,baseRefName,mergeable,reviewDecision
-```
-Then fetch the full diff:
-```
 $GH pr diff <number> --repo <owner/repo>
 ```
 
-**All PRs mode** (`/triage prs`):
+**All PRs** (`/triage prs`):
 ```
 $GH pr list --repo <owner/repo> --state open --json number,title,author,createdAt,labels --limit 50
 ```
 
 ### Phase 1b — PR Review Protocol
-
-For pull requests, the investigation is different from issues. You are reviewing contributed code.
 
 #### PR Classification
 
@@ -99,17 +84,15 @@ For pull requests, the investigation is different from issues. You are reviewing
 
 #### PR Review Checklist
 
-1. **Read the full diff.** Not just the PR description. The code is the truth.
-2. **Check for regressions.** Does this PR reintroduce a bug we already fixed? Search closed issues and recent commits for overlap.
-3. **Check for conflicts with in-flight work.** Does this touch the same files as open PRs or recent commits on dev/main?
-4. **Verify the approach.** Is this the right solution? Could it be simpler?
-5. **Check cross-platform.** Does it assume Unix? Does it handle Windows paths? Does it use `$CLAUDE_PROJECT_DIR` (broken on Windows, see #10)?
-6. **Check conventions.** Does the code follow the project's existing patterns?
-7. **Check for scope creep.** Does the PR do more than its title says?
+1. Read the full diff — not just the PR description.
+2. Check for regressions against closed issues and recent commits.
+3. Check for conflicts with in-flight work (same files as open PRs or recent commits).
+4. Verify the approach: correct solution, not overly complex.
+5. Check cross-platform: Unix assumptions, Windows path handling, `$CLAUDE_PROJECT_DIR` (broken on Windows, see #10).
+6. Check conventions against existing project patterns.
+7. Check for scope creep beyond the PR title.
 
 #### PR Resolution
-
-Produce a structured review:
 
 ```markdown
 ## PR #<N>: <title>
@@ -137,96 +120,69 @@ Produce a structured review:
 
 #### PR Actions
 
-**IMPORTANT:** All PR actions (commenting, requesting changes, approving) are external actions.
-Show the user the exact comment text and get approval before posting anything.
-
-- **Approve:** draft approval comment, show to user, post after approval
-- **Request changes:** draft comment with specific findings, show to user, post after approval
-- **Close:** draft explanation, show to user, close after approval
+**IMPORTANT:** All PR actions are external. Show the user the exact comment text and get approval before posting.
 
 ### Phase 2 — Classification
-
-For each issue, classify along these dimensions:
 
 **Type** (exactly one):
 | Type | Signal |
 |------|--------|
-| `bug` | Error messages, "doesn't work", "broken", stack traces, regression |
-| `feature` | "Would be nice", "add support for", "should be able to" |
-| `question` | "How do I", "is it possible", "what does X do" |
-| `docs` | "README says", "documentation", "typo", "unclear instructions" |
-| `infra` | CI/CD, build, packaging, release, dependency issues |
+| `bug` | Error messages, "doesn't work", stack traces, regression |
+| `feature` | "Would be nice", "add support for" |
+| `question` | "How do I", "is it possible" |
+| `docs` | README/documentation issues |
+| `infra` | CI/CD, build, packaging, dependencies |
 
-**Severity** (for bugs only):
+**Severity** (bugs only):
 | Severity | Criteria |
 |----------|----------|
 | `critical` | Blocks installation or core functionality for all users |
 | `high` | Breaks a major feature or affects many users |
 | `medium` | Breaks a minor feature or has a workaround |
-| `low` | Cosmetic, edge case, or has an easy workaround |
+| `low` | Cosmetic, edge case, or easy workaround |
 
-**Affected Component** — map to project area:
-- Citadel hooks — hook system (managed by plugin)
-- Citadel skills — skill system (built-in from plugin)
-- `.claude/skills/` — custom project skills
-- Citadel agents — agent system (managed by plugin)
+**Affected Component:**
+- Citadel hooks / skills / agents
 - `.claude/harness.json` — project configuration
 - `.planning/` — planning/campaign system
 - `docs/` — documentation
-- Root files — project setup (README, package.json, CLAUDE.md)
-
-Record classification in a structured block before proceeding.
+- Root files — project setup
 
 ### Phase 3 — Investigation
 
-This is the core phase. Investigate like a senior engineer, not a keyword matcher.
-
 #### 3a. Parse the Report
 
-Extract from the issue body:
-- **Error messages** — exact text, stack traces, error codes
-- **Environment** — OS, shell, Node version, Claude Code version
-- **Reproduction steps** — what the user did
-- **Expected vs actual behavior**
-- **Workaround** — did the user already find one?
+Extract: error messages, environment, reproduction steps, expected vs actual behavior, workarounds.
 
 #### 3b. Search the Codebase
 
-Based on extracted signals, search systematically:
-
-1. **Error text search** — grep for exact error messages, error codes, exception types
-2. **File search** — if the issue mentions specific files, read them
-3. **Function search** — if stack traces name functions, find their definitions
-4. **Pattern search** — look for the anti-pattern or bug class described
-5. **Related changes** — `git log --oneline -20 -- <affected-files>` to see recent changes
-6. **Cross-reference** — check if similar issues exist or were previously fixed
+1. Grep for exact error messages / error codes
+2. Read files named in the issue
+3. Find functions named in stack traces
+4. Search for the bug class or anti-pattern
+5. `git log --oneline -20 -- <affected-files>` for recent changes
+6. Cross-reference similar issues
 
 #### 3c. Root Cause Analysis
 
-For bugs, determine:
-1. **What breaks** — the specific code path that fails
-2. **Why it breaks** — the root cause (not the symptom)
-3. **When it was introduced** — git blame / log if applicable
-4. **Who is affected** — scope of impact (all users, Windows only, specific config, etc.)
-5. **What the fix is** — specific code change with file:line references
+For bugs:
+1. What breaks — the specific code path
+2. Why it breaks — root cause, not symptom
+3. When introduced — git blame / log
+4. Who is affected — scope
+5. The fix — file:line references
 
 For features/questions:
-1. **Is it already possible?** — search for existing functionality
-2. **Where would it go?** — which component/layer
-3. **What's the effort?** — trivial/small/medium/large
-4. **Are there blockers?** — dependencies, architecture constraints
+1. Already possible? Search existing functionality.
+2. Where would it go? Which component/layer.
+3. Effort: trivial / small / medium / large
+4. Blockers: dependencies, architecture constraints
 
 #### 3d. Reproduce (when possible)
 
-If the bug is in code you can execute (hooks, scripts):
-1. Set up the conditions described in the issue
-2. Run the failing command
-3. Confirm the error matches
-4. Verify the proposed fix resolves it
+Set up conditions, run the failing command, confirm error matches, verify proposed fix resolves it.
 
 ### Phase 4 — Resolution Plan
-
-Produce a structured finding for each issue:
 
 ```markdown
 ## Issue #<N>: <title>
@@ -237,18 +193,17 @@ Produce a structured finding for each issue:
 **Reproducible:** yes | no | not-attempted
 
 ### Root Cause
-<1-3 sentences explaining WHY, not just WHAT>
+<1-3 sentences explaining WHY>
 
 ### Affected Code
 - `<file>:<line>` — <what's wrong here>
-- `<file>:<line>` — <related code>
 
 ### Proposed Fix
-<Specific code changes. Not "update the code" — actual diffs or clear instructions.>
+<Specific code changes with file:line references>
 
 ### Impact
 - Who is affected: <scope>
-- Workaround exists: yes/no — <workaround if yes>
+- Workaround exists: yes/no
 - Breaking change: yes/no
 
 ### Recommended Action
@@ -260,38 +215,21 @@ Produce a structured finding for each issue:
 
 ### Phase 5 — Action
 
-Based on the resolution plan, take one of these actions:
-
-**Auto-fix** (when all conditions met):
-- Root cause is clear and verified
-- Fix is contained (1-3 files)
-- No breaking changes
-- No architectural decisions needed
+**Auto-fix** when: root cause clear and verified, fix contained to 1-3 files, no breaking changes, no architectural decisions needed.
 
 Steps:
-1. Create a branch: `fix/issue-<number>-<slug>`
-2. Implement the fix
-3. Run typecheck/build to verify
-4. Commit with message: `fix: <description> (closes #<number>)`
+1. Branch: `fix/issue-<number>-<slug>`
+2. Implement fix
+3. Run typecheck/build
+4. Commit: `fix: <description> (closes #<number>)`
 5. Push and open PR linking the issue
 6. Comment on the issue with the PR link
-7. Output the auto-fix handoff block (see Auto-fix Handoff section below)
 
-**Comment with findings** (when fix needs discussion or user input):
-1. Post a structured comment on the issue with:
-   - Root cause analysis
-   - Proposed fix (if known)
-   - Questions (if more info needed)
-2. Add appropriate labels
+**Comment with findings** when fix needs discussion or user input: post root cause analysis, proposed fix, and questions.
 
-**Label only** (for questions, docs, features):
-1. Add type label
-2. Add priority label if applicable
-3. Optionally comment with pointers to existing docs/functionality
+**Label only** for questions/docs/features: add type + priority labels, optionally point to existing docs.
 
 ### Phase 6 — Report
-
-After all issues are processed, output a summary table:
 
 ```
 ## Triage Summary
@@ -299,84 +237,64 @@ After all issues are processed, output a summary table:
 | # | Title | Type | Severity | Action | Status |
 |---|-------|------|----------|--------|--------|
 | 10 | Cannot find module | bug | high | Auto-fixed → PR #11 | Done |
-| 8 | Feature request | feature | — | Labeled | Done |
 ```
 
 ## Label Taxonomy
 
-Apply these labels via `$GH issue edit <number> --add-label "<label>"`:
+Apply via `$GH issue edit <number> --add-label "<label>"`:
 
-**Type labels:**
-- `bug` — confirmed defect
-- `feature` — enhancement request
-- `question` — usage question
-- `docs` — documentation issue
-- `infra` — build/CI/packaging
-
-**Severity labels (bugs only):**
-- `critical` — blocks core functionality
-- `high` — major feature broken
-- `medium` — minor feature or has workaround
-- `low` — cosmetic or edge case
-
-**Status labels:**
-- `needs-info` — waiting for reporter response
-- `confirmed` — reproduced, fix identified
-- `wont-fix` — intentional behavior or out of scope
-- `duplicate` — duplicate of another issue
+**Type:** `bug`, `feature`, `question`, `docs`, `infra`
+**Severity (bugs):** `critical`, `high`, `medium`, `low`
+**Status:** `needs-info`, `confirmed`, `wont-fix`, `duplicate`
 
 ## Auto-fix Handoff
-
-Whenever a PR is pushed (Phase 5 Auto-fix), output this block so the user can hand
-off CI watching to local or cloud auto-fix:
 
 ```
 ---PR READY---
 PR #<N>: <url>
 
 To watch this PR automatically:
-  Local  →  /pr-watch <N>          watches CI, fixes failures, runs in this terminal
+  Local  →  /pr-watch <N>
   Cloud  →  open in Claude Code web or mobile, toggle "Auto fix" ON
-            (fixes CI failures and review comments remotely; requires Claude GitHub App)
 ---
 ```
 
 ## Quality Gates
 
-- [ ] Every investigated issue has a classification (type + severity for bugs)
-- [ ] Every bug has a root cause analysis with file:line references
+- [ ] Every issue has a classification (type + severity for bugs)
+- [ ] Every bug has root cause with file:line references
 - [ ] Every auto-fix passes typecheck and build
 - [ ] Every PR links to the issue it fixes
-- [ ] Every issue comment is structured and actionable (no "I'll look into this")
-- [ ] No issue is left without at least a label or comment
+- [ ] Every issue has at least a label or comment
+- [ ] No issue comment is generic or substanceless
 
 ## Fringe Cases
 
-**gh CLI not available or not authenticated**: Run `gh auth status` in Phase 0. If gh is not installed or not authenticated, stop and instruct the user: "Run `gh auth login` before using /triage." Do not attempt API calls without a working gh session.
+**gh not available or not authenticated:** Stop and instruct: "Run `gh auth login` before using /triage."
 
-**No open issues or PRs**: Report "No open issues found." and exit cleanly. Do not error.
+**No open issues or PRs:** Report "No open issues found." and exit cleanly.
 
-**Issue body is empty or unparseable**: Classify as `needs-info`. Comment asking the reporter to provide reproduction steps and error details.
+**Empty/unparseable issue body:** Classify as `needs-info`, comment requesting reproduction steps.
 
-**If .planning/ does not exist**: /triage does not require .planning/ to function — it reads from GitHub, not local state. Skip any .planning/ writes if the directory doesn't exist.
+**`.planning/` missing:** /triage reads from GitHub, not local state. Skip .planning/ writes if missing.
 
 ## Anti-Patterns — Do NOT
 
-- Do NOT post generic "thanks for reporting" comments without substance
-- Do NOT propose fixes without reading the actual code first
-- Do NOT label without investigating — classification requires reading the issue AND the code
-- Do NOT auto-fix if the root cause is unclear — comment with findings instead
-- Do NOT close issues without explanation
-- Do NOT comment on issues asking for more info if the answer is in the codebase
-- Do NOT guess at fixes — verify by reading code and running checks
+- Post generic comments without substance
+- Propose fixes without reading the actual code
+- Label without investigating
+- Auto-fix when root cause is unclear
+- Close issues without explanation
+- Ask reporter for info that's in the codebase
+- Guess at fixes — verify by reading code and running checks
 
 ## gh CLI Notes
 
 - Windows path: `"/c/Program Files/GitHub CLI/gh.exe"`
-- Always use `--repo <owner/repo>` to avoid depending on git remote config
-- For comments: `$GH issue comment <number> --repo <owner/repo> --body "..."`
-- For labels: `$GH issue edit <number> --repo <owner/repo> --add-label "bug,high"`
-- For PRs: `$GH pr create --repo <owner/repo> --title "..." --body "..."`
+- Always use `--repo <owner/repo>`
+- Comments: `$GH issue comment <number> --repo <owner/repo> --body "..."`
+- Labels: `$GH issue edit <number> --repo <owner/repo> --add-label "bug,high"`
+- PRs: `$GH pr create --repo <owner/repo> --title "..." --body "..."`
 
 ## Exit Protocol
 

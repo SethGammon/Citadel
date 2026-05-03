@@ -46,6 +46,13 @@ Always run tests after modifying hooks or skills. Five levels:
 
 **CI:** `node scripts/test-all.js` exits non-zero on any failure. Use `--strict` to treat WARNs as failures.
 
+## Campaign Design Principles
+
+- Keep individual phases under 35 minutes of execution time. Failure rate increases 4x beyond this boundary (Morph, 2026).
+- Every phase must have a verifiable exit condition -- binary pass/fail signals (typecheck, tests, build) are force multipliers on agent autonomy.
+- Skill SKILL.md files: terse and accurate only. Stale or vague guidance actively degrades agent accuracy. Update based on observed failures, not by accumulation.
+- Sub-agents have isolated context windows -- pass only distilled findings back to the orchestrator, never raw tool output.
+
 ## Handoff Summary (Required)
 
 After completing any task, output a `HANDOFF` block:
