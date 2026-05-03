@@ -59,6 +59,12 @@ Keep it to 3-5 bullets, under 150 words. This is a context transfer, not a repor
 
 **Campaign is in a blocked/parked state**: Include the block reason and the recommended next action in the handoff so the next session can resume immediately.
 
+## Contextual Gates
+
+**Reversibility:** Green — this skill writes nothing to disk; the HANDOFF block is display-only.
+**Cost:** No cost actions — synthesis only; no agents spawned, no confirmation needed.
+**Trust:** No gates — safe at all trust levels.
+
 ## Exit Protocol
 
 Output the HANDOFF block and then wait for the next command. This skill does not write to disk — the HANDOFF block is the deliverable, for the user to copy into the next session or save manually.

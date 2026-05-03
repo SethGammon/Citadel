@@ -105,6 +105,12 @@ The research document persists for future reference.
 - **Conflicting sources**: Surface the conflict explicitly in the findings rather than silently picking one. Both sides belong in the document.
 - **Question is too broad for 3-6 sources**: Narrow to the single most important sub-question, answer it well, and note what was scoped out. Suggest `/research-fleet` for multi-angle questions.
 
+## Contextual Gates
+
+**Reversibility:** Green — writes one file to `.planning/research/`; delete to undo.
+**Cost:** No cost actions — web searches and one file write; no agents spawned, no confirmation needed.
+**Trust:** No gates — read-only investigation, safe at all trust levels.
+
 ## Quality Gates
 
 - Every finding must have a source URL

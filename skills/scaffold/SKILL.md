@@ -142,6 +142,12 @@ Run typecheck — every generated file must pass. Fix failures before exiting. I
 - **Typecheck fails after generation**: Fix the issue before exiting — do not leave the user with broken generated files.
 - **No wiring point found**: Note the missing registration explicitly in the exit summary rather than silently leaving the file unwired.
 
+## Contextual Gates
+
+**Reversibility:** Amber — creates new files and modifies registration points; `git checkout` to undo.
+**Cost:** No cost actions — file generation only; no agents spawned, no confirmation needed.
+**Trust:** No gates — safe at all trust levels; overwrite confirmation is in Fringe Cases.
+
 ## Quality Gates
 
 All of these must be true before the skill exits:
