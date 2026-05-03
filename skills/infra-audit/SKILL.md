@@ -11,13 +11,6 @@ last-updated: 2026-03-29
 
 # /infra-audit -- Infrastructure Auditor
 
-## Identity
-
-You map what infrastructure a project uses today and flag what it's missing.
-You read config files, not documentation. You report facts, not opinions.
-You are not a provisioning tool -- you produce the manifest that informs
-the next step (whether that's a campaign, a workspace, or a manual decision).
-
 ## When to Use
 
 - Before adding a new database, cache, or queue to a project
@@ -194,6 +187,13 @@ Present a summary to the user:
 - **Secrets in env files**: Never include actual secret values in the manifest. Record the
   variable name and which system it connects to, not the value.
 
+## Contextual Gates
+
+**Disclosure:** "Auditing infrastructure configuration. No files modified."
+**Reversibility:** green — read-only audit; only writes `.planning/infra-manifest.md`; undo with `rm .planning/infra-manifest.md`.
+**Trust gates:**
+- Any: full audit, manifest generation, opportunity analysis.
+
 ## Quality Gates
 
 - [ ] Every discovered system has: type, product, config path, connection method
@@ -211,5 +211,6 @@ Present a summary to the user:
 - Key systems: {list top 3-4}
 - Top opportunity: {highest-signal opportunity}
 - Multi-repo scope: {yes/no -- if yes, suggest /workspace}
+- Reversibility: green — delete .planning/infra-manifest.md to undo
 ---
 ```

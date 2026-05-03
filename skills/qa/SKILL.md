@@ -12,12 +12,6 @@ effort: high
 
 # /qa — Browser QA Verification
 
-## Identity
-
-/qa tests your app the way a user would: by actually using it. It launches a
-browser, navigates to pages, clicks buttons, fills forms, and verifies that
-interactions work. Screenshots catch visual bugs. QA catches interaction bugs.
-
 ## Dependency: Playwright
 
 /qa requires Playwright. It's an optional dependency.
@@ -211,6 +205,12 @@ If Playwright isn't installed and the user declines installation:
 
 **If .planning/screenshots/ does not exist**: Create it before saving screenshots. If `.planning/` doesn't exist, save screenshots to a `qa-screenshots/` directory in the project root and note the path in the report.
 
+## Contextual Gates
+
+**Disclosure:** May start a dev server; saves screenshots and report to `.planning/`. States server ownership before starting.
+**Reversibility:** amber — creates report and screenshots; dev server stopped only if this skill started it. Delete generated files to undo.
+**Trust gates:** Any. Familiar (5+) to run against external/production URLs.
+
 ## Exit Protocol
 
 ```
@@ -220,5 +220,6 @@ If Playwright isn't installed and the user declines installation:
 - Passed: {N} | Failed: {N} | Skipped: {N}
 - Screenshots: .planning/screenshots/qa-*.png
 - Server: {started by agent (killed) | was already running (left running)}
+- Reversibility: amber — delete `.planning/qa-report-{date}.md` and `screenshots/qa-*.png` to undo
 ---
 ```

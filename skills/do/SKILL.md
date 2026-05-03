@@ -12,18 +12,10 @@ last-updated: 2026-03-20
 
 # /do — Unified Intent Router
 
-## Identity
-
-You are the single entry point for all work. The user says what they want.
-You figure out which orchestrator or skill handles it. No more choosing between
-`/marshal`, `/archon`, `/fleet`, or individual skills.
-
 ## Orientation
 
-Use `/do` when the user wants something done but doesn't know (or care) which
-tool handles it. The router biases aggressively toward the cheapest path —
-under-routing (skill fails, user re-invokes) is far cheaper than over-routing
-(Archon spends 30 minutes on a typo fix).
+Use `/do` when the user wants something done but doesn't know (or care) which tool handles it.
+**Don't use when:** you know the destination — invoke /marshal, /archon, /fleet, or any skill directly.
 
 ## Commands
 
@@ -145,6 +137,7 @@ and any project-level custom skills in `.claude/skills/`.
 | "merge review", "check merges", "any conflicts", "fleet conflicts", "pending branches", "safe to merge" | `/merge-review` |
 | "ascii diagram", "ascii art", "box diagram", "architecture diagram", "flow diagram", "draw a diagram", "text diagram", "sequence diagram" | `/ascii-diagram` |
 | "improve", "improvement loop", "quality loop", "rubric", "score against", "run improvement", "improve citadel" | `/improve` |
+| "evolve", "sustained improve", "improvement director", "research-driven improve", "multi-cycle improve", "run until done", "improve until ceiling", "keep improving", "hypothesis", "belief model", "scout agents" | `/evolve` |
 | "organize", "directory structure", "folder structure", "project structure", "file organization", "where should this go", "cleanup directories" | `/organize` |
 | "houseclean", "house clean", "disk space", "free space", "drive full", "running out of space", "clean up disk", "clean worktrees", "disk audit", "storage audit", "move to another drive", "free up space", "c drive full", "orphaned worktrees" | `/houseclean` |
 | "daemon", "continuous", "run overnight", "keep running", "24/7", "unattended", "run autonomously", "daemon start", "daemon stop", "daemon status" | `/daemon` |
@@ -154,7 +147,8 @@ and any project-level custom skills in `.claude/skills/`.
 | "workspace", "multi-repo", "cross-repo", "across repos", "multiple repos", "coordinate repos", "add redis and snowflake", "split into repos" | `/workspace` |
 
 If ONE skill matches with high confidence → invoke it directly. Done.
-If MULTIPLE skills match → fall through to Tier 3.
+High confidence = evaluator assigns ≥ 0.85 probability to exactly one skill. Below 0.85, or multiple skills above 0.70, fall through to Tier 3.
+If MULTIPLE skills match → carry the candidate set to Tier 3. Tier 3 disambiguates between candidates only, not from scratch. Tie-break: prefer the candidate with fewer trigger keywords.
 
 ### Tier 3: LLM Complexity Classifier (Cost: ~500 tokens | Latency: ~1-2s)
 
@@ -216,151 +210,46 @@ After classification and before execution, verify the response is proportional t
 
 **Fleet auto-decomposition — 1/2/3 confirmation prompt:**
 
-When `/do` detects two or more tasks with non-overlapping file scopes and complexity >= 3,
-check the stored Fleet preference before routing:
+When 2+ independent tasks detected (non-overlapping scopes, complexity >= 3, not already routed to full Fleet), read `consent.fleetSpawn` from harness.json:
+- `auto-allow` → route directly to `/fleet --quick`
+- `always-ask` or `null` → show prompt: "These look independent — run in parallel? [1=yes  2=always  3=no]"
+  - 1: route to `--quick`, preference unchanged
+  - 2: route to `--quick`, write `writeConsent('fleetSpawn', 'auto-allow')`
+  - 3: run sequentially; if "don't ask again", write `always-ask`
 
-Read `consent.fleetSpawn` from harness.json via `readConsent('fleetSpawn')`:
-- `auto-allow` → skip prompt, route directly to `/fleet --quick`
-- `always-ask` or `null` (first encounter) → show the prompt below
+`readConsent`/`writeConsent` are in `hooks_src/harness-health-util.js`.
 
-```
-These look independent — I could run them in parallel:
-  1. {task A description}
-  2. {task B description}
-
-Run in parallel? [1=yes  2=always  3=no]
-```
-
-Handle the response:
-- **1 (yes once):** Route to `/fleet --quick`. Preference unchanged.
-- **2 (always):** Route to `/fleet --quick`. Write preference: `writeConsent('fleetSpawn', 'auto-allow')`.
-- **3 (no):** Run sequentially. If user adds "don't ask again", write `writeConsent('fleetSpawn', 'always-ask')`.
-
-`readConsent` and `writeConsent` are in `hooks_src/harness-health-util.js`. Import them via
-`require('../hooks_src/harness-health-util')` when running as a Node script, or reference
-them conceptually when routing as an LLM skill (use `node -e "..."` to read/write via Bash).
-
-This check only fires when:
-- Two or more independent tasks detected (different files/domains)
-- Complexity is 3+ (not trivial single-step work)
-- Not already routed to full Fleet (complexity 4+)
-
-**Trust level integration:**
-Read trust level from `harness.json` (via the `trust` object):
-- Compute level: novice (0-4 sessions), familiar (5-19), trusted (20+ with 2+ campaigns)
-- If `trust.override` is set, use that level
-- Apply the trust-gated rules from the tables above
+**Trust level:** Read from `harness.json` `trust` object. Levels: novice (0-4 sessions), familiar (5-19), trusted (20+ with 2+ campaigns). `trust.override` takes precedence.
 
 ### Step 4: After Classification
 
-1. **Log the routing decision to telemetry** (cost: ~0, fire-and-forget):
-   ```bash
-   node .citadel/scripts/telemetry-log.cjs --event agent-complete --agent do-router --session routing --status success --meta '{"tier":N,"target":"[skill-name]","input_chars":M}'
-   ```
-   Where:
-   - `N` = the tier number that matched (0, 1, 2, or 3)
-   - `[skill-name]` = the target skill or orchestrator being invoked (e.g., "marshal", "archon", "commit")
-   - `M` = character count of the user's input (use `input.length` conceptually — approximate is fine)
+1. **Log routing decision** (fire-and-forget):
+   `node .citadel/scripts/telemetry-log.cjs --event agent-complete --agent do-router --session routing --status success --meta '{"tier":N,"target":"[skill]","input_chars":M}'`
 
    Use `.citadel/scripts/telemetry-log.cjs` (the project-local copy). If it doesn't exist, skip logging silently — never block routing on telemetry failure.
 
 2. **Announce the routing decision**: "Routing to [target] because [one-sentence reason]"
 3. **Invoke the target** skill or orchestrator
-4. If the target fails or the user says "wrong tool", try the next tier up
-
-## /do status
-
-Routes directly to `/dashboard`. `/do status` is an alias — invoke `/dashboard`
-and display its full output. See `skills/dashboard/SKILL.md` for the complete
-protocol and output format.
+4. If the target fails or the user says "wrong tool", try the next tier up. If the target is already Tier 3 (marshal fails or user explicitly escalates from a failed marshal attempt): re-route to `/archon` with the original input as context.
 
 ## /do --list
 
-List all installed skills (Citadel built-in + project custom):
-
-```
-=== Installed Skills ===
-
-ORCHESTRATION
-  /do [intent]          Universal router
-  /marshal [direction]  Single-session orchestrator
-  /archon [direction]   Multi-session campaigns
-  /fleet [direction]    Parallel campaigns with coordination safety
-  /workspace [direction] Multi-repo campaign coordinator (fleet, one level up)
-  /autopilot            Intake-to-delivery pipeline
-
-APP CREATION
-  /prd                  Product requirements document
-  /architect            Implementation architecture from PRD
-  /create-app           End-to-end app creation (5 tiers, greenfield or existing codebase)
-
-SKILLS
-  /review               5-pass structured code review
-  /test-gen             Generate tests that actually run
-  /doc-gen              Documentation generation (3 modes)
-  /refactor             Safe multi-file refactoring
-  /scaffold             Project-aware scaffolding
-  /create-skill         Create new skills from patterns
-
-RESEARCH & DEBUGGING
-  /research             Structured investigation with findings
-  /research-fleet       Parallel multi-scout research
-  /experiment           Metric-driven optimization loops
-  /systematic-debugging Root cause analysis (4-phase)
-  /live-preview         Mid-build visual verification
-
-QUALITY & VERIFICATION
-  /improve [target]     Autonomous quality engine -- score, select, attack, verify, loop
-  /design               Design manifest generator (extract or generate)
-  /qa                   Browser QA via Playwright (optional dependency)
-  /postmortem           Campaign postmortem from telemetry + git history
-
-GITHUB & CI
-  /triage [issue|pr]    GitHub issue and PR investigator
-  /pr-watch [number]    Local PR auto-fix — watches CI, fixes failures, offers merge
-
-INFRASTRUCTURE
-  /infra-audit          Map current infrastructure from config files, flag opportunities
-  /workspace [direction] Coordinate campaigns across multiple repos
-
-MONITORING & ORGANIZATION
-  /watch [command]      File sentinel — detects changes and @citadel: markers, routes to skills
-  /organize [--audit]   Directory convention scanner, enforcer, and cleanup
-  /houseclean           Cross-drive storage audit: worktrees, AI caches, project artifacts
-
-UTILITIES
-  /session-handoff      Session context transfer
-  /setup                First-run harness configuration
-  /schedule [action]    Manage recurring tasks (CronCreate/Delete/List)
-  /merge-review         Fleet worktree merge conflict analysis
-  /ascii-diagram        Perfectly aligned ASCII diagrams via character grid
-  /do rollback          Restore to last campaign checkpoint (git stash pop)
-
-OBSERVABILITY & LEARNING
-  /dashboard            Real-time harness dashboard — campaigns, events, health
-  /learn                Extract patterns from completed campaigns into knowledge base
-
-Direct invocation (/skill-name) always bypasses the router.
-```
-
-## Escape Hatches
-
-Direct invocation ALWAYS works and bypasses the router:
-- `/marshal [thing]` — force Marshal
-- `/archon [thing]` — force Archon
-- `/fleet [thing]` — force Fleet
-- `/[skill-name]` — force specific skill
-
-The router is additive, not a gate. Power users who know what they want
-should use direct invocation.
+Output a grouped skill list drawn from the system reminder's available skills. Group by category (Orchestration, App Creation, Code Quality, Research & Debugging, GitHub & CI, Infrastructure, Monitoring, Utilities, Observability). For each skill, show `/name  — one-line description`. Include a footer: "Direct invocation (/skill-name) always bypasses the router."
 
 ## Fringe Cases
 
 - **`.planning/` does not exist**: The router works without `.planning/`. Tiers 0, 2, and 3 are fully independent of it. Tier 1 (active-state short-circuit) reads `.planning/campaigns/` and `.planning/fleet/` — if those directories are absent, skip Tier 1 gracefully and fall through to Tier 2. Never crash on a missing `.planning/` directory.
 - **`harness.json` missing**: Skip the Skill Registry Check and proceed directly to Tier 0. Announce discovered skills from the filesystem if counts can be read, otherwise route from built-in keywords.
-- **Multiple skills match at Tier 2**: Fall through to Tier 3 for disambiguation rather than picking arbitrarily.
+- **Multiple skills match at Tier 2**: Carry candidates to Tier 3 per Tier 2 disambiguation rule above.
 - **User input is empty or whitespace**: Respond with the `--list` output and a prompt to provide a direction.
 - **Routed skill not found**: Report "Skill not found" and fall back to Marshal as the safe default.
+
+## Contextual Gates
+
+**Disclosure:** "Routing to [skill]. See that skill's contextual gates for reversibility."
+**Reversibility:** depends on routed skill — check the routed skill's reversibility
+**Trust gates:**
+- Any: routing and dispatch; inherits trust gates from the routed skill.
 
 ## Quality Gates
 

@@ -12,12 +12,6 @@ effort: medium
 
 # /design — Design Manifest Generator
 
-## Identity
-
-/design creates a design manifest that documents the visual language of a project.
-The manifest is a living document that the post-edit hook reads to enforce consistency.
-It's not a design system generator. It's a pattern extractor and enforcer.
-
 ## When to Use
 
 - At the start of a new project (generate starter manifest from preferences)
@@ -49,31 +43,15 @@ Present a summary of the manifest to the user: "Here's your design manifest. It 
 
 ### Extract Mode (existing project has styles)
 
-Triggered when the project has CSS, Tailwind config, or component files.
-
-1. Read `tailwind.config.*` (if exists) — extract custom colors, spacing, fonts, breakpoints
-2. Read global CSS files (`globals.css`, `index.css`, `app.css`) — extract CSS variables, base styles
-3. Scan 5-10 component files — extract repeated patterns:
-   - Color values used 3+ times → documented as palette
-   - Spacing values used 3+ times → documented as scale
-   - Font sizes used → documented as type scale
-   - Border radius values → documented as shape language
-   - Shadow values → documented as elevation scale
-   - Component patterns (card, button, input shapes)
-4. Present findings to user: "Here's what I found in your codebase. Does this look right?"
-5. Write the manifest after user confirms
+1. Read `tailwind.config.*` — extract colors, spacing, fonts, breakpoints
+2. Read global CSS files — extract CSS variables, base styles
+3. Scan 5-10 component files — values used 3+ times become the palette, scale, type scale, shape language, and elevation scale; note component patterns (card, button, input)
+4. Present findings: "Here's what I found. Does this look right?"
+5. Write manifest after user confirms
 
 ### Generate Mode (new project or no existing styles)
 
-Triggered when no CSS/Tailwind config exists or user says "new project."
-
-Ask up to 4 questions:
-1. "What's the overall feel? (minimal, playful, corporate, bold)" — or skip with a default
-2. "Dark mode, light mode, or both?"
-3. "Any brand colors? (hex values or 'no, pick for me')"
-4. "Dense or spacious layout?"
-
-Generate a starter manifest from the answers. Use sensible defaults for anything not specified.
+Ask up to 4 questions: feel (minimal/playful/corporate/bold), color mode (dark/light/both), brand colors (hex or "pick for me"), layout density. Use sensible defaults for anything not specified.
 
 ## The Manifest
 
@@ -154,35 +132,17 @@ Write to `.planning/design-manifest.md`:
 
 ## Hook Integration
 
-The post-edit hook (post-edit.js) checks for `.planning/design-manifest.md`.
-If it exists:
+post-edit.js checks for `.planning/design-manifest.md`. When a CSS/TSX/JSX/Tailwind file is edited, it scans for: hardcoded hex colors not in the palette, font sizes outside the type scale, spacing values outside the scale, and border radius values not in the shape section. Warnings only — not blocks. One warning per category per edit.
 
-1. When a CSS, TSX, JSX, or Tailwind file is edited:
-2. Read the manifest's Anti-Patterns section and color palette
-3. Scan the edited file for:
-   - Hardcoded hex colors not in the palette (warn)
-   - Font sizes not in the type scale (warn)
-   - Spacing values that don't match the scale (warn, only for obviously wrong values)
-   - Border radius values not in the shape section (warn)
-4. Output: `[design] Found color #ff5733 not in design manifest palette. Defined colors: {list}`
-5. Warnings only, not blocks. Same as dependency-aware linting.
+Hook rules: skip entirely if no manifest; scan only the edited file; cache the manifest once per session; do not flag Tailwind utility classes that map to config; only flag raw hex/px values.
 
-Rules for the hook:
-- If no manifest exists, skip entirely. Zero cost.
-- Only scan the edited file, not the whole project.
-- Read the manifest once per session (cache it).
-- Don't flag Tailwind utility classes that map to the config (those ARE the manifest).
-- Only flag raw values (hex colors, px values) that don't match.
-- One warning per category per edit (not per occurrence).
+## Contextual Gates
 
-## What /design Does NOT Do
-
-- Generate a full design system (it's a manifest, not a component library)
-- Override Tailwind config (it reads from it, not writes to it)
-- Make design decisions for you (it documents YOUR decisions and enforces them)
-- Block edits (warnings only, same as all Citadel hooks)
-- Work without user confirmation (always presents findings before writing)
-- Accumulate patterns automatically (that's Wave 5 — for now, manifests are explicit)
+**Disclosure:** "Updating design manifest. Existing manifest will be modified."
+**Reversibility:** amber — modifies `.planning/design-manifest.md`; undo with `git checkout .planning/design-manifest.md`.
+**Trust gates:**
+- Any: generate or update design manifest.
+- Familiar (5+ sessions): full manifest rewrites that discard existing content.
 
 ## Quality Gates
 
@@ -193,13 +153,13 @@ Rules for the hook:
 
 ## Fringe Cases
 
-**No styles exist and user hasn't specified preferences**: Default to Generate Mode. Use sensible defaults (minimal feel, light mode, neutral palette) and present the manifest for review before writing.
+**No styles and no preferences:** Default to Generate Mode; use sensible defaults (minimal, light mode, neutral palette); present before writing.
 
-**Tailwind config exists but no custom theme**: Extract what's available (font, breakpoints), note which sections use Tailwind defaults, and generate the rest.
+**Tailwind config but no custom theme:** Extract available values (font, breakpoints); note which sections use Tailwind defaults; generate the rest.
 
-**If .planning/ does not exist**: Create it before writing the manifest. If not possible, output the manifest inline and instruct the user to save it or run `/do setup`.
+**`.planning/` missing:** Create it; if not possible, output manifest inline and instruct user to save it.
 
-**User says "update the manifest"**: Re-run Extract Mode on the current codebase, diff against the existing manifest, and present only what has changed.
+**"Update the manifest":** Re-run Extract Mode, diff against existing manifest, present only what changed.
 
 ## Exit Protocol
 
@@ -210,5 +170,6 @@ Rules for the hook:
 - Sources: {files read, or "user preferences"}
 - Anti-patterns documented: {count}
 - Next: Post-edit hook will flag deviations automatically
+- Reversibility: amber — undo with `git checkout .planning/design-manifest.md`
 ---
 ```

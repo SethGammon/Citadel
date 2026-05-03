@@ -21,32 +21,13 @@ trigger_keywords:
 
 # /scaffold — Project-Aware File Generator
 
-## Identity
-
-You are a scaffolding expert. You generate new files that look like they were
-written by the same developer who wrote the rest of the project. You NEVER
-generate boilerplate from memory or templates — you read the actual codebase
-first, find the closest existing examples, and replicate their exact patterns.
-
-Your output is indistinguishable from hand-written code because it IS
-hand-written code — copied from the project's own conventions.
-
 ## Orientation
 
-**Use when:**
-- Creating a new component, module, service, route, hook, domain, or utility
-- The project has existing examples of the same kind of file
-- You want the new file wired in (exports, routes, registrations) on first write
+**Use when:** Creating a new component, module, service, route, hook, domain, or utility with existing examples in the project.
 
-**Do NOT use when:**
-- The file has no precedent in the project (write it from scratch with the user)
-- You are modifying existing files (just edit them directly)
-- The project has no conventions yet (use `/setup` to establish them first)
+**Do NOT use when:** The file has no precedent (use `/marshal` for unconstrained generation), you're modifying existing files (use `/refactor`), or the project has no conventions yet.
 
-**What this skill needs:**
-- A target type: what kind of file (component, service, route, hook, module, etc.)
-- A name: what to call it
-- Optional: a brief description of what it does (helps generate meaningful internals)
+**Needs:** target type, name, and optional description.
 
 ## Protocol
 
@@ -61,8 +42,7 @@ If the type is ambiguous, ask ONE clarifying question. Do not ask more than one.
 
 ### Step 2: FIND EXEMPLARS
 
-Search the codebase for 2-3 existing files of the same type. These are your
-exemplars — the gold standard for how this project writes this kind of file.
+Search the codebase for 2-3 existing files of the same type.
 
 **Search strategy by type:**
 
@@ -86,9 +66,6 @@ exemplars — the gold standard for how this project writes this kind of file.
 7. Types pattern (inline? separate `.types.ts`? shared types file?)
 
 **Output a brief analysis** (3-5 lines) summarizing the conventions you found.
-Example: "This project uses PascalCase .tsx files co-located with .test.tsx files.
-Components use named exports, re-exported from index.ts barrels. Hooks are in a
-shared hooks/ directory. Path aliases: @/components, @/hooks, @/services."
 
 ### Step 3: DETERMINE THE FILE SET
 
@@ -123,28 +100,14 @@ For each file in the set, generate content by adapting the closest exemplar.
 3. Every generated file must be syntactically valid and importable
 4. No placeholder comments (`// TODO: implement`, `// Add logic here`)
 5. No empty function bodies unless the exemplar has them
-6. Minimal but functional — if it is a component, it renders something. If it is
-   a service, it has at least one real method signature. If it is a hook, it
-   returns a typed value.
-7. Match the project's TypeScript strictness (explicit return types if exemplars
-   have them, inferred if they don't)
+6. Minimal but functional — renders something, has at least one real method, returns a typed value
+7. Match the project's TypeScript strictness
 
-**For components specifically:**
-- Match the exemplar's props pattern (interface vs type, inline vs separate)
-- Match the exemplar's state management pattern (useState, Zustand, context, etc.)
-- Include the same utility imports the exemplar uses (cn, clsx, classNames, etc.)
-- If the exemplar uses forwardRef, use forwardRef
-- If the exemplar uses memo, use memo
-
-**For services/modules specifically:**
-- Match initialization pattern (constructor, factory function, singleton)
-- Match error handling pattern (throw, Result type, error callbacks)
-- Match async patterns (Promise, async/await, callbacks)
+Match the exemplar's props pattern, state management, utility imports, async patterns, and error handling exactly.
 
 ### Step 5: WIRE IT IN
 
-New files that exist but are not connected to anything are useless. Find every
-registration point the exemplars use and add the new file there.
+Find every registration point the exemplars use and add the new file there.
 
 **Common wiring points (check which ones the project uses):**
 
@@ -165,17 +128,7 @@ registration point the exemplars use and add the new file there.
 
 ### Step 6: VERIFY
 
-After generating all files:
-
-1. **Typecheck**: Run the project's typecheck command if available. Every generated
-   file must pass. If it fails, fix the issue — do not leave it for the user.
-2. **Import check**: Verify the main file is importable from outside its directory
-   (via barrel export or direct import, matching the project's convention).
-3. **Convention check**: Re-read the exemplars one more time. Compare your output.
-   Flag any deviations you notice and fix them.
-
-If typecheck is not available or not configured, do a manual read-through of
-each generated file to verify syntax and imports are correct.
+Run typecheck — every generated file must pass. Fix failures before exiting. If typecheck is unavailable, do a manual read-through for syntax and import correctness.
 
 ## Fringe Cases
 
@@ -184,6 +137,12 @@ each generated file to verify syntax and imports are correct.
 - **Language or framework not detected**: Ask the user directly rather than guessing. One question: "What type of file should this be? (e.g., React component, Express route, utility function)"
 - **Typecheck fails after generation**: Fix the issue before exiting — do not leave the user with broken generated files.
 - **No wiring point found**: Note the missing registration explicitly in the exit summary rather than silently leaving the file unwired.
+
+## Contextual Gates
+
+**Reversibility:** Amber — creates new files and modifies registration points; `git checkout` to undo.
+**Cost:** No cost actions — file generation only; no agents spawned, no confirmation needed.
+**Trust:** No gates — safe at all trust levels; overwrite confirmation is in Fringe Cases.
 
 ## Quality Gates
 
@@ -221,10 +180,6 @@ Conventions matched from:
 
 Typecheck: PASS
 ```
-
-If the user provided a description, also include a one-line summary of what the
-generated file does. If they didn't, suggest they fill in the implementation
-details now that the structure is in place.
 
 ```
 ---HANDOFF---

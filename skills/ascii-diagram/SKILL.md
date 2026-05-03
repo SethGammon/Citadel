@@ -19,17 +19,6 @@ trigger_keywords:
 
 # /ascii-diagram — Perfectly Aligned ASCII Diagrams
 
-## Identity
-
-You are an ASCII diagram renderer. You NEVER freehand ASCII art token-by-token.
-Instead, you build diagrams programmatically on a character grid, then read the
-grid back as text. This guarantees perfect alignment every time.
-
-LLMs fail at ASCII alignment because they predict tokens sequentially without
-spatial awareness. You solve this by treating the diagram as a 2D array of
-characters — every box corner, every pipe, every arrow is placed at exact
-coordinates.
-
 ## Orientation
 
 **Use when:**
@@ -297,6 +286,13 @@ Labeled:      HTTP
 - All arrows must be unbroken sequences ending in a head character
 - Unicode and ASCII box-drawing styles must not be mixed in the same diagram
 - For diagrams with 4+ boxes: the Grid class was used (not freehand)
+
+## Contextual Gates
+
+**Disclosure:** "Generating ASCII diagram. Output to screen (or file if requested)."
+**Reversibility:** green — outputs ASCII diagram to screen or a new file; no existing files modified
+**Trust gates:**
+- Any: full diagram generation, verification, and output.
 
 ## Exit Protocol
 

@@ -11,13 +11,9 @@ effort: high
 
 # /architect — Implementation Architecture from PRD
 
-## Identity
-
-/architect converts a PRD into a buildable plan. It decides HOW to implement
-what the PRD describes. Its output is a campaign-ready architecture document
-that Archon reads and executes.
-
 ## When to Use
+
+**Don't use when:** you already have an architecture and want to implement it (use /marshal or /archon); you need a PRD first (use /prd before /architect).
 
 - After /prd produces an approved PRD (greenfield or feature mode)
 - When the user has a clear direction + existing codebase (no PRD needed)
@@ -69,28 +65,9 @@ In feature mode:
 
 ### Step 2: EVALUATE OPTIONS (for non-trivial decisions)
 
-For any architectural decision where multiple valid approaches exist:
+For decisions with multiple valid approaches — state management, API structure, auth pattern, DB schema, routing — generate 2-3 candidates. Assess each on complexity, risk, maintainability, and LLM-friendliness. Pick the winner and document why. Reject alternatives with reasoning.
 
-1. Generate 2-3 candidate approaches
-2. For each candidate, assess:
-   - Complexity to implement (how many files, how many concepts)
-   - Risk (what could go wrong, what's the failure mode)
-   - Maintainability (how easy to modify later)
-   - LLM-friendliness (how well can an agent implement this without confusion)
-3. Pick the winner. Document why in the architecture doc.
-
-This is based on AlphaCodium's finding that multi-candidate evaluation
-outperforms single-candidate refinement. Don't commit to the first idea.
-
-Key decisions that warrant multi-candidate evaluation:
-- State management approach
-- API structure (REST vs tRPC vs GraphQL)
-- Auth implementation pattern
-- Database schema design
-- Routing strategy
-
-Simple decisions (file naming, folder structure, CSS approach) don't need this.
-Use the PRD's stack choices and move on.
+Simple decisions (file naming, folder structure, CSS) don't need this — use the PRD's stack choices and move on.
 
 ### Step 3: PRODUCE
 
@@ -98,99 +75,51 @@ Write to `.planning/architecture-{slug}.md`:
 
 ```markdown
 # Architecture: {App Name}
-
-> PRD: .planning/prd-{slug}.md
-> Date: {ISO date}
+> PRD: .planning/prd-{slug}.md  |  Date: {ISO date}
 
 ## File Tree
-{Greenfield: The complete file tree of the finished v1. Every file listed.
-Feature mode: ONLY new and modified files. Prefix modified files with ~.
-Example: ~ src/routes/index.ts (modified), + src/auth/middleware.ts (new)}
+{Greenfield: complete file tree for v1, every file listed.
+Feature mode: ONLY new (+) and modified (~) files.}
 
 ## Component Breakdown
-{For each core feature from the PRD:}
 ### Feature: {name}
-- Files: {list of files this feature touches}
-- Dependencies: {what must exist before this can be built}
-- Complexity: {low/medium/high}
+- Files: | Dependencies: | Complexity: {low/medium/high}
 
 ## Data Model
-{If the app has a database:}
 ### {Entity name}
-- Fields: {name: type}
-- Relationships: {how it connects to other entities}
-
-{If no database: skip this section}
+- Fields: {name: type}  |  Relationships: {connections}
+{Omit section if no database.}
 
 ## Key Decisions
-{Architecture decisions that were evaluated:}
-### {Decision}: {What was chosen}
-- **Chosen**: {approach} — because {reasoning}
-- **Rejected**: {alternative} — because {why not}
+### {Decision}: {chosen approach}
+- **Chosen**: {approach} — {reasoning}
+- **Rejected**: {alternative} — {why not}
 
 ## Build Phases
-{Ordered phases that Archon will execute. Each phase has:}
-
-### Phase 1: {name}
+### Phase N: {name}
 - **Goal**: {one sentence}
-- **Files**: {files created or modified}
-- **Dependencies**: {what must exist first, or "none"}
-- **End Conditions**:
-  - [ ] {machine-verifiable condition}
-  - [ ] {machine-verifiable condition}
-
-### Phase 2: {name}
-...
+- **Files**: | **Dependencies**: {or "none"}
+- **End Conditions**: [ ] {machine-verifiable}
 
 ## Phase Dependency Graph
-{Which phases depend on which. Simple text format:}
-Phase 1 → Phase 2 → Phase 3
-                  → Phase 4 (parallel with 3)
-Phase 3 + 4 → Phase 5
+{Text format: Phase 1 → Phase 2 → Phase 3 / Phase 3 + 4 → Phase 5}
 
 ## Risk Register
-{Top 3 things most likely to go wrong:}
 1. {risk}: {mitigation}
 2. {risk}: {mitigation}
 3. {risk}: {mitigation}
 
 ## Deployment Strategy
-{If the PRD specifies a deployment target. Skip if "deploy later" or static-only.}
-- **Platform**: {from PRD Technical Decisions — see .planning/_templates/deploy/}
-- **Method**: {deployment command}
-- **Environment variables**: {list required env vars, reference .env.example}
-- **Pre-deploy checks**: {typecheck, test, build all pass}
-
-{The final build phase should be "Deploy" when a platform is specified:}
-### Phase N (Final): Deploy
-- **Goal**: Deploy the verified app to {platform}
-- **Dependencies**: All previous phases complete and verified
-- **End Conditions**:
-  - [ ] App deployed successfully (no build errors)
-  - [ ] Production URL accessible and returns expected content
-
-{A failed deploy does NOT fail the campaign. The app works locally. Deploy is bonus.
-If the user says "don't deploy" or "I'll deploy later", omit this phase entirely.}
+{Skip if "deploy later" or static-only.}
+- **Platform**: | **Method**: | **Environment variables**: | **Pre-deploy checks**:
+{Final phase is "Deploy" when a platform is specified. A failed deploy does NOT fail the campaign.}
 ```
 
 ### Step 4: CONNECT TO CAMPAIGN
 
-Convert the architecture into a campaign-ready format:
+Each build phase becomes a campaign phase; end conditions carry over; the dependency graph determines ordering; parallel-safe phases flagged for Fleet.
 
-1. Each build phase becomes a campaign phase
-2. End conditions from the architecture become Phase End Conditions in the campaign
-3. The dependency graph determines phase ordering
-4. Parallel-safe phases get flagged for potential Fleet execution
-
-Present the architecture summary to the user:
-- File count and structure
-- Number of phases
-- Key decisions made and why
-- Estimated complexity
-
-Ask: "Ready to build? This will create an Archon campaign."
-
-If approved: write the campaign file using the architecture as the direction.
+Present summary to user (file count, phase count, key decisions, estimated complexity) and ask: "Ready to build? This will create an Archon campaign." If approved, write the campaign file.
 
 ### Step 5: HANDOFF
 
@@ -201,16 +130,16 @@ If approved: write the campaign file using the architecture as the direction.
 - Phases: {count}
 - Estimated complexity: {low/medium/high}
 - Next: Archon campaign ready to execute
+- Reversibility: green — delete .planning/architecture-{slug}.md to undo
 ---
 ```
 
-## What /architect Does NOT Do
+## Contextual Gates
 
-- Build anything (produces the plan, not the code)
-- Skip multi-candidate evaluation for key decisions
-- Create phases without end conditions
-- Ignore the PRD's "out of scope" section
-- Produce a file tree without knowing what each file does
+**Disclosure:** "Generating architecture plan for [description]. No files modified until you approve."
+**Reversibility:** green — creates `.planning/architecture-{slug}.md` only; undo with `rm .planning/architecture-{slug}.md`.
+**Trust gates:**
+- Any: generate architecture document, evaluate options, connect to campaign.
 
 ## Quality Gates
 
@@ -222,13 +151,13 @@ If approved: write the campaign file using the architecture as the direction.
 
 ## Fringe Cases
 
-**No PRD exists**: Treat the user's description + the existing codebase as the spec. Read the file tree and package.json to infer context. Proceed without requiring a PRD — see "If no PRD" in Step 1.
+**No PRD:** Treat user description + existing codebase as the spec; read file tree and package.json; proceed without requiring a PRD.
 
-**Project already has code**: Use feature mode. Read the existing architecture first. The file tree shows only new/modified files. Phase 0 must record the baseline typecheck and test state.
+**Project already has code:** Use feature mode; read existing architecture first; file tree shows only new/modified files; Phase 0 records baseline typecheck/test state.
 
-**Vague description**: If the user's description is too vague to produce verifiable end conditions, ask at most 2 clarifying questions before proceeding. Don't block on perfect clarity.
+**Vague description:** Ask at most 2 clarifying questions; don't block on perfect clarity.
 
-**If .planning/ does not exist**: Create it before writing the architecture document. If creation is not possible, present the architecture document inline and instruct the user to save it.
+**`.planning/` missing:** Create it; if not possible, output the architecture inline and instruct the user to save it.
 
 ## Exit Protocol
 
@@ -239,5 +168,6 @@ If approved: write the campaign file using the architecture as the direction.
 - Phases: {count}
 - Estimated complexity: {low/medium/high}
 - Next: Archon campaign ready to execute
+- Reversibility: green — delete .planning/architecture-{slug}.md to undo
 ---
 ```

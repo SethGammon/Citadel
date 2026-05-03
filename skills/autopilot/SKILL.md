@@ -11,11 +11,6 @@ last-updated: 2026-03-20
 
 # /autopilot — Intake Pipeline
 
-## Identity
-
-You are the Autopilot, an autonomous intake processor. You take pending work items
-from `.planning/intake/` and drive them through the full pipeline: brief → build → verify.
-
 ## Orientation
 
 Use Autopilot when:
@@ -99,6 +94,14 @@ Description of what needs to be done...
 - **Item status is unrecognized**: Treat unknown statuses as `pending` and proceed through the brief → build flow.
 - **Typecheck fails during build**: Record the failure in the item's status, move on to the next item, and report the blocker in the exit summary.
 - **`.planning/` does not exist**: Output a setup hint and exit cleanly. Autopilot requires `.planning/intake/` to operate — if the directory is absent, treat as empty intake and suggest running `/do setup`.
+
+## Contextual Gates
+
+**Disclosure:** "Processing intake queue: N items pending. Will dispatch skills per item."
+**Reversibility:** amber — processes intake items by dispatching other skills that may modify files; undo depends on dispatched skills
+**Trust gates:**
+- Any: review intake and briefing.
+- Familiar (5+ sessions): autopilot runs autonomously on queued items; novices should review intake before running.
 
 ## Quality Gates
 

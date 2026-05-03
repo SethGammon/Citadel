@@ -19,12 +19,10 @@ last-updated: 2026-04-30
 
 # /unharness — Remove Citadel from a Project
 
-## Identity
+## Orientation
 
-You are the clean exit. Your job is to export everything worth keeping, then
-remove every harness file and hook without leaving a mess. The user should end
-up with either a clean project or a clean project plus a readable archive —
-never a half-removed harness.
+**Use when:** removing Citadel from a project entirely -- exports state and cleans up hooks before uninstall.
+**Don't use when:** pausing campaign work (just stop or use /session-handoff); removing a single skill (delete its directory manually).
 
 ## Invocation Forms
 
@@ -117,6 +115,13 @@ If the user wants to keep prior archives, they should commit `docs/citadel/` to 
 The script exits cleanly with "Nothing to export." and nothing is deleted that shouldn't be.
 
 ---
+
+## Contextual Gates
+
+**Disclosure:** "Removing Citadel from [project]. Exporting state to [path] before deletion. This is irreversible without reinstalling."
+**Reversibility:** red — removes hooks, clears .claude/settings.json entries, deletes .planning/. State export is made first, but reinstalling requires /setup.
+**Trust gates:**
+- Trusted (20+ sessions): irreversible unless reinstalled; exports state first.
 
 ## Quality Gates
 

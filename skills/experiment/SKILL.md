@@ -11,13 +11,6 @@ last-updated: 2026-03-21
 
 # /experiment — Metric-Driven Optimization Loop
 
-## Identity
-
-/experiment is an automated optimization loop with a scalar fitness function.
-It takes a hypothesis, runs isolated experiments in git worktrees, measures results
-with a metric command, and keeps improvements or discards failures. Think of it as
-automated A/B testing for code changes.
-
 ## Inputs
 
 The user provides three things:
@@ -124,6 +117,13 @@ Also log to `.planning/telemetry/agent-runs.jsonl`:
 - Restore stashed changes on exit (even on error)
 - If the metric command fails, treat as DISCARD (not crash)
 
+## Contextual Gates
+
+**Disclosure:** "Running experiment loop on [target] with fitness: [function]. Each iteration commits. Budget: [N iterations]."
+**Reversibility:** amber — modifies source files across iterations; each iteration is committed; undo with `git revert` on kept commits.
+**Trust gates:**
+- Familiar (5+ sessions): iterates and commits autonomously; novices should use /improve with manual review between steps.
+
 ## Quality Gates
 
 - Baseline was measured before any iterations ran
@@ -151,5 +151,6 @@ Also log to `.planning/telemetry/agent-runs.jsonl`:
 - Kept: {N}/{total} iterations
 - Stop reason: {reason}
 - Report: .planning/research/experiment-{slug}.md
+- Reversibility: amber — undo kept iterations with `git revert` on each kept commit
 ---
 ```

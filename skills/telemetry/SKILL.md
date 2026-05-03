@@ -13,12 +13,6 @@ last-updated: 2026-04-09
 
 # /telemetry — Telemetry Hub
 
-## Identity
-
-/telemetry is the discovery and control surface for Citadel's telemetry system.
-One command that shows you everything, tells you where to dig deeper, and lets
-you tune or disable any part of it.
-
 ## When to Use
 
 - "What does Citadel track?" / "What telemetry does it have?"
@@ -145,28 +139,13 @@ CONTROLS
 
 ### Step 3: SUB-COMMAND HANDLING
 
-**`/telemetry off`:**
-1. Read `.claude/harness.json`
-2. Set `telemetry.sessionSummary = "off"` and `telemetry.costAlerts = false`
-3. Write back to harness.json via Bash (`node -e "..."`)
-4. Output: "Telemetry summary disabled. Hook safety checks remain active. Run `/telemetry on` to restore."
-5. Note: disabling telemetry never disables safety hooks (protect-files, circuit-breaker, external-action-gate)
+**`/telemetry off`:** Set `telemetry.sessionSummary = "off"` and `telemetry.costAlerts = false` in harness.json. Output: "Telemetry summary disabled. Hook safety checks remain active." Safety hooks (protect-files, circuit-breaker, external-action-gate) are never disabled.
 
-**`/telemetry on`:**
-1. Read `.claude/harness.json`
-2. Set `telemetry.sessionSummary = "auto"` and `telemetry.costAlerts = true`
-3. Write back
-4. Output: "Telemetry re-enabled. Session summaries will appear at session end."
+**`/telemetry on`:** Set `telemetry.sessionSummary = "auto"` and `telemetry.costAlerts = true`. Output: "Telemetry re-enabled."
 
-**`/telemetry --threshold N`:**
-1. Validate N is a positive number
-2. Generate threshold array: `[N, N*2, N*5, N*10, N*20, N*50, N*100]` (capped at 500)
-3. Write to `harness.json` under `policy.costTracker.thresholds`
-4. Output: "Cost alerts will fire at: ${thresholds.join(', $')}"
+**`/telemetry --threshold N`:** Validate N is positive. Generate `[N, N*2, N*5, N*10, N*20, N*50, N*100]` (capped at 500). Write to `harness.json` under `policy.costTracker.thresholds`.
 
-**`/telemetry --config`:**
-Show current settings with edit instructions for each. Don't auto-apply — show the
-`node -e "..."` command the user can run to change each setting.
+**`/telemetry --config`:** Show current settings with the `node -e "..."` command to change each — don't auto-apply.
 
 ### Step 4: ACCURACY BADGES
 
@@ -177,26 +156,13 @@ Always mark data source clearly:
 
 Never blend real and estimated in the same total without flagging it.
 
-## What Telemetry Covers (and What It Doesn't)
+## What Telemetry Covers
 
-**Covered:**
-- Session cost (real token data from Claude Code JSONL when available)
-- Session duration, burn rate, message count
-- Agent/subagent spawn count
-- Hook execution timing and outcomes
-- Campaign cost attribution
-- Trust level progression
+**Covered:** session cost (real token data), duration/burn rate/message count, agent spawn count, hook timing and outcomes, campaign cost attribution, trust level.
 
-**Not covered (by design):**
-- Per-tool-call cost breakdown (Claude Code doesn't expose this)
-- Per-subagent cost isolation (session JSONL is session-level, not agent-level)
-- Real-time streaming token count (snapshot-based, not streaming)
+**Not covered (by design):** per-tool-call cost, per-subagent cost isolation, real-time streaming token count.
 
-**Safety hooks always on (cannot be disabled via `/telemetry off`):**
-- protect-files — prevents accidental overwrites of sensitive config
-- external-action-gate — gates git push / PR creation
-- circuit-breaker — prevents failure spirals
-- quality-gate — catches violations at session end
+**Safety hooks always on (cannot be disabled):** protect-files, external-action-gate, circuit-breaker, quality-gate.
 
 ## Quality Gates
 
@@ -208,12 +174,16 @@ Never blend real and estimated in the same total without flagging it.
 
 ## Fringe Cases
 
-- **`.planning/telemetry/` missing:** Show empty state. Note: "Run `/do setup` to initialize telemetry."
-- **`session-tokens.js` unavailable:** Fall back to session-costs.jsonl, mark as `(est)`.
-- **harness.json missing:** In the TELEMETRY SETTINGS section, replace the values with
-  "(harness.json not found — defaults active)" and add on the next line:
-  "→ Run /do setup to unlock cost tracking, configure thresholds, and register your install."
-- **`telemetry.enabled: false` in harness.json:** Show a banner: "Telemetry is disabled. Run `/telemetry on` to re-enable."
+- **`.planning/telemetry/` missing:** Show empty state with "Run `/do setup` to initialize telemetry."
+- **`session-tokens.js` unavailable:** Fall back to session-costs.jsonl; mark `(est)`.
+- **harness.json missing:** Show "(harness.json not found — defaults active)" and "→ Run /do setup to unlock cost tracking."
+- **`telemetry.enabled: false`:** Show banner "Telemetry is disabled. Run `/telemetry on` to re-enable."
+
+## Contextual Gates
+
+**Disclosure:** Read-only by default. `--threshold`, `off`, `on`, `--config` write `harness.json`.
+**Reversibility:** amber — `harness.json` writes; undo with `git checkout .claude/harness.json`.
+**Trust gates:** Any — no restrictions.
 
 ## Exit Protocol
 

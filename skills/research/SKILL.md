@@ -11,12 +11,6 @@ last-updated: 2026-03-21
 
 # /research — Focused Investigation
 
-## Identity
-
-/research is for focused research investigations. It converts questions into structured
-findings with confidence levels. It does NOT make decisions or modify code — it produces
-information that informs the next step.
-
 ## When to Use
 
 - Evaluating whether a dependency has a newer version or has been superseded
@@ -25,6 +19,8 @@ information that informs the next step.
 - Investigating how other projects solve a similar problem
 - Checking if a pattern used in the codebase has known issues
 - Any time you need external information before making a decision
+
+**Don't use when:** the question has 3+ independent sub-questions (use /research-fleet for parallel scouts); you need to act on findings immediately (use /marshal which calls /research internally).
 
 ## Protocol
 
@@ -105,6 +101,12 @@ The research document persists for future reference.
 - **Conflicting sources**: Surface the conflict explicitly in the findings rather than silently picking one. Both sides belong in the document.
 - **Question is too broad for 3-6 sources**: Narrow to the single most important sub-question, answer it well, and note what was scoped out. Suggest `/research-fleet` for multi-angle questions.
 
+## Contextual Gates
+
+**Reversibility:** Green — writes one file to `.planning/research/`; delete to undo.
+**Cost:** No cost actions — web searches and one file write; no agents spawned, no confirmation needed.
+**Trust:** No gates — read-only investigation, safe at all trust levels.
+
 ## Quality Gates
 
 - Every finding must have a source URL
@@ -122,5 +124,6 @@ Output findings summary, then:
 - Findings: {count} sources analyzed
 - Recommendation: {one-line summary}
 - Document: .planning/research/{slug}.md
+- Reversibility: green — one file written to .planning/research/; delete to undo
 ---
 ```

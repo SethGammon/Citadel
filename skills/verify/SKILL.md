@@ -12,13 +12,6 @@ last-updated: 2026-03-27
 
 # /verify — Hook Pipeline Self-Test
 
-## Identity
-
-/verify confirms the Citadel hook pipeline is working correctly in the current
-session. Unlike the offline tools (verify-hooks.js, integration-test.js), this
-runs inside a real Claude Code session — actual tool calls trigger actual hook
-dispatch. No synthetic payloads.
-
 Use this when:
 - Hooks were recently updated and you want a live sanity check
 - Something feels wrong (tools seem too slow, quality-gate not firing)
@@ -122,6 +115,12 @@ they should be created during the test. Treat "file created" as equivalent to "g
 - Report must include exact counts (+N lines), not just PASS/FAIL
 - If .planning/telemetry/ does not exist, FAIL immediately — do not fabricate counts
 
+## Contextual Gates
+
+**Disclosure:** Creates and deletes `.planning/verify-temp.ts` during the test. No other files modified.
+**Reversibility:** green — temp file deleted on completion; no persistent changes.
+**Trust gates:** Any — no restrictions.
+
 ## Exit Protocol
 
 ```
@@ -130,6 +129,7 @@ they should be created during the test. Treat "file created" as equivalent to "g
 - hook-timing.jsonl: +N lines
 - audit.jsonl: +N lines
 - hook-errors.log: N new errors (0 expected)
+- Reversibility: green — no persistent changes; verify-temp.ts cleaned up
 - Next: if FAIL, run node scripts/verify-hooks.js for deeper diagnostics
 ---
 ```

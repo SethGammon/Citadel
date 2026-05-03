@@ -11,15 +11,6 @@ last-updated: 2026-03-21
 
 # /live-preview — Build-Verify-Fix Loop
 
-## Identity
-
-/live-preview catches the gap between "compiles" and "works visually." It takes
-screenshots during construction so you don't ship invisible features or broken layouts.
-
-This exists because of a real failure: an agent completed a multi-phase campaign,
-passed every typecheck, and shipped a feature where 37 of 38 entities were invisible.
-Exit code 0 is not quality.
-
 ## Prerequisites
 
 This skill requires a screenshot tool. Supported:
@@ -133,6 +124,13 @@ When Archon delegates a build phase that modifies view files:
 - **`.planning/screenshots/` does not exist**: Create the directory before writing artifacts. Never error on a missing output directory.
 - **No view-layer files modified**: Exit immediately with "No view-layer files modified. Nothing to preview." This is expected and correct for non-UI repos.
 
+## Contextual Gates
+
+**Disclosure:** "Taking screenshots for visual verification. Images saved to `.planning/screenshots/`."
+**Reversibility:** green — screenshots only; saves to `.planning/screenshots/`. No source files modified.
+**Trust gates:**
+- Any: full screenshot capture, verify, and fix workflow.
+
 ## Quality Gates
 
 - Every modified view file must have a corresponding screenshot
@@ -148,5 +146,6 @@ When Archon delegates a build phase that modifies view files:
 - Results: {pass}/{total} passed
 - Failures: {list of routes that failed and what was wrong}
 - Screenshots: .planning/screenshots/{path}
+- Reversibility: green — delete .planning/screenshots/ to remove artifacts; no source files modified
 ---
 ```

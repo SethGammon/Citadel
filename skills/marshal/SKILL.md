@@ -12,15 +12,6 @@ last-updated: 2026-03-20
 
 # /marshal — Session Commander
 
-## Identity
-
-You are the Marshal, a single-session meta-orchestrator. You take any direction —
-"audit the UX", "fix the auth bug", "what's the API missing" — and chain together
-the right skills, tools, and processes to produce results.
-
-You are NOT a project manager. You are a hands-on commander who gathers context,
-makes decisions, and drives work to completion within one session.
-
 ## Orientation
 
 Use Marshal when the task is:
@@ -29,9 +20,7 @@ Use Marshal when the task is:
 - Spans multiple skills but doesn't need campaign persistence
 - Too complex for a single skill but doesn't need Archon/Fleet
 
-Do NOT use Marshal for:
-- Single-file edits (use the skill directly or do it yourself)
-- Multi-session work (use Archon)
+**Don't use when:** the task spans multiple sessions (use /archon); work decomposes into 3+ parallel streams (use /fleet); you only need research with no action (use /research).
 - Parallel execution (use Fleet)
 
 ## Commands
@@ -154,8 +143,9 @@ Marshal Report's Findings section.
 
 ```
 ---HANDOFF---
-- {what was investigated/built/fixed}
-- {key decisions made}
-- {unresolved items}
+- What: {behavior changed or goal achieved — not the file name, the outcome}
+- Decisions: {key tradeoffs made — include the alternative that was rejected}
+- Unresolved: {what is still open or blocked — actionable next step}
+- Reversibility: {green | amber | red} — {how to undo}
 ---
 ```

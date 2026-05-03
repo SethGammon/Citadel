@@ -109,13 +109,15 @@ Four tiers. Use the cheapest one that fits.
 
 **Parallel coordination.** Fleet mode spawns multiple agents in isolated git worktrees, shares discoveries between them in real time, and merges results. One command, multiple agents, no conflicts.
 
+**Autonomous quality improvement.** `/evolve` is a research-driven improvement director that scores the harness against a rubric, forms causal hypotheses about why scores are low, validates them with scout agents before spending fleet budget, and runs improvement cycles until it hits a ceiling or budget. It accumulates a persistent belief model and transferable pattern library across sessions — so each run compounds on what prior runs learned.
+
 ## FAQ
 
 **Is this for me?** If you're running Claude Code or Codex on a real codebase and finding that agents lose context, repeat mistakes, or can't work in parallel, yes. If you're just starting out with either runtime, get a few sessions in first and come back when the friction shows up.
 
 **How is this different from `CLAUDE.md` or `AGENTS.md`?** Those files tell the runtime about your project. Citadel tells the runtime *how to work*: durable state, intelligent routing, automated safety, and native parallelism — the infrastructure layer those files assume someone else built.
 
-**Do I need to learn all 43 skills?** No. Just use `/do` and describe what you want in plain English. The router picks the right skill. You can go months without ever typing a skill name directly.
+**Do I need to learn all 45 skills?** No. Just use `/do` and describe what you want in plain English. The router picks the right skill. You can go months without ever typing a skill name directly.
 
 **What if `/do` routes to the wrong tool?** Tell it. "Wrong tool" or "just do it yourself" and it adjusts. You can also invoke any skill directly: `/review`, `/archon`, etc. The router is a convenience, not a gate.
 
@@ -133,7 +135,7 @@ Four tiers. Use the cheapest one that fits.
 - [Quickstart](QUICKSTART.md) — first-run paths for both Claude Code and Codex
 - [Claude Code installation guide](docs/CLAUDE_INSTALLATION_GUIDE.md) — Claude-specific plugin setup and hooks
 - [Codex installation guide](docs/CODEX_INSTALLATION_GUIDE.md) — Codex-specific setup, hooks, and verification
-- [Skills reference](docs/SKILLS.md) — all 43 skills with invocation and examples
+- [Skills reference](docs/SKILLS.md) — all 45 skills with invocation and examples
 - [Hooks reference](docs/HOOKS.md) — 14 event types, 22 hooks, what each one enforces
 - [Campaign guide](docs/CAMPAIGNS.md) — persistent state, phases, AI amnesia prevention
 - [Fleet guide](docs/FLEET.md) — parallel agents, worktree isolation, discovery relay
@@ -157,6 +159,7 @@ Have a use case, a bug, or a workflow you want optimized? Open a Discussion. If 
 - [x] Fleet mode with worktree isolation
 - [x] Campaign persistence across sessions
 - [x] Desktop app for campaign management
+- [x] Autonomous quality improvement engine (`/evolve` — research-driven multi-cycle director)
 - [ ] Governance layer (per-agent policies, immutable audit log)
 - [ ] Campaign recovery and rollback
 - [ ] Web dashboard (Citadel Cloud)

@@ -12,15 +12,6 @@ effort: high
 
 # /workspace -- Multi-Repo Campaign Coordinator
 
-## Identity
-
-You are fleet, one level up. Fleet coordinates agents within a repo.
-You coordinate campaigns across repos. Same lifecycle hooks, same discovery
-relay, same merge logic. The unit of work changes from "file" to "repo."
-
-You do not replace fleet -- you spawn fleet (or archon) sessions inside each
-repo. You are the outer loop.
-
 ## When to Use
 
 - Adding infrastructure that spans repos (new database, shared service, API contract)
@@ -36,105 +27,28 @@ repo. You are the outer loop.
 
 ### Step 1: ORIENT
 
-1. Read the user's direction
-2. Check for an existing workspace session: `.planning/workspace/session-{slug}.md`
-   - If found with `status: active` or `needs-continue`: resume from current wave
-3. If starting fresh:
-   a. Identify which repos are involved (user specifies, or infer from `/infra-audit` manifest)
-   b. Verify each repo path exists and is a git repo
-   c. Read each repo's `CLAUDE.md` for conventions
-   d. Check each repo's `.planning/campaigns/` for active campaigns (avoid collisions)
-4. **Load prior session context and start watcher**:
+1. Check for existing workspace session: `.planning/workspace/session-{slug}.md` — resume if `status: active` or `needs-continue`
+2. If starting fresh: identify repos, verify each path is a git repo, read each repo's `CLAUDE.md`, check `.planning/campaigns/` for active campaigns (avoid collisions)
+3. **Load prior session context and start watcher**:
    ```bash
    node .citadel/scripts/momentum-watch-start.cjs
    node .citadel/scripts/momentum-read.cjs
    ```
-   Start the discovery watcher first (idempotent — safe if already running). Then
-   read momentum context and use active scopes and recurring decisions to inform
-   work queue prioritization across repos. Skip momentum injection if output is empty.
+   Skip momentum injection if output is empty.
 
 ### Step 2: DECOMPOSE
 
-Break the direction into repo-scoped work items. Each item becomes a campaign
-within its target repo.
+Break the direction into repo-scoped work items (one campaign per repo per wave). Table format: `# | Repo | Campaign Direction | Scope | Deps | Wave`.
 
-```markdown
-| # | Repo | Campaign Direction | Scope | Deps | Wave |
-|---|---|---|---|---|---|
-| 1 | backend | Add Redis cache layer with connection pooling | src/cache/, src/config/ | -- | 1 |
-| 2 | backend | Add Snowflake read replica for analytics queries | src/analytics/, prisma/ | -- | 1 |
-| 3 | frontend | Update API client to use cached endpoints | src/api/, src/hooks/ | 1 | 2 |
-| 4 | infra | Add Redis and Snowflake to docker-compose and CI | docker/, .github/ | 1,2 | 2 |
-| 5 | shared-types | Add cache and analytics types to shared contract | src/types/ | 1 | 2 |
-```
+**Rules:** items with no deps → Wave 1; dependents → Wave 2+. Max 3 repo-campaigns per wave. Scope format: `{repo}:{path}`.
 
-**Dependency rules (same as fleet, repo-scoped):**
-- Items with no deps go in Wave 1
-- Items that depend on Wave 1 outputs go in Wave 2
-- Max 3 repo-campaigns per wave (same conservative default as fleet)
-
-**Scope format:** `{repo}:{path}` -- e.g., `backend:src/cache/`
-
-**Cross-repo contract points:**
-For each dependency, specify the contract:
-- What repo A will produce (API endpoint, type definition, config value)
-- What repo B expects to consume
-- Where the contract lives (shared types package, OpenAPI spec, env var)
+For each inter-wave dependency, specify the cross-repo contract: what the producer will produce, what the consumer expects, and where the contract lives (shared types package, OpenAPI spec, env var).
 
 ### Step 3: WORKSPACE SESSION FILE
 
-Create `.planning/workspace/session-{slug}.md`:
+Create `.planning/workspace/session-{slug}.md` with frontmatter: `version`, `id`, `status: active`, `started`, `completed_at: null`, `direction`, `repos` (path + name + branch per repo), `wave_count`, `current_wave: 1`, `campaigns_total`, `campaigns_complete: 0`.
 
-```markdown
----
-version: 1
-id: "{uuid}"
-status: active
-started: "{ISO timestamp}"
-completed_at: null
-direction: "{one-line summary}"
-repos:
-  - path: "{absolute path}"
-    name: "{repo name}"
-    branch: "workspace/{slug}/{repo-name}"
-  - path: "{absolute path}"
-    name: "{repo name}"
-    branch: "workspace/{slug}/{repo-name}"
-wave_count: {N}
-current_wave: 1
-campaigns_total: {total}
-campaigns_complete: 0
----
-
-# Workspace: {Title}
-
-## Direction
-{Full direction from user}
-
-## Repos
-| Name | Path | Branch | Status |
-|---|---|---|---|
-| {name} | {path} | workspace/{slug}/{name} | pending |
-
-## Work Queue
-{Table from Step 2}
-
-## Cross-Repo Contracts
-| Producer | Consumer | Contract | Location |
-|---|---|---|---|
-| backend | frontend | Cache endpoint schema | shared-types/src/cache.ts |
-
-## Wave Execution Log
-
-### Wave 1
-- Status: pending
-- Campaigns: {list}
-- Started: --
-- Completed: --
-
-## Shared Context (Discovery Relay)
-{Accumulated cross-repo discoveries}
-```
+Body sections: Direction, Repos table (name/path/branch/status), Work Queue (table from Step 2), Cross-Repo Contracts (producer/consumer/contract/location), Wave Execution Log (per wave: status, campaigns, started, completed), Shared Context (discovery relay accumulation).
 
 ### Step 4: WAVE EXECUTION
 
@@ -148,51 +62,18 @@ For each wave:
 #### 4b. Spawn campaigns
 For each repo-campaign in this wave:
 
-1. `cd` to the target repo's directory
-2. Create a branch: `git checkout -b workspace/{slug}/{repo-name}`
-3. Spawn an agent with the campaign direction:
-   - **If the campaign is complex (3+ phases):** spawn as `/archon` within that repo
-   - **If the campaign is parallelizable within the repo:** spawn as `/fleet` within that repo
-   - **If simple (1-2 steps):** spawn as `/marshal` or direct skill
-4. Inject cross-repo context:
-   - Discovery briefs from prior waves (same as fleet's discovery relay)
-   - **Prior session context** (all waves): re-read `momentum.json` fresh at each wave
-     boundary via `node .citadel/scripts/momentum-read.cjs` and inject as a
-     `=== PRIOR SESSION CONTEXT ===` block. Re-reading picks up discoveries written
-     by parallel sessions while this workspace has been running. Skip silently if empty.
-   - Cross-repo contract specifications
-   - Relevant sections of other repos' `CLAUDE.md` files
-5. Each agent runs in its own context (the target repo's working directory)
-
-**Agent context injection:**
-```
-You are working in repo: {repo-name} ({repo-path})
-This is part of workspace campaign: {slug}
-
-Your scope: {directories within this repo}
-Cross-repo contracts you must honor:
-- {contract description}
-
-Discoveries from prior waves:
-{compressed briefs}
-```
+1. Create branch: `git checkout -b workspace/{slug}/{repo-name}`
+2. Spawn agent with direction: `/archon` for complex (3+ phases), `/fleet` if parallelizable, `/marshal` or direct skill for simple (1-2 steps)
+3. Inject context: discovery briefs from prior waves, prior session context (re-read `momentum.json` via `node .citadel/scripts/momentum-read.cjs`, inject as `=== PRIOR SESSION CONTEXT ===`, skip if empty), cross-repo contracts, relevant `CLAUDE.md` sections from other repos
 
 #### 4c. Collect results
-- Wait for all campaigns in the wave to complete
-- Extract HANDOFF blocks from each
-- Compress into cross-repo discovery brief
-- **Write persistent discovery records** for each completed campaign:
+Extract HANDOFF blocks, compress into cross-repo discovery brief, write persistent discovery records:
   ```bash
   node .citadel/scripts/discovery-write.cjs \
-    --session {session-slug} \
-    --agent {repo-name}-{campaign-type} \
-    --wave {wave-number} \
-    --status {success|partial|failed} \
-    --scope "{repo-name}:{scope-path}" \
-    --handoff "{json-array-of-handoff-items}" \
-    --decisions "{json-array-of-decisions}" \
-    --files "{json-array-of-files-touched}" \
-    --failures "{json-array-of-failures}"
+    --session {session-slug} --agent {repo-name}-{campaign-type} \
+    --wave {wave-number} --status {success|partial|failed} \
+    --scope "{repo-name}:{scope-path}" --handoff "{json-array}" \
+    --decisions "{json-array}" --files "{json-array}" --failures "{json-array}"
   ```
 
 #### 4d. Discovery relay
@@ -203,48 +84,18 @@ Also write `workspace/briefs/wave{N}-cross-repo.md` summarizing:
 - Contract fulfillment status (did the producer deliver what was promised?)
 
 #### 4e. Contract verification
-For each cross-repo contract in this wave:
-1. Check that the producer created the expected output
-2. If the contract is a type definition: verify the file exists and exports the type
-3. If the contract is an API endpoint: verify the route exists
-4. If verification fails: flag the contract, do not proceed with consumers
+For each cross-repo contract: verify the producer created the expected output (file + export for types, route existence for endpoints). If verification fails, flag and do not proceed with consumers.
 
 #### 4f. Update session
-- Mark completed campaigns
-- Update wave status
-- Write discovery relay
-- Advance `current_wave`
+Mark completed campaigns, update wave status, write discovery relay, advance `current_wave`.
 
 ### Step 5: COMPLETION
 
-When all waves complete:
-
-1. **Cross-repo integration check:**
-   - For each repo, run its typecheck/build in isolation
-   - If there's a shared types package, build it first
-   - Verify no cross-repo type mismatches
-
-2. **Update session file:**
-   - Set `status: completed`, `completed_at: {ISO timestamp}`
-   - Record final state of all campaigns
-
-3. **Update momentum** (cross-session synthesis):
-   ```bash
-   node .citadel/scripts/momentum-synthesize.cjs
-   ```
-
-4. **Branch summary:**
-   List all branches created across repos so the user can review and merge:
-   ```
-   Branches ready for review:
-   - backend: workspace/{slug}/backend (3 commits)
-   - frontend: workspace/{slug}/frontend (2 commits)
-   - infra: workspace/{slug}/infra (1 commit)
-
-   Suggested merge order: backend -> shared-types -> frontend -> infra
-   ```
-
-4. **Output HANDOFF**
+1. Run typecheck/build for each repo in isolation (build shared types package first if present)
+2. Set session `status: completed`, `completed_at: {ISO timestamp}`
+3. Run `node .citadel/scripts/momentum-synthesize.cjs`
+4. List all branches created across repos with suggested merge order based on dependency graph
+5. Output HANDOFF
 
 ## Fringe Cases
 
@@ -263,6 +114,13 @@ When all waves complete:
   accessible. If a repo is remote-only, the user must clone it first.
 - **Monorepo with multiple packages:** Treat each package as a "repo" for scoping purposes.
   Use `{monorepo}:{package-path}` as the scope identifier.
+
+## Contextual Gates
+
+**Disclosure:** "Running multi-repo campaign across [repos]. Changes committed to each repo independently."
+**Reversibility:** red — coordinates changes across multiple repositories; cross-repo commits are hard to revert in bulk.
+**Trust gates:**
+- Familiar (5+ sessions): coordinates multi-repo campaigns autonomously; novices should use /marshal per repo.
 
 ## Quality Gates
 

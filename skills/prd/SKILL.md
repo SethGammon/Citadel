@@ -11,18 +11,12 @@ effort: high
 
 # /prd — Product Requirements Document Generator
 
-## Identity
-
-/prd converts "I want an app that does X" into a structured document that Archon
-can execute. It does NOT build anything. It produces the spec that drives the build.
-
 ## When to Use
 
-- User describes an app they want to build (greenfield mode)
-- User wants to add a feature to an existing project (feature mode)
-- User has a vague idea that needs structure
-- Before starting any Archon campaign for a new project or feature
-- When /do routes a "create app", "build me", or "add [feature]" request
+**Don't use when:** architecture is already defined and you need implementation (use /architect then /archon); adding a small feature to an existing app (use /marshal directly).
+
+- User describes an app or feature to build (greenfield or feature mode)
+- Before any Archon campaign for a new project or feature
 
 ## Mode Detection
 
@@ -49,37 +43,11 @@ The PRD template below works for both modes. Feature mode just scopes it tighter
 
 ### Step 1: UNDERSTAND
 
-Read the user's description. Determine mode (greenfield vs feature).
-
-**In greenfield mode**, identify:
-- What the app does (core functionality)
-- Who it's for (user type)
-- What success looks like (the user's actual goal)
-
-**In feature mode**, identify:
-- What the feature does within the existing app
-- What existing code it integrates with (read the file tree)
-- What the user's existing stack is (read package.json, tsconfig, etc.)
-
-If any of these are unclear, ask up to 3 focused questions. Not a questionnaire.
-Just the questions that would change the architecture. Examples:
-- Greenfield: "Is this for you personally or will other people use it?"
-- Greenfield: "Does this need user accounts and login?"
-- Feature: "Should this integrate with your existing auth, or is this a standalone feature?"
-- Feature: "I see you're using [library]. Should the new feature follow that pattern?"
-- Both: "What's the one thing it absolutely has to do well?"
-
-Do NOT ask about tech stack in greenfield mode yet. That comes in Step 3.
-In feature mode, the stack is already decided — skip to Step 3 directly.
+Determine mode (greenfield vs feature). Identify core functionality, target user, and success criteria (greenfield) or integration points and existing stack (feature). Ask up to 3 questions — only those that would change the architecture. Do not ask about tech stack in greenfield mode; in feature mode, the stack is already decided.
 
 ### Step 2: RESEARCH (Optional)
 
-If the app concept has well-known existing implementations:
-- Run /research on "how do similar apps to [concept] typically work"
-- Identify 2-3 reference apps (not to copy, but to understand patterns)
-- Note common features users expect in this category
-
-Skip this step if the concept is simple enough (landing page, personal tool, CRUD app).
+If the concept has well-known implementations, run /research to identify 2-3 reference apps and common expected features. Skip for simple concepts (landing page, personal tool, CRUD).
 
 ### Step 3: DEFINE
 
@@ -151,55 +119,32 @@ for the user before the campaign starts.}
 
 ### Step 4: REVIEW
 
-Present the PRD summary to the user:
-- Core features (the numbered list)
-- Tech stack decisions
-- What's explicitly out of scope
-- The end conditions
+Present: core features, tech stack decisions, out of scope, end conditions. Ask if it matches. On approval: PRD is ready for Archon. On changes: update and re-present changed sections only.
 
-Ask: "Does this match what you're thinking? Anything to change before we build?"
+## Contextual Gates
 
-If the user approves: the PRD is ready for Archon.
-If the user adjusts: update the PRD and re-present the changed sections only.
-
-### Step 5: HANDOFF
-
-The PRD is not the build. The PRD is the input to the build.
-
-```
----HANDOFF---
-- PRD: {app name}
-- Document: .planning/prd-{slug}.md
-- Status: {approved | needs-revision}
-- Next: Run `/do build {app name}` or `/archon` with the PRD as direction
----
-```
-
-## What /prd Does NOT Do
-
-- Build anything (that's Archon's job)
-- Choose a stack without reasoning (every choice needs a "because")
-- Ask more than 3 clarifying questions (this isn't a form)
-- Produce a 20-page document (max 1-2 pages, scannable)
-- Recommend stacks the user can't realistically use
+**Disclosure:** "Generating PRD for [description]. Creates `.planning/prd-{name}.md`."
+**Reversibility:** green — creates `.planning/prd-{slug}.md` only; undo by deleting the file.
+**Trust gates:**
+- Any: full PRD generation, clarifying questions, review cycle.
 
 ## Quality Gates
 
-- Every feature in Core Features is one sentence (not a paragraph)
+- Every Core Feature is one sentence
 - Every technical decision has a reasoning ("because")
-- End conditions are machine-verifiable (not "app works well")
-- Out of Scope section exists and has at least 2 items
+- End conditions are machine-verifiable
+- Out of Scope has at least 2 items
 - No more than 5 core features for v1
 
 ## Fringe Cases
 
-**Vague description**: If the user's description is too vague to infer end conditions, ask up to 3 clarifying questions. Don't produce a PRD with placeholder end conditions.
+**Vague description**: Ask up to 3 clarifying questions. Never produce a PRD with placeholder end conditions.
 
-**Feature mode but no existing code found**: Confirm with the user — "I don't see existing source files. Is this a new project?" Then switch to greenfield mode if confirmed.
+**Feature mode but no existing code**: Confirm with the user — switch to greenfield if confirmed.
 
-**User says "skip the PRD"**: Inform them that even a minimal PRD is needed for Archon to operate. Offer to produce a 1-page express PRD with minimal questions (Tier 4 style).
+**User says "skip the PRD"**: Even a minimal PRD is needed. Offer a 1-page express PRD (Tier 4 style).
 
-**If .planning/ does not exist**: Create it before writing the PRD. If not possible, present the PRD inline and suggest the user run `/do setup` first.
+**If .planning/ does not exist**: Create it before writing. If not possible, present inline and suggest `/do setup`.
 
 ## Exit Protocol
 
@@ -209,21 +154,12 @@ The PRD is not the build. The PRD is the input to the build.
 - Document: .planning/prd-{slug}.md
 - Status: {approved | needs-revision}
 - Next: Run `/do build {app name}` or `/archon` with the PRD as direction
+- Reversibility: green — delete .planning/prd-{slug}.md to undo
 ---
 ```
 
 ## Stack Selection Principles
 
-Don't lock to one stack. But do make opinionated recommendations:
-- If the user has no preference and it's a web app: Next.js + Tailwind + shadcn/ui is the safest default (most LLM training data, most community support)
-- If they need a backend: recommend based on their language comfort. Node/Express for JS people, FastAPI for Python people.
-- If they need auth: recommend the simplest option for their stack. Don't default to Supabase just because it's common.
-- If they need a database: SQLite for simple, PostgreSQL for anything multi-user
-- ALWAYS explain the reasoning. The user should understand why, not just what.
+Make opinionated recommendations with reasoning. Defaults: Next.js + Tailwind + shadcn/ui for web; Node/Express for JS backends, FastAPI for Python; SQLite for simple, PostgreSQL for multi-user; simplest auth for the stack. Always explain why.
 
-**Deployment selection** (for the Deployment field in Technical Decisions):
-- Static sites / landing pages → Vercel or Netlify (free tier, zero config)
-- Full-stack with database → Railway (simplest for beginners)
-- API only → Railway or Fly.io
-- "I don't want to deploy yet" → static (local only), architect skips the deploy phase
-- See `.planning/_templates/deploy/` for platform-specific details
+Deployment defaults: static → Vercel/Netlify; full-stack with DB → Railway; API only → Railway or Fly.io; not deploying yet → local only. See `.planning/_templates/deploy/` for platform details.

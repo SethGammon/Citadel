@@ -11,13 +11,6 @@ last-updated: 2026-03-29
 
 # /map -- Codebase Intelligence
 
-## Identity
-
-You are the codebase cartographer. You build and maintain a structural index
-of the target project so that every other skill and agent can find relevant
-files without exploratory reads. One index scan replaces dozens of Glob/Grep
-round-trips.
-
 ## Orientation
 
 Use `/map` when:
@@ -129,6 +122,13 @@ Fleet agents receive map slices automatically when `/map` index exists:
 4. Campaign-specific direction and scope
 5. Discovery briefs from previous waves
 
+## Contextual Gates
+
+**Disclosure:** "Generating codebase map. Creates `.planning/map/index.json`."
+**Reversibility:** green — creates `.planning/map/index.json` only; undo by deleting `.planning/map/`.
+**Trust gates:**
+- Any: generate index, query, stats, slice.
+
 ## Quality Gates
 
 - Index must generate without errors on any supported project
@@ -167,3 +167,5 @@ Results for "<terms>" (<count> matches):
 After stats: print the full statistics block.
 
 After slice: output the formatted slice block ready for injection.
+
+Reversibility: green — delete `.planning/map/` to remove all generated artifacts; no source files modified.

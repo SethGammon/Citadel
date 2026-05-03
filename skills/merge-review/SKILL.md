@@ -11,13 +11,10 @@ last-updated: 2026-03-26
 
 # /merge-review — Fleet Merge Arbitration
 
-## Identity
+## Orientation
 
-You are the merge arbitrator. You review pending worktree branches created by
-fleet agents, detect conflicts between them, and propose a safe merge order.
-
-You surface analysis — you never merge branches yourself. Final merge decisions
-belong to the user or the orchestrating agent.
+**Use when:** reviewing pending fleet worktree merges before accepting them into the main branch.
+**Don't use when:** reviewing general code quality (use /review); checking CI status before merging (use /pr-watch).
 
 ## When to Route Here
 
@@ -53,39 +50,16 @@ If invoked with a specific branch (`/merge-review {branch}`): filter to that bra
 
 ### Step 2: For Each Branch — Gather Diff Data
 
-For each pending branch:
+Run `git diff main..{branch} --name-only`, `--stat`, and `git branch --list {branch}`.
 
-```bash
-# List changed files
-git diff main..{branch} --name-only
-
-# Change summary (additions, deletions, file count)
-git diff main..{branch} --stat
-
-# Verify the branch still exists
-git branch --list {branch}
-```
-
-If the branch no longer exists (already merged or deleted):
-- Remove it from the queue (mark as `status: "merged"`)
-- Note it in output: "Branch `{name}` no longer exists — likely already merged. Skipped."
-- Continue to next branch
+If the branch no longer exists: mark `status: "merged"`, note "likely already merged. Skipped.", continue.
 
 ### Step 3: Detect Overlapping Files
 
-After gathering diffs for all branches, compare changed file sets pairwise.
-
-For each pair of branches that share one or more changed files:
-- This is an **overlap** — requires reconciliation
-- Read the diff sections for the overlapping files from both branches:
-  ```bash
-  git diff main..{branch-A} -- {file}
-  git diff main..{branch-B} -- {file}
-  ```
-- Assess the nature of the conflict:
-  - **Additive**: both branches add to the file (low risk, likely auto-mergeable)
-  - **Overlapping edits**: both modify the same function/section (medium risk)
-  - **Contradictory**: one adds, the other removes the same code (high risk)
+Compare changed file sets pairwise. For each pair sharing files, read `git diff main..{branch} -- {file}` for both and classify:
+- **Additive**: both add to the file (low risk, likely auto-mergeable)
+- **Overlapping edits**: both modify the same function/section (medium risk)
+- **Contradictory**: one adds, the other removes the same code (high risk)
 
 ### Step 4: Assess Risk Per Branch
 
@@ -155,71 +129,40 @@ Write the updated queue back to `.planning/telemetry/merge-check-queue.jsonl`.
 
 ### Step 8: Cleanup Merged Worktrees
 
-After updating the queue, look for any registered worktrees whose branches are
-now merged into HEAD (not just branches in the queue — check all worktrees):
-
-```bash
-git worktree list --porcelain
-```
-
-For each worktree (excluding the main one):
-1. Check if its branch is merged: `git branch --merged HEAD | grep "{branch}"`
-2. If merged AND the worktree is clean (no uncommitted changes):
-   - Run: `git worktree remove "{path}" --force`
-   - Run: `git branch -d "{branch}"`
-   - Report: "Cleaned up merged worktree: {branch}"
-
-Do this automatically — merged worktrees with no uncommitted changes are
-always safe to remove. No user confirmation needed.
-
-If any worktrees are removed, note the count in the output:
-```
-Cleaned up {N} merged worktree(s): {branch-names}
-```
-
-This keeps the desktop and repo clean without requiring a separate /houseclean run.
+Run `git worktree list --porcelain`. For each non-main worktree: check `git branch --merged HEAD`. If merged and clean: run `git worktree remove "{path}" --force` and `git branch -d "{branch}"`. No user confirmation needed. Report count: "Cleaned up {N} merged worktree(s): {branch-names}".
 
 ---
 
 ## Fringe Cases
 
-**Queue is empty:**
-> "No pending merge reviews. Fleet agents haven't completed any worktrees recently."
+**Queue empty:** Output "No pending merge reviews." and stop.
 
-**Branch no longer exists (already merged):**
-Remove from queue, note in output, continue. Don't fail.
+**Branch no longer exists:** Remove from queue, note, continue.
 
-**Specific branch not in queue:**
-> "Branch `{name}` is not in the merge queue. Use `/merge-review` to see all pending branches, or check if it was already merged."
+**Branch not in queue:** Note "not in the merge queue" and suggest `/merge-review` to see all.
 
-**All branches conflict with each other (circular/total conflict):**
-> "All {N} branches share conflicting changes. An automatic merge order cannot be determined.
-> Please review each branch manually and decide which changes to keep before merging."
-List all conflicts clearly. Do not propose an order.
+**All branches conflict (circular):** List all conflicts; do not propose an order; escalate to user.
 
-**Only one branch pending:**
-Skip the conflict detection step (nothing to compare against). Output a simplified
-single-branch review: changed files, stat summary, recommendation.
+**One branch pending:** Skip conflict detection; output single-branch review (files, stat, recommendation).
 
-**Diff is very large (>500 lines):**
-Summarize rather than quoting: "Large diff ({N} lines). Key changed areas: {list of
-directories or modules}. Run `git diff main..{branch} -- {file}` for details."
+**Large diff (>500 lines):** Summarize changed areas; link to `git diff` command for details.
 
-**Worktree path no longer exists but branch does:**
-Note the missing worktree but proceed with git diff analysis using the branch name.
-Worktree existence is not required for diff analysis.
+**Worktree path missing but branch exists:** Proceed with git diff using branch name; worktree existence not required.
 
 ---
 
 ## Integration Points
 
-- **worktree-remove.js** — queues items to `.planning/telemetry/merge-check-queue.jsonl`
-  when a fleet worktree completes. This skill processes that queue.
-- **fleet skill** — `/fleet` orchestrates the worktrees. After fleet agents complete,
-  run `/merge-review` before merging any output back to main.
-- **session-end.js** — may surface a reminder if the merge queue has items at session end.
+- **worktree-remove.js** — queues items to `.planning/telemetry/merge-check-queue.jsonl` when a fleet worktree completes
+- **fleet skill** — run `/merge-review` after fleet agents complete, before merging to main
+- **session-end.js** — may surface a reminder if the merge queue has items at session end
 
----
+## Contextual Gates
+
+**Disclosure:** "Reviewing pending fleet worktree merges. Read-only — no changes applied."
+**Reversibility:** green — read-only review; no files merged or modified
+**Trust gates:**
+- Any: view merge review report and recommendations
 
 ## Quality Gates
 
