@@ -122,6 +122,12 @@ they should be created during the test. Treat "file created" as equivalent to "g
 - Report must include exact counts (+N lines), not just PASS/FAIL
 - If .planning/telemetry/ does not exist, FAIL immediately — do not fabricate counts
 
+## Contextual Gates
+
+**Disclosure:** Creates and deletes `.planning/verify-temp.ts` during the test. No other files modified.
+**Reversibility:** green — temp file deleted on completion; no persistent changes.
+**Trust gates:** Any — no restrictions.
+
 ## Exit Protocol
 
 ```
@@ -130,6 +136,7 @@ they should be created during the test. Treat "file created" as equivalent to "g
 - hook-timing.jsonl: +N lines
 - audit.jsonl: +N lines
 - hook-errors.log: N new errors (0 expected)
+- Reversibility: green — no persistent changes; verify-temp.ts cleaned up
 - Next: if FAIL, run node scripts/verify-hooks.js for deeper diagnostics
 ---
 ```

@@ -179,6 +179,12 @@ Never blend real and estimated in the same total without flagging it.
 - **harness.json missing:** Show "(harness.json not found — defaults active)" and "→ Run /do setup to unlock cost tracking."
 - **`telemetry.enabled: false`:** Show banner "Telemetry is disabled. Run `/telemetry on` to re-enable."
 
+## Contextual Gates
+
+**Disclosure:** Read-only by default. `--threshold`, `off`, `on`, `--config` write `harness.json`.
+**Reversibility:** amber — `harness.json` writes; undo with `git checkout .claude/harness.json`.
+**Trust gates:** Any — no restrictions.
+
 ## Exit Protocol
 
 /telemetry does not produce a HANDOFF block. It is a read-only observability

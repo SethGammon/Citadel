@@ -174,6 +174,12 @@ never completed.
 - The compressed brief must be written before spawning Wave 2
 - The final report must answer the original question or state why it can't
 
+## Contextual Gates
+
+**Disclosure:** Writes report to `.planning/research/fleet-{slug}/REPORT.md`. No source files modified.
+**Reversibility:** green — creates report files only; delete the directory to undo.
+**Trust gates:** Any — no restrictions.
+
 ## Exit Protocol
 
 ```
@@ -184,5 +190,6 @@ never completed.
 - Conflicts: {any unresolved disagreements}
 - Recommendation: {one-line}
 - Report: .planning/research/fleet-{slug}/REPORT.md
+- Reversibility: green — delete `.planning/research/fleet-{slug}/` to undo
 ---
 ```
