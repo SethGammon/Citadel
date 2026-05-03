@@ -266,6 +266,7 @@ Set `--budget` to cap total spend.
 
 ## Fringe Cases
 
+- **`.planning/` does not exist**: error — run `/do setup` first to initialize the harness state directory, then retry.
 - **No rubric**: error — run `/improve {target}` Phase 0 first. List available targets in `.planning/rubrics/` as hint.
 - **No prior scores in belief model**: proceed from cycle 1; all deltas empty on first survey. Expected.
 - **All scouts return `needs-evidence`**: attack the top-EV axis anyway under `low-confidence` flag; record as exploratory. Mark result regardless.

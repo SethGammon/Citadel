@@ -148,22 +148,18 @@ For each wave:
 8. **Merge branches** from worktrees:
    - Review changes from each agent
    - If clean merge: merge the branch
-   - If conflicts: record in session file, resolve or skip
+   - If conflicts: record in session file, then decide:
+     - **Resolve if:** the conflict is < 20 lines and affects only formatting or naming
+     - **Skip if:** the conflict involves competing logic changes; keep the higher-delta worktree result and log the discarded changes in session file
 
 9. **Update session file** with wave results and accumulated discoveries
-
-### Step 4: DISCOVERY RELAY
-
-Between waves, inject all prior wave discoveries into each new agent's context as a
-`=== PRIOR DISCOVERIES ===` block. This prevents rediscovery and enables informed decisions.
-Re-read `momentum.json` fresh at each wave boundary to pick up discoveries from parallel sessions.
 
 ### Step 5: COMPLETION
 
 After all waves:
 
 1. Run typecheck on the full project via `node scripts/run-with-timeout.js 300 <typecheck-cmd>`
-2. Run tests if configured (also use the timeout wrapper)
+2. Run tests if configured (also use the timeout wrapper). If tests fail after wave completion: apply the same error ladder as the main protocol — 1-2 failures: fix before merging; 3-4 failures: attempt fixes, continue if resolved; 5+ failures: halt the wave merge for that worktree and log `wave_test_fail: true` in the session file.
 3. Update session file status to `completed`
 4. Log session completion:
    ```bash
@@ -222,11 +218,6 @@ Before assigning agents to a wave:
 Also check `.planning/coordination/claims/` for external claims.
 
 ## Budget Management
-
-- Target: ~700K tokens per wave for agent outputs
-- Reserve ~300K tokens for Fleet's own context
-- Typical: 2-3 agents per wave
-- If budget exceeded: reduce agents per wave
 
 **Effort hints for wave agents** (use the `effort` parameter, not `budget_tokens`):
 
@@ -345,6 +336,8 @@ Present a comparison table to the user:
 
 | Strategy | Branch | Typecheck | Key Decision | Notable Tradeoffs |
 |----------|--------|-----------|--------------|-------------------|
+
+If ALL N approaches fail typecheck: present the comparison table with all entries marked `FAIL typecheck`. Ask the user to pick the least-broken approach or abort. Do not proceed to Step 4 without a user decision.
 
 ### Step 4: Archive losers, merge winner
 

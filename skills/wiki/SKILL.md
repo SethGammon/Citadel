@@ -98,6 +98,7 @@ Read all topic files, extract title/summary/date, write a fresh `wiki/index.md`.
 
 ## Fringe Cases
 
+- **`.planning/` does not exist**: Run `/do setup` first to initialize the harness state directory.
 - **No wiki directory**: Prompt to run `/wiki init`. Do not auto-create on query or status.
 - **Source >50K words**: Split into sections, warn the user.
 - **Topic name collision**: Merge into existing topic, do not overwrite.

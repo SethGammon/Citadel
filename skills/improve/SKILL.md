@@ -13,9 +13,9 @@ last-updated: 2026-03-28
 
 ## Orientation
 
-**Use when:** Scoring a target against a rubric and iteratively improving it. The target must have (or need) a rubric at `.planning/rubrics/{target}.md`.
+**Use when:** Scoring a target against a rubric and iteratively improving it. Rubric required at `.planning/rubrics/{target}.md` (Phase 0 creates one if missing).
 
-**Don't use when:** Refactoring code without a quality rubric (use `/refactor`), doing a one-time code review (use `/review`), or debugging a specific bug (use `/systematic-debugging`).
+**Don't use when:** Refactoring without a rubric (use `/refactor`), one-time code review (use `/review`), or debugging a specific bug (use `/systematic-debugging`).
 
 ## Invocation
 
@@ -25,7 +25,7 @@ last-updated: 2026-03-28
 /improve {target} --axis={name}  # Force-attack a specific axis (skips scoring)
 /improve {target} --score-only   # Score and report, no attack
 /improve {target} --continue     # Resume from campaign state (used by daemon)
-/improve citadel             # Targets the entire Citadel product
+/improve citadel             # Targets Citadel itself
 ```
 
 `target` is a slug that maps to `.planning/rubrics/{target}.md`.
@@ -82,8 +82,6 @@ Update `phase_within_loop` at each phase: `scoring` → `selected-{axis}` → `a
 
 On loop complete: increment `completed_loops`, update `next_loop`/`last_scorecard_log`/`last_outcome`, append Loop History row.
 
-Status transitions: all loops done → `completed` (move to `completed/`) | level-up → `level-up-pending` | abort → `parked` | user stopped → `paused`.
-
 ### The `--continue` flag
 
 1. Read `.planning/campaigns/improve-{target}.md` — error if missing or `status` not `active`
@@ -104,8 +102,6 @@ Run only when `.planning/rubrics/{target}.md` does not exist.
 4. Present draft rubric to the user with rationale for each axis
 5. **STOP. Do not proceed until the user approves the rubric.**
 6. Write approved rubric to `.planning/rubrics/{target}.md`
-
-For Citadel: rubric exists at `.planning/rubrics/citadel.md`. Skip Phase 0.
 
 ---
 
@@ -231,7 +227,7 @@ Run the four verification tiers from the rubric for the targeted axis:
    - Optional for all other axes
    - Result: `PASS {wall_time}` or `FAIL at step {n}: {what broke}`
    - **A behavioral FAIL overrides a passing perceptual score.** Do not commit on behavioral FAIL.
-   - Skip only if the targeted axis could not plausibly affect the user path (e.g., `visual_coherence`, `api_surface_consistency`)
+   - Skip only if the targeted axis could not plausibly affect the user path. Plausible = axis governs code shown/executed in the app, or controls presence/absence of a UI element. Safe to skip: documentation axes (comments, docstrings), configuration-only axes, developer-tooling-only axes (e.g., `visual_coherence`, `api_surface_consistency`)
 
 **Regression check** (run on all axes, not just targeted):
 - Re-run programmatic checks on every axis that shares files with the changes
@@ -286,6 +282,7 @@ All proposals go to `.planning/rubrics/{target}-proposals.md`. Never to the live
 1. `--n` flag was set and N loops have completed: exit, report scorecard
 2. All axes >= 8.0: exit with "target has reached quality ceiling"
 3. No axis improved > 0.5 in either of the last 2 loops AND no programmatic cap is active AND at least 3 loops have completed: **trigger Level-Up Protocol**
+3a. A programmatic cap IS active AND the capped axis has not improved for 2 loops: **trigger Level-Up Protocol.** The cap is preventing score movement, not enforcing a ceiling — do not loop indefinitely.
 4. The user said stop: exit immediately
 
 **On Level-Up**: do not exit. Escalate. See Level-Up Protocol section.

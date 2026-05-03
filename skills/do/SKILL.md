@@ -14,10 +14,7 @@ last-updated: 2026-03-20
 
 ## Orientation
 
-Use `/do` when the user wants something done but doesn't know (or care) which
-tool handles it. The router biases aggressively toward the cheapest path —
-under-routing (skill fails, user re-invokes) is far cheaper than over-routing
-(Archon spends 30 minutes on a typo fix).
+Use `/do` when the user wants something done but doesn't know (or care) which tool handles it.
 
 ## Commands
 
@@ -149,6 +146,7 @@ and any project-level custom skills in `.claude/skills/`.
 | "workspace", "multi-repo", "cross-repo", "across repos", "multiple repos", "coordinate repos", "add redis and snowflake", "split into repos" | `/workspace` |
 
 If ONE skill matches with high confidence → invoke it directly. Done.
+High confidence = evaluator assigns ≥ 0.85 probability to exactly one skill. Below 0.85, or multiple skills above 0.70, fall through to Tier 3.
 If MULTIPLE skills match → carry the candidate set to Tier 3. Tier 3 disambiguates between candidates only, not from scratch. Tie-break: prefer the candidate with fewer trigger keywords.
 
 ### Tier 3: LLM Complexity Classifier (Cost: ~500 tokens | Latency: ~1-2s)
@@ -231,19 +229,11 @@ When 2+ independent tasks detected (non-overlapping scopes, complexity >= 3, not
 
 2. **Announce the routing decision**: "Routing to [target] because [one-sentence reason]"
 3. **Invoke the target** skill or orchestrator
-4. If the target fails or the user says "wrong tool", try the next tier up
-
-## /do status
-
-Routes to `/dashboard`. Invoke `/dashboard` and relay its full output.
+4. If the target fails or the user says "wrong tool", try the next tier up. If the target is already Tier 3 (marshal fails or user explicitly escalates from a failed marshal attempt): re-route to `/archon` with the original input as context.
 
 ## /do --list
 
 Output a grouped skill list drawn from the system reminder's available skills. Group by category (Orchestration, App Creation, Code Quality, Research & Debugging, GitHub & CI, Infrastructure, Monitoring, Utilities, Observability). For each skill, show `/name  — one-line description`. Include a footer: "Direct invocation (/skill-name) always bypasses the router."
-
-## Escape Hatches
-
-Direct invocation always works: `/marshal`, `/archon`, `/fleet`, `/[skill-name]`. The router is additive, not a gate.
 
 ## Fringe Cases
 

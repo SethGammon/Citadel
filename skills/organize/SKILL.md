@@ -379,6 +379,7 @@ Summary: {N} directories cleaned, {M} archived, {K} skipped
 
 ## Fringe Cases
 
+- **`.planning/` does not exist:** Run `/do setup` first to initialize the harness state directory; then re-run.
 - **No directories found:** Skip scan, suggest flat convention.
 - **Monorepo detected** (multiple package.json): Scan each package root separately. Ask if organization should be per-package or repo-wide.
 - **User changes convention:** Warn about number of files to move. Do NOT auto-move without explicit confirmation.
