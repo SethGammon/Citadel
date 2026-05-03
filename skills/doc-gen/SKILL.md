@@ -92,6 +92,14 @@ Structure as a single reference document with a table of contents.
 
 Re-read every doc comment. For each: "Does this add information beyond the signature?" If not, delete it. Check accuracy: parameter names, return types, side effects, and that examples would actually compile/run.
 
+## Contextual Gates
+
+**Disclosure:** "Generating documentation for [target]. Source files will be modified."
+**Reversibility:** amber — adds JSDoc/docstrings to source files; undo with `git checkout` on modified files.
+**Trust gates:**
+- Any: additive doc generation on undocumented functions.
+- Familiar (5+ sessions): rewriting existing docstrings that may discard prior content.
+
 ## Quality Gates
 
 - Every doc comment adds information beyond the signature; if not, delete it
@@ -117,5 +125,6 @@ Skipped: {item}: {reason}
 - Generated {mode} docs for {target}
 - Matched existing {style} convention
 - {what was skipped and why}
+- Reversibility: amber — undo with `git checkout` on modified source files
 ---
 ```

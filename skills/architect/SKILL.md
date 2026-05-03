@@ -128,8 +128,16 @@ Present summary to user (file count, phase count, key decisions, estimated compl
 - Phases: {count}
 - Estimated complexity: {low/medium/high}
 - Next: Archon campaign ready to execute
+- Reversibility: green — delete .planning/architecture-{slug}.md to undo
 ---
 ```
+
+## Contextual Gates
+
+**Disclosure:** "Generating architecture plan for [description]. No files modified until you approve."
+**Reversibility:** green — creates `.planning/architecture-{slug}.md` only; undo with `rm .planning/architecture-{slug}.md`.
+**Trust gates:**
+- Any: generate architecture document, evaluate options, connect to campaign.
 
 ## Quality Gates
 
@@ -158,5 +166,6 @@ Present summary to user (file count, phase count, key decisions, estimated compl
 - Phases: {count}
 - Estimated complexity: {low/medium/high}
 - Next: Archon campaign ready to execute
+- Reversibility: green — delete .planning/architecture-{slug}.md to undo
 ---
 ```

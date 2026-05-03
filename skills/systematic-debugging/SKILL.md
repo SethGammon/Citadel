@@ -18,6 +18,11 @@ last-updated: 2026-03-21
 Most debugging failures come from guessing. This skill forces a structured approach:
 observe → hypothesize → verify → fix. The fix is always the last step, never the first.
 
+## Orientation
+
+**Use when:** root cause is unknown and premature fixes keep failing -- enforces observe -> hypothesize -> verify before touching code.
+**Don't use when:** root cause is already known (use /marshal to implement the fix); the bug is shallow and the stack trace is enough (use /do).
+
 ## Protocol
 
 ### Phase 1: OBSERVATION & REPRODUCTION

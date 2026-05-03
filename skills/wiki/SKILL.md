@@ -28,9 +28,8 @@ You maintain a structured markdown knowledge base — ingesting raw sources, com
 
 ## Orientation
 
-**Use when:** building/maintaining a project knowledge base, ingesting docs/research/notes, answering questions, or compacting scattered info.
-
-**Do NOT use when:** knowledge base exceeds ~400K words, real-time data is needed, or the question can be answered by reading one file directly.
+**Use when:** building and querying a markdown-first knowledge base -- ingests raw notes, deduplicates, surfaces answers.
+**Don't use when:** capturing session learnings into the evolve pipeline (use /learn); generating structured code documentation (use /doc-gen).
 
 ## Directory Structure
 

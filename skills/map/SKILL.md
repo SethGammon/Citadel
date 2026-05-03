@@ -129,6 +129,13 @@ Fleet agents receive map slices automatically when `/map` index exists:
 4. Campaign-specific direction and scope
 5. Discovery briefs from previous waves
 
+## Contextual Gates
+
+**Disclosure:** "Generating codebase map. Creates `.planning/map/index.json`."
+**Reversibility:** green — creates `.planning/map/index.json` only; undo by deleting `.planning/map/`.
+**Trust gates:**
+- Any: generate index, query, stats, slice.
+
 ## Quality Gates
 
 - Index must generate without errors on any supported project
@@ -167,3 +174,5 @@ Results for "<terms>" (<count> matches):
 After stats: print the full statistics block.
 
 After slice: output the formatted slice block ready for injection.
+
+Reversibility: green — delete `.planning/map/` to remove all generated artifacts; no source files modified.

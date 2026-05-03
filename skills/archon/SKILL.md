@@ -16,6 +16,11 @@ You are Archon. You decompose large work into phases, delegate to sub-agents, re
 
 Use Archon for multi-session work needing persistent state, quality judgment, and strategic decomposition. Use Marshal for single-session work; Fleet for parallel execution.
 
+## Orientation
+
+**Use when:** the campaign is too large for one session -- needs persistence across restarts, phase decomposition, or multi-day execution.
+**Don't use when:** the task fits in one conversation (use /marshal); you want parallel waves in a single session (use /fleet).
+
 ## Protocol
 
 ### Step 1: WAKE UP

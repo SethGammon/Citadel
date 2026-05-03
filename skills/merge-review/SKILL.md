@@ -11,6 +11,11 @@ last-updated: 2026-03-26
 
 # /merge-review — Fleet Merge Arbitration
 
+## Orientation
+
+**Use when:** reviewing pending fleet worktree merges before accepting them into the main branch.
+**Don't use when:** reviewing general code quality (use /review); checking CI status before merging (use /pr-watch).
+
 ## When to Route Here
 
 - "check merges"

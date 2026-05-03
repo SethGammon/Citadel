@@ -136,6 +136,14 @@ post-edit.js checks for `.planning/design-manifest.md`. When a CSS/TSX/JSX/Tailw
 
 Hook rules: skip entirely if no manifest; scan only the edited file; cache the manifest once per session; do not flag Tailwind utility classes that map to config; only flag raw hex/px values.
 
+## Contextual Gates
+
+**Disclosure:** "Updating design manifest. Existing manifest will be modified."
+**Reversibility:** amber — modifies `.planning/design-manifest.md`; undo with `git checkout .planning/design-manifest.md`.
+**Trust gates:**
+- Any: generate or update design manifest.
+- Familiar (5+ sessions): full manifest rewrites that discard existing content.
+
 ## Quality Gates
 
 - Every manifest section has real values (not placeholders)
@@ -162,5 +170,6 @@ Hook rules: skip entirely if no manifest; scan only the edited file; cache the m
 - Sources: {files read, or "user preferences"}
 - Anti-patterns documented: {count}
 - Next: Post-edit hook will flag deviations automatically
+- Reversibility: amber — undo with `git checkout .planning/design-manifest.md`
 ---
 ```

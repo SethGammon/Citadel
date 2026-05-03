@@ -158,6 +158,14 @@ Errors encountered:
 Suggestion: {what the user might do differently}
 ```
 
+## Fringe Cases
+
+- **No test baseline**: no test suite found in Phase 1 — output: "No tests found. Refactor proceeds without a safety net — abort or continue? Recommend running /test-gen first." Wait for user confirmation before continuing.
+- **Baseline typecheck fails**: typecheck errors exist before any refactor changes — output: "Baseline typecheck failed. Fix existing type errors before refactoring to establish a clean baseline." Do not proceed.
+- **Build fails after refactor commit**: Phase 4 build regression detected — revert the commit with `git revert HEAD --no-edit`, then report which verification step introduced the regression and what the failing error is.
+- **Circular dependency detected**: import cycle surfaces during scope analysis — treat as a blocker; output: "Circular dependency detected in [file]. Resolve the cycle before proceeding." Do not modify that file without explicit user decision.
+- **Target file exceeds 500 lines**: output: "Warning: [file] is [N] lines. Refactoring may split this file into multiple pieces. Confirm scope before proceeding." Show the proposed split in the plan and wait for user approval.
+
 ## Quality Gates
 
 - **Zero new type errors** — zero NEW ones, not just fewer.

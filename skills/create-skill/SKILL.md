@@ -159,6 +159,13 @@ trigger_keywords:
 - Change trigger words: edit `trigger_keywords` in frontmatter
 - Split if too large: create two skills, move steps between them
 
+## Contextual Gates
+
+**Disclosure:** "Creating skill '{name}'. Will create `skills/{name}/SKILL.md`."
+**Reversibility:** green — creates `skills/{name}/SKILL.md` only; undo by deleting the directory.
+**Trust gates:**
+- Any: full skill creation, install, and teach workflow.
+
 ## Quality Gates
 
 - [ ] Three discovery questions asked and answered
@@ -196,6 +203,7 @@ Tested on: {target description}
 Test result: PASS
 
 Trigger keywords: {comma-separated list}
+Reversibility: green — delete skills/{name}/ to undo
 ```
 
 ```

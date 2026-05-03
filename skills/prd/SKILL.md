@@ -124,6 +124,13 @@ for the user before the campaign starts.}
 
 Present: core features, tech stack decisions, out of scope, end conditions. Ask if it matches. On approval: PRD is ready for Archon. On changes: update and re-present changed sections only.
 
+## Contextual Gates
+
+**Disclosure:** "Generating PRD for [description]. Creates `.planning/prd-{name}.md`."
+**Reversibility:** green — creates `.planning/prd-{slug}.md` only; undo by deleting the file.
+**Trust gates:**
+- Any: full PRD generation, clarifying questions, review cycle.
+
 ## Quality Gates
 
 - Every Core Feature is one sentence
@@ -150,6 +157,7 @@ Present: core features, tech stack decisions, out of scope, end conditions. Ask 
 - Document: .planning/prd-{slug}.md
 - Status: {approved | needs-revision}
 - Next: Run `/do build {app name}` or `/archon` with the PRD as direction
+- Reversibility: green — delete .planning/prd-{slug}.md to undo
 ---
 ```
 

@@ -194,6 +194,13 @@ Present a summary to the user:
 - **Secrets in env files**: Never include actual secret values in the manifest. Record the
   variable name and which system it connects to, not the value.
 
+## Contextual Gates
+
+**Disclosure:** "Auditing infrastructure configuration. No files modified."
+**Reversibility:** green — read-only audit; only writes `.planning/infra-manifest.md`; undo with `rm .planning/infra-manifest.md`.
+**Trust gates:**
+- Any: full audit, manifest generation, opportunity analysis.
+
 ## Quality Gates
 
 - [ ] Every discovered system has: type, product, config path, connection method
@@ -211,5 +218,6 @@ Present a summary to the user:
 - Key systems: {list top 3-4}
 - Top opportunity: {highest-signal opportunity}
 - Multi-repo scope: {yes/no -- if yes, suggest /workspace}
+- Reversibility: green — delete .planning/infra-manifest.md to undo
 ---
 ```

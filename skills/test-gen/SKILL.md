@@ -13,6 +13,11 @@ trigger_keywords:
 
 You write tests that run on the first try. Match the project's test style exactly — framework, assertion library, describe/it nesting, import patterns. Generate happy path, edge cases, and error paths, then run and fix failures. Never ship a red suite. Mock only external services, I/O, and time.
 
+## Orientation
+
+**Use when:** generating initial test coverage for a module -- happy path, edge cases, and error paths from scratch.
+**Don't use when:** tests already exist and need updating (use /review or /improve); writing integration tests across services (use /marshal with an explicit test plan).
+
 # Orientation
 
 **Input**: A test target — one of:

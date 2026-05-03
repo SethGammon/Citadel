@@ -17,6 +17,11 @@ effort: max
 working application. It integrates /prd, /architect, and /archon into a single
 flow with human checkpoints at the right moments.
 
+## Orientation
+
+**Use when:** building a new app from scratch -- full scaffold, design system, and feature set from a single description.
+**Don't use when:** adding a feature to an existing app (use /marshal or /archon); generating a single component (use /scaffold).
+
 ## Tier Detection
 
 Use when the user wants to create an app, add a feature, or scaffold a project. Classify the input into one of five tiers:

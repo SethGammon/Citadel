@@ -26,6 +26,11 @@ remove every harness file and hook without leaving a mess. The user should end
 up with either a clean project or a clean project plus a readable archive —
 never a half-removed harness.
 
+## Orientation
+
+**Use when:** removing Citadel from a project entirely -- exports state and cleans up hooks before uninstall.
+**Don't use when:** pausing campaign work (just stop or use /session-handoff); removing a single skill (delete its directory manually).
+
 ## Invocation Forms
 
 ```

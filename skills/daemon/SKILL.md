@@ -14,6 +14,11 @@ last-updated: 2026-03-28
 
 # /daemon -- Continuous Autonomous Operation
 
+## Orientation
+
+**Use when:** running campaigns overnight or unattended -- chains sessions automatically until a ceiling or budget is hit.
+**Don't use when:** a single autonomous session is enough (use /archon); you want manual control between cycles (use /loop).
+
 ## Default execution path (READ FIRST)
 
 **`/daemon start` does NOT call `RemoteTrigger` by default.** The local

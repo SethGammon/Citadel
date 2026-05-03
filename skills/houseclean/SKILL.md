@@ -31,6 +31,11 @@ last-updated: 2026-04-03
 Use when disk space is low, AI tool caches are bloated, or worktrees need cleanup.
 Do NOT use for project structure issues (use `/organize`) or pre-merge worktree review (use `/merge-review`).
 
+## Orientation
+
+**Use when:** cross-drive storage audit -- finds orphaned repos, stale branches, and large directories across all drives.
+**Don't use when:** auditing project infrastructure only (use /infra-audit); cleaning a specific directory (use Bash directly).
+
 ## Invocation Forms
 
 ```

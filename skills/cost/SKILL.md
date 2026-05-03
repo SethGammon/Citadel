@@ -158,6 +158,13 @@ The token counts shown here represent your usage volume, not billing.
 For rate limit awareness, token throughput matters more than dollar cost.
 ```
 
+## Fringe Cases
+
+- **Telemetry directory missing**: `.planning/telemetry/` does not exist — output: "No telemetry data found. Run any skill first to generate session data, then re-run /cost."
+- **Malformed telemetry JSON**: a `session-*.json` file fails to parse — output: "Telemetry file is corrupted. Delete `.planning/telemetry/session-*.json` and re-run the skill that generated it." Skip the bad file and continue with the rest.
+- **MCP cost API returns no data**: Claude Code is not tracking this session — output: "Session cost unavailable from MCP. Check that Claude Code is running with cost tracking enabled. Showing telemetry file data only." Fall back to session-costs.jsonl.
+- **All session files are from a different project**: project paths in the files do not match the current working directory — warn: "Session files found belong to a different project. You may be in the wrong directory." List the project paths found in the session files.
+
 ## Quality Gates
 
 - Always show real data when available, estimated when not

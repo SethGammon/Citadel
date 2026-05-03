@@ -20,6 +20,11 @@ last-updated: 2026-04-06
 
 Configures the harness for a specific project: installs hooks, detects stack, writes harness.json, and optionally demos the system on real code. Flag: `/do setup --express` skips mode selection and runs Express directly.
 
+## Orientation
+
+**Use when:** first-run configuration of Citadel on a new project -- installs hooks, generates harness.json, scaffolds .planning/.
+**Don't use when:** harness is already configured and you want to verify it (use /verify); adding a single skill to an existing project (copy SKILL.md manually).
+
 ## Protocol
 
 ### Step -1: ARCHIVE DETECTION (all modes, before anything else)

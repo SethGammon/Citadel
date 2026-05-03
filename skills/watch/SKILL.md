@@ -17,6 +17,11 @@ last-updated: 2026-03-29
 Use when the user wants automatic reactions to file changes or marker comments (`@citadel:`).
 Do NOT use for one-off file inspection or tasks that need human judgment per file.
 
+## Orientation
+
+**Use when:** running a file sentinel that triggers a skill or command automatically when watched paths change.
+**Don't use when:** monitoring CI status on a PR (use /pr-watch); running a one-shot verification check (use /verify).
+
 ## Default execution path (READ FIRST)
 
 **`/watch start` does NOT call `CronCreate` by default.** Only pass `--remote`

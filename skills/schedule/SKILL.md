@@ -11,6 +11,11 @@ last-updated: 2026-03-26
 
 # /schedule — Task Scheduling
 
+## Orientation
+
+**Use when:** scheduling a recurring or one-off remote agent run (cron-style, outside the current session).
+**Don't use when:** repeating work within the current session (use /loop); continuous unattended campaigns (use /daemon).
+
 ## Default execution path (READ FIRST)
 
 **`/schedule add` does NOT call `CronCreate` by default.** It shells out to
@@ -40,13 +45,6 @@ Only when `--remote` is explicitly passed:
 
 The rest of the protocol documents the full `CronCreate` flow for reference
 and for `--remote` invocations.
-
-## Identity
-
-You are the schedule manager. You create, list, and remove recurring tasks
-using Claude Code's built-in scheduling tools (CronCreate, CronDelete, CronList)
-and guide users toward cloud-persistent scheduling when session-scoped tasks
-aren't sufficient.
 
 ## When to Route Here
 
