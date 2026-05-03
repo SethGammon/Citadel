@@ -189,33 +189,17 @@ Direction: {original direction}
 
 ## Work Queue
 | # | Campaign | Scope | Deps | Status | Wave | Agent |
-|---|----------|-------|------|--------|------|-------|
-| 1 | API auth | src/api/auth/ | none | complete | 1 | builder |
-| 2 | Frontend | src/ui/ | none | complete | 1 | builder |
-| 3 | Integration | src/api/,src/ui/ | 1,2 | pending | 2 | wirer |
 
-## Wave 1 Results
-
-### Agent: api-auth-builder
-**Status:** complete
-**Built:** JWT authentication middleware with refresh token support
-**Decisions:** Used jose library over jsonwebtoken for ESM compatibility
-**Files:** src/api/auth/middleware.ts, src/api/auth/tokens.ts
-
-### Agent: frontend-builder
-**Status:** complete
-**Built:** Login form with token storage
-**Discoveries:** Found existing auth context at src/ui/context/auth.tsx
+## Wave N Results
+### Agent: {name}
+**Status:** complete | partial | failed
+**Built:** ...  **Decisions:** ...  **Files:** ...
 
 ## Shared Context (Discovery Relay)
-- Agent frontend-builder discovered existing auth context — Wave 2 should use it
-- API auth uses jose library for JWT — frontend should import types from there
+- {cross-agent finding → what Wave N+1 should know}
 
 ## Continuation State
-Next wave: 2
-Blocked items: none
-Context usage: ~400K tokens
-Auto-continue: true
+Next wave: N  Blocked items: ...  Auto-continue: true
 ```
 
 ## Scope Overlap Prevention
@@ -284,34 +268,9 @@ Timeouts are configurable in `harness.json`:
 
 ### Timeout Protocol
 
-When spawning each agent, set the timeout on the Agent tool call. If an agent
-exceeds its timeout:
+On timeout: log `agent-timeout` event, extract partial HANDOFF if present, retry once with simplified prompt (Wave 1 critical scope only), skip otherwise. Never block the wave. Record `Status: timed out` in session file.
 
-1. **Log the timeout**:
-   ```bash
-   node .citadel/scripts/telemetry-log.cjs --event agent-timeout --agent {instance-id} --session {session-slug} --meta '{"scope":"{scope}","elapsed_ms":{ms}}'
-   ```
-2. **Check for partial output**: Read the agent's output file. If it contains
-   a partial HANDOFF or usable findings, extract them.
-3. **Decide: retry or skip**:
-   - If this is Wave 1 and the agent's scope is critical → retry once with a
-     simplified prompt (remove WebFetch instructions, reduce scope)
-   - If this is a research scout → skip and proceed with other scouts' results
-   - If retry also times out → skip, log, and continue
-4. **Never block the wave**: Collect results from completed agents and proceed.
-5. **Record in session file**: Add a `**Status:** timed out` entry with duration and whether retry was attempted.
-
-### Reading Timeouts from Config
-
-```javascript
-const config = JSON.parse(fs.readFileSync('.claude/harness.json', 'utf8'));
-const timeouts = config.agentTimeouts || {};
-const skillTimeout = timeouts.skill || 600000;
-const researchTimeout = timeouts.research || 900000;
-const buildTimeout = timeouts.build || 1800000;
-```
-
-Match agent type to timeout based on the work queue's "Agent type" column.
+Read timeout values from `harness.json` → `agentTimeouts.{skill|research|build}` (defaults: 600000/900000/1800000ms).
 
 ## Coordination Safety
 
@@ -330,34 +289,11 @@ The instance ID is:
 
 ### Scope Overlap Detection
 
-Before spawning a wave, validate that no two agents claim overlapping file scopes.
-
-Protocol:
-1. After decomposing tasks for the wave, extract each agent's file scope
-2. Compare all scopes pairwise:
-   - If Agent A's scope includes `src/auth/` and Agent B's scope includes `src/auth/login.ts`,
-     that's an overlap
-   - Directory scopes overlap with any file scope inside that directory
-3. If overlap detected:
-   - Option 1: Merge the overlapping tasks into one agent
-   - Option 2: Narrow scopes so they don't overlap
-   - Option 3: Sequence them (agent B waits for agent A to merge first)
-4. NEVER proceed with overlapping scopes. This is a hard gate.
+Before spawning: compare all agent scopes pairwise (directory scopes overlap any file inside them). On overlap: merge tasks, narrow scopes, or sequence. **NEVER proceed with overlapping scopes.**
 
 ### Dead Instance Recovery
 
-After each wave completes, check for orphaned claims.
-
-Protocol:
-1. Read all claim files in `.planning/coordination/claims/`
-2. For each claim, check if the claiming instance is still alive:
-   - Does the worktree still exist?
-   - Did the agent complete (check for HANDOFF or completion signal)?
-3. If an instance is dead but its claim still exists:
-   - Log a warning: "Dead instance {id} left orphaned claim on {scope}"
-   - Release the claim (delete the claim file)
-   - Add the uncompleted work back to the task queue for the next wave
-4. Run this check after every wave completes and before spawning a new wave.
+After each wave: read `.planning/coordination/claims/`, verify each instance is still alive (worktree exists + HANDOFF present). Release orphaned claims, return uncompleted scope to next wave's queue.
 
 ## Fringe Cases
 
@@ -415,22 +351,7 @@ When the user picks a winner:
 git tag archive/{loser-branch} {loser-branch}
 ```
 
-### Speculative session file additions
-
-The fleet session file gets a `## Speculative Comparison` section:
-
-```markdown
-## Speculative Comparison
-
-Direction: {shared direction}
-Strategies: {N}
-
-| Strategy | Branch | Status | Typecheck | Notes |
-|----------|--------|--------|-----------|-------|
-
-Winner: {strategy}
-Merged: {ISO timestamp}
-```
+Add `## Speculative Comparison` to session file: direction, N strategies, comparison table (strategy/branch/status/typecheck/notes), winner, merge timestamp.
 
 ## Quick Mode
 
@@ -465,24 +386,7 @@ Merged: {ISO timestamp}
 - Complexity is 3 (moderate), not 4+ (complex)
 - User chose "1" (yes once) or "2" (always) on the Fleet confirmation prompt
 
-### Entry from /do confirmation prompt
-
-When `/do` detects independent parallel tasks, it shows:
-
-```
-These look independent — I could run them in parallel:
-  1. {task description}
-  2. {task description}
-
-Run in parallel? [1=yes  2=always  3=no]
-```
-
-- **1 (yes):** Run `--quick` once. Preference not saved.
-- **2 (always):** Run `--quick`. Save `fleetSpawn: auto-allow` to harness.json.
-- **3 (no):** Run sequentially. Save `fleetSpawn: always-ask` to harness.json if user says "don't ask again".
-
-Preferences are stored under `consent.fleetSpawn` in harness.json using the existing
-consent machinery (`readConsent`/`writeConsent` from harness-health-util.js).
+Entry from `/do` confirmation prompt: user chose yes (1) or always (2). Preferences stored under `consent.fleetSpawn` in harness.json via `readConsent`/`writeConsent`.
 
 ## Contextual Gates
 

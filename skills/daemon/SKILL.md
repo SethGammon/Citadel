@@ -110,46 +110,11 @@ Only when the user has explicitly passed `--remote`:
 
 **Step 3: Create triggers**
 
-The daemon uses two RemoteTrigger mechanisms:
+**A. Chain trigger** — one-shot, fires after cooldown, `command: "/daemon tick"`. Save ID as `chainTriggerId`.
 
-**A. Self-rescheduling chain (primary work loop):**
+**B. Watchdog trigger** — recurring, fires every `--interval`, `command: "/daemon tick --watchdog"`. Save ID as `watchdogTriggerId`.
 
-The first tick is a one-shot RemoteTrigger that fires after the cooldown period.
-Each tick, after completing work, schedules the next tick.
-
-Create the initial trigger:
-
-```
-RemoteTrigger create:
-  body: {
-    "type": "scheduled",
-    "schedule": "{cooldown}s",
-    "command": "/daemon tick",
-    "project_path": "{absolute path to project root}",
-    "description": "Daemon: {campaign-slug} tick"
-  }
-```
-
-Save the returned trigger ID as `chainTriggerId` in daemon.json.
-
-**B. Watchdog (safety net):**
-
-A recurring trigger that fires every `--interval` (default 30m). If the last tick
-completed more than 2x the watchdog interval ago, the chain died -- the watchdog
-restarts it.
-
-```
-RemoteTrigger create:
-  body: {
-    "type": "recurring",
-    "schedule": "{interval}",
-    "command": "/daemon tick --watchdog",
-    "project_path": "{absolute path to project root}",
-    "description": "Daemon: {campaign-slug} watchdog"
-  }
-```
-
-Save the returned trigger ID as `watchdogTriggerId` in daemon.json.
+Both use `type: scheduled/recurring`, `project_path: {absolute project root}`, `description: "Daemon: {slug} tick/watchdog"`.
 
 **Step 4: Write state file**
 
@@ -178,93 +143,26 @@ Write `.planning/daemon.json`:
 
 **Step 5: Log and confirm**
 
-```
-node .citadel/scripts/telemetry-log.cjs --event daemon-start --agent daemon --session {campaign-slug} --status success --meta '{"budget":{N},"interval":"{interval}"}'
-```
-
-Output to user:
-
-```
-Daemon started.
-  Campaign:  {slug}
-  Budget:    ${N} (~{floor(N/costPerSession)} sessions at ${costPerSession}/session estimate)
-  Cooldown:  {cooldown} between sessions
-  Watchdog:  every {interval}
-  State:     .planning/daemon.json
-
-The campaign will continue autonomously. Sessions restart after each one
-completes. Auto-stops when the campaign completes or budget is exhausted.
-
-Use `/daemon status` to check progress.
-Use `/daemon stop` to halt.
-```
+Log: `daemon-start` event with budget and interval. Output confirmation: campaign slug, budget (estimated sessions), cooldown, watchdog interval, state file path. Suggest `/daemon status` and `/daemon stop`.
 
 ---
 
 ### /daemon stop
 
-1. Read `.planning/daemon.json`. If it doesn't exist or status is not `"running"`:
-   "No daemon is running."
-2. Delete both triggers:
-   ```
-   RemoteTrigger delete: chainTriggerId
-   RemoteTrigger delete: watchdogTriggerId
-   ```
-   If a trigger ID is missing or deletion fails, continue (it may have already
-   been cleaned up).
-3. Update daemon.json:
-   ```json
-   {
-     "status": "stopped",
-     "stoppedAt": "{ISO timestamp}",
-     "stopReason": "user"
-   }
-   ```
-4. Log:
-   ```
-   node .citadel/scripts/telemetry-log.cjs --event daemon-stop --agent daemon --session {campaign-slug} --status success --meta '{"reason":"user","sessions":{N},"estimatedSpend":{N}}'
-   ```
-5. Output:
-   ```
-   Daemon stopped.
-     Sessions completed: {N}
-     Estimated spend:    ${estimatedSpend}
-     Campaign status:    {read current campaign status}
-   ```
+1. Read `.planning/daemon.json`. If missing or not `running`: "No daemon is running."
+2. Delete both triggers (ignore failures — may already be cleaned up).
+3. Update daemon.json: `status: stopped`, `stoppedAt`, `stopReason: user`.
+4. Log `daemon-stop` event. Output: sessions completed, estimated spend, campaign status.
 
 ---
 
 ### /daemon status
 
-1. Read `.planning/daemon.json`. If it doesn't exist: "No daemon configured. Use `/daemon start` to begin."
-2. Read the campaign file to get current phase and status
-3. Output:
-   ```
-   Daemon: {status}
-     Campaign:     {slug} (phase {current_phase}/{phase_count})
-     Sessions:     {sessionCount}
-     Budget:       ${estimatedSpend} / ${budget} ({remaining} remaining)
-     Cost/session: ${costPerSession} (source: {campaign frontmatter | flag | default})
-     Last tick:    {lastTickAt} ({lastTickStatus})
-     Running for:  {duration since startedAt}
-     Watchdog:     every {interval}
-     State file:   .planning/daemon.json
-   ```
-4. If status is `paused-level-up`, additionally output:
-   ```
-   PAUSED: Level-up triggered. Improve hit distribution saturation.
-     Action needed: Review proposals at .planning/rubrics/{target}-proposals.md
-     To resume: Edit the rubric with approved proposals, then set campaign
-                status to "active". The watchdog will detect the change and
-                restart the daemon automatically.
-   ```
-5. For improve campaigns, additionally output:
-   ```
-   Improve: {target}
-     Loops:        {completed_loops} / {total_loops}
-     Current level: {current_level}
-     Last axis:    {last attacked axis from loop history}
-   ```
+Output: status, campaign (slug + phase), sessions, budget (spent/cap/remaining), cost/session source, last tick (time + status), running duration, watchdog interval, state file path.
+
+If `paused-level-up`: add instructions to review proposals at `.planning/rubrics/{target}-proposals.md` and set campaign `status: active` to resume.
+
+For improve campaigns: add loops completed/total, current level, last axis attacked.
 
 ---
 
@@ -366,26 +264,9 @@ After `/do continue` returns (or the session is winding down):
      }
      ```
 
-**Step 5: Schedule next tick (self-rescheduling chain)**
+**Step 5: Schedule next tick**
 
-1. Re-read daemon.json (status may have changed if campaign completed during execution)
-2. If status is still `"running"` AND `estimatedSpend + costPerSession <= budget`:
-   - Create a new one-shot RemoteTrigger with the cooldown delay:
-     ```
-     RemoteTrigger create:
-       body: {
-         "type": "scheduled",
-         "schedule": "{cooldown}",
-         "command": "/daemon tick",
-         "project_path": "{project root}",
-         "description": "Daemon: {campaign-slug} tick #{sessionCount + 1}"
-       }
-     ```
-   - Update `chainTriggerId` in daemon.json with the new trigger ID
-3. If budget would be exceeded on next session:
-   - Stop the daemon: `status: "stopped"`, `stopReason: "budget-exhausted"`
-   - Delete watchdog trigger
-   - Log `daemon-stop`
+Re-read daemon.json. If still `running` and `estimatedSpend + costPerSession <= budget`: create new chain trigger (one-shot, cooldown delay), update `chainTriggerId`. If budget would be exceeded: stop daemon (`budget-exhausted`), delete watchdog, log `daemon-stop`.
 
 **Step 6: Exit**
 
@@ -425,85 +306,29 @@ else. If RemoteTrigger is unavailable, an OS cron job or manual restart achieves
 
 ## Budget Tracking
 
-**Primary: Session cost telemetry (real data)**
+**Primary:** Read latest entry from `.planning/telemetry/session-costs.jsonl` (written by session-end hook) for real cost. Use `override_cost` if present, else `estimated_cost`.
 
-The `session-end` hook writes per-session cost events to `.planning/telemetry/session-costs.jsonl`.
-When `/daemon tick` runs Step 4 (Record session), it should:
-1. Read the latest entry from `session-costs.jsonl` (the one just written by session-end)
-2. Use that entry's `estimated_cost` (or `override_cost` if set) as the real session cost
-3. Fall back to `costPerSession` flat estimate only if session-costs.jsonl has no new entry
+**Fallback:** `costPerSession` flat estimate (default $3). Each tick adds it to `estimatedSpend`.
 
-**Secondary: Flat per-session estimate (fallback)**
+Stop when `estimatedSpend >= budget` or `estimatedSpend + costPerSession > budget` (preemptive).
 
-- Budget: `$50` (default)
-- Cost per session: `$3` (conservative estimate for Opus)
-- Each completed tick adds `costPerSession` to `estimatedSpend` when real data unavailable
-- When `estimatedSpend >= budget`: daemon stops, triggers deleted
-- When `estimatedSpend + costPerSession > budget` after a tick: daemon stops preemptively
-
-**User overrides:**
-- `--budget {N}`: set the cap (dollars)
-- `--budget unlimited`: no cap (must be explicit)
-- `--cost-per-session {N}`: adjust the fallback estimate
-
-**Cost override for exact accounting:**
-
-Users who want exact costs from their Anthropic dashboard can add entries to
-`session-costs.jsonl` with `override_cost` set. The aggregation functions in
-`telemetry-stats.js` (`readCostByCampaign`, `readTotalCost`) prefer `override_cost`
-over `estimated_cost` when present.
+Overrides: `--budget {N}` | `--budget unlimited` (explicit, warns) | `--cost-per-session {N}`
 
 ---
 
 ## Fringe Cases
 
-**RemoteTrigger not available:**
-The daemon still works through the SessionStart hook bridge. Tell the user:
-"RemoteTrigger is unavailable. The daemon is active and will auto-continue
-when any new session starts in this project. For overnight operation, set up a cron job:
-`*/30 * * * * cd ~/your-project && claude -p '/do continue' --plugin-dir ~/Citadel`"
-
-**`.planning/` does not exist:**
-"No planning directory. Run `/do setup` to initialize the harness for this project."
-
-**Campaign has no Continuation State:**
-"Campaign {slug} has no Continuation State section. Run `/archon` interactively for
-one session first to establish the continuation point."
-
-**daemon.json is corrupted or missing required fields:**
-Treat as "no daemon running." The user can `/daemon start` fresh.
-
-**Session crashes without scheduling next tick:**
-The watchdog catches this. After `2 * interval` with no tick, the watchdog restarts the chain.
-
-**Multiple daemons requested:**
-Only one daemon can run at a time per project. Separate project directories each have
-their own `.planning/`.
-
-**User runs `/daemon tick` manually:**
-It works -- the gate checks still apply. Warn: "This is an internal command.
-The daemon's triggers handle tick scheduling automatically."
-
-**Budget exactly exhausted:**
-When `estimatedSpend == budget` after a tick, the daemon stops. Output in the log:
-"Budget exhausted ($X/$X). Campaign at phase {N}. Restart with `/daemon start --budget {higher}` to continue."
-
-**Level-up during daemon run:**
-Improve campaigns can trigger a level-up (distribution saturation). The daemon detects
-`status: level-up-pending` and sets its own status to `paused-level-up`. The watchdog
-stays alive. When the human approves and sets the campaign status back to `active`, the
-next watchdog tick detects the change and resumes automatically.
-
-**Campaign completes mid-session:**
-Archon marks the campaign as completed. The tick's Step 4 no-work gate catches it and stops the daemon.
-
-**Campaign completed but daemon.json not updated (the idle loop bug):**
-Three layers prevent this:
-1. Campaign gate (Step 1.5): checks campaign file status before executing
-2. No-work gate (Step 4.2): checks after `/do continue` returns
-3. `/do` Tier 1: if "continue" finds no active campaign and daemon.json is running, stops the daemon directly
-
-All three write `stopReason: "no-active-work"` to daemon.json.
+- **RemoteTrigger unavailable**: SessionStart hook bridge still works. Suggest OS cron: `*/30 * * * * cd ~/project && claude -p '/do continue'`
+- **No `.planning/`**: "Run `/do setup` first."
+- **Campaign has no Continuation State**: run `/archon` once interactively to establish it.
+- **daemon.json corrupted**: treat as no daemon running; `/daemon start` fresh.
+- **Session crashes without next tick**: watchdog restarts chain after `2 * interval`.
+- **Multiple daemons**: one per project. Block with "daemon already running" prompt.
+- **`/daemon tick` called manually**: works, gate checks apply. Warn it's internal.
+- **Budget exhausted**: stop, log "Budget exhausted. Restart with `--budget {higher}`."
+- **Level-up during run**: detect `level-up-pending`, set `paused-level-up`, keep watchdog alive for human-resume detection.
+- **Campaign completes mid-session**: no-work gate (Step 4) catches it, stops daemon.
+- **Idle loop bug (campaign done but daemon still running)**: three layers prevent it — campaign gate (Step 1), no-work gate (Step 4), `/do` Tier 1 stop. All write `stopReason: no-active-work`.
 
 ---
 
@@ -545,19 +370,8 @@ Read trust level from `harness.json`:
 
 ## Exit Protocol
 
-### After `/daemon start`:
-Output the confirmation block (see Step 5 above). No HANDOFF block.
-
-### After `/daemon stop`:
-Output the stop summary. No HANDOFF block.
-
-### After `/daemon tick`:
-No user-visible output (runs in a headless session). Updates daemon.json and
-campaign file. Schedules next tick or stops.
-
-### After `/daemon status` or `/daemon log`:
-Output the requested information. Wait for next command.
-
-### On error during any command:
-Output a clear error message with actionable fix. Never leave triggers running
-if the daemon state is inconsistent -- clean up on error.
+- `start`: confirmation output, no HANDOFF
+- `stop`: stop summary, no HANDOFF
+- `tick`: no user output (headless); updates daemon.json, schedules or stops
+- `status`/`log`: output requested info
+- On error: actionable message, clean up any dangling triggers before exiting

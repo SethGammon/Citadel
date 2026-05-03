@@ -78,45 +78,18 @@ level_up_triggered: false
 
 ### Campaign lifecycle
 
-**On each loop start (Phase 1):** Update campaign: `phase_within_loop: scoring`
+Update `phase_within_loop` at each phase: `scoring` → `selected-{axis}` → `attacking-{axis}` → `verifying` → `not-started`.
 
-**On selection (Phase 2):** Update campaign: `phase_within_loop: selected-{axis_name}`
+On loop complete: increment `completed_loops`, update `next_loop`/`last_scorecard_log`/`last_outcome`, append Loop History row.
 
-**On attack start (Phase 3):** Update campaign: `phase_within_loop: attacking-{axis_name}`
-
-**On verification (Phase 4):** Update campaign: `phase_within_loop: verifying`
-
-**On loop completion (Phase 5/6):**
-- Increment `completed_loops`
-- Update `next_loop`, `last_scorecard_log`, `last_outcome`
-- Set `phase_within_loop: not-started`
-- Append to Loop History table
-
-**On exit (all loops complete):** Set campaign `status: completed`, move to `.planning/campaigns/completed/`
-
-**On level-up trigger:**
-- Set campaign `status: level-up-pending`
-- Set `level_up_triggered: true`
-- Daemon reads this status and pauses (does not retry)
-
-**On abort (security failure, unrecoverable regression):** Set campaign `status: parked`
+Status transitions: all loops done → `completed` (move to `completed/`) | level-up → `level-up-pending` | abort → `parked` | user stopped → `paused`.
 
 ### The `--continue` flag
 
-When invoked as `/improve {target} --continue`:
-
-1. Read `.planning/campaigns/improve-{target}.md`
-2. If campaign doesn't exist: error -- "No improve campaign found. Start with `/improve {target} --n=N`."
-3. If `status` is not `active`: error -- "Campaign is {status}. Cannot continue."
-4. Read `completed_loops` and `total_loops`:
-   - If `completed_loops >= total_loops`: set status to completed, exit
-5. Read `phase_within_loop`:
-   - If `not-started`: begin next loop from Phase 1
-   - If `scoring`, `selected-*`, `attacking-*`, or `verifying`: restart current loop from Phase 1
-6. Read `last_scorecard_log` to load the previous loop's scorecard for delta comparison
-7. Proceed with the normal loop protocol (Phase 1 onwards)
-
-`--continue` always restarts the current loop from Phase 1 if interrupted. The campaign file's value is tracking which loop number we're on and whether the campaign is still active.
+1. Read `.planning/campaigns/improve-{target}.md` — error if missing or `status` not `active`
+2. If `completed_loops >= total_loops`: mark completed, exit
+3. If `phase_within_loop` is not `not-started`: restart current loop from Phase 1 (interrupted mid-loop)
+4. Load `last_scorecard_log` for delta comparison, then run Phase 1 onwards
 
 ## Protocol
 
@@ -282,56 +255,29 @@ Write the loop log. Always. Even on abort.
 ```markdown
 # Improvement Loop {n}: {target}
 
-> Date: {ISO date}
-> Loop: {n}
-> Selected axis: {axis_name}
-> Outcome: improved | no-change | aborted
+> Date: {ISO date} | Loop: {n} | Selected axis: {axis_name} | Outcome: improved | no-change | aborted
 
 ## Scorecard
-
 | Axis | Loop {n-1} | Loop {n} | Delta |
-|------|------------|----------|-------|
-| {axis} | {prev} | {current} | {delta} |
 
 ## Attack summary
-
-**What was changed:** {description of changes}
-**Approach taken:** {the method — experiment / direct edit / research+update}
-**Files modified:** {list}
-
-{If multiple approaches were tried:}
-**APPROACH COMPARISON:** {approach A} vs {approach B}
-Winner: {A} because {reason}
-Loser archived: {why it lost}
+**What was changed:** ...  **Approach:** experiment / direct / research+update  **Files:** ...
+**APPROACH COMPARISON:** (if multiple tried) {A} vs {B} — winner: {A} because {reason}
 
 ## Verification results
-
-**Programmatic:** {PASS/FAIL} — {what ran}
-**Structural:** {PASS/FAIL} — {what was checked}
-**Perceptual:** {score}/10 — {evaluator B's one-line rationale}
-**Behavioral:** {PASS {wall_time} | FAIL at step {n}: {reason} | SKIPPED — axis does not affect user path}
-
-{If aborted:}
-**Abort reason:** {what regressed, by how much}
+**Programmatic:** PASS/FAIL  **Structural:** PASS/FAIL
+**Perceptual:** {score}/10 — {one-line rationale}
+**Behavioral:** PASS {wall_time} | FAIL at step {n}: {reason} | SKIPPED
 
 ## Proposed axis additions
-
-{If any evaluator proposed a new axis this loop:}
-PROPOSED AXIS: {name}
-Rationale: {why this emerged}
-Category: {category}
-Weight: {proposed}
-Draft anchors: 0=... / 5=... / 10=...
-
-{If none:} None proposed this loop.
-
-All proposals are written to `.planning/rubrics/{target}-proposals.md`. Never written
-directly to the live rubric. Human approval required to move a proposal into the live rubric.
+PROPOSED AXIS: {name} | Rationale | Category | Weight | Anchors: 0=... 5=... 10=...
+(or: None proposed this loop.)
 
 ## What was learned
-
-{2-3 sentences: what the improvement revealed about the product, what future loops should know}
+{2-3 sentences}
 ```
+
+All proposals go to `.planning/rubrics/{target}-proposals.md`. Never to the live rubric.
 
 ---
 
@@ -367,64 +313,15 @@ Triggers when no axis improved > 0.5 in the last 2 consecutive loops, no program
 
 **Step 1: Freeze the snapshot**
 
-Write `.planning/rubrics/{target}-level-{n}-final.md`:
-
-```markdown
-# {target} Rubric — Level {n} Final State
-
-> Date: {ISO date}
-> Loops completed at this level: {count}
-> Triggered by: distribution saturation
-
-## Final Scorecard
-
-| Axis | Final Score | Ceiling (10) |
-|------|-------------|--------------|
-| {axis} | {score} | {rubric's current 10 anchor} |
-
-## Axes at ceiling (>= 9.0)
-{list — these axes' 10 anchors become Level {n+1}'s 5 anchors}
-
-## Axes that plateaued below 9.0
-{axis}: stuck at {score} — {why it plateaued: measurement limit, build limit, or rubric calibration issue?}
-```
+Write `.planning/rubrics/{target}-level-{n}-final.md` with: date, loops completed, final scorecard, axes at ceiling (≥9.0 — their 10 anchors become Level {n+1}'s 5 anchors), and axes that plateaued below 9.0 with why.
 
 **Step 2: Write proposals**
 
-For each axis, propose a Level {n+1} re-anchoring:
-- Current 10 becomes new 5
-- Propose what a true 10 looks like from the new vantage point
+For each axis: propose Level {n+1} re-anchoring (current 10 → new 5, propose new 10). For plateaued axes: re-anchor, replace with measurable proxy, or retire.
 
-For axes that plateaued: propose whether to re-anchor, replace with a more measurable proxy, or retire.
+Auto-include these three process axes if not already in the rubric: `decomposition_quality`, `scope_appropriateness`, `verification_depth`.
 
-Automatically include the three process axes if not already in the rubric:
-- `decomposition_quality` — did the attack correctly diagnose before executing?
-- `scope_appropriateness` — was the change proportional to the gap?
-- `verification_depth` — did verify actually test what changed?
-
-Write everything to `.planning/rubrics/{target}-proposals.md`:
-
-```markdown
-# {target} Level {n+1} Proposals
-
-> Generated: {ISO date}
-> Level {n} final state: .planning/rubrics/{target}-level-{n}-final.md
-
-## Re-anchored axes
-
-### {axis_name}
-Current 10: "{current 10 anchor text}"
-Proposed Level {n+1} anchors:
-- 0: {what failure looks like from the new floor}
-- 5: {what the current 10 looks like from here}
-- 10: {the next ceiling}
-
-## Proposed new axes
-{emergent axes only visible at this quality level}
-
-## Axes proposed for retirement
-{axes that hit a structural ceiling with no meaningful level 2 version}
-```
+Write to `.planning/rubrics/{target}-proposals.md`: re-anchored axes (current 10 anchor, proposed 0/5/10), proposed new axes, axes proposed for retirement.
 
 **Step 3: Halt -- human approval required**
 
@@ -454,27 +351,16 @@ When the loop resumes after a level-up, every evaluator in Phase 1c receives:
 
 ## Fringe Cases
 
-**Rubric doesn't exist**: run Phase 0 and halt until human approval. Never improvise a rubric mid-loop.
-
-**Evaluator agents disagree by > 3 points on an axis**: log as `needs-refinement`, use the minimum score, add a note in the loop log. Do not halt. Log as a proposed rubric refinement.
-
-**Programmatic checks can't be automated for an axis**: note explicitly. Use structural + perceptual only. Cap maximum achievable score at 8.
-
-**Attack produces no measurable improvement**: document as "no-change" loop. Apply recency penalty to force a different axis next loop.
-
-**Targeted axis doesn't improve despite changes**: check if rubric anchors are miscalibrated. Log a proposed refinement.
-
-**Target has no prior loop logs** (loop 1): all delta fields are empty. Expected.
-
-**Security axis fails programmatic**: blocking issue. Do not loop. Halt and report.
-
-**`--continue` with no campaign file**: error, suggest starting with `--n`.
-
-**`--continue` with status `level-up-pending`**: do not resume. Report: "Campaign is waiting for human approval of level-up proposals at .planning/rubrics/{target}-proposals.md. Approve and set campaign status to `active` to resume."
-
-**`--continue` with status `completed`**: do not resume. Report final scorecard summary.
-
-**Campaign file exists but `--n` invoked**: read existing campaign. If active, resume (treat as `--continue`). If completed/parked, create new campaign with incremented slug.
+- **No rubric**: run Phase 0, halt for human approval. Never improvise.
+- **Evaluators disagree > 3 pts**: log `needs-refinement`, use minimum score, continue.
+- **Programmatic checks can't be automated**: use structural + perceptual only, cap axis at 8.
+- **No improvement this loop**: document as "no-change", apply recency penalty.
+- **Loop 1 (no prior logs)**: delta fields empty — expected.
+- **Security axis fails programmatic**: halt and report. Blocking.
+- **`--continue` + no campaign file**: error, suggest `--n`.
+- **`--continue` + `level-up-pending`**: halt, point to proposals file, require human approval then `status: active`.
+- **`--continue` + `completed`**: do not resume, report final scorecard.
+- **`--n` + existing active campaign**: treat as `--continue`. If completed/parked: new campaign, incremented slug.
 
 ---
 

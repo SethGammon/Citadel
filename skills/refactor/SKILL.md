@@ -22,10 +22,7 @@ last-updated: 2026-03-20
 
 ## Identity
 
-You are a refactoring engine that treats safety as a hard constraint, not a
-best effort. Every refactoring you perform is bounded by a contract: the
-codebase must typecheck and pass tests after your changes, or you revert
-everything. You plan before you cut, and you verify after every change.
+Safety is a hard constraint: the codebase must typecheck and pass tests after your changes, or you revert everything. Plan before you cut; verify after every change.
 
 ## Orientation
 
@@ -38,15 +35,9 @@ Use `/refactor` when you need to:
 - Merge related files into one
 - Change a function signature and update all call sites
 
-Do NOT use `/refactor` for:
-- Adding new features (that is building, not refactoring)
-- Fixing bugs (the behavior should not change)
-- Deleting dead code with no replacement (just delete it directly)
-- Formatting or style changes (use a linter)
+Do NOT use for: adding features, fixing bugs, deleting dead code, formatting/style changes.
 
-The defining property of a refactoring: **behavior does not change.** If the
-tests passed before and they pass after, and no new type errors appeared, the
-refactoring is correct. If behavior needs to change, that is a separate step.
+**Behavior does not change.** Tests pass before and after, no new type errors — the refactoring is correct.
 
 ## Commands
 
@@ -65,21 +56,7 @@ refactoring is correct. If behavior needs to change, that is a separate step.
 
 ### Phase 1: BASELINE
 
-Before touching any code, establish the current state of the world.
-
-1. **Typecheck**: Run the project's typecheck command via timeout wrapper
-   (e.g., `node scripts/run-with-timeout.js 300 npm run typecheck`). Record the result.
-   - If the baseline has errors, record them explicitly. These are NOT your
-     responsibility — but you must not add to them.
-   - Store the error count and the specific errors for comparison later.
-
-2. **Tests**: If the project has tests, run them. Record the result.
-   - If some tests fail at baseline, record which ones. Same rule: do not
-     add new failures.
-
-3. **Git state**: Check for uncommitted changes. If there are unstaged changes
-   in files you plan to modify, warn the user before proceeding. Their work
-   could be tangled with your refactoring.
+Run typecheck (via `node scripts/run-with-timeout.js 300 npm run typecheck`) and tests. Record error/failure counts — pre-existing issues are not your responsibility, but you must not add to them. Warn if there are uncommitted changes in files you plan to modify.
 
 ```
 Baseline established:
@@ -103,43 +80,17 @@ Analyze the refactoring target and produce a concrete plan.
 
 2. **Classify the refactoring type** and apply type-specific analysis:
 
-   **Rename (symbol)**:
-   - Find all files importing the symbol
-   - Find all usage sites within those files
-   - Check for string references (e.g., in error messages, logging, serialized keys)
-   - Check for dynamic access patterns (`obj[key]` where key could be the symbol name)
+   **Rename (symbol):** all imports + usage sites + string references + dynamic access patterns (`obj[key]`)
 
-   **Rename (file/module)**:
-   - Find all import paths referencing the file
-   - Check for path aliases that resolve to this file
-   - Check for dynamic imports (`import()` with the path)
-   - Check index file re-exports
+   **Rename (file/module):** all import paths + path aliases + dynamic imports + index re-exports
 
-   **Extract (function/component/module)**:
-   - Identify the code to extract
-   - Determine its dependencies (what it reads from the enclosing scope)
-   - Determine what the remaining code needs back (return values, callbacks)
-   - Decide where to put it: same file, new file, existing related file
-   - Design the interface (parameters, return type)
+   **Extract (function/component/module):** code to extract, enclosing-scope dependencies, return values back to caller, destination file, interface design
 
-   **Move (file)**:
-   - Map every import that references the old path
-   - Compute new relative paths from each importer
-   - Check for path alias changes (moving between alias boundaries)
-   - Check for barrel/index file updates needed
+   **Move (file):** every import of old path → compute new relative paths, check alias boundary changes, barrel updates
 
-   **Split (file)**:
-   - Identify logical groupings in the file (by functionality, by export)
-   - Map internal cross-references between groups
-   - Determine which group becomes the "primary" file (keeps the original path)
-   - Plan new files for each extracted group
-   - Plan the index file if one is needed
+   **Split (file):** logical groupings, internal cross-references, which group keeps the original path, new files per group, index if needed
 
-   **Merge (files)**:
-   - Read all files to merge
-   - Identify duplicate or conflicting definitions
-   - Determine import consolidation
-   - Plan the merged file's internal organization
+   **Merge (files):** duplicates/conflicts, import consolidation, merged file organization
 
 3. **Produce the plan** — list every file that will change and what changes:
 
@@ -165,37 +116,19 @@ Risk assessment:
 
 ### Phase 3: EXECUTE
 
-Apply changes file by file in a deliberate order that minimizes intermediate
-breakage:
+Apply changes in this order to minimize intermediate breakage:
+1. Create new files first (exports only, not yet imported)
+2. Update importers to point to new locations/names
+3. Update the source file (remove extracted code, rename, etc.)
+4. Delete old files last (only after all importers are updated)
+5. Update index/barrel files
 
-1. **Create new files first** (extractions, move targets) — but leave them
-   as exports only, not yet imported anywhere
-2. **Update importers** to point to new locations/names
-3. **Update the source file** (remove extracted code, rename, etc.)
-4. **Delete old files** last (only after all importers are updated)
-5. **Update index/barrel files** to reflect the new structure
-
-For each file modification:
-- Read the file before editing (never edit blind)
-- Make the minimal change needed — do not reformat or restructure unrelated code
-- If a file needs multiple changes, apply them in a single coherent edit when possible
+Read each file before editing. Make the minimal change needed — do not reformat unrelated code.
 
 ### Phase 4: VERIFY
 
-After ALL changes are complete:
+Run typecheck and tests from Phase 1. Compare against baseline — any NEW errors or failures? Search for import paths referencing old/deleted files.
 
-1. **Typecheck**: Run the same typecheck command from Phase 1.
-   - Compare against baseline: any NEW errors?
-   - If new errors exist, proceed to Phase 5 (Fix).
-
-2. **Tests**: Run the same test command from Phase 1.
-   - Compare against baseline: any NEW failures?
-   - If new failures exist, proceed to Phase 5 (Fix).
-
-3. **Import resolution**: Verify no broken imports remain.
-   Search for import paths that reference old/deleted files.
-
-4. If everything passes:
 ```
 Verification: PASS
   Typecheck: {pass | same N pre-existing errors}
@@ -205,24 +138,7 @@ Verification: PASS
 
 ### Phase 5: FIX (if verification fails)
 
-If Phase 4 found new errors or test failures:
-
-**Attempt 1:**
-1. Read each new error carefully
-2. Identify the root cause (usually a missed import update, missing re-export,
-   or type mismatch from changed interface)
-3. Fix each error
-4. Re-run verification
-
-**Attempt 2 (if Attempt 1 didn't fully resolve):**
-1. Read remaining errors
-2. Apply fixes
-3. Re-run verification
-
-**After 2 failed fix attempts: REVERT.**
-
-Do not keep trying. The refactoring plan was flawed or the codebase has
-complexities that require human judgment.
+Two attempts: read errors, identify root cause (missed import update, missing re-export, type mismatch), fix, re-run verification. After 2 failed attempts: REVERT.
 
 ### Phase 6: REVERT (if fixes fail)
 
@@ -244,19 +160,12 @@ Suggestion: {what the user might do differently}
 
 ## Quality Gates
 
-- **Zero new type errors.** Not "fewer errors" — zero NEW ones. If the baseline
-  had 3 errors and you end with 3 different errors, that is a failure.
-- **Zero new test failures.** Same rule: baseline failures are accepted,
-  new failures are not.
-- **All imports resolve.** No dangling references to old paths or removed exports.
-- **Behavior unchanged.** If you find yourself adding logic, fixing bugs, or
-  changing return values during a refactoring, stop — that is scope creep.
-  Complete the refactoring first, then address behavior changes separately.
-- **Minimal diff.** The changeset should contain only the refactoring. No
-  reformatting, no unrelated cleanups, no whitespace normalization in files
-  you didn't need to touch.
-- **Plan matches execution.** Every file in the plan was modified, no
-  unplanned files were touched.
+- **Zero new type errors** — zero NEW ones, not just fewer.
+- **Zero new test failures** — baseline failures accepted, new failures are not.
+- **All imports resolve** — no dangling references to old paths or removed exports.
+- **Behavior unchanged** — adding logic or changing return values is scope creep; stop and do it separately.
+- **Minimal diff** — no reformatting, unrelated cleanups, or whitespace changes in untouched files.
+- **Plan matches execution** — every planned file modified, no unplanned files touched.
 
 ## Exit Protocol
 
