@@ -154,8 +154,9 @@ Marshal Report's Findings section.
 
 ```
 ---HANDOFF---
-- {what was investigated/built/fixed}
-- {key decisions made}
-- {unresolved items}
+- What: {behavior changed or goal achieved — not the file name, the outcome}
+- Decisions: {key tradeoffs made — include the alternative that was rejected}
+- Unresolved: {what is still open or blocked — actionable next step}
+- Reversibility: {green | amber | red} — {how to undo}
 ---
 ```

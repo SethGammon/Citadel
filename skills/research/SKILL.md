@@ -122,5 +122,6 @@ Output findings summary, then:
 - Findings: {count} sources analyzed
 - Recommendation: {one-line summary}
 - Document: .planning/research/{slug}.md
+- Reversibility: green — one file written to .planning/research/; delete to undo
 ---
 ```
