@@ -105,7 +105,7 @@ Run only when `.planning/rubrics/{target}.md` does not exist.
 5. **STOP. Do not proceed until the user approves the rubric.**
 6. Write approved rubric to `.planning/rubrics/{target}.md`
 
-For Citadel: rubric already exists at `.planning/rubrics/citadel.md`. Skip Phase 0.
+For Citadel: rubric exists at `.planning/rubrics/citadel.md`. Skip Phase 0.
 
 ---
 
@@ -143,14 +143,12 @@ Each evaluator scores independently. For each axis:
 #### 1d. Compile scorecard
 
 ```
-Axis                      | A  | B  | C  | Prog | Final | Delta | Flag
---------------------------|----|----|----|----- |-------|-------|-----
-security_posture          | 7  | 8  | 6  | PASS |  6.0  |       |
-onboarding_friction       | 4  | 3  | 5  | FAIL |  3.0  | cap   |
-documentation_accuracy    | 6  | 6  | 7  | PASS |  6.0  |       |
+Axis        | A   | B   | C   | Prog      | Final | Delta  | Flag
+------------|-----|-----|-----|-----------|-------|--------|-----
+{axis_name} | {n} | {n} | {n} | PASS/FAIL | {n.n} | +{n.n} | cap
 ```
 
-Final = min(A, B, C), then apply programmatic cap. Delta = current - previous loop score (empty on loop 1).
+Final = min(A, B, C), then apply programmatic cap (sets Flag=cap). Delta = current − prior loop score (empty on loop 1).
 
 ---
 

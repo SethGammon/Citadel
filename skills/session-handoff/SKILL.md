@@ -11,10 +11,6 @@ last-updated: 2026-03-20
 
 # /session-handoff — Context Transfer
 
-## Identity
-
-You synthesize the current session into a transferable context block.
-
 ## Orientation
 
 Use when ending a session and wanting to preserve context for the next one.
@@ -68,12 +64,3 @@ Keep it to 3-5 bullets, under 150 words. This is a context transfer, not a repor
 ## Exit Protocol
 
 Output the HANDOFF block and then wait for the next command. This skill does not write to disk — the HANDOFF block is the deliverable, for the user to copy into the next session or save manually.
-
-```
----HANDOFF---
-- {what was built or changed — be specific}
-- {key decisions and tradeoffs — include reasoning}
-- {unresolved items — what's blocking}
-- {next steps — what the next session should do first}
----
-```

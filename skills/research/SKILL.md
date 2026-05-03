@@ -11,12 +11,6 @@ last-updated: 2026-03-21
 
 # /research — Focused Investigation
 
-## Identity
-
-/research is for focused research investigations. It converts questions into structured
-findings with confidence levels. It does NOT make decisions or modify code — it produces
-information that informs the next step.
-
 ## When to Use
 
 - Evaluating whether a dependency has a newer version or has been superseded
