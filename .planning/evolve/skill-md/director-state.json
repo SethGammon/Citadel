@@ -2,32 +2,31 @@
   "target": "skill-md",
   "mode": "budget",
   "budget": 50,
-  "cumulative_spend": 33,
-  "cycle": 4,
+  "cumulative_spend": 39,
+  "cycle": 5,
   "current_phase": "checkpoint",
-  "velocity_history": [1.0, 1.17, 1.17],
+  "velocity_history": [1.0, 1.17, 1.17, 0.73],
   "halt_status": null,
   "started": "2026-05-03T00:00:00Z",
   "level_up_triggered": false,
   "continuation": {
-    "last_cycle_digest": ".planning/evolve/skill-md/cycle-3-digest.md",
-    "axes_below_8": ["protocol_completeness", "density", "fringe_accuracy", "orientation_precision"],
-    "axes_at_8_plus": ["escalation_guidance", "output_completeness"],
-    "cycle3_estimated_scores": {
-      "protocol_completeness": 7.0,
-      "density": 7.5,
+    "last_cycle_digest": ".planning/evolve/skill-md/cycle-4-digest.md",
+    "axes_below_8": ["orientation_precision"],
+    "axes_at_8_plus": ["protocol_completeness", "density", "fringe_accuracy", "escalation_guidance", "output_completeness"],
+    "cycle4_estimated_scores": {
+      "protocol_completeness": 8.0,
+      "density": 8.2,
       "escalation_guidance": 8.5,
-      "fringe_accuracy": 7.5,
+      "fringe_accuracy": 8.0,
       "orientation_precision": 7.5,
       "output_completeness": 8.5
     },
     "remaining_gaps": {
-      "fringe_accuracy": "evolve and organize have lint WARNs for missing .planning/ guards (P-05 pattern) -- quick fix, 2 files",
-      "density": "do (2485), improve (2476), fleet (2448) near complex limit -- look for redundant sections not Identity prose",
-      "protocol_completeness": "no structural check can find gaps -- needs perceptual survey of 5 complex skills (archon, fleet, do, evolve, improve)",
-      "orientation_precision": "all skills have orientation; some may have vague 'Don't use when' without named neighbors -- check with grep"
+      "orientation_precision": "all skills have orientation sections; some may be vague -- check with grep for 'Don't use when' lines that don't name specific skills; 7.5 score suggests real gap here",
+      "density": "setup (2419), organize (2321), daemon (2370) may have redundant sections; diminishing returns -- only attack if clear dead weight found via scout",
+      "escalation_guidance": "5 remaining skills may lack contextual gates -- recheck with grep after cycle 3/4 cross-pollination"
     },
-    "velocity_note": "Velocity 1.17 for 2nd consecutive cycle. Approaching structural ceiling. Cycle 4 targets harder perceptual gaps -- expect velocity drop to 0.5-0.8.",
-    "note": "Cycle 3 complete. Budget remaining ~$17. Cycle 4 should: (1) fix 2 lint WARNs for fringe_accuracy; (2) perceptual scout of protocol_completeness gaps; (3) targeted density trim of do/improve/fleet. Keep cycle 4 targeted -- avoid large fleet to preserve budget."
+    "velocity_trajectory": "velocity dropped 1.17 -> 0.73 in cycle 4 (expected, entering perceptual territory). Halt if cycle 5 velocity < 0.2. Budget remaining ~$11 -- small targeted cycle only.",
+    "note": "Cycle 4 complete. All axes now at 8.0+ except orientation_precision (7.5). Cycle 5 should focus on orientation_precision: check which skills have vague Don't-use-when, add named neighbors where missing. This is a low-cost targeted fix."
   }
 }
