@@ -126,6 +126,12 @@ Each scout returns:
 { "hypothesis_id": "...", "confirmed": true, "evidence": "...", "confidence": 0.85 }
 ```
 
+**Scout confidence protocol**: Scouts read relevant files only — no edits, no test runs. Assign `confidence`:
+- **0.9+**: mechanism is directly observable (explicit absence, missing section, wrong value in file)
+- **0.7–0.89**: strong indirect evidence from 2+ corroborating observations
+- **0.4–0.69**: single observation that supports the hypothesis; alternative explanations plausible
+- **< 0.4**: no direct evidence found; hypothesis is speculative from this file set
+
 Run scouts in parallel. Update experiment log:
 - `confidence >= 0.7` → `confirmed`
 - `confidence 0.4–0.69` → `needs-evidence` (do not attack; add to next cycle)

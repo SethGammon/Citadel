@@ -155,7 +155,7 @@ and any project-level custom skills in `.claude/skills/`.
 | "workspace", "multi-repo", "cross-repo", "across repos", "multiple repos", "coordinate repos", "add redis and snowflake", "split into repos" | `/workspace` |
 
 If ONE skill matches with high confidence → invoke it directly. Done.
-If MULTIPLE skills match → fall through to Tier 3.
+If MULTIPLE skills match → carry the candidate set to Tier 3. Tier 3 disambiguates between candidates only, not from scratch. Tie-break: prefer the candidate with fewer trigger keywords.
 
 ### Tier 3: LLM Complexity Classifier (Cost: ~500 tokens | Latency: ~1-2s)
 
@@ -241,9 +241,7 @@ When 2+ independent tasks detected (non-overlapping scopes, complexity >= 3, not
 
 ## /do status
 
-Routes directly to `/dashboard`. `/do status` is an alias — invoke `/dashboard`
-and display its full output. See `skills/dashboard/SKILL.md` for the complete
-protocol and output format.
+Routes to `/dashboard`. Invoke `/dashboard` and relay its full output.
 
 ## /do --list
 
@@ -257,7 +255,7 @@ Direct invocation always works: `/marshal`, `/archon`, `/fleet`, `/[skill-name]`
 
 - **`.planning/` does not exist**: The router works without `.planning/`. Tiers 0, 2, and 3 are fully independent of it. Tier 1 (active-state short-circuit) reads `.planning/campaigns/` and `.planning/fleet/` — if those directories are absent, skip Tier 1 gracefully and fall through to Tier 2. Never crash on a missing `.planning/` directory.
 - **`harness.json` missing**: Skip the Skill Registry Check and proceed directly to Tier 0. Announce discovered skills from the filesystem if counts can be read, otherwise route from built-in keywords.
-- **Multiple skills match at Tier 2**: Fall through to Tier 3 for disambiguation rather than picking arbitrarily.
+- **Multiple skills match at Tier 2**: Carry candidates to Tier 3 per Tier 2 disambiguation rule above.
 - **User input is empty or whitespace**: Respond with the `--list` output and a prompt to provide a direction.
 - **Routed skill not found**: Report "Skill not found" and fall back to Marshal as the safe default.
 
