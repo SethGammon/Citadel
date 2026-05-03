@@ -16,6 +16,8 @@ last-updated: 2026-03-20
 Use when ending a session and wanting to preserve context for the next one.
 Also used automatically by orchestrators (Archon, Fleet) at session boundaries.
 
+**Don't use when:** You want to extract reusable patterns from a completed campaign (use `/learn`), write a structured postmortem for a failed campaign (use `/postmortem`), or produce documentation rather than a context transfer.
+
 ## Protocol
 
 1. **Collect session data** (run in parallel):
@@ -56,6 +58,8 @@ Keep it to 3-5 bullets, under 150 words. This is a context transfer, not a repor
 ## Fringe Cases
 
 **`.planning/` does not exist**: Skip campaign and fleet checks. Treat as "no active campaigns" and proceed with git-only context.
+
+**Corrupted or unparseable campaign file** (malformed frontmatter, invalid status, or truncated content in `.planning/campaigns/`): Skip that file and treat it as inactive. Output: "Campaign file at `{path}` could not be parsed — treating as inactive. Check the file manually if this is unexpected."
 
 **No active campaign and no git changes**: If there is nothing to summarize, say so explicitly: "No active campaign or session changes found. Nothing to hand off." Do not fabricate a handoff.
 

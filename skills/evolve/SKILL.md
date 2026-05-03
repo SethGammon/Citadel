@@ -269,6 +269,7 @@ Set `--budget` to cap total spend.
 - **No rubric**: error — run `/improve {target}` Phase 0 first. List available targets in `.planning/rubrics/` as hint.
 - **No prior scores in belief model**: proceed from cycle 1; all deltas empty on first survey. Expected.
 - **All scouts return `needs-evidence`**: attack the top-EV axis anyway under `low-confidence` flag; record as exploratory. Mark result regardless.
+- **Scout agent hangs or times out** (dispatched scout never returns): After 10 minutes without a response, log the scout as `status: timed-out` in the experiment log with `confidence: 0`. Proceed with the remaining returned scouts. Never let a hung scout block the cycle — if all scouts time out, treat as "all scouts return needs-evidence" and attack the top-EV axis under `low-confidence` flag.
 - **All axes collide** (every axis shares files): serialize top 2 axes; parallelize remainder. Log collision.
 - **Cross-pollination causes regression**: revert that skill, mark pattern `context-dependent`, do not propagate further.
 - **Level-up mid-campaign**: pause, write proposals, set `level-up-pending`. `/evolve --continue` after human approval resumes cycle numbering from where it stopped.
