@@ -3,9 +3,11 @@ name: no-fleet-dir
 skill: fleet
 description: Fleet creates session directory when .planning/fleet/ does not exist
 tags: [fringe, missing-state]
+behavior: invariant
 input: /fleet build the auth module in parallel
 state: clean
 skip-execute: true
+skip-reason: requires-agent-spawn
 timeout: 300000
 assert-contains:
   - auth

@@ -5,7 +5,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Node.js 18+](https://img.shields.io/badge/Node.js-18%2B-green.svg)](https://nodejs.org/)
 [![Claude Code](https://img.shields.io/badge/Claude_Code-compatible-blueviolet.svg)](https://docs.anthropic.com/en/docs/claude-code)
-[![Codex](https://img.shields.io/badge/Codex-compatible-5865F2.svg)](https://github.com/openai/codex)
+![Codex](https://img.shields.io/badge/Codex-compatible-5865F2.svg)
 [![Interactive Demo](https://img.shields.io/badge/▶_Try_the_Router-00d2ff.svg)](https://sethgammon.github.io/Citadel/)
 
 *Stop re-explaining your codebase every session. Start compounding what your agents learn.*
@@ -103,7 +103,7 @@ Four tiers. Use the cheapest one that fits.
 
 **Cost transparency.** Citadel reads runtime-native session artifacts and computes real cost from API pricing. You see what every session, campaign, and agent actually costs. Use `/cost` for a full breakdown or `/dashboard` for the overview. A real-time tracker alerts you at configurable spend thresholds without interrupting your work.
 
-**Safety hooks.** 22 hooks across 14 lifecycle events run automatically. A consent system gates external actions (pushes, PRs, comments) with first-encounter choice — always-ask, session-allow, or auto-allow. Protected branches can't be deleted. Path traversal and secrets exfiltration are blocked. A circuit breaker stops failure spirals before they burn tokens. All of this is configurable per-project in `harness.json`.
+**Safety hooks.** 32 hooks across 29 lifecycle events run automatically. A consent system gates external actions (pushes, PRs, comments) with first-encounter choice — always-ask, session-allow, or auto-allow. Protected branches can't be deleted. Path traversal and secrets exfiltration are blocked. A circuit breaker stops failure spirals before they burn tokens. All of this is configurable per-project in `harness.json`.
 
 **Campaign persistence.** Multi-session work survives context compression and session boundaries. Start an architecture overhaul today, close your laptop, pick it up tomorrow — the campaign state, decisions, and progress are all preserved. `/do continue` resumes exactly where you left off.
 
@@ -136,13 +136,11 @@ Four tiers. Use the cheapest one that fits.
 - [Claude Code installation guide](docs/CLAUDE_INSTALLATION_GUIDE.md) — Claude-specific plugin setup and hooks
 - [Codex installation guide](docs/CODEX_INSTALLATION_GUIDE.md) — Codex-specific setup, hooks, and verification
 - [Skills reference](docs/SKILLS.md) — all 45 skills with invocation and examples
-- [Hooks reference](docs/HOOKS.md) — 14 event types, 22 hooks, what each one enforces
+- [Hooks reference](docs/HOOKS.md) — 29 lifecycle events, 32 hooks, what each one enforces
 - [Campaign guide](docs/CAMPAIGNS.md) — persistent state, phases, AI amnesia prevention
 - [Fleet guide](docs/FLEET.md) — parallel agents, worktree isolation, discovery relay
 - [Security model](SECURITY.md) — path traversal, shell injection, and defensive measures
 - [Contributing](CONTRIBUTING.md) — how to submit issues, PRs, and new skills
-- [External overview](https://repo-explainer.com/SethGammon/Citadel/) — third-party writeup on the architecture and philosophy
-
 
 ## Community
 
@@ -160,7 +158,7 @@ Have a use case, a bug, or a workflow you want optimized? Open a Discussion. If 
 - [x] Campaign persistence across sessions
 - [x] Desktop app for campaign management
 - [x] Autonomous quality improvement engine (`/evolve` — research-driven multi-cycle director)
-- [ ] Governance layer (per-agent policies, immutable audit log)
+- [x] Governance layer (3-tier policy constitution, policy-enforcer agent, immutable audit log)
 - [ ] Campaign recovery and rollback
 - [ ] Web dashboard (Citadel Cloud)
 - [ ] Team collaboration features

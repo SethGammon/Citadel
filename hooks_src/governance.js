@@ -49,6 +49,10 @@ function run(input) {
     return; // Not a tool we log — skip
   }
 
+  // Fleet agent identity — bound to the spawning agent when inside a subagent
+  const agentId = event.agent_id || null;
+  const agentType = event.agent_type || null;
+
   // Derive a human-readable target string from tool input
   let target = '';
   const inp = event.tool_input || {};
@@ -68,6 +72,8 @@ function run(input) {
   health.writeAuditLog('tool-call', {
     tool: toolName,
     target,
+    agent_id: agentId,
+    agent_type: agentType,
   });
 }
 

@@ -1,6 +1,6 @@
 # Campaigns
 
-> last-updated: 2026-03-20
+> last-updated: 2026-05-07
 
 Campaigns are the persistence mechanism for multi-session work. They're the only
 state that survives across context windows.
@@ -85,6 +85,16 @@ to continue must be in the file.
 | wire | Connect systems | 15-60 min |
 | verify | Test and check | 15-30 min |
 | prune | Clean up | 15-30 min |
+
+## Phase Validation
+
+Archon spawns a **Phase Validator** agent at the end of each build or wire phase to confirm exit conditions before the campaign advances. The validator reads the phase plan, checks actual file state, and returns `pass` or `fail` with a specific reason. On `fail`, Archon re-enters the phase rather than advancing — preventing partially-complete phases from silently propagating into later work.
+
+For high-stakes decisions (abort, rollback, scope change), Archon may spawn 3 Phase Validators and require 2/3 agreement. A timed-out validator counts as `pass` to prevent indefinite blocking.
+
+## Policy Enforcement
+
+Before executing Red-reversibility operations (force push, bulk delete, branch reset), Archon spawns a `policy-enforcer` agent — a read-only Haiku judge that checks the proposed action against the 3-tier constitution in `docs/CONSTITUTION.md`. A Tier 1 violation always blocks. The verdict and reason are logged to the Decision Log.
 
 ## Intake Items
 

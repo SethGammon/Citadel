@@ -60,6 +60,10 @@ function main() {
     }
 
     const toolName = event.tool_name || '';
+    // Wall-clock timing from Claude Code (ms, excluding permission prompts)
+    const durationMs = typeof event.duration_ms === 'number' ? event.duration_ms : null;
+    const agentId = event.agent_id || null;
+    const agentType = event.agent_type || null;
 
     // Only run on Edit and Write operations
     if (toolName !== 'Edit' && toolName !== 'Write') {
@@ -94,6 +98,9 @@ function main() {
       file: relativePath,
       lenses: lenses.join(','),
       typecheck: exitCode === 0 ? 'pass' : 'fail',
+      tool_duration_ms: durationMs,
+      agent_id: agentId,
+      agent_type: agentType,
     });
 
     process.exit(exitCode);

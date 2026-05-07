@@ -3,9 +3,11 @@ name: visual-verify-pass
 skill: live-preview
 description: Live-preview captures screenshots and reports PASS for a correctly rendering component
 tags: [happy-path]
+behavior: invariant
 input: /live-preview
 state: with-campaign
 skip-execute: true
+skip-reason: requires-playwright
 assert-contains:
   - screenshot
   - PASS

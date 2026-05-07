@@ -1,48 +1,110 @@
 # Hooks
 
-> last-updated: 2026-03-25
+> last-updated: 2026-05-07
 
-Hooks are shell scripts that fire automatically at lifecycle events in Claude Code.
-You never invoke them manually. They provide automated quality enforcement.
+Hooks are Node.js scripts that fire automatically at lifecycle events in Claude Code.
+You never invoke them manually. They provide automated quality enforcement and telemetry.
 
-## Active Hooks
+## Active Hooks (29 of 29 Claude Code events)
 
 | Hook | Event | Purpose |
 |------|-------|---------|
-| `post-edit.js` | PostToolUse | Per-file typecheck on every edit |
-| `circuit-breaker.js` | PostToolUseFailure | Detect failure loops |
-| `quality-gate.js` | Stop | Anti-pattern scan before session ends |
-| `intake-scanner.js` | SessionStart | Report pending work items |
-| `protect-files.js` | PreToolUse | Block edits to protected files |
-| `pre-compact.js` | PreCompact | Save context before compression |
+| `protect-files.js` | PreToolUse | Block edits to protected files and out-of-scope paths |
+| `external-action-gate.js` | PreToolUse (Bash) | Gate external actions (git push, API calls) |
+| `governance.js` | PreToolUse (Edit/Write/Bash/Agent) | Audit every significant tool call |
+| `post-edit.js` | PostToolUse | Per-file typecheck + structural/performance/visual lenses |
+| `organize-enforce.js` | PostToolUse (Edit/Write) | Enforce file placement conventions |
+| `circuit-breaker.js` | PostToolUse (Bash) + PostToolUseFailure | Detect failure loops |
+| `cost-tracker.js` | PostToolUse | Real-time session cost monitoring |
+| `complexity-check.js` | PostToolUse (Edit/Write) | Advisory complexity score for JS/TS files |
+| `post-tool-batch.js` | PostToolBatch | Wave-level quality checkpoint (async, asyncRewake) |
+| `quality-gate.js` | Stop | Cold-path anti-pattern scan before session ends |
+| `stop-failure.js` | StopFailure | Log hook failures |
+| `user-prompt-submit.js` | UserPromptSubmit | Log turn boundaries; extension point for prompt gating |
+| `user-prompt-expansion.js` | UserPromptExpansion | Log skill invocations to skill-usage.jsonl |
+| `init-project.js` | SessionStart + Setup | Scaffold .planning/ state; also runs in --init-only mode |
 | `restore-compact.js` | SessionStart (compact) | Restore context after compression |
+| `intake-scanner.js` | SessionStart | Report pending work items |
+| `session-end.js` | SessionEnd | Flush session telemetry |
+| `subagent-start.js` | SubagentStart | Bind fleet agent identity at spawn time |
+| `subagent-stop.js` | SubagentStop | Log agent completion + flag abnormal exits |
+| `teammate-idle.js` | TeammateIdle | Log teammate idle events (multi-instance fleet) |
+| `permission-request.js` | PermissionRequest + PermissionDenied | Auto-approve safe Citadel ops, log all decisions |
+| `instructions-loaded.js` | InstructionsLoaded | Detect CLAUDE.md reloads, queue doc-sync |
+| `file-changed.js` | FileChanged | React to file-on-disk changes; queue doc-sync and skill-lint |
+| `cwd-changed.js` | CwdChanged | Log directory changes; flag when moving outside project root |
+| `config-change.js` | ConfigChange | Detect harness.json / settings.json changes mid-session |
+| `elicitation.js` | Elicitation + ElicitationResult | Log MCP elicitation requests; never auto-responds |
+| `notification.js` | Notification | Elevated audit for auth events; log idle alerts |
+| `task-events.js` | TaskCreated + TaskCompleted | Task lifecycle telemetry |
 | `worktree-setup.js` | WorktreeCreate | Initialize agent worktrees |
+| `worktree-remove.js` | WorktreeRemove | Clean up worktree state |
+| `pre-compact.js` | PreCompact | Save context before compression |
+| `post-compact.js` | PostCompact | Restore compact state |
 
-## Lifecycle Events
+## Lifecycle Events (all 29)
 
-| Event | When | Can Block? |
-|-------|------|-----------|
-| SessionStart | New conversation begins | No |
-| PreToolUse | Before a tool is called | Yes (exit 2) |
-| PostToolUse | After a tool completes | No |
-| PostToolUseFailure | After a tool fails | No |
-| PreCompact | Before message compression | No |
-| Stop | Session ending | No |
-| WorktreeCreate | Agent creates a worktree | No |
+| Event | When | Can Block? | Citadel Hook |
+|-------|------|------------|--------------|
+| `Setup` | `--init-only` or `--maintenance` mode | No | `init-project.js` |
+| `UserPromptSubmit` | Before Claude processes each user prompt | Yes | `user-prompt-submit.js` |
+| `UserPromptExpansion` | Slash command expands | Yes | `user-prompt-expansion.js` |
+| `SessionStart` | New conversation begins | No | `init-project.js`, `restore-compact.js`, `intake-scanner.js` |
+| `PreToolUse` | Before a tool executes | Yes (exit 2) | `protect-files.js`, `external-action-gate.js`, `governance.js` |
+| `PostToolUse` | After a tool completes | No | `post-edit.js`, `organize-enforce.js`, `circuit-breaker.js`, `cost-tracker.js`, `complexity-check.js` |
+| `PostToolBatch` | After ALL parallel tools in a wave settle | No | `post-tool-batch.js` |
+| `PostToolUseFailure` | After a tool fails | No | `circuit-breaker.js` |
+| `Stop` | Session turn ending | No | `quality-gate.js` |
+| `StopFailure` | Hook error on Stop | No | `stop-failure.js` |
+| `SessionEnd` | Session terminated | No | `session-end.js` |
+| `SubagentStart` | Subagent spawns (Agent tool) | No | `subagent-start.js` |
+| `SubagentStop` | Subagent session ends | No | `subagent-stop.js` |
+| `TeammateIdle` | A Claude Code teammate goes idle | No | `teammate-idle.js` |
+| `PermissionRequest` | Permission dialog appears | Yes (via JSON output) | `permission-request.js` |
+| `PermissionDenied` | Auto-mode denies a tool | No | `permission-request.js` |
+| `InstructionsLoaded` | CLAUDE.md or rules/*.md loaded | No | `instructions-loaded.js` |
+| `FileChanged` | Watched file changes on disk | No | `file-changed.js` |
+| `CwdChanged` | Working directory changes | No | `cwd-changed.js` |
+| `ConfigChange` | Settings file changes mid-session | No | `config-change.js` |
+| `Elicitation` | MCP server requests user input | No | `elicitation.js` |
+| `ElicitationResult` | User responds to MCP elicitation | No | `elicitation.js` |
+| `Notification` | Permission prompts, idle alerts, auth events | No | `notification.js` |
+| `TaskCreated` | Task created | No | `task-events.js` |
+| `TaskCompleted` | Task completed | No | `task-events.js` |
+| `PreCompact` | Before message compression | No | `pre-compact.js` |
+| `PostCompact` | After compression | No | `post-compact.js` |
+| `WorktreeCreate` | Agent creates a worktree | No | `worktree-setup.js` |
+| `WorktreeRemove` | Worktree deleted | No | `worktree-remove.js` |
+
+## Hook Protocol
+
+Hooks receive a JSON payload on stdin and communicate results via:
+
+| Mechanism | How | When |
+|-----------|-----|------|
+| **Exit 0** | Success — no block | Always for observer hooks |
+| **Exit 2** | Block — abort the tool | PreToolUse and UserPromptSubmit only |
+| **`additionalContext`** | JSON `{"additionalContext": "text"}` on stdout | Inject text into Claude's context window |
+| **`hookSpecificOutput`** | JSON on stdout | PermissionRequest auto-approve decisions |
+| **`asyncRewake: true`** | Declared in hook registration | Run async, wake Claude only on exit 2 |
+
+Key protocol fields from the event payload that hooks consume:
+
+| Field | Available On | Used By |
+|-------|-------------|---------|
+| `agent_id` | All events inside subagents | `governance.js`, `subagent-start.js`, `post-edit.js` |
+| `agent_type` | All events inside subagents | `governance.js`, `subagent-start.js`, `post-edit.js` |
+| `duration_ms` | PostToolUse | `post-edit.js` (wall-clock timing, excluding permission prompts) |
+| `file_path` | PostToolUse (Write/Edit/Read) | `post-edit.js`, `organize-enforce.js` |
 
 ## Configuration
 
-Hook definitions live in `hooks/hooks-template.json`. They are installed per-project
-via `scripts/install-hooks.js`, which resolves `${CLAUDE_PLUGIN_ROOT}` to absolute paths
-and filters out hook events unsupported by the installed Claude Code version:
+Hook definitions live in `hooks/hooks-template.json`. Installed per-project via `scripts/install-hooks.js`:
 
 ```bash
 # From your project directory:
 node /path/to/Citadel/scripts/install-hooks.js
 ```
-
-If Claude Code is unavailable on `PATH`, Citadel falls back to a safe compatibility
-profile and skips newer hook events instead of writing a broken `.claude/settings.json`.
 
 To force the full hook surface after upgrading Claude Code:
 
@@ -50,25 +112,35 @@ To force the full hook surface after upgrading Claude Code:
 node /path/to/Citadel/scripts/install-hooks.js --hook-profile latest
 ```
 
-This writes resolved hooks into your project's `.claude/settings.json`:
+## PostToolBatch — Wave-Level Quality Checkpoint
 
-```json
-{
-  "hooks": {
-    "PostToolUse": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "node /absolute/path/to/Citadel/hooks_src/post-edit.js",
-            "timeout": 30
-          }
-        ]
-      }
-    ]
-  }
-}
-```
+`post-tool-batch.js` fires **once** after all parallel tool calls in a wave settle,
+rather than once per tool. This is the wave-level checkpoint — more efficient than
+per-tool checks for multi-file edit waves.
+
+Registered with `async: true, asyncRewake: true` — runs in the background without
+blocking the edit path. If it exits 2, Claude Code wakes Claude with the stderr as
+feedback. Currently exit 0 only (observer mode).
+
+## Permission Auto-Approval
+
+`permission-request.js` auto-approves known-safe Citadel operations without showing
+the permission dialog. Safe patterns:
+
+- `node .citadel/scripts/*.js` (telemetry delegates)
+- Write/Edit to `.planning/**` (campaign and fleet state)
+- Write/Edit to `.citadel/**` (harness scaffolding)
+
+All permission requests (approved and deferred) are logged to `audit.jsonl`.
+
+## additionalContext Output
+
+`quality-gate.js` (Stop) and `post-tool-batch.js` (PostToolBatch) inject quality signals
+directly into Claude's context window via the `additionalContext` protocol field, rather
+than printing to stderr. This means Claude sees the violation summary in its context
+without relying on stderr display.
+
+CITADEL_UI mode (when `CITADEL_UI=true`) uses the Citadel-formatted JSON instead.
 
 ## Language-Adaptive Typecheck
 
@@ -95,73 +167,22 @@ Configure in `harness.json`:
 
 ## Dependency-Aware Pattern Detection
 
-The `post-edit.js` hook can warn agents when they use raw APIs that an installed
-library already handles. This prevents agents from reinventing what your project
-already has.
-
-Configure in `harness.json`:
+The `post-edit.js` hook warns agents when they use raw APIs that an installed
+library already handles. Configure in `harness.json`:
 
 ```json
 {
   "dependencyPatterns": [
     {
       "dependency": "@tanstack/react-query",
-      "banned": ["fetch(", "axios(", "XMLHttpRequest"],
-      "message": "Use tanstack query instead of raw fetch. See: https://tanstack.com/query"
-    },
-    {
-      "dependency": "zustand",
-      "banned": ["React.createContext", "useContext"],
-      "message": "Use Zustand store instead of React Context for shared state"
-    },
-    {
-      "dependency": "date-fns",
-      "banned": ["new Date().toLocaleDateString", "moment("],
-      "message": "Use date-fns for date formatting — it's already installed"
-    },
-    {
-      "dependency": "zod",
-      "banned": ["typeof ", "instanceof "],
-      "message": "Use Zod schemas for runtime validation instead of manual type checks"
+      "banned": ["fetch(", "axios("],
+      "message": "Use tanstack query instead of raw fetch"
     }
   ]
 }
 ```
 
-**How it works:**
-
-1. On each edit, reads `dependencyPatterns` from harness.json (skips entirely if missing)
-2. Reads `package.json` once per session and caches the dependency list
-3. For each pattern entry: if the dependency is installed, scans the edited file for banned strings
-4. Surfaces warnings (not blocks) — the agent sees the feedback and self-corrects
-
-**Rules:**
-
-- `dependencyPatterns` is optional. If absent, zero cost — the section is skipped entirely.
-- Only the edited file is scanned, not the whole project.
-- `package.json` is read once and cached for the process lifetime.
-- Warnings only. The agent receives the feedback but the edit is not blocked.
-- One warning per dependency per edit (not per match).
-
-`/do setup` will detect common dependencies and offer to add patterns during first run.
-
-## Circuit Breaker
-
-Tracks tool failures. After 3 failures:
-- Suggests alternative approaches
-- After 5 trips: escalates to "stop and rethink" message
-
-State stored in `.claude/circuit-breaker-state.json` (gitignored).
-
-**Note:** The failure counter increments on every `PostToolUseFailure` event and resets
-when the threshold is hit (tripped). There is no success-reset mechanism — the counter
-tracks failures since the last trip, not strictly consecutive failures. In practice this
-means scattered failures across a long session can eventually trip the breaker, which is
-conservative by design.
-
-## Quality Gate
-
-Scans recently modified files on session end. Built-in rules:
+## Quality Gate Rules
 
 | Rule | What It Catches |
 |------|----------------|
@@ -187,10 +208,15 @@ Add custom rules in `harness.json`:
 }
 ```
 
+## Circuit Breaker
+
+Tracks tool failures. After 3 failures: suggests alternatives. After 5: escalates to
+"stop and rethink". State stored in `.claude/circuit-breaker-state.json` (gitignored).
+
 ## Rules
 
-1. **One hook per lifecycle event.** Don't chain multiple scripts on the same event.
-2. **Hooks must be fast.** PostToolUse fires on every edit — keep it under 5 seconds.
-3. **Hook output goes to Claude.** Use it for actionable feedback, not noise.
-4. **PreToolUse can block.** Exit code 2 prevents the tool from executing.
-5. **Everything else is advisory.** Other hooks report but don't block.
+1. **Hooks are fail-safe.** Observer hooks always exit 0. Only PreToolUse and UserPromptSubmit can block (exit 2).
+2. **Hot-path hooks must be fast.** PostToolUse fires on every edit — keep it under 5 seconds.
+3. **Use `additionalContext` for feedback.** Inject quality signals into Claude's context window rather than printing to stderr.
+4. **Heavy checks use `asyncRewake`.** Slow quality checks (typecheck, test runs) run async on PostToolBatch — zero blocking penalty on the edit path.
+5. **Fleet agents are attributed.** `agent_id` and `agent_type` are captured on every audit log entry when inside a subagent.

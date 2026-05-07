@@ -3,9 +3,11 @@ name: fresh-project
 skill: setup
 description: setup walks through configuration steps and creates harness.json on a clean project
 tags: [happy-path]
+behavior: invariant
 input: /setup
 state: clean
 skip-execute: true
+skip-reason: interactive-setup
 assert-contains:
   - setup
   - Q1

@@ -1,6 +1,6 @@
 # Architecture
 
-> last-updated: 2026-03-25
+> last-updated: 2026-05-07
 
 How the harness works, from intent to execution.
 
@@ -49,23 +49,33 @@ to re-invoke than to waste tokens on over-routing.
 
 ## Hooks
 
-Automatic shell scripts that fire on lifecycle events:
+Automatic Node.js scripts that fire on 29 lifecycle events. 32 hooks total. Full reference: [docs/HOOKS.md](HOOKS.md).
 
-| Hook | Event | What It Does |
-|------|-------|-------------|
-| `post-edit.js` | PostToolUse | Per-file typecheck on every edit |
-| `circuit-breaker.js` | PostToolUseFailure | Detect failure loops, suggest alternatives |
-| `quality-gate.js` | Stop | Scan for anti-patterns before session ends |
-| `intake-scanner.js` | SessionStart | Report pending work items |
-| `protect-files.js` | PreToolUse | Block edits to protected files |
-| `pre-compact.js` | PreCompact | Save context before compression |
-| `restore-compact.js` | SessionStart (compact) | Restore context after compression |
-| `worktree-setup.js` | WorktreeCreate | Initialize worktrees for parallel agents |
+| Category | Key Hooks | Purpose |
+|----------|-----------|---------|
+| Safety (PreToolUse) | `protect-files.js`, `external-action-gate.js`, `governance.js` | Block protected edits, gate external actions, audit tool calls |
+| Quality (PostToolUse) | `post-edit.js`, `organize-enforce.js`, `complexity-check.js` | Typecheck, file placement, advisory complexity scores |
+| Wave (PostToolBatch) | `post-tool-batch.js` | Async quality checkpoint after parallel tool waves |
+| Session | `init-project.js`, `session-end.js`, `restore-compact.js` | Scaffold state, flush telemetry, restore after compression |
+| Fleet | `subagent-start.js`, `subagent-stop.js`, `worktree-setup.js` | Agent identity binding, completion logging, worktree init |
+| Consent | `permission-request.js`, `external-action-gate.js` | Auto-approve safe ops, gate pushes/PRs with user consent |
+| Signals | `instructions-loaded.js`, `file-changed.js`, `config-change.js` | React to CLAUDE.md reloads, file-on-disk changes, settings changes |
 
-Hook definitions live in `hooks/hooks-template.json`. They are installed per-project
-via the Claude runtime adapter in `runtimes/claude-code/generators/install-hooks.js`,
-with `scripts/install-hooks.js` kept as the public entrypoint.
-One hook per lifecycle event (consolidate rather than chain).
+Hook definitions live in `hooks/hooks-template.json`. Installed per-project via `scripts/install-hooks.js`.
+
+## Governance & Safety
+
+Three layers of policy enforcement:
+
+| Layer | Mechanism | When |
+|-------|-----------|------|
+| Automatic | Hooks (PreToolUse, PostToolUse) | Every tool call |
+| Spawned judge | `policy-enforcer` agent (Haiku, read-only) | Red-reversibility operations in Archon |
+| Constitution | `docs/CONSTITUTION.md` — 3-tier rules | Tier 1 hard-blocks, Tier 2 warns, Tier 3 advisory |
+
+The `policy-enforcer` agent receives a proposed action, reads the Tier-appropriate rules, and returns a structured JSON verdict (allow/block). Tier 1 violations always block. Archon spawns it before destructive or hard-to-reverse operations.
+
+Audit entries are written with a `_hash` field (SHA-256 of the entry content minus `_hash` itself). The `verify-audit-integrity` script detects tampering by recomputing hashes.
 
 ## Campaign Files
 

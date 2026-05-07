@@ -3,9 +3,9 @@ name: no-metric
 skill: experiment
 description: experiment asks for a measurable metric before starting when none is provided
 tags: [fringe, missing-state]
+behavior: invariant
 input: /experiment make the dashboard faster
 state: clean
-skip-execute: true
 timeout: 240000
 assert-contains:
   - metric

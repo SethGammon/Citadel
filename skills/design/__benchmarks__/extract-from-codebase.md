@@ -3,9 +3,9 @@ name: extract-from-codebase
 skill: design
 description: Design skill extracts colors, typography, and spacing into a manifest from an existing codebase
 tags: [happy-path]
+behavior: invariant
 input: /design extract the design system
-state: with-campaign
-skip-execute: true
+state: with-ui-source
 assert-contains:
   - extract
 assert-not-contains:

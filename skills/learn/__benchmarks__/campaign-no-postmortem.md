@@ -27,4 +27,4 @@ Per the SKILL.md: "If not found: note 'Postmortem not found — proceeding witho
 1. Reads the completed campaign file successfully
 2. Notes that the postmortem was not found (does not crash)
 3. Still produces pattern extraction output (or notes campaign is too brief)
-4. Writes knowledge files to .planning/knowledge/ or notes why it can't
+4. Writes staged findings to .planning/wiki/_staging/ and compiles into .planning/wiki/

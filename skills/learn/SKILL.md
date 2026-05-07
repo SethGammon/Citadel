@@ -1,153 +1,249 @@
 ---
 name: learn
 description: >-
-  Post-campaign learning extractor. Reads a completed campaign file, its
-  postmortem, and telemetry audit log to extract successful patterns,
-  failed patterns, key decisions, and quality rule candidates. Writes
-  findings to the knowledge base and optionally appends quality rules to
-  harness.json. Auto-triggered after /postmortem completes.
+  Knowledge compiler. Extracts patterns, decisions, and anti-patterns from
+  completed campaigns and evolve cycles, then compiles them into structured wiki
+  pages that integrate with existing knowledge rather than appending isolated
+  files. Implements flush→compile→lint pipeline. Auto-triggered by /postmortem
+  and /evolve Phase 6.
 user-invocable: true
 auto-trigger: false
-last-updated: 2026-03-26
+last-updated: 2026-05-07
 ---
 
-# /learn — Campaign Pattern Extractor
+# /learn — Knowledge Compiler
 
 ## Orientation
 
-**Use when:** You have a completed campaign and want to extract successful patterns, failed patterns, key decisions, and quality rule candidates into the knowledge base.
+**Use when:** You have a completed campaign or evolve cycle and want to compile
+its findings into the project's growing knowledge wiki — so future sessions
+start smarter, not from scratch.
 
-**Don't use when:** You want a structured incident analysis first (use `/postmortem` — run it before `/learn`), you need a context transfer for the next session (use `/session-handoff`), or you haven't completed a campaign yet (nothing to extract).
+**Don't use when:** You want a structured incident analysis first (use `/postmortem`
+— run it before `/learn`); you haven't finished any campaigns (nothing to compile);
+you want a context transfer only (use `/session-handoff`).
 
-## When to Use
-
-- After any completed campaign (auto-triggered by /postmortem)
-- Manually: `/learn` runs on the most recently completed campaign
-- Targeted: `/learn {slug}` runs on a specific campaign
-- When the user says "extract patterns", "learn from that", "save what worked"
+**Key difference from appending:** `/learn` doesn't create isolated per-campaign
+files. It integrates new findings into existing wiki pages — updating evidence
+lists, raising confidence where a pattern is confirmed again, and flagging
+contradictions. A wiki is a compiler; a log is an interpreter.
 
 ## Invocation Forms
 
 ```
-/learn                  — most recently completed campaign
-/learn {slug}           — specific campaign by slug
-/learn {file-path}      — specific campaign file path
+/learn                              — most recently completed campaign
+/learn {slug}                       — specific campaign by slug
+/learn {file-path}                  — specific campaign file path
+/learn --from-evolve {target}       — compile from /evolve pattern library
+/learn --from-evolve {target} --cycle {n}  — specific evolve cycle only
+/learn --lint                       — lint-only pass (no new extraction)
+/learn --compile                    — re-compile staging area into wiki (no new extraction)
 ```
 
 ## Inputs
 
-1. A campaign slug, file path, or "most recent" resolution
+1. A campaign slug, file path, evolve target, or "most recent" resolution
 2. Corresponding postmortem in `.planning/postmortems/` (optional)
-3. `.planning/telemetry/audit.jsonl` filtered to this campaign
+3. `.planning/telemetry/audit.jsonl` filtered to this campaign (optional)
+4. For `--from-evolve`: `.planning/evolve/{target}/pattern-library.md`
 
 ## Protocol
 
-### Step 1: RESOLVE TARGET CAMPAIGN
+### Step 1: RESOLVE TARGET
 
 **If `/learn` (no argument):**
 - Glob `.planning/campaigns/completed/*.md` or `.planning/campaigns/*.md`
   where `Status: completed`
-- Sort by modification time descending
-- Take the most recent
-- If none found: output "No completed campaigns found. Run /learn after a
-  campaign completes." and stop
+- Sort by modification time descending, take most recent
+- If none found: "No completed campaigns found. Run /learn after a campaign completes." Stop.
 
 **If `/learn {slug}`:**
 - Search `.planning/campaigns/` for a file whose name contains `{slug}`
-- If not found in active campaigns, check `.planning/campaigns/completed/`
+- Check `.planning/campaigns/completed/` if not found in active
 - If still not found: "No campaign found matching '{slug}'."
+
+**If `/learn --from-evolve {target}`:**
+- Read `.planning/evolve/{target}/pattern-library.md` — this is the source
+- If `--cycle {n}`: filter to sections beginning with `## Cycle {n}` only
+- If file not found: "No evolve pattern library for '{target}'." Stop.
+
+**If `/learn --lint` or `/learn --compile`:** Skip to Step 4 or 5 respectively.
 
 ### Step 2: GATHER SOURCES
 
+For campaign-based runs only (skip for `--from-evolve`):
+
 **Campaign file (required):**
-- Full content — direction, phases, Decision Log, Feature Ledger,
-  circuit breaker activations, review queue items
+- Full content — direction, phases, Decision Log, circuit breaker activations
 
 **Postmortem (optional):**
 - Search `.planning/postmortems/` for files matching `*{slug}*`
-- If found: read the full postmortem
 - If not found: note "Postmortem not found — proceeding without it" and continue
 
 **Audit telemetry (optional):**
 - Read last 200 lines of `.planning/telemetry/audit.jsonl`
-- Filter entries that contain the campaign slug or timestamps within the
-  campaign's active period (if dates are available in the campaign file)
-- If no matching entries found: note "No audit telemetry found for this campaign"
+- Filter entries that match the campaign slug or its active period
+- If none: note "No audit telemetry found for this campaign"
 
-### Step 3: EXTRACT PATTERNS
+### Step 3: FLUSH
 
-Extract four categories from gathered sources:
+Extract raw findings and write to staging.
 
-**A. Successful Patterns** — approaches/decisions that demonstrably worked (phases completed without rework, postmortem positives, unrevert commits). Per pattern: name, description, evidence (phase/commit/log), applicability.
+**For campaign sources:**
 
-**B. Failed Patterns (Anti-patterns)** — what was tried and failed (rework phases, circuit breaker trips, quality gate blocks, reverted commits). Per anti-pattern: name, description, failure mode, evidence, avoidance.
+Extract four categories:
 
-**C. Key Decisions** — from campaign Decision Log or inferred from phase descriptions. Per decision: what was decided, rationale, outcome (completed vs. rework).
+**A. Successful Patterns** — approaches that demonstrably worked (phases completed without rework, postmortem positives, no reverts).
+Per pattern: `name`, `mechanism` (what caused success), `evidence` (phase/commit/entry), `topic` (infer from subject matter), `applicability`.
 
-**D. Quality Rule Candidates** — only generate a rule if: specific regex (not vague principle), applies to a specific file pattern, occurred more than once or was severe. Per candidate: regex, file pattern, trigger message, confidence (high/medium/low — skip low).
+**B. Anti-patterns** — what was tried and failed (rework phases, circuit breaker trips, quality gate blocks, reverts).
+Per pattern: `name`, `what-was-tried`, `failure-mode`, `evidence`, `topic`, `avoidance`.
 
-### Step 4: WRITE KNOWLEDGE FILES
+**C. Key Decisions** — from Decision Log or inferred from phase descriptions.
+Per decision: `what`, `rationale`, `outcome` (completed or rework).
 
-Create `.planning/knowledge/{slug}-patterns.md` with sections: header (extracted date, campaign path, postmortem path or "none"), `## Successful Patterns` (name, description, evidence, applicability per pattern), `## Key Decisions` (table: decision | rationale | outcome).
+**D. Quality Rule Candidates** — only generate if: specific regex, applies to a specific file pattern, occurred more than once or was severe. Per candidate: regex, file pattern, trigger message, confidence (`high`/`medium`/`low` — skip `low`).
 
-Create `.planning/knowledge/{slug}-antipatterns.md` with sections: header, `## Failed Patterns` (name, what was done, failure mode, evidence, avoidance per pattern).
+**For evolve sources:**
 
-Create `.planning/knowledge/` if it does not exist.
+Parse the pattern library's sections. For each pattern record:
+- `name`: section heading
+- `mechanism`: "**Mechanism:**" field
+- `delta`: "**Delta:**" field
+- `topic`: infer from "**Axis class:**" (e.g., `orientation_precision` → `skill-orientation`)
+- `applies-to`: "**Applies to:**" field
+- `confidence`: "**Confidence:**" field
+- `evidence`: source file + cycle number
 
-### Step 5: APPEND QUALITY RULES
+**Staging write:**
 
-For each high/medium-confidence rule candidate:
+Create `.planning/wiki/_staging/` if it does not exist.
+Write staged findings to `.planning/wiki/_staging/{source-slug}-{timestamp}.jsonl` —
+one JSON record per finding (newline-delimited).
+
+If zero findings are extractable: write staging file with a single `{"type":"empty","source":"{slug}"}` record and note "Campaign may have been too brief."
+
+### Step 4: COMPILE
+
+Integrate staged findings into wiki pages.
+
+Create `.planning/wiki/` if it does not exist.
+
+For each staged finding:
+1. Determine the wiki page: `.planning/wiki/{topic}.md` where `topic` is the finding's `topic` field (normalized to kebab-case).
+2. Read the wiki page if it exists.
+3. **If the page exists and contains a section for this pattern** (match on `## {name}`):
+   - Append the new source to the `**Evidence:**` list
+   - Update `**Last confirmed:**` to today
+   - If new confidence >= existing confidence: raise it
+   - If new evidence contradicts the existing mechanism: add a `**Conflict:**` field — do not silently overwrite
+4. **If the page exists but has no section for this pattern:**
+   - Append a new section with the full finding
+5. **If the page does not exist:**
+   - Create it with the frontmatter template (see below) and the finding as the first section
+
+**Wiki page format:**
+```markdown
+---
+topic: {slug}
+last-compiled: {ISO date}
+sources: {N}
+---
+
+# {Topic Title}
+
+## {Pattern Name}
+**Mechanism:** {what causes success/failure}
+**Evidence:** {source-1 (date)}, {source-2 (date)}, ...
+**Confidence:** high/medium/low
+**Last confirmed:** {ISO date}
+**Applies to:** {scope}
+```
+
+After compiling all findings: update `.planning/wiki/index.md` —
+one line per wiki page: `- [{topic}]({topic}.md) — {one-line description}`.
+Create `index.md` if it does not exist.
+
+### Step 5: LINT
+
+Scan all `.planning/wiki/*.md` pages (skip `index.md`).
+
+**Contradiction check:** For each page, if two sections contain opposing directives
+("always X" vs "never X", "prefer X" vs "avoid X"), flag as:
+`CONFLICT: [{page}] {section-A} contradicts {section-B} — requires human resolution`
+
+**Staleness check:** Sections with `**Last confirmed:**` older than 60 days are flagged as:
+`STALE: [{page}] {section} — last confirmed {date}, consider re-testing`
+
+**Coverage check:** Warn if a wiki page has fewer than 2 sections — single-entry pages are fragile.
+
+Lint results are reported in the summary. Lint does not modify wiki pages.
+
+### Step 6: APPEND QUALITY RULES
+
+For each high/medium-confidence rule candidate in the staged findings:
 1. Read `.claude/harness.json` (create with `{}` if missing)
 2. Initialize `qualityRules.custom` to `[]` if absent
 3. Skip if a rule with the same `pattern` already exists
-4. Append: `{ "name": "auto-{slug}-{N}", "pattern": "{regex}", "filePattern": "{glob}", "message": "Learned from campaign {slug}: {message}" }`
+4. Append: `{ "name": "auto-{slug}-{N}", "pattern": "{regex}", "filePattern": "{glob}", "message": "Learned from {slug}: {message}" }`
 5. Write updated harness.json
 
-Skip low-confidence rules — a bad rule firing on innocent code is worse than no rule.
+Skip low-confidence rules.
 
-### Step 6: OUTPUT SUMMARY
+### Step 7: OUTPUT SUMMARY
 
 ```
-=== /learn: {Campaign Slug} ===
-Sources: campaign {path} | postmortem {path or "not found"} | {N} audit entries matched
-Extracted: {N} patterns | {N} anti-patterns | {N} decisions | {N} rule candidates ({M} added, {K} skipped)
-Files: .planning/knowledge/{slug}-patterns.md, {slug}-antipatterns.md
-Rules added to harness.json: {M} (one line per rule)
-Next: review .planning/knowledge/ and promote useful rules to CLAUDE.md for permanent enforcement.
+=== /learn: {Source} ===
+Mode: {campaign | evolve-{target} | lint-only | compile-only}
+Sources: {campaign path | evolve path} | postmortem {path or "not found"} | {N} audit entries
+Staged: {N} findings → .planning/wiki/_staging/{file}
+Compiled: {N} patterns integrated | {M} new wiki sections | {K} existing sections updated
+Wiki pages: .planning/wiki/{topic-1}.md, ...
+Lint: {conflicts found | clean} | {stale entries} | {coverage warnings}
+Rules added to harness.json: {M} ({K} skipped — already exist)
+Next: review .planning/wiki/index.md — promote stable patterns to CLAUDE.md for permanent enforcement.
 ```
 
-## Fringe Case Handling
+## Fringe Cases
 
 **No completed campaigns:** Output message and stop.
 
-**No Decision Log:** Extract decisions from phase descriptions; note "inferred from phase descriptions" in output.
+**`.planning/` does not exist:** Output "Run /do setup first to initialize the harness state directory." Stop.
+
+**No Decision Log:** Extract decisions from phase descriptions; note "inferred from phase descriptions."
 
 **harness.json missing:** Create with only the qualityRules section; do not invent other fields.
 
-**Duplicate rule:** Skip silently; count in "skipped — already exist".
+**Duplicate quality rule:** Skip silently; count in "skipped — already exist."
 
 **Postmortem missing:** Proceed without it; note in summary.
 
 **Large telemetry file:** Read last 200 lines only.
 
-**Zero extractable patterns:** Write knowledge files with empty sections and note "campaign may have been too brief." Do not skip file creation.
+**Zero extractable findings:** Write staging file noting source was empty. Do not skip wiki/index update.
+
+**Wiki page conflict detected at compile time:** Add a `**Conflict:**` field to the section. Never silently overwrite the existing mechanism.
+
+**evolve pattern-library.md missing:** "No evolve pattern library for '{target}'. Run /evolve {target} first to generate patterns." Stop.
 
 ## Contextual Gates
 
-**Disclosure:** "Extracting learnings to `.planning/evolve/{target}/`. Creates new files only."
-**Reversibility:** green — writes to `.planning/knowledge/{slug}-*.md` only; delete those files to undo
+**Disclosure:** "Compiling findings into .planning/wiki/. Modifies wiki pages in-place; creates staging files."
+**Reversibility:** green — all writes are to `.planning/wiki/` and `.planning/wiki/_staging/`; `git restore .planning/wiki/` or delete the directory to undo. Quality rule additions to harness.json can be manually removed.
 **Trust gates:**
-- Any: run on any completed campaign
+- Any: run on any completed campaign or evolve target
 
 ## Quality Gates
 
 - Never invent patterns not supported by evidence in the source files
 - Never write a quality rule with confidence < medium
 - Never duplicate an existing quality rule (check before appending)
-- Knowledge files must be written even if quality rules section is empty
-- Summary output must include counts for all four extraction categories
+- Wiki index must be updated on every compile run
+- Lint must run after every compile (not skipped)
+- Conflicts must be flagged, never silently resolved
+- Summary output must include counts for all phases
 
 ## Exit Protocol
 
 /learn does not produce a full HANDOFF block (it is a utility, not a campaign).
-It outputs the summary block in Step 6 and then waits for the next command.
+It outputs the summary block in Step 7 and waits for the next command.

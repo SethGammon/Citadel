@@ -162,7 +162,7 @@ the router matches it to user intent.
 
 ## Examples
 
-The harness ships with 33 built-in skills. Here are 6 core examples:
+The harness ships with 45 built-in skills. Here are 6 core examples:
 
 | Skill | Type | What It Does |
 |-------|------|-------------|

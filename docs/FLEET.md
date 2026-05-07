@@ -1,6 +1,6 @@
 # Fleet — Parallel Campaign Orchestration
 
-> last-updated: 2026-03-24
+> last-updated: 2026-05-07
 
 Fleet runs multiple campaigns simultaneously through coordinated waves,
 sharing discoveries between them.
@@ -79,6 +79,38 @@ Direction: {what was requested}
 - API uses jose for JWT (inform frontend agents)
 - 15min token expiry means frontend needs refresh logic
 ```
+
+## Shared State Merge Strategies
+
+Parallel agents access shared `.planning/` state. Each resource has a declared merge strategy to prevent silent overwrites:
+
+| Resource | File | Strategy |
+|----------|------|----------|
+| Discoveries | `fleet/{session}/discoveries.jsonl` | Append-only — each agent appends, never overwrites |
+| Agent briefs | `fleet/{session}/briefs/{agent}.md` | Per-agent file — no conflicts possible |
+| Session file | `fleet/{session}-session.md` | Lock-on-write — agent acquires `.lock` before editing, releases after |
+| Campaign file | `campaigns/{name}.md` | Lock-on-write — same lock protocol |
+| Telemetry | `telemetry/agent-runs.jsonl` | Append-only — atomic append per event |
+| Wiki staging | `wiki/staging/` | Per-agent file — named by agent ID |
+| Coordination claims | `coordination/claims/` | Per-scope file — one file per claimed directory |
+
+An agent that violates its resource's strategy may silently corrupt shared state.
+When in doubt, use append-only and let Fleet merge after the wave completes.
+
+## Consistency Voting
+
+For high-stakes Fleet decisions, spawn 3 Phase Validators and require 2/3 agreement:
+
+**When to vote:**
+- A wave completes partially (some agents succeeded, some failed) and the next wave's scope depends on the outcome
+- A failed validation merge would affect other agents' branches
+- An abort decision would discard multiple agents' work
+
+**How to vote:**
+1. Spawn 3 Phase Validator agents with identical context
+2. Each agent independently examines the evidence and returns a verdict (`proceed` / `abort` / `retry`)
+3. Tally: majority verdict wins; timeout counts as `proceed` (never blocks indefinitely)
+4. Log the vote and outcome to `telemetry/agent-runs.jsonl`
 
 ## Coordination
 

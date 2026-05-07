@@ -3,9 +3,9 @@ name: audit-and-report
 skill: marshal
 description: Marshal runs a full audit loop and produces a structured findings report
 tags: [happy-path]
+behavior: invariant
 input: /marshal assess the authentication module
 state: clean
-skip-execute: true
 assert-contains:
   - Marshal Report
   - Findings
