@@ -3,9 +3,10 @@ name: external-library-research
 skill: research
 description: Research produces structured findings with confidence levels for an external library question
 tags: [happy-path]
+behavior: invariant
 input: /research what is the best way to handle JWT refresh tokens in 2025
 state: clean
-skip-execute: true
+timeout: 300000
 assert-contains:
   - findings
   - Confidence

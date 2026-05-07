@@ -52,11 +52,37 @@ function run() {
     process.exit(0);
   }
 
+  // Check for uncompiled wiki staging entries (before the files early-exit so wiki-only
+  // sessions still surface the message even when the intake directory is empty)
+  const wikiStagingDir = path.join(PROJECT_ROOT, '.planning', 'wiki', '_staging');
+  let stagedCount = 0;
+  if (fs.existsSync(wikiStagingDir)) {
+    try {
+      const stagingFiles = fs.readdirSync(wikiStagingDir).filter(f => f.endsWith('.jsonl'));
+      const wikiIndexPath = path.join(PROJECT_ROOT, '.planning', 'wiki', 'index.md');
+      if (stagingFiles.length > 0) {
+        // Surface if any staging file is newer than the wiki index (or index doesn't exist)
+        let indexMtime = 0;
+        try {
+          if (fs.existsSync(wikiIndexPath)) {
+            indexMtime = fs.statSync(wikiIndexPath).mtimeMs;
+          }
+        } catch { /* ignore */ }
+        for (const sf of stagingFiles) {
+          try {
+            const sfMtime = fs.statSync(path.join(wikiStagingDir, sf)).mtimeMs;
+            if (sfMtime > indexMtime) { stagedCount++; }
+          } catch { /* ignore */ }
+        }
+      }
+    } catch { /* non-critical */ }
+  }
+
   const files = fs.readdirSync(INTAKE_DIR).filter(f =>
     f.endsWith('.md') && !f.startsWith('_') && !f.startsWith('.')
   );
 
-  if (files.length === 0) {
+  if (files.length === 0 && stagedCount === 0) {
     process.exit(0);
   }
 
@@ -86,12 +112,16 @@ function run() {
     });
   }
 
-  if (items.length === 0) {
+  if (items.length === 0 && stagedCount === 0) {
     process.exit(0);
   }
 
   const pending = items.filter(i => i.status === 'pending');
   const inProgress = items.filter(i => i.status === 'in-progress' || i.status === 'briefed');
+
+  if (pending.length === 0 && inProgress.length === 0 && stagedCount === 0) {
+    process.exit(0);
+  }
 
   const lines = ['[Intake] Work items detected:'];
 
@@ -107,6 +137,11 @@ function run() {
     for (const item of inProgress) {
       lines.push(`    → ${item.file}: "${item.title}" [${item.status}]`);
     }
+  }
+
+  if (stagedCount > 0) {
+    lines.push(`  ${stagedCount} wiki finding(s) staged but not compiled:`);
+    lines.push(`    → Run /learn --compile to integrate into .planning/wiki/`);
   }
 
   lines.push('  Run /do status for details, or /autopilot to process pending items.');

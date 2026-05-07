@@ -116,6 +116,31 @@ For each wave:
 
 4. **Collect results** from all agents in the wave
 
+4.5. **Validate wave results** — spawn one Phase Validator per agent in parallel
+   (validators are Haiku, read-only, effort: low):
+   ```
+   Agent(
+     subagent_type: "citadel:phase-validator",
+     prompt: "Campaign: {session-slug}. Wave {N} agent: {agent-name}.
+              Exit conditions: {agent's scope goal and any stated conditions}.
+              HANDOFF: {agent's full handoff text}",
+     effort: "low"
+   )
+   ```
+   Collect all validator verdicts. For each agent:
+   - **`verdict: "pass"`**: mark agent `validated` in session file. Proceed.
+   - **`verdict: "fail"`**: check retry counter for this agent (max 2 retries in fleet;
+     single-session so lower budget than Archon's 3):
+     - **Retries remain**: re-spawn the failed agent in a new worktree with the
+       validator's `conditions_failed` and `suggestions` appended to its prompt.
+       Collect its result and re-validate. Decrement counter.
+     - **Retries exhausted**: mark agent `partial` in session file. Log
+       `validator_halt: {agent-name} wave {N} — {conditions_failed}`. Continue.
+   - **Validator timeout or unparseable output**: treat as pass with warning. Log. Advance.
+
+   Run all validators for the wave in a single parallel batch — do not validate
+   sequentially. The cost is proportional to the wave size, not multiplicative.
+
 5. **Log per-agent results**:
    ```bash
    node .citadel/scripts/telemetry-log.cjs --event agent-complete --agent {agent-name} --session {session-slug} --status {success|partial|failed}
@@ -269,6 +294,54 @@ On timeout: log `agent-timeout` event, extract partial HANDOFF if present, retry
 
 Read timeout values from `harness.json` → `agentTimeouts.{skill|research|build}` (defaults: 600000/900000/1800000ms).
 
+## Shared State Merge Strategies
+
+Parallel agents writing to the same `.planning/` directory can silently overwrite
+each other. Each shared resource has a declared merge strategy:
+
+| Resource | Strategy | Rule |
+|---|---|---|
+| `.planning/discoveries/*.md` | append-only | Never overwrite an existing discovery file. Each agent writes its own uniquely-named file: `{agent-id}-{timestamp}.md`. |
+| `.planning/fleet/briefs/*.md` | append-only | Each agent writes its own brief. Fleet coordinator reads all of them. |
+| `.planning/fleet/session-{slug}.md` | lock-on-write | Only the Fleet coordinator updates the session file. Agents never write to it directly — they emit HANDOFFs that the coordinator reads and transcribes. |
+| `.planning/campaigns/{slug}.md` | lock-on-write | Only the owning Archon instance updates this file. Fleet agents that produce campaign-adjacent work report it in their HANDOFF and let Archon update. |
+| `.planning/telemetry/*.jsonl` | append-only | Append-only log. Multiple agents may append simultaneously — JSONL format guarantees each line is an atomic write. |
+| `.planning/wiki/_staging/*.jsonl` | append-only | Each agent writes a uniquely-named staging file. Compile step resolves all of them in order. No concurrent write conflicts possible. |
+| `.planning/coordination/claims/*.json` | lock-on-write | Each agent owns its own claim file (named by instance ID). No sharing; no conflicts. |
+
+**Enforcement:** Before Step 3 (spawn agents), remind each agent in its context
+injection which paths it may write to and what the strategy is for each. Agents
+that attempt to modify lock-on-write resources they don't own must be blocked via
+scope claim verification.
+
+## Consistency Voting (High-Stakes Decisions)
+
+For decisions that cannot easily be undone — campaign completion approval, campaign
+merge to main, fleet abort — spawn 3 judgment agents in parallel and require 2/3
+agreement before proceeding.
+
+**When to vote:**
+- Proposing to mark a multi-wave fleet `completed` when any wave is `partial`
+- Merging an agent's branch when its phase validator returned a `fail` (even after retries)
+- Deciding to abort and discard work from a wave with mixed results
+
+**How to vote:**
+```
+Vote prompt: "Fleet session {slug}, Wave {N}. The proposed decision is: {decision}.
+             Evidence: {handoff summaries, validator results}. 
+             Should we proceed? Respond with JSON: {verdict: 'proceed'|'block', reason: '...'}"
+```
+
+Spawn 3 Phase Validators with the vote prompt. Collect results. Tally:
+- 3/3 proceed → proceed
+- 2/3 proceed → proceed, log the dissenting reason
+- 2/3 block → block, escalate to user with the reasons
+- 3/3 block → block
+
+If voting agents time out: count the timeout as a `proceed` vote (conservative — don't let validator failure park the fleet).
+
+Skip voting when the decision is clearly safe (all waves complete, all validators pass).
+
 ## Coordination Safety
 
 ### Instance ID Generation
@@ -299,6 +372,8 @@ After each wave: read `.planning/coordination/claims/`, verify each instance is 
 - **Worktree checkout fails for an agent**: Skip that agent, log the failure in the session file, and continue. Record the skipped scope as a gap for the next wave.
 - **`.planning/` does not exist**: Create `.planning/fleet/` before starting. If `.planning/coordination/` is absent, skip scope claim registration.
 - **Discovery compression script missing**: Write raw HANDOFF excerpts to the briefs directory instead.
+- **Phase validator times out or returns malformed output**: Treat as pass with warning. Log and advance. Never block a wave on validator failure.
+- **All agents in a wave fail validation and exhaust retries**: Mark the entire wave `partial`. Log `wave_validator_halt`. Escalate to the user before proceeding to the next wave — partial wave results may invalidate downstream wave assumptions.
 
 ## Speculative Mode
 

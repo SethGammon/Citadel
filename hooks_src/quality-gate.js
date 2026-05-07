@@ -164,7 +164,14 @@ function run() {
       '',
       'Fix these before finalizing your work.',
     ].join('\n');
-    hookOutput('quality-gate', 'warned', msg, { violations });
+
+    if (CITADEL_UI) {
+      hookOutput('quality-gate', 'warned', msg, { violations });
+    } else {
+      // Inject violations directly into Claude's context window via additionalContext.
+      // This makes quality signals visible to Claude without relying on stderr display.
+      process.stdout.write(JSON.stringify({ additionalContext: msg }));
+    }
   }
 
   process.exit(0);

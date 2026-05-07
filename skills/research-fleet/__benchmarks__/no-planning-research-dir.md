@@ -3,9 +3,11 @@ name: no-planning-research-dir
 skill: research-fleet
 description: Research-fleet creates output directory when .planning/research/ does not exist
 tags: [fringe, missing-state]
+behavior: invariant
 input: /research-fleet what testing framework should we adopt
 state: clean
 skip-execute: true
+skip-reason: requires-agent-spawn
 timeout: 240000
 assert-contains:
   - scouts

@@ -148,10 +148,16 @@ test('all expected hook events registered', () => {
   const settings = JSON.parse(fs.readFileSync(path.join(installDir, '.claude/settings.json'), 'utf8'));
   const registered = Object.keys(settings.hooks || {});
   const expected = [
-    'PreToolUse', 'PostToolUse', 'PostToolUseFailure',
+    'Setup',
+    'PreToolUse', 'PostToolUse', 'PostToolBatch', 'PostToolUseFailure',
     'PreCompact', 'PostCompact', 'Stop', 'StopFailure',
+    'UserPromptSubmit', 'UserPromptExpansion',
     'SessionStart', 'SessionEnd',
-    'SubagentStop', 'TaskCreated', 'TaskCompleted',
+    'SubagentStart', 'SubagentStop', 'TeammateIdle',
+    'PermissionRequest', 'PermissionDenied', 'InstructionsLoaded',
+    'FileChanged', 'CwdChanged', 'ConfigChange',
+    'Elicitation', 'ElicitationResult', 'Notification',
+    'TaskCreated', 'TaskCompleted',
     'WorktreeCreate', 'WorktreeRemove',
   ];
   const missing = expected.filter(e => !registered.includes(e));
@@ -477,6 +483,305 @@ test('worktree-remove: writes telemetry', () => {
   if (after <= before) return 'hook-timing.jsonl not updated';
 });
 
+// ── post-tool-batch.js ──
+
+test('post-tool-batch: exits 0', () => {
+  const payload = { session_id: 'test-session', agent_id: null, agent_type: null };
+  const r = fireHook('post-tool-batch.js', payload, rDir);
+  if (r.exitCode !== 0) return `exit ${r.exitCode}: ${r.stderr.slice(0, 200)}`;
+});
+
+test('post-tool-batch: writes hook-timing entry', () => {
+  const before = countLines(rDir, '.planning/telemetry/hook-timing.jsonl');
+  fireHook('post-tool-batch.js', { session_id: 'test-batch-2' }, rDir);
+  const after = countLines(rDir, '.planning/telemetry/hook-timing.jsonl');
+  if (after <= before) return 'hook-timing.jsonl not updated';
+});
+
+// ── subagent-start.js ──
+
+test('subagent-start: exits 0', () => {
+  const payload = { agent_id: 'agent-abc', agent_type: 'marshal', description: 'Run audit' };
+  const r = fireHook('subagent-start.js', payload, rDir);
+  if (r.exitCode !== 0) return `exit ${r.exitCode}`;
+});
+
+test('subagent-start: writes hook-timing entry', () => {
+  const before = countLines(rDir, '.planning/telemetry/hook-timing.jsonl');
+  fireHook('subagent-start.js', { agent_id: 'agent-def', agent_type: 'fleet' }, rDir);
+  const after = countLines(rDir, '.planning/telemetry/hook-timing.jsonl');
+  if (after <= before) return 'hook-timing.jsonl not updated';
+});
+
+test('subagent-start: writes audit entry for typed agents', () => {
+  const before = countLines(rDir, '.planning/telemetry/audit.jsonl');
+  fireHook('subagent-start.js',
+    { agent_id: 'agent-ghi', agent_type: 'Explore', description: 'Search codebase' },
+    rDir
+  );
+  const after = countLines(rDir, '.planning/telemetry/audit.jsonl');
+  if (after <= before) return 'audit.jsonl not updated for typed agent spawn';
+});
+
+// ── permission-request.js ──
+
+test('permission-request: exits 0', () => {
+  const payload = { tool_name: 'Bash', tool_input: { command: 'npm test' } };
+  const r = fireHook('permission-request.js', payload, rDir);
+  if (r.exitCode !== 0) return `exit ${r.exitCode}`;
+});
+
+test('permission-request: writes audit entry', () => {
+  const before = countLines(rDir, '.planning/telemetry/audit.jsonl');
+  const payload = { tool_name: 'Bash', tool_input: { command: 'git push' } };
+  fireHook('permission-request.js', payload, rDir);
+  const after = countLines(rDir, '.planning/telemetry/audit.jsonl');
+  if (after <= before) return 'audit.jsonl not updated';
+});
+
+test('permission-request: auto-approves citadel script (stdout has allow decision)', () => {
+  const payload = {
+    tool_name: 'Bash',
+    tool_input: { command: 'node .citadel/scripts/telemetry-log.cjs --event test' },
+  };
+  const r = fireHook('permission-request.js', payload, rDir);
+  if (r.exitCode !== 0) return `exit ${r.exitCode}`;
+  if (!r.stdout.includes('"behavior":"allow"') && !r.stdout.includes('"behavior": "allow"'))
+    return 'expected auto-approve decision in stdout';
+});
+
+test('permission-request: defers unknown command (no decision in stdout)', () => {
+  const payload = {
+    tool_name: 'Bash',
+    tool_input: { command: 'rm -rf /' },
+  };
+  const r = fireHook('permission-request.js', payload, rDir);
+  if (r.exitCode !== 0) return `exit ${r.exitCode}`;
+  if (r.stdout.includes('"behavior":"allow"')) return 'should not auto-approve dangerous command';
+});
+
+// ── instructions-loaded.js ──
+
+test('instructions-loaded: exits 0 with no file path', () => {
+  const r = fireHook('instructions-loaded.js', {}, rDir);
+  if (r.exitCode !== 0) return `exit ${r.exitCode}`;
+});
+
+test('instructions-loaded: exits 0 with file path', () => {
+  const payload = {
+    file_path: path.join(rDir, 'CLAUDE.md'),
+    session_id: 'test-session',
+  };
+  const r = fireHook('instructions-loaded.js', payload, rDir);
+  if (r.exitCode !== 0) return `exit ${r.exitCode}`;
+});
+
+test('instructions-loaded: writes hook-timing entry', () => {
+  const before = countLines(rDir, '.planning/telemetry/hook-timing.jsonl');
+  fireHook('instructions-loaded.js',
+    { file_path: path.join(rDir, 'CLAUDE.md'), session_id: 'test-timing' },
+    rDir
+  );
+  const after = countLines(rDir, '.planning/telemetry/hook-timing.jsonl');
+  if (after <= before) return 'hook-timing.jsonl not updated';
+});
+
+// ── user-prompt-submit.js ──
+
+test('user-prompt-submit: exits 0', () => {
+  const r = fireHook('user-prompt-submit.js', { session_id: 'test-session' }, rDir);
+  if (r.exitCode !== 0) return `exit ${r.exitCode}`;
+});
+
+test('user-prompt-submit: writes hook-timing entry', () => {
+  const before = countLines(rDir, '.planning/telemetry/hook-timing.jsonl');
+  fireHook('user-prompt-submit.js', { session_id: 'test-prompt-2' }, rDir);
+  const after = countLines(rDir, '.planning/telemetry/hook-timing.jsonl');
+  if (after <= before) return 'hook-timing.jsonl not updated';
+});
+
+// ── file-changed.js ──
+
+test('file-changed: exits 0 with no file', () => {
+  const r = fireHook('file-changed.js', {}, rDir);
+  if (r.exitCode !== 0) return `exit ${r.exitCode}`;
+});
+
+test('file-changed: exits 0 on regular file', () => {
+  const payload = { file_path: path.join(rDir, 'src', 'app.ts'), change_type: 'modified' };
+  const r = fireHook('file-changed.js', payload, rDir);
+  if (r.exitCode !== 0) return `exit ${r.exitCode}`;
+});
+
+test('file-changed: writes hook-timing entry', () => {
+  const before = countLines(rDir, '.planning/telemetry/hook-timing.jsonl');
+  fireHook('file-changed.js', { file_path: path.join(rDir, 'src', 'x.ts') }, rDir);
+  const after = countLines(rDir, '.planning/telemetry/hook-timing.jsonl');
+  if (after <= before) return 'hook-timing.jsonl not updated';
+});
+
+test('file-changed: queues doc-sync for CLAUDE.md change', () => {
+  const payload = { file_path: path.join(rDir, 'CLAUDE.md'), change_type: 'modified' };
+  fireHook('file-changed.js', payload, rDir);
+  const queue = readJsonl(rDir, '.planning/telemetry/doc-sync-queue.jsonl');
+  const entry = queue.find(e => e.event === 'file-changed');
+  if (!entry) return 'no doc-sync-queue entry for CLAUDE.md change';
+});
+
+test('file-changed: queues skill-lint for SKILL.md change', () => {
+  const payload = {
+    file_path: path.join(rDir, 'skills', 'marshal', 'SKILL.md'),
+    change_type: 'modified',
+  };
+  fireHook('file-changed.js', payload, rDir);
+  const queue = readJsonl(rDir, '.planning/telemetry/skill-lint-queue.jsonl');
+  if (queue.length === 0) return 'skill-lint-queue.jsonl not updated';
+});
+
+// ── user-prompt-expansion.js ──
+
+test('user-prompt-expansion: exits 0 with no prompt', () => {
+  const r = fireHook('user-prompt-expansion.js', {}, rDir);
+  if (r.exitCode !== 0) return `exit ${r.exitCode}`;
+});
+
+test('user-prompt-expansion: exits 0 with skill name', () => {
+  const r = fireHook('user-prompt-expansion.js',
+    { skill_name: 'marshal', original_prompt: '/marshal fix auth' },
+    rDir
+  );
+  if (r.exitCode !== 0) return `exit ${r.exitCode}`;
+});
+
+test('user-prompt-expansion: writes skill-usage.jsonl entry', () => {
+  const before = countLines(rDir, '.planning/telemetry/skill-usage.jsonl');
+  fireHook('user-prompt-expansion.js',
+    { skill_name: 'fleet', original_prompt: '/fleet build auth' },
+    rDir
+  );
+  const after = countLines(rDir, '.planning/telemetry/skill-usage.jsonl');
+  if (after <= before) return 'skill-usage.jsonl not updated';
+});
+
+// ── notification.js ──
+
+test('notification: exits 0', () => {
+  const r = fireHook('notification.js', { notification_type: 'idle' }, rDir);
+  if (r.exitCode !== 0) return `exit ${r.exitCode}`;
+});
+
+test('notification: writes audit entry for auth_failure', () => {
+  const before = countLines(rDir, '.planning/telemetry/audit.jsonl');
+  fireHook('notification.js', { notification_type: 'auth_failure', message: 'Token expired' }, rDir);
+  const after = countLines(rDir, '.planning/telemetry/audit.jsonl');
+  if (after <= before) return 'audit.jsonl not updated for auth_failure';
+});
+
+test('notification: writes hook-timing for any notification', () => {
+  const before = countLines(rDir, '.planning/telemetry/hook-timing.jsonl');
+  fireHook('notification.js', { notification_type: 'permission' }, rDir);
+  const after = countLines(rDir, '.planning/telemetry/hook-timing.jsonl');
+  if (after <= before) return 'hook-timing.jsonl not updated';
+});
+
+// ── config-change.js ──
+
+test('config-change: exits 0', () => {
+  const r = fireHook('config-change.js', {}, rDir);
+  if (r.exitCode !== 0) return `exit ${r.exitCode}`;
+});
+
+test('config-change: exits 0 with file path', () => {
+  const r = fireHook('config-change.js',
+    { file_path: path.join(rDir, '.claude', 'settings.json') },
+    rDir
+  );
+  if (r.exitCode !== 0) return `exit ${r.exitCode}`;
+});
+
+test('config-change: writes hook-timing entry', () => {
+  const before = countLines(rDir, '.planning/telemetry/hook-timing.jsonl');
+  fireHook('config-change.js', { file_path: path.join(rDir, '.claude', 'settings.json') }, rDir);
+  const after = countLines(rDir, '.planning/telemetry/hook-timing.jsonl');
+  if (after <= before) return 'hook-timing.jsonl not updated';
+});
+
+// ── cwd-changed.js ──
+
+test('cwd-changed: exits 0', () => {
+  const r = fireHook('cwd-changed.js',
+    { old_cwd: rDir, cwd: path.join(rDir, 'src') },
+    rDir
+  );
+  if (r.exitCode !== 0) return `exit ${r.exitCode}`;
+});
+
+test('cwd-changed: writes hook-timing entry', () => {
+  const before = countLines(rDir, '.planning/telemetry/hook-timing.jsonl');
+  fireHook('cwd-changed.js', { old_cwd: rDir, cwd: path.join(rDir, 'src') }, rDir);
+  const after = countLines(rDir, '.planning/telemetry/hook-timing.jsonl');
+  if (after <= before) return 'hook-timing.jsonl not updated';
+});
+
+test('cwd-changed: logs audit entry when moving outside project', () => {
+  const before = countLines(rDir, '.planning/telemetry/audit.jsonl');
+  fireHook('cwd-changed.js', { old_cwd: rDir, cwd: '/tmp/outside' }, rDir);
+  const after = countLines(rDir, '.planning/telemetry/audit.jsonl');
+  if (after <= before) return 'audit.jsonl not updated for outside-project cwd';
+});
+
+// ── teammate-idle.js ──
+
+test('teammate-idle: exits 0', () => {
+  const r = fireHook('teammate-idle.js',
+    { teammate_id: 'agent-xyz', reason: 'no-work' },
+    rDir
+  );
+  if (r.exitCode !== 0) return `exit ${r.exitCode}`;
+});
+
+test('teammate-idle: writes hook-timing entry', () => {
+  const before = countLines(rDir, '.planning/telemetry/hook-timing.jsonl');
+  fireHook('teammate-idle.js', { teammate_id: 'agent-abc' }, rDir);
+  const after = countLines(rDir, '.planning/telemetry/hook-timing.jsonl');
+  if (after <= before) return 'hook-timing.jsonl not updated';
+});
+
+// ── elicitation.js (Elicitation + ElicitationResult) ──
+
+test('elicitation: exits 0 on Elicitation event', () => {
+  const payload = {
+    hook_event_name: 'Elicitation',
+    server_name: 'my-mcp-server',
+  };
+  const r = fireHook('elicitation.js', payload, rDir);
+  if (r.exitCode !== 0) return `exit ${r.exitCode}`;
+});
+
+test('elicitation: exits 0 on ElicitationResult event', () => {
+  const payload = {
+    hook_event_name: 'ElicitationResult',
+    server_name: 'my-mcp-server',
+    accepted: true,
+  };
+  const r = fireHook('elicitation.js', payload, rDir);
+  if (r.exitCode !== 0) return `exit ${r.exitCode}`;
+});
+
+test('elicitation: writes hook-timing entry', () => {
+  const before = countLines(rDir, '.planning/telemetry/hook-timing.jsonl');
+  fireHook('elicitation.js', { hook_event_name: 'Elicitation', server_name: 'test' }, rDir);
+  const after = countLines(rDir, '.planning/telemetry/hook-timing.jsonl');
+  if (after <= before) return 'hook-timing.jsonl not updated';
+});
+
+test('elicitation: no auto-response (empty stdout)', () => {
+  const payload = { hook_event_name: 'Elicitation', server_name: 'unknown-server' };
+  const r = fireHook('elicitation.js', payload, rDir);
+  // Should NOT emit hookSpecificOutput (no auto-response)
+  if (r.stdout.trim()) return `expected empty stdout, got: ${r.stdout.slice(0, 100)}`;
+});
+
 // ── protect-files: campaign scope enforcement ──
 
 test('protect-files: warns (not blocks) on out-of-scope edit', () => {
@@ -522,6 +827,87 @@ test('protect-files: hard-blocks on Restricted Files edit', () => {
   const r = fireHook('protect-files.js', payload, rDir);
   if (r.exitCode !== 2) return `expected exit 2 (block), got ${r.exitCode}`;
   fs.rmSync(path.join(campaignsDir, 'test-restricted.md'));
+});
+
+// ── Audit integrity (harness-health-util) ──
+
+test('audit integrity: writeAuditLog produces _hash field', () => {
+  const health = require(path.join(CITADEL_ROOT, 'hooks_src', 'harness-health-util'));
+  health.writeAuditLog('test-event', { detail: 'verify-hooks test' });
+  const auditFile = path.join(rDir, '.planning', 'telemetry', 'audit.jsonl');
+  if (!fs.existsSync(auditFile)) return 'audit.jsonl not created';
+  const lines = fs.readFileSync(auditFile, 'utf8').split('\n').filter(Boolean);
+  const last = JSON.parse(lines[lines.length - 1]);
+  if (!last._hash) return 'no _hash field on audit record';
+  if (last._hash_v !== 1) return `expected _hash_v 1, got ${last._hash_v}`;
+  if (typeof last._hash !== 'string' || last._hash.length !== 64) return `unexpected _hash value: ${last._hash}`;
+});
+
+test('audit integrity: verifyAuditIntegrity detects clean records', () => {
+  const health = require(path.join(CITADEL_ROOT, 'hooks_src', 'harness-health-util'));
+  const auditFile = path.join(rDir, '.planning', 'telemetry', 'audit.jsonl');
+  const result = health.verifyAuditIntegrity(auditFile);
+  if (result.tampered.length > 0) return `${result.tampered.length} records flagged as tampered (should be 0)`;
+  if (result.verified === 0 && result.legacy.length === 0) return 'no records verified and none legacy — file may be empty';
+});
+
+test('audit integrity: verifyAuditIntegrity detects tampered record', () => {
+  const health = require(path.join(CITADEL_ROOT, 'hooks_src', 'harness-health-util'));
+  const tamperedFile = path.join(rDir, '.planning', 'telemetry', 'audit-tampered-test.jsonl');
+  // Write a record, then corrupt its hash
+  const base = { schema: 1, event: 'test', timestamp: new Date().toISOString(), project: 'test' };
+  const record = { ...base, _hash: 'deadbeef'.repeat(8), _hash_v: 1 };
+  fs.writeFileSync(tamperedFile, JSON.stringify(record) + '\n', 'utf8');
+  const result = health.verifyAuditIntegrity(tamperedFile);
+  if (result.tampered.length !== 1) return `expected 1 tampered record, got ${result.tampered.length}`;
+  fs.unlinkSync(tamperedFile);
+});
+
+test('audit integrity: logTiming produces _hash field', () => {
+  const health = require(path.join(CITADEL_ROOT, 'hooks_src', 'harness-health-util'));
+  health.logTiming('verify-hooks-test', 0, { test: true });
+  const timingFile = path.join(rDir, '.planning', 'telemetry', 'hook-timing.jsonl');
+  if (!fs.existsSync(timingFile)) return 'hook-timing.jsonl not created';
+  const lines = fs.readFileSync(timingFile, 'utf8').split('\n').filter(Boolean);
+  const last = JSON.parse(lines[lines.length - 1]);
+  if (!last._hash) return 'no _hash field on timing record';
+  if (last._hash_v !== 1) return `expected _hash_v 1, got ${last._hash_v}`;
+});
+
+test('audit integrity: hashRecord is deterministic', () => {
+  const health = require(path.join(CITADEL_ROOT, 'hooks_src', 'harness-health-util'));
+  const record = { b: 2, a: 1, c: { z: 26, y: 25 } };
+  const h1 = health.hashRecord(record);
+  const h2 = health.hashRecord(record);
+  if (h1 !== h2) return 'hashRecord is not deterministic';
+  // Key order should not matter
+  const reordered = { c: { z: 26, y: 25 }, a: 1, b: 2 };
+  const h3 = health.hashRecord(reordered);
+  if (h1 !== h3) return 'hashRecord is not key-order-independent';
+});
+
+// ── intake-scanner.js ──
+
+test('intake-scanner: exits 0 with no intake items or staged wiki', () => {
+  const r = fireHook('intake-scanner.js', { session_id: 'test-session' }, rDir);
+  if (r.exitCode !== 0) return `exit ${r.exitCode}: ${r.stderr.slice(0, 200)}`;
+});
+
+test('intake-scanner: surfaces staged wiki findings message', () => {
+  // Create a staging file that is newer than any wiki index
+  const stagingDir = path.join(rDir, '.planning', 'wiki', '_staging');
+  fs.mkdirSync(stagingDir, { recursive: true });
+  const stagingFile = path.join(stagingDir, 'test-cycle-0000000000000.jsonl');
+  fs.writeFileSync(stagingFile, JSON.stringify({ type: 'pattern', name: 'test-pattern', topic: 'test' }) + '\n');
+
+  const r = fireHook('intake-scanner.js', { session_id: 'test-session-2' }, rDir);
+  if (r.exitCode !== 0) return `exit ${r.exitCode}: ${r.stderr.slice(0, 200)}`;
+  if (!r.stdout.includes('wiki') && !r.stdout.includes('staged')) {
+    return `expected wiki staging message in stdout, got: ${r.stdout.slice(0, 200)}`;
+  }
+
+  // Cleanup
+  fs.rmSync(stagingDir, { recursive: true, force: true });
 });
 
 // ── Cleanup ─────────────────────────────────────────────────────────────────

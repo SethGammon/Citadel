@@ -3,9 +3,9 @@ name: with-metric
 skill: experiment
 description: experiment produces iterations and measurement plan for a bundle-size reduction goal
 tags: [happy-path]
+behavior: invariant
 input: /experiment reduce bundle size, baseline 450kb
 state: clean
-skip-execute: true
 assert-contains:
   - bundle
   - baseline

@@ -17,6 +17,7 @@
  *   node scripts/skill-bench.js --execute --verify-hooks   # also assert hooks fired
  *   node scripts/skill-bench.js --skill dashboard          # filter by skill name
  *   node scripts/skill-bench.js --tag fringe               # filter by tag
+ *   node scripts/skill-bench.js --invariant-only           # only invariant-behavior scenarios
  *   node scripts/skill-bench.js --list                     # list scenarios, no run
  *   node scripts/skill-bench.js --json                     # machine-readable output
  *
@@ -40,11 +41,12 @@ const RESULTS_DIR   = path.join(PLUGIN_ROOT, '.planning', 'benchmark-results');
 
 // ── CLI args ─────────────────────────────────────────────────────────────────
 
-const args          = process.argv.slice(2);
-const EXECUTE_MODE  = args.includes('--execute');
-const LIST_MODE     = args.includes('--list');
-const JSON_MODE     = args.includes('--json');
-const VERIFY_HOOKS  = args.includes('--verify-hooks'); // install hooks + assert telemetry grew
+const args           = process.argv.slice(2);
+const EXECUTE_MODE   = args.includes('--execute');
+const LIST_MODE      = args.includes('--list');
+const JSON_MODE      = args.includes('--json');
+const VERIFY_HOOKS   = args.includes('--verify-hooks'); // install hooks + assert telemetry grew
+const INVARIANT_ONLY = args.includes('--invariant-only'); // filter to invariant-behavior scenarios only
 function getArgValue(flag) {
   // --flag=value  OR  --flag value (next token, only if it doesn't start with --)
   const eq = args.find(a => a.startsWith(flag + '='));
@@ -70,9 +72,12 @@ const tagFilter   = getArgValue('--tag');
  *   tags            — comma-separated or YAML list: [fringe, missing-state]
  *   input           — the prompt to send to the skill
  *   state           — named project state: clean | with-campaign | with-completed-campaign | with-telemetry
+ *   behavior        — invariant | implementation (default: invariant)
  *   assert-contains — YAML list: patterns that MUST appear in output (case-insensitive substring)
  *   assert-not-contains — YAML list: patterns that must NOT appear in output
  *   timeout         — milliseconds before giving up (default: 180000)
+ *   skip-execute    — true: skip in execute mode (not a failure); for external services or agent spawning
+ *   skip-reason     — why skip-execute is set: requires-agent-spawn | requires-web-search | requires-github-pr | requires-playwright | requires-ui-codebase | interactive-setup
  *
  * @param {string} filePath
  * @returns {object|null} parsed scenario, or null with error logged
@@ -155,10 +160,12 @@ function parseScenario(filePath) {
     tags:             Array.isArray(fm.tags) ? fm.tags : (fm.tags ? [fm.tags] : []),
     input:            fm.input,
     state:            fm.state || 'clean',
+    behavior:         fm.behavior || 'invariant',
     assertContains:    Array.isArray(fm['assert-contains'])     ? fm['assert-contains']     : [],
     assertNotContains: Array.isArray(fm['assert-not-contains']) ? fm['assert-not-contains'] : [],
     timeout:          parseInt(fm.timeout, 10) || 180000,
     skipExecute:      fm['skip-execute'] === 'true' || fm['skip-execute'] === true,
+    skipReason:       fm['skip-reason'] || null,
     filePath,
     body,
   };
@@ -424,6 +431,73 @@ const STATES = {
     ].join('\n'));
   },
 
+  'with-ui-source': (tmpDir) => {
+    // Project with CSS custom properties, Tailwind config, and components — for design extraction
+    const srcDir = path.join(tmpDir, 'src');
+    fs.mkdirSync(srcDir, { recursive: true });
+
+    fs.writeFileSync(path.join(tmpDir, 'tailwind.config.js'), [
+      "/** @type {import('tailwindcss').Config} */",
+      'module.exports = {',
+      "  content: ['./src/**/*.{ts,tsx}'],",
+      '  theme: {',
+      '    extend: {',
+      '      colors: {',
+      "        brand: { DEFAULT: '#2563eb', light: '#93c5fd', dark: '#1d4ed8' },",
+      "        surface: { DEFAULT: '#ffffff', muted: '#f8fafc', subtle: '#f1f5f9' },",
+      "        danger: '#ef4444',",
+      "        success: '#22c55e',",
+      '      },',
+      '      fontFamily: {',
+      "        sans: ['Inter', 'system-ui', 'sans-serif'],",
+      "        mono: ['JetBrains Mono', 'monospace'],",
+      '      },',
+      '      spacing: {',
+      "        '4xs': '2px', '3xs': '4px', '2xs': '8px', xs: '12px',",
+      "        sm: '16px', md: '24px', lg: '32px', xl: '48px',",
+      '      },',
+      '    },',
+      '  },',
+      '};',
+    ].join('\n'));
+
+    fs.writeFileSync(path.join(srcDir, 'tokens.css'), [
+      ':root {',
+      '  --color-brand: #2563eb;',
+      '  --color-brand-light: #93c5fd;',
+      '  --color-brand-dark: #1d4ed8;',
+      '  --color-surface: #ffffff;',
+      '  --color-surface-muted: #f8fafc;',
+      '  --color-text: #0f172a;',
+      '  --color-text-muted: #64748b;',
+      '  --font-sans: Inter, system-ui, sans-serif;',
+      '  --font-mono: "JetBrains Mono", monospace;',
+      '  --text-xs: 0.75rem;',
+      '  --text-sm: 0.875rem;',
+      '  --text-base: 1rem;',
+      '  --text-lg: 1.125rem;',
+      '  --text-xl: 1.25rem;',
+      '  --radius-sm: 4px;',
+      '  --radius-md: 8px;',
+      '  --radius-lg: 12px;',
+      '  --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);',
+      '  --shadow-md: 0 4px 6px rgba(0,0,0,0.1);',
+      '}',
+    ].join('\n'));
+
+    fs.writeFileSync(path.join(tmpDir, 'CLAUDE.md'), [
+      '# Test Project',
+      '',
+      'A TypeScript React application with a defined design system.',
+      '',
+      '## Stack',
+      '- TypeScript + React',
+      '- Tailwind CSS with custom design tokens',
+      '- CSS custom properties in src/tokens.css',
+      '- Color, typography, and spacing defined in tailwind.config.js',
+    ].join('\n'));
+  },
+
   'with-git-remote': (tmpDir) => {
     // Minimal git repo with a GitHub remote — for git-dependent skills (pr-watch, triage)
     try {
@@ -619,6 +693,10 @@ function printScenarioResult(scenario, result, verbose) {
   const note = result.mode === 'static-only' ? ' [static]' : '';
   console.log(`  ${tag.padEnd(5)} ${scenario.skill}/${scenario.name}${note}`);
 
+  if (result.skipped && scenario.skipReason) {
+    console.log(`         Reason: ${scenario.skipReason}`);
+  }
+
   if (!result.passed && !result.skipped) {
     if (result.executionError) {
       console.log(`         Execution error: ${result.executionError}`);
@@ -664,6 +742,13 @@ function main() {
       process.exit(1);
     }
   }
+  if (INVARIANT_ONLY) {
+    scenarios = scenarios.filter(s => s.behavior === 'invariant');
+    if (scenarios.length === 0) {
+      console.error('No invariant-behavior scenarios found.');
+      process.exit(1);
+    }
+  }
 
   // List mode
   if (LIST_MODE) {
@@ -676,8 +761,12 @@ function main() {
     for (const [skill, skillScenarios] of Object.entries(bySkill)) {
       console.log(`  ${skill}/`);
       for (const s of skillScenarios) {
-        const tags = s.tags.length ? ` [${s.tags.join(', ')}]` : '';
-        console.log(`    ${s.name}${tags} — ${s.description || s.input}`);
+        const tags    = s.tags.length ? ` [${s.tags.join(', ')}]` : '';
+        const bTag    = s.behavior === 'implementation' ? ' (impl)' : '';
+        const skipTag = s.skipExecute
+          ? ` [SKIP${s.skipReason ? ': ' + s.skipReason : ''}]`
+          : '';
+        console.log(`    ${s.name}${tags}${bTag}${skipTag} — ${s.description || s.input}`);
       }
     }
     process.exit(0);
@@ -797,6 +886,7 @@ function main() {
     }
 
     result.tags        = scenario.tags;
+    result.behavior    = scenario.behavior;
     result.description = scenario.description;
     result.timestamp   = new Date().toISOString();
     allResults.push(result);

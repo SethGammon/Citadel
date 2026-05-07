@@ -9,6 +9,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
 
 const PROJECT_ROOT = process.env.CLAUDE_PROJECT_DIR || process.cwd();
 const TELEMETRY_DIR = path.join(PROJECT_ROOT, '.planning', 'telemetry');
@@ -19,6 +20,81 @@ const AUDIT_LOG_FILE = path.join(TELEMETRY_DIR, 'audit.jsonl');
 // Prints a one-line summary to stderr each time a hook fires or completes.
 // Follows the same opt-in pattern as CITADEL_UI.
 const CITADEL_DEBUG = process.env.CITADEL_DEBUG === 'true';
+
+// ── Audit integrity ─────────────────────────────────────────────────────────
+
+/**
+ * Recursively sort object keys for deterministic JSON serialization.
+ * Arrays are preserved in order; object keys are sorted alphabetically.
+ * Primitive values are returned as-is.
+ */
+function canonicalize(obj) {
+  if (Array.isArray(obj)) return obj.map(canonicalize);
+  if (obj !== null && typeof obj === 'object') {
+    const sorted = {};
+    for (const key of Object.keys(obj).sort()) {
+      sorted[key] = canonicalize(obj[key]);
+    }
+    return sorted;
+  }
+  return obj;
+}
+
+/**
+ * Compute a SHA-256 hash of a telemetry record.
+ * The record must NOT contain _hash or _hash_v fields — those are added after.
+ * @param {object} record - Plain object without hash fields
+ * @returns {string} Hex-encoded SHA-256 digest
+ */
+function hashRecord(record) {
+  const canonical = JSON.stringify(canonicalize(record));
+  return crypto.createHash('sha256').update(canonical, 'utf8').digest('hex');
+}
+
+/**
+ * Verify the integrity of a telemetry JSONL file.
+ * Checks each record's _hash field by recomputing the hash from the record body.
+ *
+ * @param {string} [file] - Path to the JSONL file (defaults to audit.jsonl)
+ * @returns {{ total: number, verified: number, tampered: object[], legacy: string[] }}
+ *   total     — number of parseable records
+ *   verified  — records whose hash matched
+ *   tampered  — records whose hash did not match (possible corruption or tampering)
+ *   legacy    — records written before hashing was added (no _hash field)
+ */
+function verifyAuditIntegrity(file) {
+  const targetFile = file || AUDIT_LOG_FILE;
+  const results = { total: 0, verified: 0, tampered: [], legacy: [] };
+  try {
+    if (!fs.existsSync(targetFile)) return results;
+    const lines = fs.readFileSync(targetFile, 'utf8').split('\n').filter(Boolean);
+    for (const line of lines) {
+      let record;
+      try { record = JSON.parse(line); } catch { continue; }
+      results.total++;
+
+      if (!record._hash || record._hash_v !== 1) {
+        results.legacy.push(record.timestamp || 'unknown-timestamp');
+        continue;
+      }
+
+      // Reconstruct the pre-hash body and recompute
+      const { _hash, _hash_v, ...body } = record; // eslint-disable-line no-unused-vars
+      const expected = hashRecord(body);
+      if (expected === _hash) {
+        results.verified++;
+      } else {
+        results.tampered.push({
+          timestamp: record.timestamp,
+          event: record.event || record.hook,
+          expected,
+          got: _hash,
+        });
+      }
+    }
+  } catch { /* non-critical — always return a result */ }
+  return results;
+}
 
 /**
  * Emit a debug line to stderr when CITADEL_DEBUG=true.
@@ -61,13 +137,14 @@ function ensureTelemetryDir() {
 function increment(hook, metric) {
   ensureTelemetryDir();
   try {
-    const entry = JSON.stringify({
+    const base = {
       schema: 1,
       hook,
       event: 'counter',
       metric,
       timestamp: new Date().toISOString(),
-    });
+    };
+    const entry = JSON.stringify({ ...base, _hash: hashRecord(base), _hash_v: 1 });
     fs.appendFileSync(HOOK_TIMING_FILE, entry + '\n', 'utf8');
   } catch { /* non-critical — telemetry should never break the hook */ }
 }
@@ -81,14 +158,15 @@ function increment(hook, metric) {
 function logTiming(hook, durationMs, meta = {}) {
   ensureTelemetryDir();
   try {
-    const entry = JSON.stringify({
+    const base = {
       schema: 1,
       hook,
       event: 'timing',
       duration_ms: durationMs,
       timestamp: new Date().toISOString(),
       ...meta,
-    });
+    };
+    const entry = JSON.stringify({ ...base, _hash: hashRecord(base), _hash_v: 1 });
     fs.appendFileSync(HOOK_TIMING_FILE, entry + '\n', 'utf8');
   } catch { /* non-critical */ }
 }
@@ -363,13 +441,14 @@ function securityWarning(hook, message) {
 function writeAuditLog(event, data = {}) {
   ensureTelemetryDir();
   try {
-    const entry = JSON.stringify({
+    const base = {
       schema: 1,
       event,
       timestamp: new Date().toISOString(),
       project: path.basename(PROJECT_ROOT),
       ...data,
-    });
+    };
+    const entry = JSON.stringify({ ...base, _hash: hashRecord(base), _hash_v: 1 });
     fs.appendFileSync(AUDIT_LOG_FILE, entry + '\n', 'utf8');
   } catch { /* audit log should never break a hook */ }
 }
@@ -538,6 +617,9 @@ module.exports = {
   logBlock,
   debugLog,
   writeAuditLog,
+  hashRecord,
+  canonicalize,
+  verifyAuditIntegrity,
   readConfig,
   readTrustLevel,
   detectStack,

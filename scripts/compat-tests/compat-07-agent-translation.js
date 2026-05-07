@@ -36,7 +36,7 @@ async function run() {
     }
 
     // Expected agents from Citadel source
-    const expectedAgents = ['archon', 'fleet', 'arch-reviewer', 'knowledge-extractor'];
+    const expectedAgents = ['archon', 'fleet', 'arch-reviewer', 'knowledge-extractor', 'phase-validator', 'policy-enforcer'];
 
     for (const expected of expectedAgents) {
       const tomlPath = path.join(agentsDir, `${expected}.toml`);
@@ -87,6 +87,6 @@ async function run() {
 }
 
 // For the return message outside the try block
-const expectedAgents = ['archon', 'fleet', 'arch-reviewer', 'knowledge-extractor'];
+const expectedAgents = ['archon', 'fleet', 'arch-reviewer', 'knowledge-extractor', 'phase-validator'];
 
 module.exports = { run };

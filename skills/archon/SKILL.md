@@ -73,6 +73,7 @@ Prefer `effort` over `budget_tokens` for all sub-agent invocations — ~20-40% t
    - Condition types: `file_exists`, `command_passes`, `metric_threshold`, `visual_verify`, `manual`
    - `manual` is acceptable for UX/design decisions but must not be the only condition
    - Write conditions to the Phase End Conditions table in the campaign file
+   - Include a `validator_retries_remaining: 3` field per phase row (consumed by step 4.5)
 5. Write the campaign file to `.planning/campaigns/{slug}.md`
 6. Register a scope claim if `.planning/coordination/` exists
 
@@ -128,6 +129,35 @@ For each phase:
    - `manual`: log to Review Queue, don't block
    - If ANY non-manual condition fails: phase is NOT complete. Fix what's failing.
    - Log which conditions passed/failed in the Feature Ledger
+
+4.5. **Validate handoff** — spawn a Phase Validator (Haiku, read-only) to independently
+   confirm the HANDOFF demonstrates each exit condition was met:
+   ```
+   Agent(
+     subagent_type: "citadel:phase-validator",
+     prompt: "Campaign: {slug}. Phase {N} — {title}.
+              Exit conditions: {conditions from Phase End Conditions table}.
+              HANDOFF: {full handoff text from sub-agent}",
+     effort: "low"
+   )
+   ```
+   Parse the validator's JSON response:
+   - **`verdict: "pass"`**: proceed to step 5.
+   - **`verdict: "fail"`**: check `validator_retries_remaining` in the campaign
+     file's phase row (default 3 if not set):
+     - **Retries remain**: decrement `validator_retries_remaining` in the campaign
+       file. Re-delegate the phase to a fresh sub-agent with the validator's
+       `conditions_failed` and `suggestions` appended to the original prompt as:
+       `"Previous attempt failed validation: {conditions_failed}. Fix: {suggestions}."
+       Return to step 3.`
+     - **Retries exhausted (0)**: log `validator_halt: phase {N} failed validation
+       after 3 retries — {conditions_failed}` to the campaign Decision Log. Mark
+       phase `partial`. Advance to the next phase.
+
+   **Validator timeout**: if the validator does not return within 3 minutes,
+   treat the result as `verdict: "pass" with warnings: ["validator timed out"]`
+   and log the timeout. Never let validation block the campaign indefinitely.
+
 5. **Review**: Read the sub-agent's HANDOFF. Did it accomplish the phase goal?
    - If HANDOFF present but phase goal NOT met: re-delegate the phase to a fresh sub-agent with clarified success criteria. If second attempt also fails goal: mark phase as `partial`, log the gap, continue to next phase.
 5. **Log delegation result**:
@@ -246,6 +276,7 @@ Fix any found before marking the phase complete.
 - Campaign file must be updated after every phase
 - Sub-agents must receive full context injection (CLAUDE.md + rules-summary)
 - Never re-delegate the same failing work without changing the approach
+- Every phase must pass validator (or exhaust 3 retries) before advancing
 - Continuation State must be written before context runs low
 - Direction alignment must pass every 2 phases
 - Quality spot-check must pass every phase
@@ -276,6 +307,11 @@ Park the campaign when:
 - **`.planning/campaigns/` missing**: Treat as no active campaigns. Proceed to directed/undirected mode.
 - **Sub-agent returns no HANDOFF**: Treat phase as partial. Log observations, proceed to next phase.
 - **Sub-agent hangs and never returns**: After 30 minutes without a response, abort the phase, log `phase-timeout` in the campaign Decision Log, and proceed to Recovery. Never let a hung phase block the entire campaign.
+- **Phase validator returns no JSON or malformed JSON**: Treat as `verdict: "pass" with warnings: ["validator output unparseable"]`. Log and advance. Never block on validator failure.
+- **Policy enforcer returns no JSON or malformed JSON**: Treat as `verdict: "allow" with warnings: ["policy-enforcer output unparseable"]`. Log. Do NOT block the operation on enforcer failure — the hook layer still provides baseline protection.
+- **Policy enforcer times out (> 2 min)**: Treat as allow with warning. Log. Never let the policy gate block a campaign indefinitely.
+- **Phase validator times out (> 3 min)**: Treat as pass with warning. Log timeout. Advance.
+- **All 3 validator retries exhausted**: Mark phase `partial`, log `validator_halt` with the failed conditions, advance to next phase. Never park the campaign solely due to validator failure.
 
 ## Contextual Gates
 
@@ -288,6 +324,28 @@ One sentence before executing:
 - **Green:** Single-phase, < 5 file changes
 - **Amber:** Multi-phase campaigns — revert requires rolling back multiple commits
 - **Red:** Campaigns modifying CI/CD config, publishing content, or pushing to remote — require explicit confirmation regardless of trust level
+
+### Policy Gate (Red operations only)
+
+Before any Red-reversibility operation (remote push, PR creation, CI/CD modification), spawn the policy-enforcer to check Tier 1 rules:
+
+```
+Agent(
+  subagent_type: "citadel:policy-enforcer",
+  prompt: "Action: {description of the proposed operation}
+           Tier: 1
+           Rules: P-001, P-002, P-004, P-007
+           Context: campaign={slug}, agent=archon, session={campaign-slug}",
+  effort: "low"
+)
+```
+
+Parse the verdict JSON:
+- **`verdict: "allow"`**: proceed with the operation.
+- **`verdict: "block"`**: do NOT proceed. Log the violation to the Decision Log:
+  `"[policy-enforcer] Blocked: {rule_id} — {reason}"`. Report to the user and stop.
+
+The policy gate is non-negotiable for Tier 1 violations. Never override a block verdict.
 
 ### Proportionality
 - Single sentence input + 5+ phases → downgrade to Marshal

@@ -3,9 +3,11 @@ name: briefed-item-build
 skill: autopilot
 description: Autopilot processes a briefed intake item through to completion
 tags: [happy-path]
+behavior: invariant
 input: /autopilot
 state: with-intake
 skip-execute: true
+skip-reason: requires-agent-spawn
 assert-contains:
   - processed
   - logging

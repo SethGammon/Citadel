@@ -58,6 +58,7 @@ only at cycle end. A crashed or compacted session resumes with full context.
 | Pattern library | `.planning/evolve/{target}/pattern-library.md` | transferable patterns: what change to what axis class caused what delta in which skills |
 | Cycle digest | `.planning/evolve/{target}/cycle-{n}-digest.md` | human-readable per-cycle summary for review |
 | Global patterns | `.planning/research/patterns.md` | cross-target patterns written outside campaign scope; available to future sessions and other targets |
+| Knowledge wiki | `.planning/wiki/` | compiled wiki pages from `/learn`; integrates evolve discoveries across sessions |
 
 Create `.planning/evolve/{target}/` on first invocation. Create `.planning/research/` if absent.
 
@@ -194,6 +195,12 @@ PATTERN: {axis_class} | Mechanism: {what caused improvement} | Delta: {avg} acro
 
 Write patterns to `.planning/evolve/{target}/pattern-library.md`.
 
+**Compile into wiki:** After writing to the pattern library, call
+`/learn --from-evolve {target} --cycle {n}`. This compiles cycle discoveries
+into `.planning/wiki/` — integrating with findings from prior cycles and
+campaigns rather than siloing them in the evolve directory. Skip if `/learn`
+is not available in this session (log the skip, do not block the cycle).
+
 ### Phase 7: Cross-Pollinate
 
 For each `confidence: high` pattern, or any pattern confirmed in 2+ skills:
@@ -321,6 +328,7 @@ revertable; high volume. Range: `git revert {first}^..{last}`.
 - Belief model: .planning/evolve/{target}/belief-model.jsonl ({N} confirmed, {M} rejected)
 - Pattern library: .planning/evolve/{target}/pattern-library.md ({N} patterns)
 - Global patterns: .planning/research/patterns.md
+- Knowledge wiki: .planning/wiki/index.md (compiled via /learn --from-evolve after each cycle)
 - Cycle digests: .planning/evolve/{target}/cycle-*-digest.md
 - Halt reason: {ceiling/velocity/budget/n-complete/user-stop/level-up-pending}
 - Level-up proposals: {path or N/A}

@@ -3,9 +3,11 @@ name: decompose-angles
 skill: research-fleet
 description: Research-fleet spawns scouts across multiple angles and produces a unified REPORT
 tags: [happy-path]
+behavior: invariant
 input: /research-fleet should we use Redis or Postgres for session storage
 state: clean
 skip-execute: true
+skip-reason: requires-agent-spawn
 assert-contains:
   - scouts
   - REPORT
