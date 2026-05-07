@@ -87,3 +87,7 @@ CITADEL-STATE.md
 _cc_source/
 Analysis-of-source.md
 docs/cloud-integration.md
+docs/cloud/
+
+# Internal planning and design documents (not user-facing)
+docs/FACELIFT_PLAN.md
