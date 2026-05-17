@@ -1,0 +1,42 @@
+# Map Amplitude export keys (or project IDs) to tradable symbols.
+# Replace example keys with your real Amplitude project / app identifiers.
+
+amplitude_project_meta:
+  symbol: META
+  exchange: NASDAQ
+
+amplitude_project_nflx:
+  symbol: NFLX
+  exchange: NASDAQ
+
+amplitude_project_amzn:
+  symbol: AMZN
+  exchange: NASDAQ
+
+amplitude_project_googl:
+  symbol: GOOGL
+  exchange: NASDAQ
+
+amplitude_project_aapl:
+  symbol: AAPL
+  exchange: NASDAQ
+
+amplitude_project_msft:
+  symbol: MSFT
+  exchange: NASDAQ
+
+amplitude_project_nvda:
+  symbol: NVDA
+  exchange: NASDAQ
+
+amplitude_project_avgo:
+  symbol: AVGO
+  exchange: NASDAQ
+
+amplitude_project_cost:
+  symbol: COST
+  exchange: NASDAQ
+
+amplitude_project_tsla:
+  symbol: TSLA
+  exchange: NASDAQ

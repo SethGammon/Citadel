@@ -1,0 +1,34 @@
+# Trading profile — swing long-only NASDAQ-100
+horizon: swing
+direction: long_only
+universe: nasdaq100
+benchmark: QQQ
+rebalance: weekly
+rebalance_day: monday
+rebalance_timing: open
+
+max_positions: 12
+risk_per_trade_pct: 1.0
+min_adv_usd: 5000000
+max_hold_sessions: 10
+
+# Signal thresholds
+top_quintile_pct: 0.2
+sma_period: 20
+rs_period: 20
+adv_period: 20
+
+# Costs (backtest)
+commission_bps: 5
+slippage_bps: 5
+
+# Alt-data publication lag (business days after period close)
+alt_data_lag_days: 1
+
+# Compliance
+compliance:
+  mnpi: |
+    Do not ingest or trade on material non-public information.
+    Only use Amplitude or alt metrics for issuers you are permitted to analyze.
+  licensing: |
+    Ensure Amplitude ToS and data vendor licenses allow your use case.

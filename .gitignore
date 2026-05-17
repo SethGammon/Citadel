@@ -64,6 +64,10 @@ npm-debug.log*
 .DS_Store
 Thumbs.db
 
+# Trading pipeline runtime data
+trading/data/
+.venv-trading/
+
 # Environment
 .env
 .env.local
