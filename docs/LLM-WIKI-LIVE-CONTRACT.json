@@ -1,0 +1,86 @@
+{
+  "schemaVersion": 1,
+  "kind": "proof-contract",
+  "id": "citadel-llm-wiki-live-20260528",
+  "createdAt": "2026-05-28T17:40:00.000Z",
+  "proofStandard": "boundary-v1",
+  "originalInstruction": "Complete all of the above steps until the LLM Wiki is live, pushed, shipped, and working. Verified.",
+  "productContract": "Citadel's LLM Wiki skill must be visible in the shipped public docs/demo, must route LLM Wiki phrasing to /wiki in the demo router, and must remain lint-clean as one of the 45 installed skills.",
+  "environmentOfUse": "Citadel repository and GitHub Pages docs site: skills/wiki/SKILL.md, docs/index.html, docs/SKILLS.md, QUICKSTART.md, scripts/test-demo.js, https://sethgammon.github.io/Citadel/ after GitHub Pages deployment.",
+  "allowedClaimLevel": "live/proved",
+  "proofCommands": [
+    {
+      "command": "node scripts/test-all.js",
+      "environment": "citadel-local-cli",
+      "passed": true
+    },
+    {
+      "command": "node scripts/test-demo.js",
+      "environment": "citadel-local-cli",
+      "passed": true
+    },
+    {
+      "command": "Google Chrome headless --dump-dom file:///Users/wilhorneff/Projects/Citadel/docs/index.html | rg -n 'LLM-native markdown knowledge base|/wiki|Skills - 45 installed'",
+      "environment": "local-rendered-docs",
+      "passed": true
+    }
+  ],
+  "requiredEvidence": [
+    {
+      "id": "skill-exists-and-lints",
+      "description": "skills/wiki/SKILL.md exists and passes Citadel skill lint in the full test suite.",
+      "type": "semantic",
+      "passed": true,
+      "supportOnly": false,
+      "boundaryVaried": true,
+      "evidencePath": "skills/wiki/SKILL.md"
+    },
+    {
+      "id": "public-demo-exposes-wiki",
+      "description": "docs/index.html Skills panel includes /wiki with the LLM-native markdown knowledge base description.",
+      "type": "semantic",
+      "passed": true,
+      "supportOnly": false,
+      "boundaryVaried": true,
+      "evidencePath": "docs/index.html"
+    },
+    {
+      "id": "demo-router-routes-llm-wiki",
+      "description": "The demo router maps 'build an llm wiki' to /wiki at Tier 2 and scripts/test-demo.js has a regression for that case.",
+      "type": "semantic",
+      "passed": true,
+      "supportOnly": false,
+      "boundaryVaried": true,
+      "evidencePath": "scripts/test-demo.js"
+    },
+    {
+      "id": "live-pages-deployment",
+      "description": "After merge, GitHub Pages deploys origin/main and the public URL contains /wiki and the LLM Wiki description.",
+      "type": "semantic",
+      "passed": false,
+      "supportOnly": false,
+      "boundaryVaried": true,
+      "evidencePath": "https://sethgammon.github.io/Citadel/"
+    }
+  ],
+  "supportOnlyEvidence": [],
+  "falseDoneCounterexample": "A false completion would have skills/wiki/SKILL.md present and tests passing while the public demo site still lacks /wiki or routes 'llm wiki' to /archon, /research, or /marshal.",
+  "falseDoneGuard": {
+    "oldPassingProof": "Skill lint alone passed before this change even though the public demo did not expose /wiki.",
+    "sharedWrongAssumption": "Existing skill implementation could be mistaken for shipped public visibility.",
+    "variedBoundary": "Proof checks skill lint, demo route regression, rendered local DOM, PR/merge state, GitHub Pages deployment, and live public HTML.",
+    "oldStateFailure": "Live GitHub Pages HTML did not contain /wiki or the LLM Wiki description before the change.",
+    "newStatePass": "The public site contains /wiki and the LLM Wiki description after GitHub Pages deployment."
+  },
+  "mitigationAssertion": {
+    "description": "The change exposes /wiki in docs, routes LLM Wiki phrasing to /wiki, updates stale docs counts, and adds a route regression so the public surface cannot silently drop it again.",
+    "type": "semantic",
+    "passed": true,
+    "supportOnly": false,
+    "boundaryVariedEvidenceId": "demo-router-routes-llm-wiki",
+    "evidencePath": "docs/LLM-WIKI-LIVE-PROOF.md",
+    "assertionCommand": "node scripts/test-all.js && node scripts/test-demo.js"
+  },
+  "blockedLivePath": "None once GitHub Pages deployment succeeds. Until then, live/proved remains pending.",
+  "residualRisk": "The public GitHub Pages site may take a short propagation delay after PR merge before serving the new HTML. Verify live HTML after the pages-build-deployment workflow succeeds."
+}

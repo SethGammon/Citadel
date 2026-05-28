@@ -1841,6 +1841,7 @@
       <div class="skill-list">
         <div class="skill-row"><span class="skill-name">/research</span><span class="skill-desc">Structured investigation with confidence levels and cited sources.</span></div>
         <div class="skill-row"><span class="skill-name">/research-fleet</span><span class="skill-desc">Parallel multi-scout research. 3–5 independent angles simultaneously, then compressed.</span></div>
+        <div class="skill-row"><span class="skill-name">/wiki</span><span class="skill-desc">LLM-native markdown knowledge base. Ingests sources, compiles interlinked topic files, and answers from cited wiki pages.</span></div>
         <div class="skill-row"><span class="skill-name">/experiment</span><span class="skill-desc">Metric-driven optimization loops in isolated worktrees. Stops when metric plateaus.</span></div>
         <div class="skill-row"><span class="skill-name">/systematic-debugging</span><span class="skill-desc">4-phase root cause: observe → hypothesize → verify → fix. Emergency stop after 2 failures.</span></div>
         <div class="skill-row"><span class="skill-name">/live-preview</span><span class="skill-desc">Mid-build visual verification via screenshot. Used by Archon to validate UI phases.</span></div>
@@ -1971,6 +1972,8 @@
         desc: 'Project-aware file generation. Reads your naming conventions and patterns from existing code before generating.', icon: '⬡' },
       { re: /\b(research|investigate|look into|find out)\b/i, skill: '/research',
         desc: 'Structured investigation with confidence levels and cited sources. Writes findings to .planning/research/.', icon: '⌕' },
+      { re: /\b(wiki|knowledge base|llm wiki|project wiki|knowledge management|karpathy wiki)\b/i, skill: '/wiki',
+        desc: 'LLM-native markdown knowledge base. Ingests sources, compiles interlinked topic files, and answers from cited wiki pages.', icon: '▤' },
       { re: /\b(debug|root.?cause|diagnose|why is|investigate.?bug)\b/i, skill: '/systematic-debugging',
         desc: '4-phase root cause analysis: observe → hypothesize → verify → fix. Emergency stop after 2 failed attempts.', icon: '⚡' },
       { re: /\b(prd|requirements|spec|plan an app)\b/i, skill: '/prd',
