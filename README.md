@@ -18,7 +18,14 @@
 
 ## What Is Citadel
 
-An agent orchestration harness for Claude Code and OpenAI Codex. It coordinates multiple AI agents in parallel, persists memory across sessions, and routes your intent to the cheapest execution path automatically. Citadel adapts itself to each runtime: plugin-first for Claude Code and plugin-first for Codex, with generated project artifacts as a fallback.
+Citadel is an agent orchestration harness for Claude Code and OpenAI Codex. It gives your coding agent durable project memory, installable skills, safety hooks, and parallel campaign coordination.
+
+In practice, that means:
+
+- `/do` routes plain-English requests to the right workflow.
+- Campaign state survives new sessions and context resets.
+- Fleet mode can split large work across isolated worktrees.
+- Hooks enforce quality, safety, telemetry, and handoff rules automatically.
 
 ## Why Citadel Exists
 
@@ -28,11 +35,13 @@ An agent orchestration harness for Claude Code and OpenAI Codex. It coordinates 
 
 The difference: `CLAUDE.md` and `AGENTS.md` tell the runtime about your project. Citadel gives the runtime the *infrastructure to work autonomously* — routing, memory, safety hooks, and coordination that a single guidance file can't provide.
 
-## Install Without Thinking About Paths
+---
+
+## Quick Install
 
 **Prerequisites:** Claude Code or OpenAI Codex already installed, plus Node.js 18+.
 
-Open your target project in your agent and paste this exact message:
+Open your target project in your agent and paste this message:
 
 ```text
 Install Citadel in this repository.
@@ -46,11 +55,11 @@ After Citadel is enabled in a fresh thread, run:
 
 /do setup --express
 
-Do not ask me to edit placeholder paths. Use the current repository as the
-target project.
+Use the current repository as the target project. Do not require placeholder
+path edits.
 ```
 
-The agent will clone or update Citadel, install it for the current runtime, use the current repo as the target, and tell you if a runtime trust click is required.
+The agent will clone or update Citadel, install it for the current runtime, use the current repo as the target, and tell you if a plugin approval step is required.
 
 Want to install it yourself instead? Read [INSTALL.md](INSTALL.md). That page has the manual Codex and Claude Code commands, dry-run commands, and verification steps.
 
@@ -62,9 +71,11 @@ After setup, try:
 
 What gets checked: plugin manifest, local marketplace, skill paths, hook bundle, MCP config, project guidance, runtime shell or sandbox settings, and readiness evidence under `.planning/verification/`.
 
+---
+
 ## How It Works
 
-Say what you want. `/do` routes it to the cheapest tool that can handle it.
+Say what you want. `/do` routes it to the lightest workflow that can handle it.
 
 ```
 /do fix the typo on line 42        # Direct edit, no model call
@@ -74,7 +85,7 @@ Say what you want. `/do` routes it to the cheapest tool that can handle it.
 /do overhaul all three services    # Parallel fleet with isolated worktrees
 ```
 
-Classification runs across four tiers, each cheaper than the last:
+Classification runs across four tiers:
 
 1. **Pattern match** — catches trivial commands with regex. Zero tokens, zero model calls, instant.
 2. **Session state** — checks if you're mid-campaign and resumes it. Still zero tokens.
@@ -87,38 +98,40 @@ Most requests resolve at tiers 1-3 for free. Tier 4 is the exception, not the de
 
 ## The Orchestration Ladder
 
-Four tiers. Use the cheapest one that fits.
+Four tiers. Use the lightest one that fits.
 
 - **Skill:** direct domain workflow for focused tasks.
 - **Marshal:** single-session commander for multi-step work.
 - **Archon:** multi-session campaign planner and executor.
 - **Fleet:** parallel agents in isolated worktrees with shared discoveries.
 
+---
+
 ## What You Get
 
-**Cost transparency.** Citadel reads runtime-native session artifacts and computes real cost from API pricing. You see what every session, campaign, and agent actually costs. Use `/cost` for a full breakdown or `/dashboard` for the overview. A real-time tracker alerts you at configurable spend thresholds without interrupting your work.
+**Cost transparency.** Citadel reads runtime-native session artifacts and computes real cost from API pricing. Use `/cost` for a breakdown or `/dashboard` for the overview.
 
-**Safety hooks.** 32 hooks across 29 lifecycle events run automatically. A consent system gates external actions (pushes, PRs, comments) with first-encounter choice — always-ask, session-allow, or auto-allow. Protected branches can't be deleted. Path traversal and secrets exfiltration are blocked. A circuit breaker stops failure spirals before they burn tokens. All of this is configurable per-project in `harness.json`.
+**Safety hooks.** 32 hooks across 29 lifecycle events guard file access, external actions, protected branches, secrets, and repeated tool failures. Project policy lives in `harness.json`.
 
-**Campaign persistence.** Multi-session work survives context compression and session boundaries. Start an architecture overhaul today, close your laptop, pick it up tomorrow — the campaign state, decisions, and progress are all preserved. `/do continue` resumes exactly where you left off.
+**Campaign persistence.** Multi-session work survives context compression and session boundaries. `/do continue` resumes saved state, decisions, and progress.
 
-**Parallel coordination.** Fleet mode spawns multiple agents in isolated git worktrees, shares discoveries between them in real time, and merges results. One command, multiple agents, no conflicts.
+**Parallel coordination.** Fleet mode spawns multiple agents in isolated git worktrees, shares discoveries between them, and keeps merge work organized.
 
-**Autonomous quality improvement.** `/evolve` is a research-driven improvement director that scores the harness against a rubric, forms causal hypotheses about why scores are low, validates them with scout agents before spending fleet budget, and runs improvement cycles until it hits a ceiling or budget. It accumulates a persistent belief model and transferable pattern library across sessions — so each run compounds on what prior runs learned.
+**Autonomous quality improvement.** `/evolve` scores a target against a rubric, validates improvement hypotheses, runs focused cycles, and records reusable lessons for later sessions.
 
 ## FAQ
 
-**Is this for me?** If you're running Claude Code or Codex on a real codebase and finding that agents lose context, repeat mistakes, or can't work in parallel, yes. If you're just starting out with either runtime, get a few sessions in first and come back when the friction shows up.
+**Is this for me?** If you're running Claude Code or Codex on a real codebase and finding that agents lose context, repeat mistakes, or can't work in parallel, yes. If you're still exploring either runtime for the first time, Citadel is most useful once you have a real repository and repeat workflows.
 
 **How is this different from `CLAUDE.md` or `AGENTS.md`?** Those files tell the runtime about your project. Citadel tells the runtime *how to work*: durable state, intelligent routing, automated safety, and native parallelism — the infrastructure layer those files assume someone else built.
 
 **Do I need to learn all 45 skills?** No. Just use `/do` and describe what you want in plain English. The router picks the right skill. You can go months without ever typing a skill name directly.
 
-**What if `/do` routes to the wrong tool?** Tell it. "Wrong tool" or "just do it yourself" and it adjusts. You can also invoke any skill directly: `/review`, `/archon`, etc. The router is a convenience, not a gate.
+**What if `/do` routes to the wrong tool?** Tell it "wrong tool" or invoke the skill directly: `/review`, `/archon`, `/fleet`, and so on. The router is a convenience, not a gate.
 
 **How much does it cost in tokens?** Citadel adds ~2.5% overhead to your session cost. Skills cost zero when not loaded. The `/do` router costs ~500 tokens only at Tier 4. Use `/cost` to see real token data and exact spend for any session or campaign.
 
-**How is this different from CrewAI, LangChain, or Aider?** Those are agent frameworks: they give you primitives for building agents from scratch. Citadel is an *operating system for an existing agent* (Claude Code or Codex). You don't write agent code — you install a plugin and get routing, persistence, parallelism, and safety hooks on top of the agent you already use. If you're building a custom agent, use a framework. If you're using Claude Code or Codex and want it to work better, use Citadel.
+**How is this different from CrewAI, LangChain, or Aider?** Those are agent frameworks: they give you primitives for building agents from scratch. Citadel is an *operating system for an existing coding agent*. You install a plugin and get routing, persistence, parallelism, and safety hooks on top of the agent you already use.
 
 **Does it work with Claude Code?** Yes. Citadel ships a Claude Code marketplace and plugin manifest, and `scripts/claude-install.js --install --scope local` validates the marketplace, installs the plugin into the target project scope, and writes resolved hook paths before you run `/do setup`.
 
