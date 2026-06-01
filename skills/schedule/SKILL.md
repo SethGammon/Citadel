@@ -37,6 +37,18 @@ end, machine reboot, and consumes zero routine quota. Use
 `/schedule list` and `/schedule remove {id}` (which also shell out to
 `local-schedule.js`) by default.
 
+### Codex automation lane
+
+When running in Codex and the user wants the schedule to survive the current terminal session, create a Codex Automation plan instead of a local OS entry:
+
+```bash
+node scripts/codex-automation.js plan --type schedule --cadence "<expr>" --command "<command>" --write
+```
+
+Give the returned `prompt` to the Codex app automation surface and keep the generated `.planning/codex-automations/{id}.json` as the durable Citadel record.
+
+If `.planning/` does not exist, create it before writing automation state.
+
 ### Opt-in routine flow — `/schedule add --remote ...`
 Only when `--remote` is explicitly passed:
 1. Confirm: "This will use `CronCreate`, which counts against your 15 routine

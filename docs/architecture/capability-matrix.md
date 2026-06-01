@@ -3,7 +3,7 @@
 Documents what each runtime adapter supports. Used by the runtime registry
 and compatibility tests to verify behavior.
 
-Last updated: 2026-03-31
+Last updated: 2026-06-01
 
 ## Capability IDs
 
@@ -14,20 +14,20 @@ Defined in `core/contracts/capabilities.js`. Support levels: `full`, `partial`, 
 | Capability | Claude Code | Codex | OpenAI | Notes |
 |---|---|---|---|---|
 | `guidance` | Full | Full | Full | CLAUDE.md / AGENTS.md projected from `.citadel/project.md` |
-| `skills` | Full | Partial | Partial | Codex uses YAML adapter; OpenAI uses Responses API reusable skills |
-| `agents` | Full | Partial | Partial | Codex uses `.toml`; OpenAI uses Responses API agent loop |
-| `hooks` | Full | Full | Partial | Codex hooks translated via adapter; OpenAI needs adapter for lifecycle parity |
+| `skills` | Full | Full | Partial | Codex supports repo/user/admin/system/plugin skills; OpenAI uses Responses API reusable skills |
+| `agents` | Full | Full | Partial | Codex supports `.codex/agents/*.toml` and native subagents; OpenAI uses Responses API agent loop |
+| `hooks` | Full | Partial | Partial | Codex supports native lifecycle hooks, but Citadel still needs an adapter for hook contract parity |
 | `workspace` | Full | Full | Full | OpenAI Responses API provides shell tool + hosted container |
-| `worktrees` | Full | None | None | Neither Codex nor OpenAI provide native git worktree support |
+| `worktrees` | Full | Partial | None | Codex app supports native Git worktrees and handoff; CLI flows still rely on Citadel-managed worktrees |
 | `approvals` | Full | Partial | Partial | Both Codex and OpenAI need adapter-level policy handling |
 | `history` | Full | Partial | Partial | Claude Code exposes session JSONL; Codex uses API logs; OpenAI uses Responses API state |
 | `telemetry` | Full | Full | Partial | Normalized events via `core/hooks/normalize-event.js` |
-| `mcp` | Full | None | Partial | Codex does not support MCP; OpenAI has native tool support, MCP bridge possible |
-| `surfaces` | Full | None | Partial | OpenAI Responses API reusable skills map to Citadel surface |
+| `mcp` | Full | Full | Partial | Codex supports MCP servers in CLI/IDE and can run as an MCP server; OpenAI has native tool support, MCP bridge possible |
+| `surfaces` | Full | Partial | Partial | Codex supports skills, plugins, app/IDE/CLI surfaces, browser/artifacts, and automations |
 
 ## Hook Event Coverage
 
-Claude Code supports all 15 Citadel event types. Codex supports 5. OpenAI Responses API supports 4 natively (adapter extends coverage):
+Claude Code supports the full Citadel event template. Codex supports a growing native subset. OpenAI Responses API supports agent-loop events natively (adapter extends coverage):
 
 | Citadel Event | Claude Code | Codex | OpenAI |
 |---|---|---|---|
@@ -39,21 +39,24 @@ Claude Code supports all 15 Citadel event types. Codex supports 5. OpenAI Respon
 | `stop` | Stop | Stop | Agent loop end |
 | `stop_failure` | StopFailure | (skipped) | (skipped) |
 | `session_end` | SessionEnd | mapped to Stop | Agent loop end |
-| `pre_compact` | PreCompact | (skipped) | Context compaction trigger |
-| `post_compact` | PostCompact | (skipped) | (skipped) |
-| `subagent_stop` | SubagentStop | (skipped) | (skipped) |
+| `pre_compact` | PreCompact | PreCompact | Context compaction trigger |
+| `post_compact` | PostCompact | PostCompact | (skipped) |
+| `subagent_start` | SubagentStart | SubagentStart | (skipped) |
+| `subagent_stop` | SubagentStop | SubagentStop | (skipped) |
+| `permission_request` | PermissionRequest | PermissionRequest | Approval request |
 | `task_created` | TaskCreated | (skipped) | (skipped) |
 | `task_completed` | TaskCompleted | (skipped) | (skipped) |
-| `worktree_create` | WorktreeCreate | (skipped) | (skipped) |
-| `worktree_remove` | WorktreeRemove | (skipped) | (skipped) |
+| `worktree_create` | WorktreeCreate | app-native only | (skipped) |
+| `worktree_remove` | WorktreeRemove | app-native only | (skipped) |
 
 ## Codex Hook Translation
 
 When installing hooks for Codex, the translation layer:
 1. Maps supported events using `EVENT_MAP` in `runtimes/codex/generators/install-hooks.js`
 2. Routes all hooks through `codex-adapter.js` which normalizes input format
-3. Skips unsupported events with warnings (logged in translation metadata)
-4. Merges with existing user hooks (preserving non-Citadel entries)
+3. Maps current Codex-native events including permission, compaction, and subagent hooks
+4. Skips unsupported task/worktree-only events with warnings (logged in translation metadata)
+5. Merges with existing user hooks (preserving non-Citadel entries)
 
 The fixture at `scripts/fixtures/codex-translation-meta.json` tracks the exact
 installed/skipped breakdown. Any change to hook coverage will be caught by

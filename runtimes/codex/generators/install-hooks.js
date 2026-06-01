@@ -10,22 +10,29 @@ const {
 const CODEX_EVENTS = new Set([
   'SessionStart',
   'PreToolUse',
+  'PermissionRequest',
   'PostToolUse',
+  'PreCompact',
+  'PostCompact',
   'UserPromptSubmit',
+  'SubagentStart',
+  'SubagentStop',
   'Stop',
 ]);
 
 const EVENT_MAP = {
   SessionStart: 'SessionStart',
   PreToolUse: 'PreToolUse',
+  PermissionRequest: 'PermissionRequest',
   PostToolUse: 'PostToolUse',
   PostToolUseFailure: null,
-  PreCompact: null,
-  PostCompact: null,
+  PreCompact: 'PreCompact',
+  PostCompact: 'PostCompact',
   Stop: 'Stop',
   StopFailure: null,
   SessionEnd: 'Stop',
-  SubagentStop: null,
+  SubagentStart: 'SubagentStart',
+  SubagentStop: 'SubagentStop',
   TaskCreated: null,
   TaskCompleted: null,
   WorktreeCreate: null,
@@ -37,13 +44,15 @@ function extractHookName(command) {
   return match ? match[1] : null;
 }
 
-function translateCodexHooks(hooksTemplate, adapterScriptPath) {
+function translateCodexHooks(hooksTemplate, adapterScriptPath, options = {}) {
   const codexHooks = {};
   const warnings = [];
   const installed = [];
   const skipped = [];
   const adapterPath = adapterScriptPath.replace(/\\/g, '/');
   const adapterCmd = quoteNodeCommand(`node ${adapterPath}`);
+  const commandForHook = options.commandForHook || ((hookName) => `${adapterCmd} ${hookName}`);
+  const commandWindowsForHook = options.commandWindowsForHook || null;
 
   for (const [citadelEvent, entries] of Object.entries(hooksTemplate.hooks || {})) {
     const codexEvent = EVENT_MAP[citadelEvent];
@@ -68,12 +77,14 @@ function translateCodexHooks(hooksTemplate, adapterScriptPath) {
       for (const hook of entry.hooks) {
         const hookName = extractHookName(hook.command);
         if (!hookName) continue;
-        hooks.push({
+        const translatedHook = {
           type: 'command',
-          command: `${adapterCmd} ${hookName}`,
+          command: commandForHook(hookName),
           statusMessage: `Citadel: ${hookName}`,
           timeout: hook.timeout || 30,
-        });
+        };
+        if (commandWindowsForHook) translatedHook.commandWindows = commandWindowsForHook(hookName);
+        hooks.push(translatedHook);
         installed.push({ hook: hookName, event: codexEvent });
       }
 
@@ -90,6 +101,13 @@ function translateCodexHooks(hooksTemplate, adapterScriptPath) {
   }
 
   return { hooks: codexHooks, installed, skipped, warnings };
+}
+
+function translateCodexPluginHooks(hooksTemplate) {
+  return translateCodexHooks(hooksTemplate, '${PLUGIN_ROOT}/hooks_src/codex-adapter.js', {
+    commandForHook: (hookName) => `node "\${PLUGIN_ROOT}/hooks_src/codex-adapter.js" ${hookName}`,
+    commandWindowsForHook: (hookName) => `node "%PLUGIN_ROOT%\\hooks_src\\codex-adapter.js" ${hookName}`,
+  });
 }
 
 function installCodexHooks(options = {}) {
@@ -120,5 +138,6 @@ module.exports = {
   EVENT_MAP,
   extractHookName,
   installCodexHooks,
+  translateCodexPluginHooks,
   translateCodexHooks,
 };

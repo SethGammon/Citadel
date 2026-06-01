@@ -31,13 +31,15 @@ Keep `.claude/harness.json` and `.planning/` — they contain your project state
 ## 3. Install the plugin
 
 ```bash
-git clone https://github.com/SethGammon/Citadel.git
+git clone https://github.com/SethGammon/Citadel.git ~/Citadel
+cd /path/to/your-project
+node ~/Citadel/scripts/claude-install.js --install --scope local
 ```
 
-In Claude Code:
+Manual Claude Code equivalent:
 ```
 /plugin marketplace add /path/to/Citadel
-/plugin install citadel@citadel-local
+/plugin install citadel@citadel-local --scope local
 ```
 
 ## 4. Re-run the hook installer

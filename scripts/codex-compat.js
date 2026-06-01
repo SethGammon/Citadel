@@ -8,6 +8,7 @@
  *
  *   .codex/config.toml                     Required feature flags and agent config
  *   .codex-plugin/plugin.json              Plugin manifest for Codex marketplace
+ *   hooks/hooks.json                       Plugin-bundled Codex lifecycle hooks
  *   .codex/agents/{name}.toml              Translated agent definitions
  *   .agents/skills/{name}/SKILL.md         Skill copies for Codex discovery
  *   .agents/skills/{name}/agents/openai.yaml   UI metadata per skill
@@ -25,6 +26,9 @@
 
 const fs   = require('fs');
 const path = require('path');
+const { translateCodexPluginHooks } = require('../runtimes/codex/generators/install-hooks');
+const { parseProjectSpec, validateProjectSpec } = require('../core/project/load-project-spec');
+const { renderCodexGuidance } = require('../core/project/render-codex-guidance');
 
 const CITADEL_ROOT = path.resolve(__dirname, '..');
 const args = process.argv.slice(2);
@@ -98,16 +102,30 @@ function generateConfigToml() {
   let mcpSection = '';
   const mcpPath = path.join(PROJECT_ROOT, '.mcp.json');
   const mcpData = readJSON(mcpPath);
+  const entries = [mcpServerToToml('citadel-state', {
+    command: 'node',
+    args: [path.join(CITADEL_ROOT, 'mcp-servers', 'citadel-state', 'index.js')],
+    env: {
+      CITADEL_PROJECT_ROOT: PROJECT_ROOT,
+      CITADEL_ROOT,
+    },
+    _codex: {
+      startup_timeout_sec: 10,
+      tool_timeout_sec: 30,
+      required: false,
+      instructions: 'Use citadel_status to orient on campaign, fleet, telemetry, and artifact state before invoking Citadel workflows.',
+    },
+  })];
   if (mcpData && mcpData.mcpServers) {
-    const entries = [];
     for (const [name, config] of Object.entries(mcpData.mcpServers)) {
       // Skip comments and disabled entries (prefixed with _)
       if (name.startsWith('_')) continue;
+      if (name === 'citadel-state') continue;
       entries.push(mcpServerToToml(name, config));
     }
-    if (entries.length > 0) {
-      mcpSection = '\n' + entries.join('\n');
-    }
+  }
+  if (entries.length > 0) {
+    mcpSection = '\n' + entries.join('\n');
   }
 
   // On Windows, PowerShell 5 fails to load its managed runtime in some environments
@@ -123,6 +141,8 @@ function generateConfigToml() {
 # Route Codex shell execution through Git Bash instead of PowerShell on Windows.
 # Prevents "Loading managed Windows PowerShell failed with error 8009001d" errors.
 [windows]
+sandbox = "elevated"
+sandbox_private_desktop = true
 agent_shell = "git-bash"
 `;
     }
@@ -133,7 +153,7 @@ agent_shell = "git-bash"
 
 # Required feature flags for Citadel harness
 [features]
-codex_hooks = true
+hooks = true
 multi_agent = true
 skill_mcp_dependency_install = true
 
@@ -264,37 +284,75 @@ function mcpServerToToml(name, config) {
   return lines.join('\n');
 }
 
-// ---- 2. Generate .codex-plugin/plugin.json ----------------------------------
+// ---- 2. Generate plugin MCP config ------------------------------------------
+
+function generatePluginMcpConfig() {
+  const mcpPath = path.join(PROJECT_ROOT, '.mcp.json');
+  if (fs.existsSync(mcpPath)) {
+    console.log('Preserving existing .mcp.json...');
+    return;
+  }
+
+  console.log('Generating plugin MCP config...');
+  const content = JSON.stringify({
+    mcpServers: {
+      'citadel-state': {
+        command: 'node',
+        args: [path.join(CITADEL_ROOT, 'mcp-servers', 'citadel-state', 'index.js')],
+        env: {
+          CITADEL_PROJECT_ROOT: PROJECT_ROOT,
+          CITADEL_ROOT,
+        },
+        _codex: {
+          startup_timeout_sec: 10,
+          tool_timeout_sec: 30,
+          required: false,
+          instructions: 'Use citadel_status to orient on campaign, fleet, telemetry, and artifact state before invoking Citadel workflows.',
+        },
+      },
+    },
+  }, null, 2) + '\n';
+  writeFile(mcpPath, content);
+}
+
+// ---- 3. Generate .codex-plugin/plugin.json ----------------------------------
+
+function countSkills() {
+  const skillsDir = path.join(CITADEL_ROOT, 'skills');
+  if (!fs.existsSync(skillsDir)) return 0;
+  return fs.readdirSync(skillsDir).filter(d =>
+    fs.existsSync(path.join(skillsDir, d, 'SKILL.md'))
+  ).length;
+}
 
 function generatePluginManifest() {
   console.log('Generating .codex-plugin/plugin.json...');
 
   const pkg = readJSON(path.join(CITADEL_ROOT, 'package.json')) || {};
   const repoUrl = (pkg.repository && pkg.repository.url) || '';
-
-  // Count skills
-  const skillsDir = path.join(CITADEL_ROOT, 'skills');
-  let skillCount = 0;
-  if (fs.existsSync(skillsDir)) {
-    skillCount = fs.readdirSync(skillsDir).filter(d =>
-      fs.existsSync(path.join(skillsDir, d, 'SKILL.md'))
-    ).length;
-  }
+  const repositoryUrl = repoUrl.replace(/^git\+/, '').replace(/\.git$/, '');
+  const skillCount = countSkills();
+  const pluginInCitadelRoot = path.resolve(PROJECT_ROOT) === CITADEL_ROOT;
 
   const manifest = {
     name: pkg.name || 'citadel',
     version: pkg.version || '1.0.0',
-    description: pkg.description || 'Agent orchestration harness',
+    description: 'Codex-native agent orchestration harness for durable campaigns, skills, hooks, telemetry, and parallel work.',
     author: {
       name: pkg.author || 'Citadel',
-      url: repoUrl.replace(/\.git$/, ''),
+      url: repositoryUrl,
     },
+    repository: repositoryUrl,
     license: pkg.license || 'MIT',
-    keywords: pkg.keywords || ['orchestration', 'campaigns', 'fleet'],
-    skills: './skills/',
+    keywords: ['codex', 'openai', 'agent', 'harness', 'orchestration', 'skills', 'hooks', 'mcp', 'automation'],
+    skills: pluginInCitadelRoot ? './skills/' : './.agents/skills/',
+    mcpServers: './.mcp.json',
+    hooks: './hooks/hooks.json',
     interface: {
       displayName: 'Citadel Harness',
-      shortDescription: `Agent orchestration: ${skillCount} skills, campaigns, fleet coordination, quality gates`,
+      shortDescription: `Codex-native orchestration: ${skillCount} skills, campaigns, fleet coordination, quality gates`,
+      longDescription: 'Citadel adds durable planning state, reusable skills, lifecycle hooks, telemetry, PR triage, and coordinated multi-agent workflows to Codex.',
+      developerName: 'Citadel',
       category: 'Developer Tools',
       capabilities: [
         'orchestration',
@@ -303,19 +361,34 @@ function generatePluginManifest() {
         'quality-gates',
         'telemetry',
         'intent-routing',
+        'mcp',
+        'codex-hooks',
+      ],
+      defaultPrompt: [
+        'Use Citadel to route this task through the right skill and verification loop.',
+        'Use Citadel to continue the active campaign and report current state.',
       ],
     },
   };
 
-  // Add mcpServers pointer if .mcp.json exists
-  if (fs.existsSync(path.join(PROJECT_ROOT, '.mcp.json'))) {
-    manifest.mcpServers = './.mcp.json';
-  }
-
-  const content = '// Generated by Citadel. Do not edit manually.\n'
-    + JSON.stringify(manifest, null, 2) + '\n';
+  const content = JSON.stringify(manifest, null, 2) + '\n';
 
   writeFile(path.join(PROJECT_ROOT, '.codex-plugin', 'plugin.json'), content);
+}
+
+function generatePluginHooks() {
+  console.log('Generating plugin-bundled Codex hooks...');
+
+  const hooksTemplatePath = path.join(CITADEL_ROOT, 'hooks', 'hooks-template.json');
+  const hooksTemplate = readJSON(hooksTemplatePath);
+  if (!hooksTemplate) {
+    console.warn('  warning: hooks template missing; plugin hooks not generated.');
+    return;
+  }
+
+  const translated = translateCodexPluginHooks(hooksTemplate);
+  const content = JSON.stringify({ hooks: translated.hooks }, null, 2) + '\n';
+  writeFile(path.join(PROJECT_ROOT, 'hooks', 'hooks.json'), content);
 }
 
 // ---- 3. Translate agent definitions -----------------------------------------
@@ -525,14 +598,73 @@ function syncProjectGuidance() {
     return;
   }
 
-  // Try to copy from CLAUDE.md as initial content
+  const projectSpecPath = path.join(PROJECT_ROOT, '.citadel', 'project.md');
+  if (fs.existsSync(projectSpecPath)) {
+    const content = fs.readFileSync(projectSpecPath, 'utf8');
+    const spec = parseProjectSpec(content);
+    const errors = validateProjectSpec(spec);
+    if (errors.length === 0) {
+      writeFile(agentsMdPath, renderCodexGuidance(spec));
+      console.log('  Generated AGENTS.md from .citadel/project.md with Codex-specific guidance.');
+      return;
+    }
+    console.warn(`  warning: .citadel/project.md invalid (${errors.join('; ')}); using fallback guidance.`);
+  }
+
+  // CLAUDE.md is a fallback only. Keep the generated file Codex-specific so
+  // Codex instruction discovery, nested overrides, and review guidance have a
+  // clear owner even when the project has no Citadel spec yet.
   const claudeMdPath = path.join(PROJECT_ROOT, 'CLAUDE.md');
   if (fs.existsSync(claudeMdPath)) {
     const content = fs.readFileSync(claudeMdPath, 'utf8');
-    writeFile(agentsMdPath, content);
-    console.log('  Generated AGENTS.md from CLAUDE.md content.');
+    const fallback = [
+      '# Codex Project Guidance',
+      '',
+      'This AGENTS.md was generated by Citadel for Codex instruction discovery.',
+      '',
+      '## Repository expectations',
+      '',
+      '- Read this file before changing code.',
+      '- Prefer project-specific build, test, lint, and verification commands from this file or nested AGENTS.override.md files.',
+      '- Preserve user-authored changes and avoid broad rewrites unless the task calls for them.',
+      '',
+      '## Review guidelines',
+      '',
+      '- Prioritize correctness, security, regressions, and missing verification.',
+      '- Keep review findings focused and actionable.',
+      '',
+      '## Imported legacy guidance',
+      '',
+      content,
+      '',
+    ].join('\n');
+    writeFile(agentsMdPath, fallback);
+    console.log('  Generated Codex AGENTS.md with imported CLAUDE.md fallback content.');
   } else {
-    console.log('  No CLAUDE.md found. AGENTS.md will be generated by /do setup.');
+    const fallback = [
+      '# Codex Project Guidance',
+      '',
+      'This AGENTS.md was generated by Citadel so Codex has a usable project instruction file before `/do setup` runs.',
+      '',
+      '## Repository expectations',
+      '',
+      '- Run `/do setup` before substantial work so Citadel can detect the stack and create project state.',
+      '- Preserve user-authored changes and avoid broad rewrites unless the task calls for them.',
+      '- Keep durable campaign, review, automation, and verification state under `.planning/`.',
+      '',
+      '## Review guidelines',
+      '',
+      '- Prioritize P0/P1 correctness, security, regression, and missing-verification issues.',
+      '- Keep findings concrete and actionable with file and line references when possible.',
+      '',
+      '## Verification',
+      '',
+      '- Use the narrowest command that proves the changed behavior.',
+      '- Run `node scripts/codex-readiness-check.js --write` after generating Codex artifacts when Citadel is available.',
+      '',
+    ].join('\n');
+    writeFile(agentsMdPath, fallback);
+    console.log('  Generated minimal Codex AGENTS.md fallback.');
   }
 }
 
@@ -546,7 +678,9 @@ function main() {
   console.log('');
 
   generateConfigToml();
+  generatePluginMcpConfig();
   generatePluginManifest();
+  generatePluginHooks();
   translateAgents();
   syncSkills();
   syncProjectGuidance();
@@ -556,7 +690,7 @@ function main() {
     console.log('Dry run complete. No files were written.');
   } else {
     console.log('Codex compatibility artifacts generated.');
-    console.log('Run `node scripts/install-hooks-codex.js` to install Codex hooks.');
+    console.log('Plugin-bundled hooks are in `hooks/hooks.json`; `scripts/install-hooks-codex.js` is only needed for legacy `.codex/hooks.json` installs.');
   }
 }
 

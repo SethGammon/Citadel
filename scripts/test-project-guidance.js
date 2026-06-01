@@ -35,6 +35,11 @@ function main() {
   if (!codex.includes('## Citadel Project Guidance')) {
     fail('Codex guidance renderer must emit the Citadel Project Guidance section');
   }
+  for (const section of ['## Verification', '## Review Guidelines', '## Codex Notes']) {
+    if (!codex.includes(section)) {
+      fail(`Codex guidance renderer missing ${section}`);
+    }
+  }
   if (CODEX_GUIDANCE_TARGET.filePath !== 'AGENTS.md') {
     fail('Codex runtime guidance target must point to AGENTS.md');
   }

@@ -1,102 +1,88 @@
 # Claude Code Installation Guide
 
-Install Citadel as a Claude Code plugin, run project setup, and verify that the harness is active before you start real work.
+Install Citadel as a Claude Code plugin, verify the marketplace, write project hooks, and run setup from the target repo.
 
-## What This Guide Covers
+Sources: Claude Code's current plugin docs support marketplace discovery, local paths, GitHub sources, install scopes, and non-interactive `claude plugin marketplace` / `claude plugin install` commands. See [Discover and install plugins](https://code.claude.com/docs/en/discover-plugins), [Create and distribute marketplaces](https://code.claude.com/docs/en/plugin-marketplaces), and [Plugins reference](https://code.claude.com/docs/en/plugins-reference).
 
-This guide is for the Claude Code runtime. It focuses on the Claude-specific installation path:
+## Fast Path: Local Project Install
 
-- loading Citadel as a Claude Code plugin
-- running `/do setup`
-- installing Citadel hooks into `.claude/settings.json`
-- generating project guidance and harness state
-
-## Prerequisites
-
-Before you start, make sure you have:
-
-- [Claude Code](https://docs.anthropic.com/en/docs/claude-code) installed
-- Node.js 18 or newer
-- Git
-- a project directory where you want Citadel enabled
-
-No extra API key setup is required beyond whatever Claude Code already uses.
-
-## 1. Clone Citadel
-
-Clone the repository somewhere stable on disk:
+From the project where you want Citadel enabled:
 
 ```bash
 git clone https://github.com/SethGammon/Citadel.git ~/Citadel
-cd ~/Citadel
-```
-
-PowerShell example:
-
-```powershell
-git clone https://github.com/SethGammon/Citadel.git $HOME\Citadel
-Set-Location $HOME\Citadel
-```
-
-Citadel's hook installation uses absolute paths. If you move the clone later, re-run setup in your project.
-
-## 2. Open the Target Project
-
-Switch to the project where you want to use Citadel:
-
-```bash
 cd /path/to/your-project
+node ~/Citadel/scripts/claude-install.js --install --scope local
+claude
 ```
 
-PowerShell example:
+Then in Claude Code:
 
-```powershell
-Set-Location C:\path\to\your-project
+```text
+/do setup --express
+/do --list
+/do review path/to/file
 ```
 
-## 3. Load Citadel Into Claude Code
+Local scope is the safest default for trying Citadel: it installs the plugin for you in this repository only and avoids committing project-wide Claude settings.
 
-### Option A: Per-session
+## What The Installer Does
 
-Launch Claude Code with the plugin directory directly:
+`scripts/claude-install.js --install --scope local` wraps the manual Claude Code setup:
+
+- validates `.claude-plugin/marketplace.json` and `.claude-plugin/plugin.json`
+- runs `claude plugin marketplace add <Citadel> --scope local`
+- runs `claude plugin install citadel@citadel-local --scope local`
+- runs `scripts/install-hooks.js <project>` so `.claude/settings.json` gets resolved absolute hook paths
+- prints the next Claude Code commands to run
+
+Useful variants:
 
 ```bash
-claude --plugin-dir /path/to/Citadel
+node ~/Citadel/scripts/claude-install.js --dry-run --json
+node ~/Citadel/scripts/claude-install.js --add-marketplace --scope user
+node ~/Citadel/scripts/claude-install.js --install-plugin --scope project
+node ~/Citadel/scripts/install.js --runtime claude --install --scope local
+npm run claude:install -- --install --scope local
 ```
 
-### Option B: Persistent install
+## Manual Install
 
-Inside Claude Code, run:
+Inside Claude Code:
 
 ```text
 /plugin marketplace add /path/to/Citadel
-/plugin install citadel@citadel-local
-/reload-plugins
+/plugin install citadel@citadel-local --scope local
 ```
 
-If `/plugin install` cannot find the plugin, start with `claude --plugin-dir /path/to/Citadel` first, then add and install it from inside that session.
+Or from the shell:
 
-## 4. Run Citadel Setup
-
-Once Claude Code is open in the target project with Citadel loaded, run:
-
-```text
-/do setup
+```bash
+claude plugin marketplace add /path/to/Citadel --scope local
+claude plugin install citadel@citadel-local --scope local
+node /path/to/Citadel/scripts/install-hooks.js /path/to/your-project
 ```
 
-This bootstraps the project for Citadel. In the Claude runtime, setup is expected to:
+For a one-session trial without registering a marketplace:
 
-- install hooks into `.claude/settings.json`
-- generate `.claude/harness.json`
-- scaffold or extend `CLAUDE.md`
-- scaffold or extend `AGENTS.md`
-- create `.planning/` and `.citadel/`
+```bash
+cd /path/to/your-project
+claude --plugin-dir /path/to/Citadel
+```
 
-If you already have `CLAUDE.md` or `AGENTS.md`, Citadel should preserve existing content instead of replacing it wholesale.
+## GitHub Marketplace Install
 
-## 5. Verify the Installation
+If you want Claude Code to fetch Citadel from GitHub instead of a local clone:
 
-Check for these project files and directories:
+```bash
+claude plugin marketplace add SethGammon/Citadel --scope local
+claude plugin install citadel@citadel-local --scope local
+```
+
+You still need to run `/do setup --express` in the target project so Citadel can detect the stack, initialize state, and refresh hooks.
+
+## Verify
+
+Expected project files after the installer and `/do setup`:
 
 ```text
 CLAUDE.md
@@ -107,62 +93,62 @@ AGENTS.md
 .citadel/
 ```
 
-Then run a simple command in Claude Code:
+Fast checks:
+
+```bash
+claude plugin validate /path/to/Citadel
+node /path/to/Citadel/scripts/test-installers.js
+```
+
+In Claude Code:
 
 ```text
 /do --list
+/do review path/to/file
 ```
-
-You can also try:
-
-```text
-/do review src/main.ts
-```
-
-Use any real file from your project.
-
-## Why Claude Setup Uses `/do setup`
-
-Claude Code plugins cannot currently rely on relative hook paths alone, so Citadel uses setup to write resolved absolute hook commands into `.claude/settings.json`. If the Citadel clone moves, re-run:
-
-```text
-/do setup
-```
-
-That refreshes the hook paths for the current project.
 
 ## Troubleshooting
 
 ### Hooks are not firing
 
-Re-run:
-
-```text
-/do setup
-```
-
-Or from the project root:
+Re-run the installer from the target project:
 
 ```bash
-node /path/to/Citadel/scripts/install-hooks.js
+node /path/to/Citadel/scripts/claude-install.js --install --scope local
 ```
 
-### `/do setup` does not create the harness files
+Or install only hooks:
 
-Make sure Claude Code is running from the actual project root, not from the Citadel repository. Setup needs to inspect files like `package.json`, `tsconfig.json`, or other project markers.
-
-### Citadel was moved to a different folder
-
-Re-run setup so `.claude/settings.json` gets rewritten with the new absolute paths.
-
-## Recommended First Commands
-
-After installation, these are the fastest checks:
-
-```text
-/do setup
-/do --list
-/do review path/to/file
+```bash
+node /path/to/Citadel/scripts/install-hooks.js /path/to/your-project
 ```
 
-If those work, Citadel is installed for Claude Code and ready for normal use.
+### Claude says the plugin is not found
+
+Refresh the marketplace and install again:
+
+```bash
+claude plugin marketplace update citadel-local
+claude plugin install citadel@citadel-local --scope local
+```
+
+If the local clone moved, run:
+
+```bash
+claude plugin marketplace remove citadel-local
+claude plugin marketplace add /new/path/to/Citadel --scope local
+```
+
+### Setup runs in the wrong project
+
+Start Claude Code from the actual target project root. Setup detects stack files such as `package.json`, `tsconfig.json`, `Cargo.toml`, and similar project markers.
+
+### You want a team-shared install
+
+Use `--scope project` only when you intentionally want Claude Code plugin settings shared through the repository:
+
+```bash
+node /path/to/Citadel/scripts/claude-install.js --install --scope project
+```
+
+Review the settings diff before committing.

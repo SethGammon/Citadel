@@ -51,7 +51,18 @@ routine on the account (including unrelated ones). See
      /daemon start --remote    (uses RemoteTrigger, counts against 15/day cap)
    ```
 
+### Codex automation lane
+
+In Codex, prefer a Codex Automation for durable unattended daemon ticks when available:
+
+```bash
+node scripts/codex-automation.js plan --type daemon --command "/daemon tick" --cadence "<interval>" --target background-worktree --write
+```
+
+Use the returned prompt in the Codex app automation surface. Each run must still read and update `.planning/daemon.json`; Codex owns the scheduling, Citadel owns the budget/status gates and run log.
+
 ### Opt-in routine flow — `/daemon start --remote`
+
 Only when the user has explicitly passed `--remote`:
 1. Before proceeding, confirm: "This will use Anthropic's `RemoteTrigger`,
    which counts against your 15 routine runs / 24h quota. A single overnight

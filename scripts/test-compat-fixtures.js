@@ -143,7 +143,18 @@ check('Claude settings has all expected hook events', () => {
 
 check('Codex hooks only include supported events', () => {
   const codex = JSON.parse(readFixture('codex-hooks.json'));
-  const supported = new Set(['SessionStart', 'PreToolUse', 'PostToolUse', 'UserPromptSubmit', 'Stop']);
+  const supported = new Set([
+    'SessionStart',
+    'PreToolUse',
+    'PermissionRequest',
+    'PostToolUse',
+    'PreCompact',
+    'PostCompact',
+    'UserPromptSubmit',
+    'SubagentStart',
+    'SubagentStop',
+    'Stop',
+  ]);
   for (const event of Object.keys(codex.hooks)) {
     assert(supported.has(event), `unsupported Codex event: ${event}`);
   }
@@ -151,7 +162,10 @@ check('Codex hooks only include supported events', () => {
 
 check('Codex translation installs at least 10 hooks', () => {
   const meta = JSON.parse(readFixture('codex-translation-meta.json'));
-  assert(meta.installedCount >= 10, `only ${meta.installedCount} hooks installed`);
+  assert(meta.installedCount >= 18, `only ${meta.installedCount} hooks installed`);
+  for (const event of ['PermissionRequest', 'PreCompact', 'PostCompact', 'SubagentStart', 'SubagentStop']) {
+    assert(meta.events.includes(event), `missing Codex event: ${event}`);
+  }
 });
 
 check('Claude guidance contains required sections', () => {

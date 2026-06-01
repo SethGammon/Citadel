@@ -89,7 +89,15 @@ Save verification artifacts:
 
 1. Screenshots go to `.planning/screenshots/{campaign-slug}/` (if in a campaign)
    or `.planning/screenshots/` (if standalone)
-2. Write a verification summary:
+2. In Codex, also register screenshots for the app artifact/browser workflow:
+   ```bash
+   node scripts/codex-app-artifacts.js record --workflow live-preview --kind screenshot --path ".planning/screenshots/{route-slug}.png" --status pass
+   ```
+3. Verify registered artifacts:
+   ```bash
+   node scripts/codex-app-artifacts.js verify --require-artifacts
+   ```
+4. Write a verification summary:
    ```markdown
    ## Visual Verification: {date}
 

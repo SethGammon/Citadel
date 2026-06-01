@@ -9,11 +9,12 @@
  *
  * TWO MODES:
  *   Static (default): validates scenario files + state setup. Zero cost.
- *   Execute (--execute): runs scenarios against the real claude CLI.
+ *   Execute (--execute): runs scenarios against the real Claude CLI or Codex exec.
  *
  * Usage:
  *   node scripts/skill-bench.js                            # static validate all
  *   node scripts/skill-bench.js --execute                  # run against claude
+ *   node scripts/skill-bench.js --execute --runtime codex-exec
  *   node scripts/skill-bench.js --execute --verify-hooks   # also assert hooks fired
  *   node scripts/skill-bench.js --skill dashboard          # filter by skill name
  *   node scripts/skill-bench.js --tag fringe               # filter by tag
@@ -34,6 +35,7 @@ const fs            = require('fs');
 const path          = require('path');
 const os            = require('os');
 const { execFileSync, execSync } = require('child_process');
+const { buildCodexExecArgs } = require('../core/codex/native-integrations');
 
 const PLUGIN_ROOT   = path.resolve(__dirname, '..');
 const SKILLS_DIR    = path.join(PLUGIN_ROOT, 'skills');
@@ -60,6 +62,8 @@ function getArgValue(flag) {
 
 const skillFilter = getArgValue('--skill');
 const tagFilter   = getArgValue('--tag');
+const runtimeFilter = getArgValue('--runtime') || 'claude';
+const CODEX_SANDBOX = getArgValue('--codex-sandbox') || 'read-only';
 
 // ── Scenario parsing ──────────────────────────────────────────────────────────
 
@@ -575,6 +579,7 @@ function assertHooksFired(tmpDir, before) {
 // ── Claude CLI detection ──────────────────────────────────────────────────────
 
 let _claudeCmd = undefined;
+let _codexCmd = undefined;
 
 function findClaudeCLI() {
   if (_claudeCmd !== undefined) return _claudeCmd;
@@ -592,13 +597,28 @@ function findClaudeCLI() {
   return null;
 }
 
+function findCodexCLI() {
+  if (_codexCmd !== undefined) return _codexCmd;
+
+  const candidates = ['codex', 'codex.exe'];
+  for (const cmd of candidates) {
+    try {
+      execFileSync(cmd, ['--version'], { stdio: 'pipe', timeout: 5000 });
+      _codexCmd = cmd;
+      return cmd;
+    } catch { /* not found */ }
+  }
+  _codexCmd = null;
+  return null;
+}
+
 // ── Scenario execution ────────────────────────────────────────────────────────
 
 /**
- * Run a scenario against the real claude CLI.
+ * Run a scenario against the real Claude CLI.
  * Returns { output: string, error: string|null, timedOut: boolean }
  */
-function executeScenario(scenario, claudeCmd, tmpDir) {
+function executeClaudeScenario(scenario, claudeCmd, tmpDir) {
   const [bin, ...binArgs] = claudeCmd.split(' ');
   try {
     const output = execFileSync(
@@ -625,6 +645,46 @@ function executeScenario(scenario, claudeCmd, tmpDir) {
       output: err.stdout || '',
       error:  err.message || 'unknown error',
       timedOut: false,
+    };
+  }
+}
+
+function executeCodexScenario(scenario, codexCmd, tmpDir) {
+  const outputPath = path.join(tmpDir, '.planning', 'benchmark-results', `${scenario.skill}-${scenario.name}-codex.md`);
+  fs.mkdirSync(path.dirname(outputPath), { recursive: true });
+  const codexArgs = buildCodexExecArgs({
+    projectRoot: tmpDir,
+    sandbox: CODEX_SANDBOX,
+    outputLastMessagePath: outputPath,
+    prompt: scenario.input,
+    json: true,
+  });
+  try {
+    const output = execFileSync(
+      codexCmd,
+      codexArgs,
+      {
+        cwd: tmpDir,
+        timeout: scenario.timeout,
+        encoding: 'utf8',
+        env: {
+          ...process.env,
+          CITADEL_RUNTIME: 'codex',
+        },
+        maxBuffer: 10 * 1024 * 1024,
+      }
+    );
+    const finalMessage = fs.existsSync(outputPath) ? fs.readFileSync(outputPath, 'utf8') : '';
+    return { output: finalMessage || output, rawOutput: output, error: null, timedOut: false, command: ['codex', ...codexArgs].join(' ') };
+  } catch (err) {
+    if (err.killed) {
+      return { output: err.stdout || '', error: 'timed out', timedOut: true, command: ['codex', ...codexArgs].join(' ') };
+    }
+    return {
+      output: err.stdout || '',
+      error: err.message || 'unknown error',
+      timedOut: false,
+      command: ['codex', ...codexArgs].join(' '),
     };
   }
 }
@@ -772,19 +832,23 @@ function main() {
     process.exit(0);
   }
 
-  // Detect claude CLI for execute mode
-  const claudeCmd = EXECUTE_MODE ? findClaudeCLI() : null;
-  const canExecute = EXECUTE_MODE && claudeCmd !== null;
+  // Detect the selected runtime CLI for execute mode.
+  const isCodexRuntime = runtimeFilter === 'codex-exec';
+  const runtimeName = isCodexRuntime ? 'codex exec' : 'claude';
+  const runtimeCmd = EXECUTE_MODE
+    ? (isCodexRuntime ? findCodexCLI() : findClaudeCLI())
+    : null;
+  const canExecute = EXECUTE_MODE && runtimeCmd !== null;
 
-  if (EXECUTE_MODE && !claudeCmd) {
-    console.warn('\nWARN: claude CLI not found in PATH — running static validation only.');
-    console.warn('Install Claude Code CLI to enable execution testing.\n');
+  if (EXECUTE_MODE && !runtimeCmd) {
+    console.warn(`\nWARN: ${runtimeName} CLI not found in PATH - running static validation only.`);
+    console.warn(`Install ${runtimeName} to enable execution testing.\n`);
   }
 
   const mode = canExecute ? 'execute' : 'static';
   console.log(`\nCitadel Skill Bench (${mode} mode)\n` + '='.repeat(40));
   if (mode === 'static') {
-    console.log('Validating scenario structure. Use --execute to run against claude CLI.\n');
+    console.log(`Validating scenario structure. Use --execute --runtime ${runtimeFilter} to run against ${runtimeName}.\n`);
   }
 
   const allResults = [];
@@ -802,7 +866,7 @@ function main() {
       result = {
         scenario: scenario.name,
         skill:    scenario.skill,
-        mode:     'execute',
+        mode:     isCodexRuntime ? 'codex-exec' : 'execute',
         passed:   true,
         skipped:  true,
         assertionResults: [],
@@ -812,13 +876,15 @@ function main() {
       try {
         tmpDir = setupProjectState(scenario.state);
         const telemetryBefore = VERIFY_HOOKS ? snapshotTelemetry(tmpDir) : null;
-        const execResult = executeScenario(scenario, claudeCmd, tmpDir);
+        const execResult = isCodexRuntime
+          ? executeCodexScenario(scenario, runtimeCmd, tmpDir)
+          : executeClaudeScenario(scenario, runtimeCmd, tmpDir);
 
         if (execResult.timedOut) {
           result = {
             scenario: scenario.name,
             skill:    scenario.skill,
-            mode:     'execute',
+            mode:     isCodexRuntime ? 'codex-exec' : 'execute',
             passed:   false,
             skipped:  false,
             executionError: `timed out after ${scenario.timeout}ms`,
@@ -828,7 +894,7 @@ function main() {
           result = {
             scenario: scenario.name,
             skill:    scenario.skill,
-            mode:     'execute',
+            mode:     isCodexRuntime ? 'codex-exec' : 'execute',
             passed:   false,
             skipped:  false,
             executionError: execResult.error,
@@ -849,7 +915,7 @@ function main() {
           result = {
             scenario: scenario.name,
             skill:    scenario.skill,
-            mode:     'execute',
+            mode:     isCodexRuntime ? 'codex-exec' : 'execute',
             passed:   allPass,
             skipped:  false,
             output:   execResult.output.slice(0, 2000), // cap stored output
@@ -860,7 +926,7 @@ function main() {
         result = {
           scenario: scenario.name,
           skill:    scenario.skill,
-          mode:     'execute',
+          mode:     isCodexRuntime ? 'codex-exec' : 'execute',
           passed:   false,
           skipped:  false,
           executionError: err.message,
@@ -925,8 +991,9 @@ function main() {
   } else if (mode === 'static') {
     console.log(`All ${totalPass} scenario files are valid.\n`);
     if (!EXECUTE_MODE) {
-      console.log('To run against the live claude CLI:');
-      console.log('  node scripts/skill-bench.js --execute\n');
+      console.log('To run against a live runtime:');
+      console.log('  node scripts/skill-bench.js --execute');
+      console.log('  node scripts/skill-bench.js --execute --runtime codex-exec\n');
     }
   } else {
     console.log(`All ${totalPass} scenarios passed.\n`);

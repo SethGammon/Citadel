@@ -1717,14 +1717,14 @@
             <div class="install-step-num">2</div>
             <div class="install-step-body">
               <div class="install-step-label">Add Citadel as a plugin</div>
-              <div class="install-code">claude plugin add https://github.com/SethGammon/Citadel</div>
+              <div class="install-code">claude plugin marketplace add SethGammon/Citadel</div>
             </div>
           </div>
           <div class="install-step">
             <div class="install-step-num">3</div>
             <div class="install-step-body">
-              <div class="install-step-label">Open any project and start</div>
-              <div class="install-code">cd your-project &amp;&amp; /do setup</div>
+              <div class="install-step-label">Install the Citadel plugin</div>
+              <div class="install-code">/plugin install citadel@citadel-local</div>
             </div>
           </div>
         </div>
@@ -1736,8 +1736,8 @@
   <!-- Final CTA — single copy-pasteable command -->
   <div class="final-cta">
     <div class="final-cta-label">One command. Any project.</div>
-    <div class="final-cta-cmd" onclick="navigator.clipboard.writeText('claude plugin add https://github.com/SethGammon/Citadel').then(()=>{this.querySelector('.final-cta-copy').textContent='copied!';setTimeout(()=>{this.querySelector('.final-cta-copy').textContent='copy'},1500)})" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}">
-      claude plugin add https://github.com/SethGammon/Citadel
+    <div class="final-cta-cmd" onclick="navigator.clipboard.writeText('claude plugin marketplace add SethGammon/Citadel').then(()=>{this.querySelector('.final-cta-copy').textContent='copied!';setTimeout(()=>{this.querySelector('.final-cta-copy').textContent='copy'},1500)})" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}">
+      claude plugin marketplace add SethGammon/Citadel
       <button class="final-cta-copy">copy</button>
     </div>
   </div>
@@ -1783,16 +1783,16 @@
         <div class="panel-step-num">2</div>
         <div class="panel-step-body">
           <div class="panel-step-label">Add Citadel as a plugin</div>
-          <div class="panel-code">claude plugin add https://github.com/SethGammon/Citadel</div>
-          <div class="panel-note">Installs once globally. Skills and agents become available in every project.</div>
+          <div class="panel-code">claude plugin marketplace add SethGammon/Citadel</div>
+          <div class="panel-note">Adds the Citadel marketplace. Then install citadel@citadel-local from /plugin.</div>
         </div>
       </div>
       <div class="panel-step">
         <div class="panel-step-num">3</div>
         <div class="panel-step-body">
           <div class="panel-step-label">Open any project and start</div>
-          <div class="panel-code">cd your-project<br>claude<br>/do describe what you want</div>
-          <div class="panel-note">The SessionStart hook auto-scaffolds <code style="font-family:'SF Mono',monospace;color:var(--cyan);font-size:11px">.planning/</code> and installs hooks on first run. No manual setup required.</div>
+          <div class="panel-code">cd your-project<br>claude<br>/do setup --express</div>
+          <div class="panel-note">Setup detects the stack, refreshes hooks, and creates the project state Citadel uses for campaigns, fleet work, and telemetry.</div>
         </div>
       </div>
       <div class="panel-section-label">Optional: per-project config</div>

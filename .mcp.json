@@ -1,0 +1,19 @@
+{
+  "mcpServers": {
+    "citadel-state": {
+      "command": "node",
+      "args": [
+        "mcp-servers/citadel-state/index.js"
+      ],
+      "env": {
+        "CITADEL_MCP_SERVER": "citadel-state"
+      },
+      "_codex": {
+        "startup_timeout_sec": 10,
+        "tool_timeout_sec": 30,
+        "required": false,
+        "instructions": "Use citadel_status to orient on campaign, fleet, telemetry, and artifact state before invoking Citadel workflows."
+      }
+    }
+  }
+}

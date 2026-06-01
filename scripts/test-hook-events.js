@@ -47,6 +47,19 @@ function main() {
   const legacy = toLegacyHookPayload(codexEnvelope);
   if (legacy.tool_name !== 'Edit') fail('Legacy hook payload tool mismatch');
   if (legacy._runtime !== 'codex') fail('Legacy hook payload runtime metadata mismatch');
+
+  const codexPermission = normalizeCodexHookInput({
+    hook_event_name: 'PermissionRequest',
+    tool_name: 'Bash',
+    tool_input: { command: 'git push' },
+  });
+  if (codexPermission.event_id !== 'permission_request') fail('Codex permission event normalization mismatch');
+
+  const codexSubagent = normalizeCodexHookInput({
+    hook_event_name: 'SubagentStart',
+    subagent_type: 'explorer',
+  });
+  if (codexSubagent.event_id !== 'subagent_start') fail('Codex subagent event normalization mismatch');
   if (legacy._event_id !== 'pre_tool') fail('Legacy hook payload event metadata mismatch');
 
   console.log('Hook event normalization tests pass.');

@@ -19,8 +19,13 @@ const TOOL_MAP = Object.freeze({
 const CODEX_EVENT_MAP = Object.freeze({
   SessionStart: CIT_EVENT_IDS.SESSION_START,
   PreToolUse: CIT_EVENT_IDS.PRE_TOOL,
+  PermissionRequest: CIT_EVENT_IDS.PERMISSION_REQUEST,
   PostToolUse: CIT_EVENT_IDS.POST_TOOL,
+  PreCompact: CIT_EVENT_IDS.PRE_COMPACT,
+  PostCompact: CIT_EVENT_IDS.POST_COMPACT,
   UserPromptSubmit: CIT_EVENT_IDS.USER_PROMPT,
+  SubagentStart: CIT_EVENT_IDS.SUBAGENT_START,
+  SubagentStop: CIT_EVENT_IDS.SUBAGENT_STOP,
   Stop: CIT_EVENT_IDS.STOP,
 });
 

@@ -46,6 +46,14 @@ Always run tests after modifying hooks or skills. Five levels:
 
 **CI:** `node scripts/test-all.js` exits non-zero on any failure. Use `--strict` to treat WARNs as failures.
 
+## Review Guidelines
+
+Codex GitHub review should focus on actionable P0/P1 issues:
+- correctness regressions in hooks, skills, routing, MCP, generated config, or campaign state
+- security boundaries around shell commands, protected files, permissions, and unattended automations
+- missing verification when a change affects hooks, skills, runtime adapters, or generated Codex artifacts
+- stale generated artifacts that would mislead Codex users
+
 ## Handoff Summary (Required)
 
 After completing any task, output a `HANDOFF` block:

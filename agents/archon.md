@@ -6,6 +6,7 @@ description: >-
   standards. Maintains campaign state across invocations. Does not write code —
   orchestrates those who do.
 model: opus
+codex_max_chars: 9000
 maxTurns: 200
 effort: high
 tools:

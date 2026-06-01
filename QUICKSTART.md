@@ -10,12 +10,14 @@ Choose your runtime:
 
 ```bash
 git clone https://github.com/SethGammon/Citadel.git ~/Citadel
-claude --plugin-dir ~/Citadel
+cd ~/your-project
+node ~/Citadel/scripts/install.js --runtime claude --install --scope local
+claude
 ```
 
 Then in Claude Code:
 ```
-/do setup
+/do setup --express
 /do review src/main.ts
 ```
 
@@ -24,16 +26,19 @@ Then in Claude Code:
 ```bash
 git clone https://github.com/SethGammon/Citadel.git ~/Citadel
 cd ~/your-project
-node ~/Citadel/scripts/codex-compat.js
-node ~/Citadel/scripts/install-hooks-codex.js
+node ~/Citadel/scripts/install.js --runtime codex --add-marketplace
 codex
 ```
 
 Then in Codex:
 ```
-/do setup
+/do setup --express
 /do review src/main.ts
 ```
+
+In the Codex app, the remaining trust step is a click: open **Plugins**,
+choose **Citadel Local Plugins**, and select **Add to Codex** for
+**Citadel Harness** before starting the new thread.
 
 Both paths converge on the same harness commands once the runtime-specific install step is done.
 
@@ -41,7 +46,7 @@ Both paths converge on the same harness commands once the runtime-specific insta
 
 ## Prerequisites
 
-- **[Claude Code](https://docs.anthropic.com/en/docs/claude-code)** or **[Codex](https://github.com/openai/codex)** -- the runtime Citadel extends
+- **[Claude Code](https://docs.anthropic.com/en/docs/claude-code)** or **[Codex](https://developers.openai.com/codex/quickstart)** -- the runtime Citadel extends
 - **[Node.js 18+](https://nodejs.org/)** -- required for hooks and scripts
 
 Authentication depends on the runtime you use. Citadel layers on top of the runtime you already have configured.
@@ -58,44 +63,63 @@ That's it. No build step, no `npm install`. Citadel runs directly on Node.js.
 
 ### Claude Code
 
-Launch with the plugin or install it persistently.
+From your target project root, run the bootstrap installer:
 
-#### Option A: Per-session (try it first)
+```bash
+cd ~/your-project
+node ~/Citadel/scripts/claude-install.js --install --scope local
+claude
+```
+
+This validates the Claude marketplace, adds Citadel from the local clone,
+installs **Citadel Harness** into local scope, and writes resolved hook paths to
+the target project. Local scope is gitignored and affects only you in this repo.
+
+Alternative manual install from inside Claude Code:
+
+```
+/plugin marketplace add ~/Citadel
+/plugin install citadel@citadel-local --scope local
+```
+
+For a one-session trial without registering the marketplace:
 
 ```bash
 cd ~/your-project
 claude --plugin-dir ~/Citadel
 ```
 
-Loads the plugin for this session only. Good for evaluation before committing.
-
-#### Option B: Persistent (recommended)
-
-Inside Claude Code:
-```
-/plugin marketplace add ~/Citadel
-/plugin install citadel@citadel-local
-/reload-plugins
-```
-
-> If `/plugin install` says "Plugin not found", launch with
-> `claude --plugin-dir ~/Citadel` first, then run the marketplace add
-> and install from inside that session.
-
 For the full Claude-specific flow, see [docs/CLAUDE_INSTALLATION_GUIDE.md](docs/CLAUDE_INSTALLATION_GUIDE.md).
 
 ### Codex
 
-From your target project root, generate the Codex compatibility artifacts and install the translated hooks:
+From your target project root, run the bootstrap installer:
 
 ```bash
 cd ~/your-project
-node ~/Citadel/scripts/codex-compat.js
-node ~/Citadel/scripts/install-hooks-codex.js
+node ~/Citadel/scripts/codex-install.js --add-marketplace
 codex
 ```
 
-This creates the Codex-facing files such as `AGENTS.md`, `.codex/config.toml`, `.codex/hooks.json`, projected agents, and projected skills.
+This single command refreshes Citadel's Codex plugin package, writes the local
+plugin marketplace entry, generates the target project's Codex fallback
+artifacts, runs the readiness verifier, and on Windows checks the Codex shell
+and sandbox settings. It creates Codex-facing files such as `AGENTS.md`,
+`.codex/config.toml`, `.codex-plugin/plugin.json`, plugin-bundled
+`hooks/hooks.json`, projected agents, projected skills, and Citadel MCP wiring.
+
+The `--add-marketplace` flag also runs Codex CLI marketplace registration when
+the CLI is installed. Omit it when you only want to prepare files and follow the
+printed Codex app steps.
+
+Then install or enable Citadel from Codex:
+
+- App: open **Plugins**, choose **Citadel Local Plugins**, select **Add to Codex** for **Citadel Harness**, then start a new thread.
+- CLI: run `/plugins`, install or enable **Citadel Harness**, then start a new thread.
+
+`scripts/install-hooks-codex.js` remains available for legacy per-project
+`.codex/hooks.json` installs, but plugin-bundled hooks are the preferred Codex
+path.
 
 For the full Codex-specific flow, see [docs/CODEX_INSTALLATION_GUIDE.md](docs/CODEX_INSTALLATION_GUIDE.md).
 
@@ -153,8 +177,9 @@ In all modes, setup:
 
 > **Why does the runtime-specific install still matter?**
 > Claude Code and Codex load Citadel differently. Claude relies on the plugin path
-> and hook installation into `.claude/settings.json`. Codex relies on generated
-> project artifacts like `AGENTS.md`, `.codex/config.toml`, and `.codex/hooks.json`.
+> and hook installation into `.claude/settings.json`. Codex can load Citadel as
+> a plugin with bundled skills/hooks/MCP and can also use generated project
+> artifacts like `AGENTS.md`, `.codex/config.toml`, and projected agents.
 > After moving Citadel to a new location, refresh the runtime-specific install step
 > and then re-run `/do setup`.
 
@@ -197,8 +222,8 @@ Create custom skills to capture patterns you keep repeating:
 
 **Hook not firing / "command not found" errors:**
 Re-run the runtime-specific install step, then re-run `/do setup`. For Claude Code,
-that usually means refreshing `.claude/settings.json`. For Codex, that usually means
-re-running `node /path/to/Citadel/scripts/install-hooks-codex.js`.
+that usually means re-running `claude-install.js --install --scope local`. For Codex,
+that usually means re-running `codex-install.js --add-marketplace`.
 
 Alternatively, run directly from your project directory:
 ```bash
@@ -207,8 +232,12 @@ node /path/to/Citadel/scripts/install-hooks.js
 
 For Codex:
 ```bash
-node /path/to/Citadel/scripts/codex-compat.js
-node /path/to/Citadel/scripts/install-hooks-codex.js
+node /path/to/Citadel/scripts/codex-install.js --add-marketplace
+```
+
+For Claude Code:
+```bash
+node /path/to/Citadel/scripts/claude-install.js --install --scope local
 ```
 
 **"[protect-files] Blocked" message:**
