@@ -56,11 +56,16 @@ function readFixture(name) {
   return fs.readFileSync(p, 'utf8');
 }
 
+function normalizeSnapshot(str) {
+  return str.replace(/\r\n/g, '\n');
+}
+
 function compareFixture(label, fixtureName, generated) {
   check(label, () => {
-    const expected = readFixture(fixtureName);
-    if (generated !== expected) {
-      const genLines = generated.split('\n');
+    const expected = normalizeSnapshot(readFixture(fixtureName));
+    const actual = normalizeSnapshot(generated);
+    if (actual !== expected) {
+      const genLines = actual.split('\n');
       const expLines = expected.split('\n');
       let firstDiff = -1;
       for (let i = 0; i < Math.max(genLines.length, expLines.length); i++) {
