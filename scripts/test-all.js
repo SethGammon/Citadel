@@ -38,6 +38,9 @@ const MOMENTUM_WATCHER_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-momentum-w
 const POLICY_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-policy-core.js');
 const CLAUDE_RUNTIME_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-claude-runtime.js');
 const CODEX_RUNTIME_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-codex-runtime.js');
+const CODEX_NATIVE_INTEGRATION_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-codex-native-integrations.js');
+const CODEX_OPERATIONAL_IMPROVEMENT_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-codex-operational-improvements.js');
+const INSTALLER_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-installers.js');
 const PROJECT_BOOTSTRAP_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-project-bootstrap.js');
 const COMPAT_FIXTURE_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-compat-fixtures.js');
 const BACKWARD_COMPAT_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-backward-compat.js');
@@ -46,7 +49,7 @@ const COST_TRACKER_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-cost-tracker.j
 const STRICT = process.argv.includes('--strict');
 
 console.log('\nCitadel Full Test Suite\n' + '='.repeat(40));
-console.log('Running: hook smoke test + security tests + runtime contract test + runtime registry test + hook event test + skill lint + demo routing check + telemetry core check + coordination core check + hook installer check + campaign core check + discovery core check + discovery writer check + momentum synthesizer check + policy core check + Claude runtime check + Codex runtime check + project bootstrap check + compat fixtures + backward compat + cost tracker\n');
+console.log('Running: hook smoke test + security tests + runtime contract test + runtime registry test + hook event test + skill lint + demo routing check + telemetry core check + coordination core check + hook installer check + campaign core check + discovery core check + discovery writer check + momentum synthesizer check + policy core check + Claude runtime check + Codex runtime check + Codex native integration check + Codex operational improvement check + installer check + project bootstrap check + compat fixtures + backward compat + cost tracker\n');
 
 function run(label, scriptPath, extraArgs = []) {
   console.log(`\n> ${label}`);
@@ -83,6 +86,9 @@ const momentumWatcherPassed = run('Momentum Watcher Check', MOMENTUM_WATCHER_TES
 const policyPassed = run('Policy Core Check', POLICY_TEST);
 const claudeRuntimePassed = run('Claude Runtime Check', CLAUDE_RUNTIME_TEST);
 const codexRuntimePassed = run('Codex Runtime Check', CODEX_RUNTIME_TEST);
+const codexNativeIntegrationPassed = run('Codex Native Integration Check', CODEX_NATIVE_INTEGRATION_TEST);
+const codexOperationalImprovementPassed = run('Codex Operational Improvement Check', CODEX_OPERATIONAL_IMPROVEMENT_TEST);
+const installerPassed = run('Installer Check', INSTALLER_TEST);
 const projectBootstrapPassed = run('Project Bootstrap Check', PROJECT_BOOTSTRAP_TEST);
 const compatFixturePassed = STRICT ? run('Compatibility Fixtures', COMPAT_FIXTURE_TEST) : true;
 const backwardCompatPassed = run('Backward Compatibility', BACKWARD_COMPAT_TEST);
@@ -108,18 +114,22 @@ console.log(`  Momentum watcher:   ${momentumWatcherPassed ? 'PASS' : 'FAIL'}`);
 console.log(`  Policy core:        ${policyPassed ? 'PASS' : 'FAIL'}`);
 console.log(`  Claude runtime:     ${claudeRuntimePassed ? 'PASS' : 'FAIL'}`);
 console.log(`  Codex runtime:      ${codexRuntimePassed ? 'PASS' : 'FAIL'}`);
+console.log(`  Codex native:       ${codexNativeIntegrationPassed ? 'PASS' : 'FAIL'}`);
+console.log(`  Codex operational:  ${codexOperationalImprovementPassed ? 'PASS' : 'FAIL'}`);
+console.log(`  Installers:         ${installerPassed ? 'PASS' : 'FAIL'}`);
 console.log(`  Project bootstrap:  ${projectBootstrapPassed ? 'PASS' : 'FAIL'}`);
 if (STRICT) console.log(`  Compat fixtures:    ${compatFixturePassed ? 'PASS' : 'FAIL'}`);
 console.log(`  Backward compat:    ${backwardCompatPassed ? 'PASS' : 'FAIL'}`);
 console.log(`  Cost tracker:       ${costTrackerPassed ? 'PASS' : 'FAIL'}`);
 console.log('');
 
-if (hooksPassed && securityPassed && contractsPassed && runtimeRegistryPassed && hookEventsPassed && skillsPassed && demoPassed && telemetryPassed && coordinationPassed && hookInstallerPassed && campaignPassed && discoveryPassed && discoveryWriterPassed && momentumPassed && momentumWatcherPassed && policyPassed && claudeRuntimePassed && codexRuntimePassed && projectBootstrapPassed && compatFixturePassed && backwardCompatPassed && costTrackerPassed) {
+if (hooksPassed && securityPassed && contractsPassed && runtimeRegistryPassed && hookEventsPassed && skillsPassed && demoPassed && telemetryPassed && coordinationPassed && hookInstallerPassed && campaignPassed && discoveryPassed && discoveryWriterPassed && momentumPassed && momentumWatcherPassed && policyPassed && claudeRuntimePassed && codexRuntimePassed && codexNativeIntegrationPassed && codexOperationalImprovementPassed && installerPassed && projectBootstrapPassed && compatFixturePassed && backwardCompatPassed && costTrackerPassed) {
   console.log('All tests pass.\n');
   console.log('Next steps:');
   console.log('  node scripts/skill-bench.js --list      see benchmark scenarios');
   console.log('  node scripts/skill-bench.js             validate scenario files');
-  console.log('  node scripts/skill-bench.js --execute   run against claude CLI\n');
+  console.log('  node scripts/skill-bench.js --execute   run against Claude CLI');
+  console.log('  node scripts/skill-bench.js --execute --runtime codex-exec   run against Codex exec\n');
   process.exit(0);
 }
 
@@ -141,11 +151,14 @@ const momentumWatcherFail = !momentumWatcherPassed ? 16384 : 0;
 const policyFail = !policyPassed ? 32768 : 0;
 const claudeRuntimeFail = !claudeRuntimePassed ? 65536 : 0;
 const codexRuntimeFail = !codexRuntimePassed ? 131072 : 0;
-const projectBootstrapFail = !projectBootstrapPassed ? 262144 : 0;
-const compatFixtureFail = !compatFixturePassed ? 524288 : 0;
-const backwardCompatFail = !backwardCompatPassed ? 1048576 : 0;
-const costTrackerFail = !costTrackerPassed ? 2097152 : 0;
-const code = hookFail | securityFail | contractFail | runtimeRegistryFail | hookEventFail | skillFail | demoFail | telemetryFail | coordinationFail | hookInstallerFail | campaignFail | discoveryFail | discoveryWriterFail | momentumFail | momentumWatcherFail | policyFail | claudeRuntimeFail | codexRuntimeFail | projectBootstrapFail | compatFixtureFail | backwardCompatFail | costTrackerFail;
+const codexNativeIntegrationFail = !codexNativeIntegrationPassed ? 262144 : 0;
+const codexOperationalImprovementFail = !codexOperationalImprovementPassed ? 524288 : 0;
+const installerFail = !installerPassed ? 1048576 : 0;
+const projectBootstrapFail = !projectBootstrapPassed ? 2097152 : 0;
+const compatFixtureFail = !compatFixturePassed ? 4194304 : 0;
+const backwardCompatFail = !backwardCompatPassed ? 8388608 : 0;
+const costTrackerFail = !costTrackerPassed ? 16777216 : 0;
+const code = hookFail | securityFail | contractFail | runtimeRegistryFail | hookEventFail | skillFail | demoFail | telemetryFail | coordinationFail | hookInstallerFail | campaignFail | discoveryFail | discoveryWriterFail | momentumFail | momentumWatcherFail | policyFail | claudeRuntimeFail | codexRuntimeFail | codexNativeIntegrationFail | codexOperationalImprovementFail | installerFail | projectBootstrapFail | compatFixtureFail | backwardCompatFail | costTrackerFail;
 
 if (!hooksPassed) console.log('Hook smoke test failed. Fix hook issues before proceeding.');
 if (!securityPassed) console.log('Security tests failed. DO NOT SHIP - critical vulnerabilities present.');
@@ -165,6 +178,9 @@ if (!momentumWatcherPassed) console.log('Momentum watcher check failed. Fix mome
 if (!policyPassed) console.log('Policy core check failed. Fix policy regressions before shipping.');
 if (!claudeRuntimePassed) console.log('Claude runtime check failed. Fix runtime adapter regressions before shipping.');
 if (!codexRuntimePassed) console.log('Codex runtime check failed. Fix runtime adapter regressions before shipping.');
+if (!codexNativeIntegrationPassed) console.log('Codex native integration check failed. Fix Codex bridge scripts, MCP, plugin, or docs before shipping.');
+if (!codexOperationalImprovementPassed) console.log('Codex operational improvement check failed. Fix readiness, review ingestion, artifacts, or app-server event summarization before shipping.');
+if (!installerPassed) console.log('Installer check failed. Fix Claude/Codex installer regressions before shipping.');
 if (!projectBootstrapPassed) console.log('Project bootstrap check failed. Fix canonical guidance bootstrap before shipping.');
 if (!compatFixturePassed) console.log('Compatibility fixture check failed. Run: node scripts/generate-fixtures.js --write');
 if (!backwardCompatPassed) console.log('Backward compatibility check failed. Legacy data formats may be broken.');

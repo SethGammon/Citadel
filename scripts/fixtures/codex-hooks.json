@@ -2,7 +2,6 @@
   "hooks": {
     "PreToolUse": [
       {
-        "matcher": "Edit|Write",
         "hooks": [
           {
             "type": "command",
@@ -10,10 +9,10 @@
             "statusMessage": "Citadel: protect-files",
             "timeout": 5
           }
-        ]
+        ],
+        "matcher": "Edit"
       },
       {
-        "matcher": "Read",
         "hooks": [
           {
             "type": "command",
@@ -21,10 +20,21 @@
             "statusMessage": "Citadel: protect-files",
             "timeout": 5
           }
-        ]
+        ],
+        "matcher": "Write"
       },
       {
-        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node ${CITADEL_ROOT}/codex-adapter.js protect-files",
+            "statusMessage": "Citadel: protect-files",
+            "timeout": 5
+          }
+        ],
+        "matcher": "Read"
+      },
+      {
         "hooks": [
           {
             "type": "command",
@@ -32,10 +42,10 @@
             "statusMessage": "Citadel: external-action-gate",
             "timeout": 5
           }
-        ]
+        ],
+        "matcher": "Bash"
       },
       {
-        "matcher": "Edit|Write|Bash|Agent",
         "hooks": [
           {
             "type": "command",
@@ -43,7 +53,41 @@
             "statusMessage": "Citadel: governance",
             "timeout": 3
           }
-        ]
+        ],
+        "matcher": "Edit"
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node ${CITADEL_ROOT}/codex-adapter.js governance",
+            "statusMessage": "Citadel: governance",
+            "timeout": 3
+          }
+        ],
+        "matcher": "Write"
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node ${CITADEL_ROOT}/codex-adapter.js governance",
+            "statusMessage": "Citadel: governance",
+            "timeout": 3
+          }
+        ],
+        "matcher": "Bash"
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node ${CITADEL_ROOT}/codex-adapter.js governance",
+            "statusMessage": "Citadel: governance",
+            "timeout": 3
+          }
+        ],
+        "matcher": "Agent"
       }
     ],
     "PostToolUse": [
@@ -58,7 +102,6 @@
         ]
       },
       {
-        "matcher": "Edit|Write",
         "hooks": [
           {
             "type": "command",
@@ -66,10 +109,43 @@
             "statusMessage": "Citadel: organize-enforce",
             "timeout": 5
           }
-        ]
+        ],
+        "matcher": "Edit"
       },
       {
-        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node ${CITADEL_ROOT}/codex-adapter.js organize-enforce",
+            "statusMessage": "Citadel: organize-enforce",
+            "timeout": 5
+          }
+        ],
+        "matcher": "Write"
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node ${CITADEL_ROOT}/codex-adapter.js complexity-check",
+            "statusMessage": "Citadel: complexity-check",
+            "timeout": 5
+          }
+        ],
+        "matcher": "Edit"
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node ${CITADEL_ROOT}/codex-adapter.js complexity-check",
+            "statusMessage": "Citadel: complexity-check",
+            "timeout": 5
+          }
+        ],
+        "matcher": "Write"
+      },
+      {
         "hooks": [
           {
             "type": "command",
@@ -77,7 +153,8 @@
             "statusMessage": "Citadel: circuit-breaker",
             "timeout": 5
           }
-        ]
+        ],
+        "matcher": "Bash"
       },
       {
         "hooks": [
@@ -86,6 +163,30 @@
             "command": "node ${CITADEL_ROOT}/codex-adapter.js cost-tracker",
             "statusMessage": "Citadel: cost-tracker",
             "timeout": 5
+          }
+        ]
+      }
+    ],
+    "PreCompact": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node ${CITADEL_ROOT}/codex-adapter.js pre-compact",
+            "statusMessage": "Citadel: pre-compact",
+            "timeout": 15
+          }
+        ]
+      }
+    ],
+    "PostCompact": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node ${CITADEL_ROOT}/codex-adapter.js post-compact",
+            "statusMessage": "Citadel: post-compact",
+            "timeout": 10
           }
         ]
       }
@@ -124,7 +225,6 @@
         ]
       },
       {
-        "matcher": "compact",
         "hooks": [
           {
             "type": "command",
@@ -132,7 +232,8 @@
             "statusMessage": "Citadel: restore-compact",
             "timeout": 5
           }
-        ]
+        ],
+        "matcher": "compact"
       },
       {
         "hooks": [
@@ -141,6 +242,42 @@
             "command": "node ${CITADEL_ROOT}/codex-adapter.js intake-scanner",
             "statusMessage": "Citadel: intake-scanner",
             "timeout": 5
+          }
+        ]
+      }
+    ],
+    "SubagentStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node ${CITADEL_ROOT}/codex-adapter.js subagent-start",
+            "statusMessage": "Citadel: subagent-start",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "SubagentStop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node ${CITADEL_ROOT}/codex-adapter.js subagent-stop",
+            "statusMessage": "Citadel: subagent-stop",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "PermissionRequest": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node ${CITADEL_ROOT}/codex-adapter.js permission-request",
+            "statusMessage": "Citadel: permission-request",
+            "timeout": 3
           }
         ]
       }

@@ -1,210 +1,172 @@
 # Codex Installation Guide
 
-Install Citadel into a project you use with Codex, generate the Codex-facing artifacts, and verify that the harness is active before you start real work.
+Install Citadel into a project you use with Codex, then verify that Codex can see the plugin, hooks, skills, MCP state, and project guidance.
 
-## What This Guide Covers
+## Fast Path: One Command, Then Add to Codex
 
-This guide is for the Codex runtime, not Claude Code. It focuses on the parts Citadel needs in order to show up correctly inside Codex:
+Codex plugins can bundle skills, app integrations, hooks, and MCP servers, and Codex can install plugins from local or repo marketplace files. The [official Codex plugin docs](https://developers.openai.com/codex/plugins) describe the app flow as opening Plugins and selecting **Add to Codex** or the CLI flow as running `/plugins`; the [plugin authoring docs](https://developers.openai.com/codex/plugins/build) describe repo and personal marketplace files.
 
-- `AGENTS.md` project guidance for Codex
-- `.codex/config.toml` for Codex feature flags and runtime wiring
-- `.codex/hooks.json` for translated Citadel hooks
-- `.codex/agents/` and `.agents/skills/` projections for Codex discovery
-
-## Prerequisites
-
-Before you start, make sure you have:
-
-- Codex installed and working in your shell
-- Node.js 18 or newer
-- Git
-- A project directory where you want Codex to use Citadel
-
-## 1. Clone Citadel
-
-Clone the Citadel repository somewhere stable on disk:
+Citadel's installer gets everything ready for that final install click:
 
 ```bash
 git clone https://github.com/SethGammon/Citadel.git ~/Citadel
-cd ~/Citadel
-```
-
-On Windows PowerShell, the same step looks like:
-
-```powershell
-git clone https://github.com/SethGammon/Citadel.git $HOME\Citadel
-Set-Location $HOME\Citadel
-```
-
-Citadel's hook installer writes absolute paths into generated Codex files. If you move the repository later, regenerate the Codex artifacts and reinstall hooks.
-
-## 2. Open the Target Project
-
-Switch to the project where you want Citadel enabled:
-
-```bash
 cd /path/to/your-project
-```
-
-Or in PowerShell:
-
-```powershell
-Set-Location C:\path\to\your-project
-```
-
-Everything in the next steps is generated into this project, not into the Citadel repository.
-
-## 3. Generate Codex Compatibility Artifacts
-
-From the target project root, run the compatibility generator from the Citadel clone:
-
-```bash
-node /path/to/Citadel/scripts/codex-compat.js
-```
-
-PowerShell example:
-
-```powershell
-node C:\Users\you\Citadel\scripts\codex-compat.js
-```
-
-This generates the Codex-facing files Citadel needs:
-
-- `.codex/config.toml`
-- `.codex-plugin/plugin.json`
-- `.codex/agents/*.toml`
-- `.agents/skills/*/SKILL.md`
-- `.agents/skills/*/agents/openai.yaml`
-
-If `AGENTS.md` does not already exist, the generator also creates an initial version for Codex to read.
-
-## 4. Install Codex Hooks
-
-Still from the target project root, install the translated hook configuration:
-
-```bash
-node /path/to/Citadel/scripts/install-hooks-codex.js
-```
-
-PowerShell example:
-
-```powershell
-node C:\Users\you\Citadel\scripts\install-hooks-codex.js
-```
-
-This writes `.codex/hooks.json` and points the entries at `hooks_src/codex-adapter.js` inside your Citadel clone.
-
-## 5. Start Codex in the Project
-
-Launch Codex from the same project root after the files above exist:
-
-```bash
+node ~/Citadel/scripts/codex-install.js --add-marketplace
 codex
 ```
 
-Codex should now see the generated `AGENTS.md` guidance and the `.codex/` runtime config for that project.
+Equivalent unified installer:
 
-## 6. Run Citadel Setup Inside Codex
-
-Once Codex is open in the project, run:
-
-```text
-$do setup
+```bash
+node ~/Citadel/scripts/install.js --runtime codex --add-marketplace
 ```
 
-This is the project bootstrap step for the harness itself. For Codex projects it is expected to create or refresh project-level guidance and state such as:
+On Windows PowerShell:
 
-- `.planning/`
-- `.citadel/`
-- `AGENTS.md`
-- Codex-oriented harness configuration
+```powershell
+git clone https://github.com/SethGammon/Citadel.git $HOME\Citadel
+Set-Location C:\path\to\your-project
+node $HOME\Citadel\scripts\codex-install.js --add-marketplace
+codex
+```
 
-If your project already has `AGENTS.md`, Citadel should extend or preserve it rather than replacing your hand-authored content wholesale.
+Then install or enable the plugin:
 
-## 7. Verify the Installation
+- Codex app: open **Plugins**, choose **Citadel Local Plugins**, select **Add to Codex** for **Citadel Harness**, then start a new thread.
+- Codex CLI: run `/plugins`, install or enable **Citadel Harness**, then start a new thread.
 
-Check for these files in the target project:
+Once enabled, run:
+
+```text
+/do setup --express
+```
+
+`--add-marketplace` asks Codex CLI to register the local marketplace. Omit it when you only want the script to prepare files and print the app/CLI steps. Use `--plugin-only` when you want to prepare the Citadel plugin package without generating target-project fallback artifacts.
+
+If you only want to install the published repo marketplace and do not need local project fallback artifacts, Codex CLI can add the marketplace source directly:
+
+```bash
+codex plugin marketplace add SethGammon/Citadel
+codex
+```
+
+Then use `/plugins` or the Codex app plugin directory to install **Citadel Harness**. The local installer remains the safer onboarding path because it also verifies the target project and records readiness evidence.
+
+## What The Installer Does
+
+`scripts/codex-install.js` wraps the previously manual Codex setup steps:
+
+- `.codex-plugin/plugin.json` describes Citadel as a Codex-native harness.
+- `skills/` provides the installed skill set.
+- `hooks/hooks.json` bundles translated Codex hook commands.
+- `.mcp.json` exposes the `citadel-state` MCP server.
+- `.agents/plugins/marketplace.json` exposes the local marketplace Codex can browse.
+- Target-project `AGENTS.md`, `.codex/config.toml`, `.codex/agents/*.toml`, `.agents/skills/*`, `.codex-plugin/plugin.json`, and `hooks/hooks.json` are generated as a verified fallback for projects where plugin install is not available yet.
+- `.planning/verification/codex-readiness.json` records the readiness checks.
+- On Windows, the installer runs the Codex sandbox/shell readiness check unless `--skip-windows-check` is passed.
+
+Useful variants:
+
+```bash
+node ~/Citadel/scripts/codex-install.js --dry-run
+node ~/Citadel/scripts/codex-install.js --plugin-only
+node ~/Citadel/scripts/codex-install.js --project-root /path/to/your-project
+npm run codex:install -- --project-root /path/to/your-project
+npm run codex:verify
+```
+
+## Manual Steps The Installer Replaces
+
+The installer is equivalent to running the old sequence:
+
+```bash
+node /path/to/Citadel/scripts/codex-compat.js /path/to/Citadel
+node /path/to/Citadel/scripts/codex-plugin-smoke.js --project-root /path/to/Citadel --write
+node /path/to/Citadel/scripts/codex-compat.js /path/to/your-project
+node /path/to/Citadel/scripts/codex-readiness-check.js --project-root /path/to/your-project --write
+```
+
+On Windows it also runs:
+
+```bash
+node /path/to/Citadel/scripts/codex-windows-check.js --project-root /path/to/your-project
+```
+
+## Project Artifact Fallback
+
+For projects where plugin install is not available, generate the Codex-facing artifacts directly into the target project:
+
+```bash
+cd /path/to/your-project
+node /path/to/Citadel/scripts/codex-install.js --project-root . --skip-plugin-refresh
+```
+
+This writes:
+
+- `AGENTS.md` when one does not already exist
+- `.codex/config.toml` with `hooks = true`, history, agents, shell policy, and `citadel-state` MCP config
+- `.codex/agents/*.toml`
+- `.agents/skills/*`
+- `.codex-plugin/plugin.json`
+- `hooks/hooks.json`
+
+`scripts/install-hooks-codex.js` remains available for legacy per-project `.codex/hooks.json` installs, but plugin-bundled hooks are the preferred Codex path.
+
+## Verify
+
+From the Citadel clone:
+
+```bash
+node scripts/test-codex-native-integrations.js
+node scripts/test-hook-installers.js
+node scripts/test-project-guidance.js
+node scripts/skill-lint.js
+node scripts/codex-install.js --plugin-only --dry-run
+node scripts/codex-plugin-smoke.js --write
+```
+
+From a target project after setup, check:
 
 ```text
 AGENTS.md
 .codex/config.toml
-.codex/hooks.json
 .codex/agents/
 .agents/skills/
 .planning/
 .citadel/
 ```
 
-Then run a simple command in Codex:
-
-```text
-$do --list
-```
-
-If installation is working, Codex should discover the Citadel skills and the project should contain the generated state directories.
-
-You can also try:
-
-```text
-$do review src/main.ts
-```
-
-Use any real file in your project for the first command.
-
-## How the Codex Install Differs From Claude Code
-
-Claude Code can load Citadel through Claude's plugin flow. Codex currently relies on generated project artifacts instead:
-
-- Codex reads `AGENTS.md` for project guidance
-- Codex uses `.codex/config.toml` for runtime feature flags
-- Codex uses `.codex/hooks.json` for translated lifecycle hooks
-- Citadel projects its skills and agents into Codex-readable locations
-
-For that reason, `node scripts/codex-compat.js` and `node scripts/install-hooks-codex.js` are the key install steps for Codex.
-
-## Troubleshooting
-
-### Codex does not seem to pick up Citadel
-
-Verify that you launched Codex from the same project root where `AGENTS.md` and `.codex/config.toml` were generated.
-
-### Hooks are not firing
-
-Re-run:
+Then run the readiness verifier, or use the npm alias from the Citadel clone:
 
 ```bash
-node /path/to/Citadel/scripts/install-hooks-codex.js
+node /path/to/Citadel/scripts/codex-readiness-check.js --write
+npm run codex:verify
 ```
 
-If Citadel was moved to a different folder, this is required because `.codex/hooks.json` contains absolute adapter paths.
+It writes `.planning/verification/codex-readiness.json` and fails if Codex plugin metadata, hooks, MCP, agents, guidance, or artifact tracking are not usable.
 
-### `AGENTS.md` is missing
-
-Re-run:
-
-```bash
-node /path/to/Citadel/scripts/codex-compat.js
-```
-
-If the file still does not appear, create it by running `$do setup` inside Codex after the compatibility artifacts exist.
-
-### You changed or pulled new Citadel code
-
-Refresh the generated artifacts in your project:
-
-```bash
-node /path/to/Citadel/scripts/codex-compat.js
-node /path/to/Citadel/scripts/install-hooks-codex.js
-```
-
-## Recommended First Commands
-
-After installation, these are the fastest checks:
+Then in Codex:
 
 ```text
-$do setup
-$do --list
-$do review path/to/file
+/do --list
+/do review path/to/file
 ```
 
-If those work, Citadel is installed for Codex and ready for normal use.
+## Native Codex Surfaces Citadel Uses
+
+- **Skills and plugins:** Citadel loads as reusable Codex workflows instead of one-off copied prompts.
+- **Hooks:** Citadel maps safety and telemetry hooks to current Codex lifecycle events.
+- **MCP:** `citadel-state` exposes campaign/fleet/telemetry/artifact state as structured tools and resources.
+- **Subagents and worktrees:** projected `.codex/agents/` files let Codex run specialized agents while Citadel keeps coordination state.
+- **Automations:** `scripts/codex-automation.js` generates Codex Automation prompts for schedule, daemon, and PR-watch workflows.
+- **PR review:** `scripts/codex-pr-review.js` chooses local Citadel review, `@codex review`, or both.
+- **QA artifacts:** `scripts/codex-app-artifacts.js` records screenshots and artifact evidence for Codex app review.
+- **Windows:** `scripts/codex-windows-check.js` checks Codex Windows sandbox and shell readiness.
+- **Readiness:** `scripts/codex-readiness-check.js` proves the generated/plugin surfaces are actually usable.
+- **Plugin smoke:** `scripts/codex-plugin-smoke.js` validates and writes the local marketplace manifest Codex uses to enable the Citadel plugin.
+- **Bootstrap install:** `scripts/codex-install.js` wraps plugin refresh, marketplace generation, target artifact generation, readiness verification, and optional Codex CLI marketplace registration.
+- **Review fetching:** `scripts/codex-review-fetch.js` fetches Codex GitHub review findings through `gh api` and records them into Citadel PR state.
+- **App-server capture:** `scripts/codex-app-server-capture.js` records and verifies a real local app-server handshake plus idle thread start, with opt-in turn capture, `--turn-file` support, controlled approval probes, and safe default approval decline.
+- **App-server dashboard:** `scripts/codex-app-server-dashboard.js` summarizes app-server JSONL output and writes a local dashboard.
+
+See [CODEX_NATIVE_INTEGRATIONS.md](CODEX_NATIVE_INTEGRATIONS.md) for the full 12-entry matrix and verification commands.

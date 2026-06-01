@@ -1,11 +1,15 @@
 {
-  "installedCount": 13,
-  "skippedCount": 9,
+  "installedCount": 19,
+  "skippedCount": 19,
   "installed": [
+    "PermissionRequest:permission-request",
+    "PostCompact:post-compact",
     "PostToolUse:circuit-breaker",
+    "PostToolUse:complexity-check",
     "PostToolUse:cost-tracker",
     "PostToolUse:organize-enforce",
     "PostToolUse:post-edit",
+    "PreCompact:pre-compact",
     "PreToolUse:external-action-gate",
     "PreToolUse:governance",
     "PreToolUse:protect-files",
@@ -14,23 +18,40 @@
     "SessionStart:intake-scanner",
     "SessionStart:restore-compact",
     "Stop:quality-gate",
-    "Stop:session-end"
+    "Stop:session-end",
+    "SubagentStart:subagent-start",
+    "SubagentStop:subagent-stop"
   ],
   "skipped": [
-    "PostCompact:post-compact",
+    "ConfigChange:config-change",
+    "CwdChanged:cwd-changed",
+    "Elicitation:elicitation",
+    "ElicitationResult:elicitation",
+    "FileChanged:file-changed",
+    "InstructionsLoaded:instructions-loaded",
+    "Notification:notification",
+    "PermissionDenied:permission-request",
+    "PostToolBatch:post-tool-batch",
     "PostToolUseFailure:circuit-breaker",
-    "PreCompact:pre-compact",
+    "Setup:init-project",
     "StopFailure:stop-failure",
-    "SubagentStop:subagent-stop",
     "TaskCompleted:task-events",
     "TaskCreated:task-events",
+    "TeammateIdle:teammate-idle",
+    "UserPromptExpansion:user-prompt-expansion",
+    "UserPromptSubmit:user-prompt-submit",
     "WorktreeCreate:worktree-setup",
     "WorktreeRemove:worktree-remove"
   ],
   "events": [
+    "PermissionRequest",
+    "PostCompact",
     "PostToolUse",
+    "PreCompact",
     "PreToolUse",
     "SessionStart",
-    "Stop"
+    "Stop",
+    "SubagentStart",
+    "SubagentStop"
   ]
 }

@@ -1,0 +1,23 @@
+{
+  "name": "citadel-local",
+  "interface": {
+    "displayName": "Citadel Local Plugins"
+  },
+  "plugins": [
+    {
+      "name": "citadel",
+      "source": {
+        "source": "local",
+        "path": "./"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Developer Tools",
+      "interface": {
+        "displayName": "Citadel Harness"
+      }
+    }
+  ]
+}

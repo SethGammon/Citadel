@@ -5,7 +5,9 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Node.js 18+](https://img.shields.io/badge/Node.js-18%2B-green.svg)](https://nodejs.org/)
 [![Claude Code](https://img.shields.io/badge/Claude_Code-compatible-blueviolet.svg)](https://docs.anthropic.com/en/docs/claude-code)
+[![Add to Claude Code](https://img.shields.io/badge/Add_to-Claude_Code-blueviolet.svg)](docs/CLAUDE_INSTALLATION_GUIDE.md)
 ![Codex](https://img.shields.io/badge/Codex-compatible-5865F2.svg)
+[![Add to Codex](https://img.shields.io/badge/Add_to-Codex-5865F2.svg)](docs/CODEX_INSTALLATION_GUIDE.md)
 [![Interactive Demo](https://img.shields.io/badge/▶_Try_the_Router-00d2ff.svg)](https://sethgammon.github.io/Citadel/)
 
 *Stop re-explaining your codebase every session. Start compounding what your agents learn.*
@@ -18,7 +20,7 @@
 
 ## What Is Citadel
 
-An agent orchestration harness for Claude Code and OpenAI Codex. It coordinates multiple AI agents in parallel, persists memory across sessions, and routes your intent to the cheapest execution path automatically. Citadel adapts itself to each runtime: plugin-first for Claude Code, generated project artifacts plus Codex-native config for Codex.
+An agent orchestration harness for Claude Code and OpenAI Codex. It coordinates multiple AI agents in parallel, persists memory across sessions, and routes your intent to the cheapest execution path automatically. Citadel adapts itself to each runtime: plugin-first for Claude Code and plugin-first for Codex, with generated project artifacts as a fallback.
 
 ## Why Citadel Exists
 
@@ -28,30 +30,55 @@ An agent orchestration harness for Claude Code and OpenAI Codex. It coordinates 
 
 The difference: `CLAUDE.md` and `AGENTS.md` tell the runtime about your project. Citadel gives the runtime the *infrastructure to work autonomously* — routing, memory, safety hooks, and coordination that a single guidance file can't provide.
 
-## Quickstart
+## Install In One Minute
 
-**Prerequisites:** [Claude Code](https://docs.anthropic.com/en/docs/claude-code) or [Codex](https://github.com/openai/codex) + [Node.js 18+](https://nodejs.org/)
+**Prerequisites:** [Claude Code](https://docs.anthropic.com/en/docs/claude-code) or [Codex](https://developers.openai.com/codex/quickstart) + [Node.js 18+](https://nodejs.org/)
+
+<table>
+<tr>
+<th width="50%">OpenAI Codex</th>
+<th width="50%">Claude Code</th>
+</tr>
+<tr>
+<td>
 
 ```bash
-# 1. Clone Citadel
-git clone https://github.com/SethGammon/Citadel.git
-
-# 2a. Claude Code runtime
-claude --plugin-dir /path/to/Citadel
-
-# 2b. Codex runtime
-node /path/to/Citadel/scripts/codex-compat.js
-node /path/to/Citadel/scripts/install-hooks-codex.js
+git clone https://github.com/SethGammon/Citadel.git ~/Citadel
+cd /path/to/your-project
+node ~/Citadel/scripts/install.js --runtime codex --add-marketplace
 codex
+```
 
-# 3. In either runtime, run setup
-/do setup
+Open **Plugins**, choose **Citadel Local Plugins**, select **Add to Codex**, start a new thread.
 
-# 4. Try something
+</td>
+<td>
+
+```bash
+git clone https://github.com/SethGammon/Citadel.git ~/Citadel
+cd /path/to/your-project
+node ~/Citadel/scripts/install.js --runtime claude --install --scope local
+claude
+```
+
+The installer validates the marketplace, installs the plugin locally, and writes resolved hooks for this project.
+
+</td>
+</tr>
+</table>
+
+Then run the same harness commands in either runtime:
+
+```text
+/do setup --express
 /do review src/main.ts
 ```
 
-[Quickstart for both runtimes](QUICKSTART.md) · [Claude Code installation guide](docs/CLAUDE_INSTALLATION_GUIDE.md) · [Codex installation guide](docs/CODEX_INSTALLATION_GUIDE.md)
+Citadel's installers keep the trust boundary explicit: they prepare and verify local files, then use each runtime's plugin install flow. Use `--dry-run --json` on either path to see exactly what would change before writing anything.
+
+**What gets checked:** plugin manifest, local marketplace, skill paths, hook bundle, MCP config, project guidance, runtime-specific shell/sandbox settings, and readiness evidence under `.planning/verification/`.
+
+[Install](INSTALL.md) · [Quickstart for both runtimes](QUICKSTART.md) · [Claude Code installation guide](docs/CLAUDE_INSTALLATION_GUIDE.md) · [Codex installation guide](docs/CODEX_INSTALLATION_GUIDE.md) · [Codex native integration matrix](docs/CODEX_NATIVE_INTEGRATIONS.md)
 
 ## How It Works
 
@@ -125,13 +152,16 @@ Four tiers. Use the cheapest one that fits.
 
 **How is this different from CrewAI, LangChain, or Aider?** Those are agent frameworks: they give you primitives for building agents from scratch. Citadel is an *operating system for an existing agent* (Claude Code or Codex). You don't write agent code — you install a plugin and get routing, persistence, parallelism, and safety hooks on top of the agent you already use. If you're building a custom agent, use a framework. If you're using Claude Code or Codex and want it to work better, use Citadel.
 
-**Does it work with OpenAI Codex?** Yes. The runtime layer (`packages/runtime-claude-code`, `packages/contracts`) abstracts over both runtimes. Skills, hooks, and campaigns are portable — the same `.planning/` state works whether you're running under Claude Code or Codex. Use `AGENTS.md` for Codex (parallel to `CLAUDE.md` for Claude Code).
+**Does it work with Claude Code?** Yes. Citadel ships a Claude Code marketplace and plugin manifest, and `scripts/claude-install.js --install --scope local` validates the marketplace, installs the plugin into the target project scope, and writes resolved hook paths before you run `/do setup`.
 
-**Does this work on Windows?** Yes. All hooks and scripts run on Node.js. The Claude plugin path and the Codex generated-artifact path both work cross-platform.
+**Does it work with OpenAI Codex?** Yes. Citadel ships as a Codex plugin with bundled skills, hooks, MCP config, and install-surface metadata. `scripts/codex-install.js` prepares the local marketplace and verifies the target project so the remaining Codex app step is the normal **Add to Codex** install click.
+
+**Does this work on Windows?** Yes. All hooks and scripts run on Node.js. The Codex installer also runs the Windows sandbox/shell readiness check when it runs on Windows.
 
 ## Learn More
 
 - [**Interactive routing demo**](https://sethgammon.github.io/Citadel/) — type any task, watch the tier cascade animate
+- [Install](INSTALL.md) — fastest path for Codex or Claude Code
 - [Quickstart](QUICKSTART.md) — first-run paths for both Claude Code and Codex
 - [Claude Code installation guide](docs/CLAUDE_INSTALLATION_GUIDE.md) — Claude-specific plugin setup and hooks
 - [Codex installation guide](docs/CODEX_INSTALLATION_GUIDE.md) — Codex-specific setup, hooks, and verification

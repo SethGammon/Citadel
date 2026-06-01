@@ -31,6 +31,25 @@ you want CI watch/fix behavior from the terminal without switching to web or mob
 
 If you have the Claude GitHub App installed, use cloud auto-fix in Claude Code web or mobile — it survives machine sleep. Toggle **Auto fix** ON in the PR view. Use `/pr-watch` for in-terminal sessions.
 
+In Codex, prefer the native PR review and automation surfaces when they fit:
+
+```bash
+node scripts/codex-pr-review.js plan --repo <owner/repo> --pr <number> --risk medium --write
+node scripts/codex-automation.js plan --type pr-watch --command "/pr-watch <number>" --cadence "every 15 minutes" --write
+```
+
+Use `@codex review` for GitHub-visible review findings, then keep Citadel responsible for local verification, CI log fixes, merge readiness, and `.planning/pr-review/` state.
+
+If `.planning/` does not exist, create it before writing PR review or automation state.
+
+When Codex has already reviewed the PR, ingest its review output before polling or merging:
+
+```bash
+node scripts/codex-review-fetch.js --repo <owner/repo> --pr <number> --write
+```
+
+Use `--file <review-comments.json>` with the same script when working from exported/offline review data.
+
 ## Inputs
 
 | Input | Source | Required |

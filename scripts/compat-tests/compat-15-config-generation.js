@@ -34,8 +34,11 @@ async function run() {
       const content = fs.readFileSync(configPath, 'utf8');
 
       // Validate required feature flags
-      if (!content.includes('codex_hooks = true')) {
-        errors.push('Missing: codex_hooks = true');
+      if (!content.includes('hooks = true')) {
+        errors.push('Missing: hooks = true');
+      }
+      if (content.includes('codex_hooks = true')) {
+        errors.push('Deprecated feature key still present: codex_hooks = true');
       }
       if (!content.includes('multi_agent = true')) {
         errors.push('Missing: multi_agent = true');
@@ -74,9 +77,29 @@ async function run() {
         if (!manifest.version) errors.push('plugin.json missing version');
         if (!manifest.description) errors.push('plugin.json missing description');
         if (!manifest.skills) errors.push('plugin.json missing skills pointer');
+        if (!manifest.hooks) errors.push('plugin.json missing hooks pointer');
         if (!manifest.interface) errors.push('plugin.json missing interface');
+        if (/claude/i.test(manifest.description)) errors.push('plugin.json description should be Codex-native, not Claude-specific');
+        if (!/Codex-native/.test(manifest.interface.shortDescription || '')) errors.push('plugin.json shortDescription should describe Codex-native orchestration');
       } catch (e) {
         errors.push(`plugin.json is invalid JSON: ${e.message}`);
+      }
+    }
+
+    const pluginHooksPath = path.join(tmpDir, 'hooks', 'hooks.json');
+    if (!fs.existsSync(pluginHooksPath)) {
+      errors.push('plugin-bundled hooks/hooks.json was not generated');
+    } else {
+      const pluginHooks = JSON.parse(fs.readFileSync(pluginHooksPath, 'utf8'));
+      if (!pluginHooks.hooks || !pluginHooks.hooks.PermissionRequest) {
+        errors.push('plugin hooks missing PermissionRequest');
+      }
+      const firstHook = pluginHooks.hooks.PermissionRequest?.[0]?.hooks?.[0];
+      if (!firstHook?.command?.includes('${PLUGIN_ROOT}')) {
+        errors.push('plugin hooks should use PLUGIN_ROOT-relative commands');
+      }
+      if (!firstHook?.commandWindows?.includes('%PLUGIN_ROOT%')) {
+        errors.push('plugin hooks should include Windows PLUGIN_ROOT command');
       }
     }
 

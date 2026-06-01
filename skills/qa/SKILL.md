@@ -205,6 +205,22 @@ If Playwright isn't installed and the user declines installation:
 
 **If .planning/screenshots/ does not exist**: Create it before saving screenshots. If `.planning/` doesn't exist, save screenshots to a `qa-screenshots/` directory in the project root and note the path in the report.
 
+## Codex App Artifact Manifest
+
+After saving screenshots, videos, rendered PDFs, or QA reports in Codex, register each durable artifact so the Codex app/browser workflow can find it later:
+
+```bash
+node scripts/codex-app-artifacts.js record --workflow qa --kind screenshot --path ".planning/screenshots/qa-flow-1.png" --status pass
+```
+
+The manifest lives at `.planning/artifacts/codex-app-evidence.jsonl`.
+
+Before reporting QA as complete in Codex, verify the manifest points at real files:
+
+```bash
+node scripts/codex-app-artifacts.js verify --require-artifacts
+```
+
 ## Contextual Gates
 
 **Disclosure:** May start a dev server; saves screenshots and report to `.planning/`. States server ownership before starting.

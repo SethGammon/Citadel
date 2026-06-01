@@ -8,7 +8,7 @@ const os = require('os');
 const path = require('path');
 
 const { installClaudeHooks } = require('../runtimes/claude-code/generators/install-hooks');
-const { installCodexHooks, translateCodexHooks } = require('../runtimes/codex/generators/install-hooks');
+const { installCodexHooks, translateCodexHooks, translateCodexPluginHooks } = require('../runtimes/codex/generators/install-hooks');
 
 function withTempDir(run) {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'citadel-hook-install-'));
@@ -71,6 +71,16 @@ assert(translated.skipped.length > 0, 'codex translation should record unmapped 
 assert(translated.hooks.PreToolUse.some((entry) => entry.matcher === 'Edit'), 'codex translation should expand Edit matcher explicitly');
 assert(translated.hooks.PreToolUse.some((entry) => entry.matcher === 'Write'), 'codex translation should expand Write matcher explicitly');
 assert(!translated.hooks.PreToolUse.some((entry) => entry.matcher === 'Edit|Write'), 'codex translation should not leave pipe-delimited matchers');
+assert(translated.hooks.PermissionRequest, 'codex translation should install PermissionRequest hooks');
+assert(translated.hooks.PreCompact, 'codex translation should install PreCompact hooks');
+assert(translated.hooks.PostCompact, 'codex translation should install PostCompact hooks');
+assert(translated.hooks.SubagentStart, 'codex translation should install SubagentStart hooks');
+assert(translated.hooks.SubagentStop, 'codex translation should install SubagentStop hooks');
+
+const pluginHooks = translateCodexPluginHooks(hooksTemplate);
+const pluginPermissionHook = pluginHooks.hooks.PermissionRequest[0].hooks[0];
+assert(pluginPermissionHook.command.includes('${PLUGIN_ROOT}'), 'plugin hooks should use PLUGIN_ROOT in POSIX command');
+assert(pluginPermissionHook.commandWindows.includes('%PLUGIN_ROOT%'), 'plugin hooks should use PLUGIN_ROOT in Windows command');
 
 withTempDir((projectRoot) => {
   const outputPath = path.join(projectRoot, '.codex', 'hooks.json');
