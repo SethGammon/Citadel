@@ -248,7 +248,7 @@ The daemon's watchdog will detect the change and resume automatically.
 
 - Add your project's conventions to `CLAUDE.md` -- the more specific, the better
 - Add your project's conventions to `AGENTS.md` if you use Codex
-- Run `/do --list` to see all 42 installed skills
+- Run `/do --list` to see all 45 installed skills
 - Drop a task in `.planning/intake/` and run `/autopilot` for hands-off execution
 - [docs/CLAUDE_INSTALLATION_GUIDE.md](docs/CLAUDE_INSTALLATION_GUIDE.md) -- Claude-specific install flow
 - [docs/CODEX_INSTALLATION_GUIDE.md](docs/CODEX_INSTALLATION_GUIDE.md) -- Codex-specific install flow

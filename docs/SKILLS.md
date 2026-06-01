@@ -162,13 +162,14 @@ the router matches it to user intent.
 
 ## Examples
 
-The harness ships with 45 built-in skills. Here are 6 core examples:
+The harness ships with 45 built-in skills. Here are 7 core examples:
 
 | Skill | Type | What It Does |
 |-------|------|-------------|
 | `/review` | Read-only | 5-pass structured code review |
 | `/test-gen` | Generative | Generate tests that actually run |
 | `/doc-gen` | Generative | Documentation in 3 modes |
+| `/wiki` | Knowledge | LLM-native markdown knowledge base with interlinked topic pages |
 | `/refactor` | Transformative | Safe multi-file refactoring |
 | `/scaffold` | Structural | Project-aware scaffolding |
 | `/create-skill` | Meta | Create new skills from patterns |

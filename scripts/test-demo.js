@@ -102,6 +102,7 @@ const SPOT_CHECKS = [
   // Tier 2 — skill keyword hits (cyan)
   ['review this code',       '/review',     'var(--cyan)',   '"review" → Tier 2 skill'],
   ['generate tests',         '/test-gen',   'var(--cyan)',   '"generate tests" → Tier 2 skill'],
+  ['build an llm wiki',       '/wiki',       'var(--cyan)',   '"llm wiki" → Tier 2 /wiki skill'],
 ];
 
 // ── Run checks ────────────────────────────────────────────────────────────────
