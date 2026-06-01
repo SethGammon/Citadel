@@ -3,11 +3,9 @@
 <div align="center">
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Node.js 18+](https://img.shields.io/badge/Node.js-18%2B-green.svg)](https://nodejs.org/)
-[![Claude Code](https://img.shields.io/badge/Claude_Code-compatible-blueviolet.svg)](https://docs.anthropic.com/en/docs/claude-code)
-[![Add to Claude Code](https://img.shields.io/badge/Add_to-Claude_Code-blueviolet.svg)](docs/CLAUDE_INSTALLATION_GUIDE.md)
+![Node.js 18+](https://img.shields.io/badge/Node.js-18%2B-green.svg)
+![Claude Code](https://img.shields.io/badge/Claude_Code-compatible-blueviolet.svg)
 ![Codex](https://img.shields.io/badge/Codex-compatible-5865F2.svg)
-[![Add to Codex](https://img.shields.io/badge/Add_to-Codex-5865F2.svg)](docs/CODEX_INSTALLATION_GUIDE.md)
 [![Interactive Demo](https://img.shields.io/badge/▶_Try_the_Router-00d2ff.svg)](https://sethgammon.github.io/Citadel/)
 
 *Stop re-explaining your codebase every session. Start compounding what your agents learn.*
@@ -30,55 +28,39 @@ An agent orchestration harness for Claude Code and OpenAI Codex. It coordinates 
 
 The difference: `CLAUDE.md` and `AGENTS.md` tell the runtime about your project. Citadel gives the runtime the *infrastructure to work autonomously* — routing, memory, safety hooks, and coordination that a single guidance file can't provide.
 
-## Install In One Minute
+## Install Without Thinking About Paths
 
-**Prerequisites:** [Claude Code](https://docs.anthropic.com/en/docs/claude-code) or [Codex](https://developers.openai.com/codex/quickstart) + [Node.js 18+](https://nodejs.org/)
+**Prerequisites:** Claude Code or OpenAI Codex already installed, plus Node.js 18+.
 
-<table>
-<tr>
-<th width="50%">OpenAI Codex</th>
-<th width="50%">Claude Code</th>
-</tr>
-<tr>
-<td>
-
-```bash
-git clone https://github.com/SethGammon/Citadel.git ~/Citadel
-cd /path/to/your-project
-node ~/Citadel/scripts/install.js --runtime codex --add-marketplace
-codex
-```
-
-Open **Plugins**, choose **Citadel Local Plugins**, select **Add to Codex**, start a new thread.
-
-</td>
-<td>
-
-```bash
-git clone https://github.com/SethGammon/Citadel.git ~/Citadel
-cd /path/to/your-project
-node ~/Citadel/scripts/install.js --runtime claude --install --scope local
-claude
-```
-
-The installer validates the marketplace, installs the plugin locally, and writes resolved hooks for this project.
-
-</td>
-</tr>
-</table>
-
-Then run the same harness commands in either runtime:
+Open your target project in your agent and paste this exact message:
 
 ```text
+Install Citadel in this repository.
+
+Use https://github.com/SethGammon/Citadel as the source. If a local clone
+already exists, reuse it or update it. Detect whether this session is running
+in OpenAI Codex or Claude Code. From this project's root, run the matching
+Citadel installer and follow any printed plugin enable step.
+
+After Citadel is enabled in a fresh thread, run:
+
 /do setup --express
+
+Do not ask me to edit placeholder paths. Use the current repository as the
+target project.
+```
+
+The agent will clone or update Citadel, install it for the current runtime, use the current repo as the target, and tell you if a runtime trust click is required.
+
+Want to install it yourself instead? Read [INSTALL.md](INSTALL.md). That page has the manual Codex and Claude Code commands, dry-run commands, and verification steps.
+
+After setup, try:
+
+```text
 /do review src/main.ts
 ```
 
-Citadel's installers keep the trust boundary explicit: they prepare and verify local files, then use each runtime's plugin install flow. Use `--dry-run --json` on either path to see exactly what would change before writing anything.
-
-**What gets checked:** plugin manifest, local marketplace, skill paths, hook bundle, MCP config, project guidance, runtime-specific shell/sandbox settings, and readiness evidence under `.planning/verification/`.
-
-[Install](INSTALL.md) · [Quickstart for both runtimes](QUICKSTART.md) · [Claude Code installation guide](docs/CLAUDE_INSTALLATION_GUIDE.md) · [Codex installation guide](docs/CODEX_INSTALLATION_GUIDE.md) · [Codex native integration matrix](docs/CODEX_NATIVE_INTEGRATIONS.md)
+What gets checked: plugin manifest, local marketplace, skill paths, hook bundle, MCP config, project guidance, runtime shell or sandbox settings, and readiness evidence under `.planning/verification/`.
 
 ## How It Works
 
@@ -107,24 +89,10 @@ Most requests resolve at tiers 1-3 for free. Tier 4 is the exception, not the de
 
 Four tiers. Use the cheapest one that fits.
 
-<table>
-<tr>
-<td width="50%">
-<img src="assets/card-skill.svg" width="100%" alt="Skill - Domain Expert" />
-</td>
-<td width="50%">
-<img src="assets/card-marshal.svg" width="100%" alt="Marshal - Session Commander" />
-</td>
-</tr>
-<tr>
-<td width="50%">
-<img src="assets/card-archon.svg" width="100%" alt="Archon - Autonomous Strategist" />
-</td>
-<td width="50%">
-<img src="assets/card-fleet.svg" width="100%" alt="Fleet - Parallel Coordinator" />
-</td>
-</tr>
-</table>
+- **Skill:** direct domain workflow for focused tasks.
+- **Marshal:** single-session commander for multi-step work.
+- **Archon:** multi-session campaign planner and executor.
+- **Fleet:** parallel agents in isolated worktrees with shared discoveries.
 
 ## What You Get
 
@@ -161,10 +129,8 @@ Four tiers. Use the cheapest one that fits.
 ## Learn More
 
 - [**Interactive routing demo**](https://sethgammon.github.io/Citadel/) — type any task, watch the tier cascade animate
-- [Install](INSTALL.md) — fastest path for Codex or Claude Code
-- [Quickstart](QUICKSTART.md) — first-run paths for both Claude Code and Codex
-- [Claude Code installation guide](docs/CLAUDE_INSTALLATION_GUIDE.md) — Claude-specific plugin setup and hooks
-- [Codex installation guide](docs/CODEX_INSTALLATION_GUIDE.md) — Codex-specific setup, hooks, and verification
+- [Install](INSTALL.md) — manual setup for Codex or Claude Code
+- [Quickstart](QUICKSTART.md) — first-run paths for both runtimes
 - [Skills reference](docs/SKILLS.md) — all 45 skills with invocation and examples
 - [Hooks reference](docs/HOOKS.md) — 29 lifecycle events, 32 hooks, what each one enforces
 - [Campaign guide](docs/CAMPAIGNS.md) — persistent state, phases, AI amnesia prevention

@@ -4,49 +4,40 @@ From `git clone` to your first working `/do` command.
 
 ## TL;DR
 
-Choose your runtime:
+Easiest path: open your target project in your agent and paste the install prompt from [INSTALL.md](INSTALL.md).
 
-### Claude Code
+Manual path:
 
-```bash
-git clone https://github.com/SethGammon/Citadel.git ~/Citadel
-cd ~/your-project
-node ~/Citadel/scripts/install.js --runtime claude --install --scope local
-claude
-```
+1. Clone Citadel once:
 
-Then in Claude Code:
-```
-/do setup --express
-/do review src/main.ts
-```
+   ```bash
+   git clone https://github.com/SethGammon/Citadel.git ~/Citadel
+   ```
 
-### Codex
+2. From the project you want Citadel to manage, run the matching installer:
 
-```bash
-git clone https://github.com/SethGammon/Citadel.git ~/Citadel
-cd ~/your-project
-node ~/Citadel/scripts/install.js --runtime codex --add-marketplace
-codex
-```
+   ```bash
+   node ~/Citadel/scripts/install.js --runtime codex --add-marketplace
+   ```
 
-Then in Codex:
-```
-/do setup --express
-/do review src/main.ts
-```
+   ```bash
+   node ~/Citadel/scripts/install.js --runtime claude --install --scope local
+   ```
 
-In the Codex app, the remaining trust step is a click: open **Plugins**,
-choose **Citadel Local Plugins**, and select **Add to Codex** for
-**Citadel Harness** before starting the new thread.
+3. Start a fresh Codex or Claude Code thread, enable **Citadel Harness** if the runtime asks, then run:
 
-Both paths converge on the same harness commands once the runtime-specific install step is done.
+   ```text
+   /do setup --express
+   /do review src/main.ts
+   ```
+
+Both runtimes converge on the same harness commands once the runtime-specific install step is done.
 
 ---
 
 ## Prerequisites
 
-- **[Claude Code](https://docs.anthropic.com/en/docs/claude-code)** or **[Codex](https://developers.openai.com/codex/quickstart)** -- the runtime Citadel extends
+- **Claude Code** or **OpenAI Codex** -- the runtime Citadel extends
 - **[Node.js 18+](https://nodejs.org/)** -- required for hooks and scripts
 
 Authentication depends on the runtime you use. Citadel layers on top of the runtime you already have configured.
@@ -66,7 +57,6 @@ That's it. No build step, no `npm install`. Citadel runs directly on Node.js.
 From your target project root, run the bootstrap installer:
 
 ```bash
-cd ~/your-project
 node ~/Citadel/scripts/claude-install.js --install --scope local
 claude
 ```
@@ -85,7 +75,6 @@ Alternative manual install from inside Claude Code:
 For a one-session trial without registering the marketplace:
 
 ```bash
-cd ~/your-project
 claude --plugin-dir ~/Citadel
 ```
 
@@ -96,7 +85,6 @@ For the full Claude-specific flow, see [docs/CLAUDE_INSTALLATION_GUIDE.md](docs/
 From your target project root, run the bootstrap installer:
 
 ```bash
-cd ~/your-project
 node ~/Citadel/scripts/codex-install.js --add-marketplace
 codex
 ```
