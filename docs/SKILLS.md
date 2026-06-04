@@ -151,6 +151,27 @@ Run it when you notice:
 - The agent keeps making the same mistakes
 - You have a workflow that could be codified
 
+For scriptable scaffolding, use:
+
+```bash
+node scripts/skill-scaffold.js --name my-skill --description "Short useful description" --task-class utility --risk-level medium --with-benchmark --write
+```
+
+Optional packaging metadata is supported in `SKILL.md` frontmatter:
+
+| Field | Purpose |
+|---|---|
+| `task-class` | Catalog grouping: orchestration, quality, knowledge, research, creation, operations, integration, utility |
+| `risk-level` | Expected action risk: low, medium, high |
+| `expected-artifacts` | Inline list of outputs such as `[HANDOFF, report]` |
+| `verification-commands` | Inline list of checks for this skill |
+| `benchmark-status` | none, empty, present, or custom status |
+| `neighbor-skills` | Adjacent skills for routing and author guidance |
+
+Use `node scripts/skill-catalog.js` to view skills grouped by inferred or declared
+task class and risk. Existing skills do not need to declare these fields; when
+present, `node scripts/skill-lint.js` validates them.
+
 ## Skill Discovery
 
 The `/do` router finds built-in skills from the Citadel plugin and custom

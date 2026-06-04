@@ -118,8 +118,10 @@ For each phase:
    - CLAUDE.md content
    - `.claude/agent-context/rules-summary.md`
    - **Map slice** (if `.planning/map/index.json` exists): run
-     `node scripts/map-index.js --query "<phase scope keywords>" --max-files 15` and inject results
+     `node scripts/map-index.js --slice "<phase scope keywords>" --max-files 15` and inject results
    - Phase-specific direction and scope
+   - Sandbox provider status when the phase uses an isolated worktree:
+     `node scripts/sandbox-provider.js status --provider worktree --worktree {path}`
    - Relevant decisions from the campaign's Decision Log
 4. **Verify end conditions** before marking a phase complete:
    - `file_exists`: check file exists on disk
@@ -129,6 +131,17 @@ For each phase:
    - `manual`: log to Review Queue, don't block
    - If ANY non-manual condition fails: phase is NOT complete. Fix what's failing.
    - Log which conditions passed/failed in the Feature Ledger
+
+4.25. **Validate exit evidence** if the campaign has an `## Exit Evidence`
+   table:
+   ```bash
+   node scripts/evidence-validate.js --file .planning/campaigns/{slug}.md --target phase:{N}
+   ```
+   - If the command passes: continue.
+   - If it fails with retries remaining: run again with `--write-repair`, keep
+     the phase active, and perform the repair task.
+   - If it fails with no retries remaining: block advancement or mark the phase
+     `partial`; do not mark it complete from prose alone.
 
 4.5. **Validate handoff** — spawn a Phase Validator (Haiku, read-only) to independently
    confirm the HANDOFF demonstrates each exit condition was met:

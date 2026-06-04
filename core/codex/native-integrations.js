@@ -4,6 +4,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const { createIntegrityRecord } = require('../telemetry/integrity');
 
 function ensureDir(dir) {
   fs.mkdirSync(dir, { recursive: true });
@@ -175,7 +176,8 @@ function recordPrReviewResult(options = {}) {
 
 function recordAppArtifact(options = {}) {
   const projectRoot = path.resolve(options.projectRoot || process.cwd());
-  const artifact = {
+  const artifact = createIntegrityRecord({
+    schema: 1,
     kind: options.kind || 'artifact',
     path: options.path,
     workflow: options.workflow || 'qa',
@@ -184,7 +186,16 @@ function recordAppArtifact(options = {}) {
     note: options.note || '',
     codexAppUse: options.codexAppUse || 'Open in the Codex app artifact viewer or in-app browser for review.',
     recordedAt: nowIso(options),
-  };
+  }, {
+    run_id: options.run_id,
+    agent_id: options.agent_id,
+    task_id: options.task_id,
+    artifact_id: options.artifact_id,
+    parent_id: options.parent_id,
+    source_event_id: options.source_event_id,
+    hmacKey: options.hmacKey,
+    hmacKeyId: options.hmacKeyId,
+  });
   if (!artifact.path) throw new Error('recordAppArtifact requires path');
   appendJsonl(path.join(planningDir(projectRoot, 'artifacts'), 'codex-app-evidence.jsonl'), artifact);
   return artifact;

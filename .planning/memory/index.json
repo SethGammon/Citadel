@@ -1,0 +1,76 @@
+{
+  "generated_at": "2026-06-04T18:35:00.457Z",
+  "block_count": 5,
+  "types": [
+    "project-rules",
+    "architecture-decisions",
+    "verification-recipes",
+    "failure-patterns",
+    "user-preferences"
+  ],
+  "blocks": [
+    {
+      "id": "memory-project-rules",
+      "type": "project-rules",
+      "scope": [
+        "project",
+        "harness",
+        "skills",
+        "hooks"
+      ],
+      "confidence": "high",
+      "file": "blocks/memory-project-rules.json"
+    },
+    {
+      "id": "memory-architecture-decisions",
+      "type": "architecture-decisions",
+      "scope": [
+        "architecture",
+        "codex",
+        "fleet",
+        "worktree",
+        "telemetry"
+      ],
+      "confidence": "high",
+      "file": "blocks/memory-architecture-decisions.json"
+    },
+    {
+      "id": "memory-verification-recipes",
+      "type": "verification-recipes",
+      "scope": [
+        "verification",
+        "tests",
+        "hooks",
+        "skills",
+        "telemetry"
+      ],
+      "confidence": "high",
+      "file": "blocks/memory-verification-recipes.json"
+    },
+    {
+      "id": "memory-failure-patterns",
+      "type": "failure-patterns",
+      "scope": [
+        "failure-patterns",
+        "quality",
+        "agents",
+        "daemon",
+        "learn"
+      ],
+      "confidence": "medium",
+      "file": "blocks/memory-failure-patterns.json"
+    },
+    {
+      "id": "memory-user-preferences",
+      "type": "user-preferences",
+      "scope": [
+        "user",
+        "planning",
+        "campaigns",
+        "verification"
+      ],
+      "confidence": "high",
+      "file": "blocks/memory-user-preferences.json"
+    }
+  ]
+}

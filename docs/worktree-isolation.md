@@ -13,8 +13,10 @@ Citadel is responsible for:
 1. **Creating the worktree** — `git worktree add {path} {branch}`
 2. **Setting up the environment** — `worktree-setup.js` runs npm/pip/bun install,
    copies `.env.local`, handles venv creation
-3. **Tracking the worktree** — campaign frontmatter records `branch` and `worktree_status`
-4. **Cleaning up or persisting** — Citadel decides whether to remove the worktree
+3. **Recording readiness** — `worktree-readiness.js` writes dependency, env,
+   port, and health-check status under `.planning/verification/worktree-readiness/`
+4. **Tracking the worktree** — campaign frontmatter records `branch` and `worktree_status`
+5. **Cleaning up or persisting** — Citadel decides whether to remove the worktree
    after work completes or leave it for the next session
 
 ### What the runtime gets
@@ -79,6 +81,43 @@ worktree_status: active
 The `worktree-remove.js` hook checks this field before removing. If `worktree_status`
 is `active`, it skips removal and logs "persistent worktree, not removing."
 
+## Readiness Profiles
+
+Worktree readiness is configured in `harness.json` under `worktreeReadiness`.
+The checker is read-only by default: it verifies whether setup succeeded, but does
+not run setup or health commands itself.
+
+```json
+{
+  "worktreeReadiness": {
+    "setupCommand": null,
+    "dependencyMode": "auto",
+    "env": {
+      "policy": "copy-if-present",
+      "files": [".env.local", ".env"]
+    },
+    "ports": {
+      "host": "127.0.0.1",
+      "required": [],
+      "preferred": []
+    },
+    "healthChecks": [],
+    "cleanupPolicy": "keep-on-failure",
+    "blockFleetOnFailure": true
+  }
+}
+```
+
+Run manually with:
+
+```bash
+node scripts/worktree-readiness.js --worktree {path} --branch {branch} --write
+```
+
+Reports are JSON files in `.planning/verification/worktree-readiness/`. Fleet
+uses `blockFleetOnFailure` reports to park high-autonomy tasks until the worktree
+is ready or the operator passes an explicit readiness override.
+
 ### Speculative (for `--speculative N` mode)
 
 ```
@@ -130,6 +169,22 @@ interface AgentResult {
 
 For Claude Code, `isolation: "worktree"` handles the working directory automatically.
 For other runtimes, pass `workingDirectory` directly and skip the `isolation` parameter.
+
+## Sandbox Provider Matrix
+
+Citadel exposes a minimal sandbox provider boundary through
+`core/sandbox/providers.js` and `node scripts/sandbox-provider.js matrix`.
+
+| Provider | Supported operations | Unsupported operations |
+|---|---|---|
+| `worktree` | `attach`, `status`, `snapshot`, `readiness` | `create`, `start`, `exec`, `fork`, `stop`, `cleanup` |
+| `docker` | none yet | all operations return clear unsupported-provider errors |
+| `remote` | none yet | all operations return clear unsupported-provider errors |
+
+The current worktree flow still owns creation and cleanup through native
+WorktreeCreate/WorktreeRemove hooks. The provider layer reports capabilities and
+normalizes status/readiness without moving command execution away from the
+runtime shell.
 
 ## V4 Roadmap: Worktree Pool
 

@@ -34,6 +34,9 @@ docs/take-screenshots.js
 # Verification results (test artifacts, not user-facing)
 .planning/verification/
 
+# Generated codebase map cache
+.planning/map/
+
 # Codex app-server capture/dashboard artifacts
 .planning/app-server/
 

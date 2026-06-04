@@ -33,7 +33,7 @@ Routed here by `/do` for: "telemetry", "what did this cost", "session stats",
 | `/telemetry` | Full hub — stats + command directory + settings |
 | `/telemetry --costs` | Cost section only: session, today, all-time, by campaign |
 | `/telemetry --hooks` | Hook activity only: last 20 fires with timing and outcomes |
-| `/telemetry --verify` | Audit integrity check — recompute SHA-256 hashes, flag tampered records |
+| `/telemetry --verify` | Telemetry and artifact integrity check: verify hashes/signatures, flag tampered records, report legacy records |
 | `/telemetry --config` | Show current telemetry settings from harness.json |
 | `/telemetry off` | Disable session summary, reduce hook verbosity |
 | `/telemetry on` | Re-enable all telemetry |
@@ -121,7 +121,7 @@ COMMAND DIRECTORY
   /telemetry                            This screen
   /telemetry --costs                    Cost breakdown only
   /telemetry --hooks                    Hook activity only
-  /telemetry --verify                   Audit integrity check (SHA-256 hash verification)
+  /telemetry --verify                   Telemetry/artifact integrity check (hash/signature verification)
   /cost                                 Deep cost exploration by session/campaign/week
   /dashboard                            Full harness state (campaigns, fleet, all costs)
 
@@ -147,44 +147,33 @@ CONTROLS
 
 **`/telemetry --threshold N`:** Validate N is positive. Generate `[N, N*2, N*5, N*10, N*20, N*50, N*100]` (capped at 500). Write to `harness.json` under `policy.costTracker.thresholds`.
 
-**`/telemetry --verify`:** Run `verifyAuditIntegrity` on both `audit.jsonl` and `hook-timing.jsonl` using this inline Node.js invocation:
+**`/telemetry --verify`:** Run the project verifier:
 
 ```
-node -e "
-const h = require('./.citadel/scripts/harness-health-util.cjs');
-const path = require('path');
-const base = '.planning/telemetry';
-['audit.jsonl','hook-timing.jsonl'].forEach(f => {
-  const r = h.verifyAuditIntegrity(path.join(base, f));
-  console.log(f + ':', JSON.stringify(r));
-});
-"
+node scripts/verify-telemetry-integrity.js
 ```
 
-If `.citadel/scripts/` is unavailable, read `audit.jsonl` and `hook-timing.jsonl` directly and report record counts without hash verification (note limitation in output).
+The verifier scans `.planning/telemetry/*.jsonl` and `.planning/artifacts/*.jsonl`. Display verified, signed, legacy, tampered, invalid, and signature-warning counts. Use `--strict-legacy` only when old unsigned records should fail the check.
 
 Output format:
 ```
-=== Audit Integrity ===
+=== Telemetry Integrity ===
 
-audit.jsonl
-  Total records:    N
-  Verified (hash):  N   ← recomputed hash matched stored hash
-  Legacy (no hash): N   ← written before hashing was added (not tampered)
-  TAMPERED:         N   ← recomputed hash did not match stored hash
-
-hook-timing.jsonl
+file.jsonl
   Total records:    N
   Verified (hash):  N
+  Verified (signed): N
   Legacy (no hash): N
   TAMPERED:         N
+  Invalid JSON:     N
+  Signature warnings: N
 
-Status: CLEAN  ← or: WARNING — N tampered record(s) detected
+Status: CLEAN or FAILED
 ```
 
 If any tampered records: list each with `timestamp`, `event`, and both the stored and expected hash (first 16 chars each). Tampering can indicate log corruption, manual edits, or a bug — not necessarily malicious.
 
-If only legacy records (no tampered): note "Legacy records were written before audit hashing was added in v{date}. New records are hashed automatically."
+If only legacy records (no tampered): note "Legacy records were written before telemetry integrity hashing was added. New telemetry and artifact records are hashed automatically."
 
 **`/telemetry --config`:** Show current settings with the `node -e "..."` command to change each — don't auto-apply.
 
@@ -219,8 +208,8 @@ Never blend real and estimated in the same total without flagging it.
 - **`session-tokens.js` unavailable:** Fall back to session-costs.jsonl; mark `(est)`.
 - **harness.json missing:** Show "(harness.json not found — defaults active)" and "→ Run /do setup to unlock cost tracking."
 - **`telemetry.enabled: false`:** Show banner "Telemetry is disabled. Run `/telemetry on` to re-enable."
-- **`--verify` with missing files:** Report "File not found — no records to verify." for each missing file. Not an error.
-- **`--verify` when `.citadel/scripts/` is unavailable:** Fall back to reading raw JSONL and reporting record counts only; note "Hash verification unavailable — run `node scripts/install-hooks.js` to restore .citadel/scripts/."
+- **`--verify` with missing files:** Report "No telemetry or artifact JSONL files found." Not an error.
+- **`--verify` when `scripts/verify-telemetry-integrity.js` is unavailable:** Report that the verifier is missing and show the raw file paths to inspect; do not claim hash verification ran.
 
 ## Contextual Gates
 

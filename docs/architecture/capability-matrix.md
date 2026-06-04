@@ -9,6 +9,26 @@ Last updated: 2026-06-01
 
 Defined in `core/contracts/capabilities.js`. Support levels: `full`, `partial`, `none`.
 
+## Adapter Levels
+
+Defined in `core/contracts/runtime.js` and printable with
+`node scripts/runtime-matrix.js`.
+
+| Level | Meaning |
+|---|---|
+| `native-files` | Citadel can project guidance/config files only. No runtime lifecycle guarantees. |
+| `cli-session` | Citadel can drive a CLI session and normalize metadata, without assuming hooks. |
+| `hook-enabled` | Runtime exposes enough lifecycle hooks for high Citadel parity. |
+| `managed-subagent` | Runtime can manage agents/subagents and workspace state, but Citadel still owns evidence and policy normalization. |
+| `remote-cloud-task` | Runtime executes remotely or in hosted containers; Citadel should use explicit evidence artifacts instead of local hook parity. |
+
+| Runtime | Adapter Level | Guarantees | Main Gaps |
+|---|---|---|---|
+| Claude Code | `hook-enabled` | guidance, skills, agents, hooks, workspace shell, worktrees | runtime-native MCP server mode |
+| Codex | `managed-subagent` | guidance, skills, agents, workspace shell, MCP, app artifacts | full hook parity, uniform CLI worktree handoff |
+| OpenAI | `remote-cloud-task` | agent loop, tool calling, workspace container when provided | local hook lifecycle, native Citadel skill runtime, local worktree lifecycle |
+| Unknown | `native-files` | project guidance files | hooks, agents, worktrees, runtime history, approvals |
+
 ## Matrix
 
 | Capability | Claude Code | Codex | OpenAI | Notes |

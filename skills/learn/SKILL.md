@@ -38,6 +38,7 @@ contradictions. A wiki is a compiler; a log is an interpreter.
 /learn --from-evolve {target} --cycle {n}  — specific evolve cycle only
 /learn --lint                       — lint-only pass (no new extraction)
 /learn --compile                    — re-compile staging area into wiki (no new extraction)
+/learn --memory                     — compile semantic memory blocks from planning artifacts
 ```
 
 ## Inputs
@@ -67,7 +68,7 @@ contradictions. A wiki is a compiler; a log is an interpreter.
 - If `--cycle {n}`: filter to sections beginning with `## Cycle {n}` only
 - If file not found: "No evolve pattern library for '{target}'." Stop.
 
-**If `/learn --lint` or `/learn --compile`:** Skip to Step 4 or 5 respectively.
+**If `/learn --lint`, `/learn --compile`, or `/learn --memory`:** Skip to Step 4, 5, or 5.5 respectively.
 
 ### Step 2: GATHER SOURCES
 
@@ -179,6 +180,36 @@ Scan all `.planning/wiki/*.md` pages (skip `index.md`).
 
 Lint results are reported in the summary. Lint does not modify wiki pages.
 
+### Step 5.5: COMPILE SEMANTIC MEMORY BLOCKS
+
+Run a safe deterministic memory compile pass:
+
+```
+node scripts/memory-compile.js compile
+```
+
+This writes compact semantic blocks to `.planning/memory/blocks/` and updates
+`.planning/memory/index.json`. Blocks must include `id`, `type`, `scope`,
+`owner`, `confidence`, `last_verified`, `sources`, and `body`.
+
+For lint-only memory checks, run:
+
+```
+node scripts/memory-compile.js lint
+```
+
+For agent context loading, use scoped listing instead of rereading full
+histories:
+
+```
+node scripts/memory-compile.js list --scope verification
+node scripts/memory-compile.js list --query "Fleet readiness"
+```
+
+Memory block lint must pass before calling the compile successful. Missing
+source paths, stale blocks, missing required block types, and contradictions are
+reported as actionable failures.
+
 ### Step 6: APPEND QUALITY RULES
 
 For each high/medium-confidence rule candidate in the staged findings:
@@ -200,6 +231,7 @@ Staged: {N} findings → .planning/wiki/_staging/{file}
 Compiled: {N} patterns integrated | {M} new wiki sections | {K} existing sections updated
 Wiki pages: .planning/wiki/{topic-1}.md, ...
 Lint: {conflicts found | clean} | {stale entries} | {coverage warnings}
+Memory blocks: {N} compiled | lint {PASS|FAIL} | .planning/memory/index.json
 Rules added to harness.json: {M} ({K} skipped — already exist)
 Next: review .planning/wiki/index.md — promote stable patterns to CLAUDE.md for permanent enforcement.
 ```
@@ -224,6 +256,9 @@ Next: review .planning/wiki/index.md — promote stable patterns to CLAUDE.md fo
 
 **Wiki page conflict detected at compile time:** Add a `**Conflict:**` field to the section. Never silently overwrite the existing mechanism.
 
+**Memory compile has missing sources:** Report the missing source paths and keep
+the existing memory blocks untouched until the source issue is resolved.
+
 **evolve pattern-library.md missing:** "No evolve pattern library for '{target}'. Run /evolve {target} first to generate patterns." Stop.
 
 ## Contextual Gates
@@ -240,6 +275,7 @@ Next: review .planning/wiki/index.md — promote stable patterns to CLAUDE.md fo
 - Never duplicate an existing quality rule (check before appending)
 - Wiki index must be updated on every compile run
 - Lint must run after every compile (not skipped)
+- Memory block lint must pass after `--memory` or the Step 5.5 compile pass
 - Conflicts must be flagged, never silently resolved
 - Summary output must include counts for all phases
 

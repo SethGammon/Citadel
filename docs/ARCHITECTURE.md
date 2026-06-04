@@ -75,7 +75,7 @@ Three layers of policy enforcement:
 
 The `policy-enforcer` agent receives a proposed action, reads the Tier-appropriate rules, and returns a structured JSON verdict (allow/block). Tier 1 violations always block. Archon spawns it before destructive or hard-to-reverse operations.
 
-Audit entries are written with a `_hash` field (SHA-256 of the entry content minus `_hash` itself). The `verify-audit-integrity` script detects tampering by recomputing hashes.
+New telemetry and artifact records carry stable lineage fields (`event_id`, `run_id`, `agent_id`, `task_id`, `artifact_id`, `parent_id`, `source_event_id`) plus `_hash`, a SHA-256 digest of the canonical record content without integrity fields. Optional HMAC-SHA256 signing is enabled with `CITADEL_TELEMETRY_HMAC_KEY`. Run `node scripts/verify-telemetry-integrity.js` to verify hashes/signatures; older unsigned records are reported as legacy instead of treated as corrupted.
 
 ## Campaign Files
 

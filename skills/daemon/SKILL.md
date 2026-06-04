@@ -280,6 +280,14 @@ After `/do continue` returns (or the session is winding down):
      }
      ```
 
+4. Run a safe memory consolidation pass when the session produced planning
+   changes:
+   ```bash
+   node scripts/memory-compile.js compile
+   ```
+   If it fails, record the failure in daemon.json `log` and continue shutdown or
+   scheduling; memory compile failures must not create overlapping daemon ticks.
+
 **Step 5: Schedule next tick**
 
 Re-read daemon.json. If still `running` and `estimatedSpend + costPerSession <= budget`: create new chain trigger (one-shot, cooldown delay), update `chainTriggerId`. If budget would be exceeded: stop daemon (`budget-exhausted`), delete watchdog, log `daemon-stop`.

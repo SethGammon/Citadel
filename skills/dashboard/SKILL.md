@@ -26,6 +26,25 @@ None required. Works with whatever state exists on disk.
 
 ## Protocol
 
+### Step 0: RUN DASHBOARD IMPLEMENTATION
+
+Run the local dashboard implementation from the project root:
+
+```bash
+node scripts/dashboard.js
+```
+
+If the package scripts are available, this equivalent command is also valid:
+
+```bash
+npm run dashboard
+```
+
+The script is read-only. It renders a user-facing control-plane snapshot from
+`.planning/`, telemetry, hook config, coordination state, worktrees, and cost
+data. Use the manual collection protocol below only as a fallback if the script
+is missing or fails in the current project.
+
 ### Step 1: COLLECT STATE
 
 Read the following sources. Each is optional — if a file or directory doesn't
