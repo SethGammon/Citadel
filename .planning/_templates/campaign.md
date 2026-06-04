@@ -62,6 +62,15 @@ Direction: {The original user direction that created this campaign}
 | 3 | manual | User confirms auth flow works end-to-end |
 -->
 
+## Exit Evidence
+
+<!-- Optional evidence contract. Validate with: node scripts/evidence-validate.js --file {campaign-file} --target phase:1 -->
+<!-- Types: file_diff, command_result, test_result, screenshot, browser_route_check, doc_update, pr_link, review_thread_resolution, hook_status -->
+
+| Target | ID | Type | Required | Evidence | Status | Retries Remaining | Next Action |
+|---|---|---|---|---|---|---|---|
+| phase:1 | typecheck | command_result | yes | npx tsc --noEmit | pass | 2 | rerun typecheck and attach output |
+
 ## Feature Ledger
 <!-- Track what was actually built. Updated after each phase. -->
 | Feature | Status | Phase | Notes |

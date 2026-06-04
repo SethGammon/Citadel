@@ -1,0 +1,29 @@
+{
+  "id": "memory-failure-patterns",
+  "type": "failure-patterns",
+  "scope": [
+    "failure-patterns",
+    "quality",
+    "agents",
+    "daemon",
+    "learn"
+  ],
+  "owner": "citadel",
+  "confidence": "medium",
+  "last_verified": "2026-06-04",
+  "sources": [
+    {
+      "path": ".planning/research/patterns.md",
+      "reason": "observed harness patterns"
+    },
+    {
+      "path": ".planning/research/external-insights-brief.md",
+      "reason": "external memory/compiler gap analysis"
+    },
+    {
+      "path": ".planning/telemetry/hook-errors.jsonl",
+      "reason": "recent hook error evidence"
+    }
+  ],
+  "body": "- Hung or silent agents need explicit timeout and continuation behavior; never let a workflow block indefinitely without a recovery path.\n- Appending isolated logs does not compound knowledge; compile repeat findings into semantic memory or wiki pages with source links.\n- Verification that only checks happy-path text can miss experiential failures; prefer command gates plus operator-readable summaries.\n**What it is:** Name 2 adjacent skills in \"Don't use when\" rather than only describing the current skill's use case.\n**Why it works:** Agent routing decisions require knowing which alternative to use — not just what this skill does. Naming neighbors makes the choice explicit and prevents misrouting.\n**What it is:** HANDOFF block slots should be typed key-value pairs, not free prose. Include a `Reversibility:` field with a literal (e.g., \"green — writes one file to X; delete to undo\").\n**Why it works:** Downstream agents and human readers need to parse handoffs programmatically. Typed slots enable that; prose requires interpretation. Reversibility field directly maps to the reversibility gate in the rubric.\n**What it is:** Any skill that dispatches sub-agents in a loop or parallel pattern needs an explicit fringe case specifying the timeout threshold and what to do when an agent hangs (abort + continue, never block).\n**Why it works:** Hung agents are the most common real failure mode in agentic pipelines. Without a specified recovery path, the orchestrator blocks indefinitely or fails silently.\n**What it is:** Skills that read from `.planning/` subdirectories need a fringe case for the directory not existing yet.\n**Why it works:** `.planning/` is created by `/do setup` and may not exist in fresh projects. A skill that crashes on missing directories fails the fringe_accuracy axis.\n**What it is:** Contextual gates must declare reversibility as green/amber/red with a specific undo command. \"Green — delete the generated file to undo\" is the minimum viable gate. Vague prose (\"this is mostly reversible\") scores below 5.\n**Why it works:** Rubric evaluators check whether escalation conditions are testable, not just present. A color + undo command is directly testable; prose is not. Red/amber/green maps directly to the `reversibility` rubric anchor."
+}

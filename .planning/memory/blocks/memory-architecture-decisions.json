@@ -1,0 +1,37 @@
+{
+  "id": "memory-architecture-decisions",
+  "type": "architecture-decisions",
+  "scope": [
+    "architecture",
+    "codex",
+    "fleet",
+    "worktree",
+    "telemetry"
+  ],
+  "owner": "citadel",
+  "confidence": "high",
+  "last_verified": "2026-06-04",
+  "sources": [
+    {
+      "path": "docs/ARCHITECTURE.md",
+      "reason": "current harness architecture"
+    },
+    {
+      "path": "docs/CODEX_NATIVE_INTEGRATIONS.md",
+      "reason": "Codex-native integration decisions"
+    },
+    {
+      "path": "docs/FLEET.md",
+      "reason": "fleet coordination design"
+    },
+    {
+      "path": "docs/worktree-isolation.md",
+      "reason": "worktree readiness design"
+    },
+    {
+      "path": ".planning/campaigns/citadel-competitor-gap-assessment.md",
+      "reason": "competitor-gap implementation decisions"
+    }
+  ],
+  "body": "- Citadel owns durable campaign memory, discovery relay, scope claims, policy, and evidence even when Codex supplies native execution primitives.\n- Fleet work is dependency-aware: ready work, blocked work, readiness-blocked work, and merge-order blockers are separate operator states.\n- Telemetry and artifact records now carry lineage IDs plus `_hash`; optional HMAC signing upgrades integrity without breaking old legacy records.\n- Plan 2 implemented Fleet DAG parsing as a core module plus a read-only-by-default steward CLI; repair-task writes require explicit `--write`.\n- Fleet docs, skill guidance, and the Fleet agent prompt now share the same dependency-aware work queue shape.\n- Plan 3 implemented read-only worktree readiness profiles and reports; WorktreeCreate records readiness after setup without blocking creation.\n- Fleet steward now parks readiness-blocked tasks unless `--override-readiness` is explicit, and the dashboard summarizes readiness reports.\n- Plan 4 implemented telemetry integrity for new records while keeping old records readable as legacy.\n- Agent-run telemetry and Codex artifact evidence now include lineage IDs and `_hash`; optional HMAC uses `CITADEL_TELEMETRY_HMAC_KEY`."
+}

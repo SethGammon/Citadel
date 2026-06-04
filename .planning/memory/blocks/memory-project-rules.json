@@ -1,0 +1,28 @@
+{
+  "id": "memory-project-rules",
+  "type": "project-rules",
+  "scope": [
+    "project",
+    "harness",
+    "skills",
+    "hooks"
+  ],
+  "owner": "citadel",
+  "confidence": "high",
+  "last_verified": "2026-06-04",
+  "sources": [
+    {
+      "path": "AGENTS.md",
+      "reason": "repository operating rules"
+    },
+    {
+      "path": "docs/CONSTITUTION.md",
+      "reason": "harness rule hierarchy"
+    },
+    {
+      "path": "docs/SKILLS.md",
+      "reason": "skill authoring and handoff contract"
+    }
+  ],
+  "body": "- Treat this repository as the Citadel harness; skills, agents, hooks, and state files are first-class product surfaces.\n- Keep changes scoped to harness conventions: skills in `skills/`, agents in `agents/`, hooks in `hooks_src/`, and campaign state in `.planning/`.\n- Every completed task must leave a compact HANDOFF and enough verification evidence for another session to resume."
+}

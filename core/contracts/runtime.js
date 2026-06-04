@@ -12,6 +12,41 @@ const RUNTIME_IDS = Object.freeze([
   'unknown',
 ]);
 
+const ADAPTER_LEVELS = Object.freeze({
+  NATIVE_FILES: 'native-files',
+  CLI_SESSION: 'cli-session',
+  HOOK_ENABLED: 'hook-enabled',
+  MANAGED_SUBAGENT: 'managed-subagent',
+  REMOTE_CLOUD_TASK: 'remote-cloud-task',
+});
+
+const RUNTIME_ADAPTER_MATRIX = Object.freeze({
+  'claude-code': {
+    level: ADAPTER_LEVELS.HOOK_ENABLED,
+    guarantees: ['project guidance', 'skills', 'agents', 'hooks', 'workspace shell', 'worktrees'],
+    missing: ['runtime-native MCP server mode'],
+    tradeoffs: 'Highest Citadel hook parity; Citadel still owns campaign files, telemetry, and policy state.',
+  },
+  codex: {
+    level: ADAPTER_LEVELS.MANAGED_SUBAGENT,
+    guarantees: ['project guidance', 'skills', 'agents', 'workspace shell', 'MCP', 'app artifacts'],
+    missing: ['full Citadel hook parity', 'uniform CLI worktree handoff'],
+    tradeoffs: 'Use Codex-native execution surfaces where available; Citadel keeps evidence, campaign memory, and adapter warnings explicit.',
+  },
+  openai: {
+    level: ADAPTER_LEVELS.REMOTE_CLOUD_TASK,
+    guarantees: ['agent loop', 'tool calling', 'workspace container when provided'],
+    missing: ['local hook lifecycle', 'native Citadel skill runtime', 'local worktree lifecycle'],
+    tradeoffs: 'Prefer normalized metadata and explicit evidence artifacts over trying to mirror local hook semantics.',
+  },
+  unknown: {
+    level: ADAPTER_LEVELS.NATIVE_FILES,
+    guarantees: ['project guidance files'],
+    missing: ['hooks', 'agents', 'worktrees', 'runtime history', 'approvals'],
+    tradeoffs: 'Safe fallback for documentation and generated files only.',
+  },
+});
+
 function createRuntimeContractSkeleton(runtimeId) {
   return {
     id: runtimeId || 'unknown',
@@ -94,8 +129,23 @@ function validateRuntimeContract(contract) {
   return errors;
 }
 
+function isAdapterLevel(value) {
+  return Object.values(ADAPTER_LEVELS).includes(value);
+}
+
+function getRuntimeAdapterMatrix(runtimeId = null) {
+  if (runtimeId) {
+    return RUNTIME_ADAPTER_MATRIX[runtimeId] || RUNTIME_ADAPTER_MATRIX.unknown;
+  }
+  return RUNTIME_ADAPTER_MATRIX;
+}
+
 module.exports = Object.freeze({
+  ADAPTER_LEVELS,
   RUNTIME_IDS,
+  RUNTIME_ADAPTER_MATRIX,
   createRuntimeContractSkeleton,
+  getRuntimeAdapterMatrix,
+  isAdapterLevel,
   validateRuntimeContract,
 });

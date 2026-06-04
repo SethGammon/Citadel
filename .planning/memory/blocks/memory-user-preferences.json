@@ -1,0 +1,24 @@
+{
+  "id": "memory-user-preferences",
+  "type": "user-preferences",
+  "scope": [
+    "user",
+    "planning",
+    "campaigns",
+    "verification"
+  ],
+  "owner": "citadel",
+  "confidence": "high",
+  "last_verified": "2026-06-04",
+  "sources": [
+    {
+      "path": ".planning/campaigns/citadel-competitor-gap-assessment.md",
+      "reason": "active user-approved competitor-gap campaign"
+    },
+    {
+      "path": "AGENTS.md",
+      "reason": "handoff and verification expectations"
+    }
+  ],
+  "body": "- The user approved proceeding from competitor research into implementation, with each accepted determination ending in a ready-to-approve plan or verified build slice.\n- Keep the paper trail current: campaign phase status, decision log, continuation state, docs, and verification output should agree.\n- Prefer technically correct and experientially clear operator surfaces: commands should be obvious, summaries should be readable, and failures should be actionable."
+}

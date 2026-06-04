@@ -220,6 +220,22 @@ function readConfig() {
     preCompact: {
       handoffMode: 'auto',        // 'auto' | 'prompt' | 'off'
     },
+    worktreeReadiness: {
+      setupCommand: null,         // informational only; setup commands require explicit opt-in tooling
+      dependencyMode: 'auto',     // 'auto' | 'optional' | 'required' | 'skip'
+      env: {
+        policy: 'copy-if-present', // 'copy-if-present' | 'required' | 'optional' | 'skip'
+        files: ['.env.local', '.env'],
+      },
+      ports: {
+        host: '127.0.0.1',
+        required: [],
+        preferred: [],
+      },
+      healthChecks: [],           // recorded but not executed by read-only readiness mode
+      cleanupPolicy: 'keep-on-failure',
+      blockFleetOnFailure: true,
+    },
     docs: {
       auto: true,                 // false to disable automatic doc sync
       audiences: ['user', 'org', 'agents'],

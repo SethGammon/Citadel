@@ -65,7 +65,7 @@ Improvement: GitHub-visible review work uses Codex's native PR workflow, while C
 
 ## 10. Codex-app-aware QA and artifacts
 
-`scripts/codex-app-artifacts.js` records screenshots, rendered documents, and QA evidence into `.planning/artifacts/codex-app-evidence.jsonl`; QA and live-preview skills point to that manifest.
+`scripts/codex-app-artifacts.js` records screenshots, rendered documents, and QA evidence into `.planning/artifacts/codex-app-evidence.jsonl`; QA and live-preview skills point to that manifest. New records include `artifact_id`, `run_id`, `agent_id`, `task_id`, `source_event_id`, `_hash`, and optional HMAC signatures so app evidence can be traced back to a run or task.
 
 Improvement: evidence is discoverable by Codex app/browser/artifact workflows instead of living only in chat text.
 
@@ -111,6 +111,7 @@ The first 12 entries make Codex-native surfaces available. The operational layer
 - `scripts/codex-plugin-smoke.js --write` writes the local Codex plugin marketplace manifest, validates the plugin entry, and prints the CLI/app steps needed to enable the Citadel Harness plugin. Add `--live` to check the installed Codex CLI without changing global Codex state; use `--add-marketplace` only when you intentionally want the script to register this clone.
 - `scripts/codex-review-fetch.js --repo <owner/repo> --pr <n> --write` fetches Codex GitHub review output through `gh api` and records it in `.planning/pr-review/`; `--file review-comments.json` remains available for offline ingestion.
 - `scripts/codex-app-artifacts.js verify --require-artifacts` validates that QA/live-preview evidence records point at real files.
+- `scripts/verify-telemetry-integrity.js` verifies hashed telemetry and artifact JSONL records, reports legacy records, and detects modified records.
 - `scripts/codex-app-server-capture.js` captures a real local app-server handshake and idle thread start into `.planning/app-server/`, verifies it, and writes a browsable dashboard. Add `--turn "prompt"` or `--turn-file prompt.txt` only when you intentionally want to run a model turn. Approval handling defaults to `--approval-decision decline`; use `--expect-approval` with `--turn-sandbox readOnly` or `--turn-approval-policy on-request` for controlled approval probes, and use `accept`, `acceptForSession`, or `cancel` only for intentional live protocol tests.
 - `scripts/codex-app-server-dashboard.js --file app-server.jsonl` writes a browsable local dashboard plus JSON summary for app-server thread, turn, approval, command-output, and file-change counts.
 

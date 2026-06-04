@@ -64,11 +64,11 @@ Status: active
 Direction: {what was requested}
 
 ## Work Queue
-| # | Campaign | Scope | Deps | Status | Wave |
-|---|----------|-------|------|--------|------|
-| 1 | API auth | src/api/ | none | done | 1 |
-| 2 | Frontend | src/ui/ | none | done | 1 |
-| 3 | Integration | both | 1,2 | pending | 2 |
+| # | Campaign | Scope | Deps | Status | Wave | Agent | Branch | Evidence |
+|---|----------|-------|------|--------|------|-------|--------|----------|
+| 1 | API auth | src/api/ | none | merged | 1 | build | codex/api-auth | validator pass |
+| 2 | Frontend | src/ui/ | none | validated | 1 | build | codex/frontend | validator pass |
+| 3 | Integration | both | 1, 2 | pending | 2 | verify | - | - |
 
 ## Wave 1 Results
 ### Agent: api-builder
@@ -79,6 +79,22 @@ Direction: {what was requested}
 - API uses jose for JWT (inform frontend agents)
 - 15min token expiry means frontend needs refresh logic
 ```
+
+Citadel also ships a queue steward:
+
+```bash
+node scripts/fleet-steward.js --session .planning/fleet/session-{slug}.md
+```
+
+The steward parses the markdown table as the session DAG. It reports runnable
+tasks, dependency-blocked tasks, merge-order blockers, and same-wave scope
+conflicts. It is read-only unless `--write` is paired with `--mark-failed`, which
+marks the failed row and adds a repair task.
+
+Fleet also reads `.planning/verification/worktree-readiness/*.json`. A task whose
+branch matches a `blockFleet: true` readiness report is shown under
+`READINESS BLOCKED` instead of `READY TO RUN`. Use
+`--override-readiness` only when a human has verified the worktree manually.
 
 ## Shared State Merge Strategies
 
@@ -153,3 +169,5 @@ If multiple Archon or Fleet instances run simultaneously:
 | `.citadel/scripts/coordination.js` | Multi-instance scope coordination |
 | `.citadel/scripts/telemetry-log.cjs` | Log agent events |
 | `.citadel/scripts/telemetry-report.cjs` | Generate performance summaries |
+| `scripts/fleet-steward.js` | Parse Fleet session DAGs, show ready/blocked/mergeable work, and create repair tasks |
+| `scripts/worktree-readiness.js` | Record dependency, env, port, and health readiness for worktrees |

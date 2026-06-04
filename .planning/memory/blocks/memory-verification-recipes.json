@@ -1,0 +1,33 @@
+{
+  "id": "memory-verification-recipes",
+  "type": "verification-recipes",
+  "scope": [
+    "verification",
+    "tests",
+    "hooks",
+    "skills",
+    "telemetry"
+  ],
+  "owner": "citadel",
+  "confidence": "high",
+  "last_verified": "2026-06-04",
+  "sources": [
+    {
+      "path": "AGENTS.md",
+      "reason": "required verification table"
+    },
+    {
+      "path": "package.json",
+      "reason": "registered npm verification scripts"
+    },
+    {
+      "path": "scripts/test-all.js",
+      "reason": "full suite orchestration"
+    },
+    {
+      "path": "scripts/verify-telemetry-integrity.js",
+      "reason": "telemetry integrity verifier"
+    }
+  ],
+  "body": "- After hook or skill changes, run the narrow check first, then `npm run test` before shipping.\n- Use `node scripts/skill-lint.js <skill>` after skill edits and `node scripts/test-all.js` for the full harness gate.\n- Use `npm run telemetry:verify` or `node scripts/verify-telemetry-integrity.js` to confirm hashed logs are clean and legacy records are only legacy.\n- `npm run test` is the canonical full regression command for this repository."
+}

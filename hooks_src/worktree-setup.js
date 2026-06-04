@@ -18,10 +18,11 @@ const { execFileSync } = require('child_process');
 const path = require('path');
 const fs = require('fs');
 const health = require('./harness-health-util');
+const { checkWorktreeReadiness } = require('../core/worktree/readiness');
 
 const MAIN_ROOT = health.PROJECT_ROOT;
 
-function main(input) {
+async function main(input) {
   const worktreePath = input.path;
   if (!worktreePath) return;
 
@@ -113,12 +114,36 @@ function main(input) {
       } catch { /* non-critical */ }
     }
   }
+
+  try {
+    const report = await checkWorktreeReadiness({
+      projectRoot: MAIN_ROOT,
+      worktreePath,
+      branch: input.branch || null,
+      write: true,
+    });
+    health.logTiming('worktree-readiness', 0, {
+      event: 'worktree-readiness',
+      status: report.status,
+      branch: input.branch || null,
+      worktree: path.basename(worktreePath),
+    });
+    health.writeAuditLog('worktree-readiness', {
+      status: report.status,
+      blockFleet: report.blockFleet,
+      branch: input.branch || null,
+      worktree: path.basename(worktreePath),
+      report: report.file,
+    });
+  } catch (err) {
+    process.stderr.write(`[worktree-setup] Readiness check failed in ${worktreePath}: ${err.message}\n`);
+  }
 }
 
 let data = '';
 process.stdin.setEncoding('utf8');
 process.stdin.on('data', chunk => { data += chunk; });
-process.stdin.on('end', () => {
-  try { main(JSON.parse(data)); } catch { /* silent */ }
+process.stdin.on('end', async () => {
+  try { await main(JSON.parse(data)); } catch { /* silent */ }
   process.stdout.write('ok\n');
 });

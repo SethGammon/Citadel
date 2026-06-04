@@ -80,6 +80,13 @@ Produce a ranked list of campaigns with:
 - Items that depend on Wave 1 results go in Wave 2
 - Maximum 3 agents per wave (conservative default)
 - Scope must NOT overlap between agents in the same wave
+- After writing or changing a session queue, run
+  `node scripts/fleet-steward.js --session .planning/fleet/session-{slug}.md`
+  and use its `READY TO RUN`, `BLOCKED`, `MERGE NEXT`, `MERGE BLOCKED`, and
+  `SCOPE CONFLICTS` sections as the operational DAG.
+- If the steward reports `READINESS BLOCKED`, do not spawn that task in a
+  high-autonomy wave unless a human verified the worktree and you pass
+  `--override-readiness` intentionally.
 
 ### Step 3: WAVE EXECUTION
 
@@ -89,8 +96,8 @@ For each wave:
    - CLAUDE.md content
    - `.claude/agent-context/rules-summary.md`
    - **Map slice** (if `.planning/map/index.json` exists): run
-     `node scripts/map-index.js --query "<agent's scope keywords>" --max-files 15`
-     and inject the results as a `=== MAP SLICE ===` block. If the index does
+     `node scripts/map-index.js --slice "<agent's scope keywords>" --max-files 15`
+     and inject the generated `=== MAP SLICE ===` block. If the index does
      not exist, skip silently.
    - **Prior session context** (all waves): re-read `momentum.json` fresh at each
      wave boundary via `node .citadel/scripts/momentum-read.cjs` and inject as a
@@ -99,6 +106,8 @@ For each wave:
      other terminals. If the output is empty, skip silently.
    - Campaign-specific direction and scope
    - Discovery briefs from previous waves (if any)
+   - Sandbox provider status when an agent has a known worktree:
+     `node scripts/sandbox-provider.js status --provider worktree --worktree {path}`
 
 2. **Log wave start**:
    ```bash
@@ -141,6 +150,14 @@ For each wave:
    Run all validators for the wave in a single parallel batch — do not validate
    sequentially. The cost is proportional to the wave size, not multiplicative.
 
+4.75. **Validate task exit evidence** if the Fleet session file has an
+   `## Exit Evidence` table:
+   ```bash
+   node scripts/evidence-validate.js --file .planning/fleet/session-{slug}.md --target task:{id}
+   ```
+   Failed required evidence creates a repair task or blocks advancement based on
+   its retries remaining.
+
 5. **Log per-agent results**:
    ```bash
    node .citadel/scripts/telemetry-log.cjs --event agent-complete --agent {agent-name} --session {session-slug} --status {success|partial|failed}
@@ -171,6 +188,8 @@ For each wave:
    ```
 
 8. **Merge branches** from worktrees:
+   - Run `node scripts/fleet-steward.js --session .planning/fleet/session-{slug}.md`
+   - Merge only tasks listed under `MERGE NEXT`
    - Review changes from each agent
    - If clean merge: merge the branch
    - If conflicts: record in session file, then decide:
@@ -215,7 +234,9 @@ Started: {ISO timestamp}
 Direction: {original direction}
 
 ## Work Queue
-| # | Campaign | Scope | Deps | Status | Wave | Agent |
+| # | Campaign | Scope | Deps | Status | Wave | Agent | Branch | Evidence |
+|---|----------|-------|------|--------|------|-------|--------|----------|
+| 1 | {name} | {dirs} | none | pending | - | - | - | - |
 
 ## Wave N Results
 ### Agent: {name}
@@ -374,6 +395,9 @@ After each wave: read `.planning/coordination/claims/`, verify each instance is 
 - **Discovery compression script missing**: Write raw HANDOFF excerpts to the briefs directory instead.
 - **Phase validator times out or returns malformed output**: Treat as pass with warning. Log and advance. Never block a wave on validator failure.
 - **All agents in a wave fail validation and exhaust retries**: Mark the entire wave `partial`. Log `wave_validator_halt`. Escalate to the user before proceeding to the next wave — partial wave results may invalidate downstream wave assumptions.
+- **An agent fails validation or post-wave tests**: Run
+  `node scripts/fleet-steward.js --session .planning/fleet/session-{slug}.md --mark-failed {id} --reason "{reason}" --write`
+  to mark the row failed and add a repair task with inherited dependencies.
 
 ## Speculative Mode
 

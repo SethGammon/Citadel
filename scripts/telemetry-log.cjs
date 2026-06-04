@@ -20,6 +20,11 @@ function parseArgs(argv) {
     if (key === '--event') { args.event = val; i++; }
     else if (key === '--agent') { args.agent = val; i++; }
     else if (key === '--session') { args.session = val; i++; }
+    else if (key === '--run-id') { args.run_id = val; i++; }
+    else if (key === '--agent-id') { args.agent_id = val; i++; }
+    else if (key === '--task-id') { args.task_id = val; i++; }
+    else if (key === '--parent-id') { args.parent_id = val; i++; }
+    else if (key === '--source-event-id') { args.source_event_id = val; i++; }
     else if (key === '--duration') { args.duration = parseInt(val, 10); i++; }
     else if (key === '--status') { args.status = val; i++; }
     else if (key === '--meta') {

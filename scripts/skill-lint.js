@@ -27,6 +27,7 @@
 
 const fs   = require('fs');
 const path = require('path');
+const { validateOptionalMetadata } = require('../core/skills/catalog');
 
 const PLUGIN_ROOT  = path.resolve(__dirname, '..');
 const SKILLS_DIR   = path.join(PLUGIN_ROOT, 'skills');
@@ -75,6 +76,19 @@ const CHECKS = [
     description: 'frontmatter: user-invocable declared',
     check: (fm) => fm && ('user-invocable' in fm),
     fix: 'Add `user-invocable: true` or `user-invocable: false` to frontmatter',
+  },
+  {
+    id: 'optional-packaging-metadata',
+    level: 'WARN',
+    description: 'optional packaging metadata is valid when present',
+    check: (fm) => {
+      if (!fm) return null;
+      const keys = ['task-class', 'risk-level', 'expected-artifacts', 'verification-commands', 'benchmark-status', 'neighbor-skills'];
+      if (!keys.some((key) => key in fm)) return null;
+      const issues = validateOptionalMetadata(fm);
+      return issues.length === 0 ? true : issues.join('; ');
+    },
+    fix: 'Use valid optional metadata: task-class, risk-level, expected-artifacts, verification-commands, benchmark-status, neighbor-skills',
   },
 
   // ── Required sections (FAIL) ──────────────────────────────────────────────
@@ -198,6 +212,9 @@ function parseFrontmatter(content) {
       const val = kvMatch[2].trim();
       if      (val === 'true')  fm[key] = true;
       else if (val === 'false') fm[key] = false;
+      else if (val.startsWith('[') && val.endsWith(']')) {
+        fm[key] = val.slice(1, -1).split(',').map(s => s.trim()).filter(Boolean);
+      }
       else if (val === '')      fm[key] = null;
       else                      fm[key] = val;
     }

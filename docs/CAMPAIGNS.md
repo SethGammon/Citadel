@@ -92,6 +92,13 @@ Archon spawns a **Phase Validator** agent at the end of each build or wire phase
 
 For high-stakes decisions (abort, rollback, scope change), Archon may spawn 3 Phase Validators and require 2/3 agreement. A timed-out validator counts as `pass` to prevent indefinite blocking.
 
+Campaigns can also declare an `## Exit Evidence` table. Run
+`node scripts/evidence-validate.js --file <campaign.md> --target phase:<n>`
+before advancing a phase. Required rows support file diffs, command results,
+test results, screenshots, browser route checks, doc updates, PR links, review
+thread resolution, and hook status. Missing required evidence reports a repair
+task while retries remain, then blocks advancement when retries are exhausted.
+
 ## Policy Enforcement
 
 Before executing Red-reversibility operations (force push, bulk delete, branch reset), Archon spawns a `policy-enforcer` agent — a read-only Haiku judge that checks the proposed action against the 3-tier constitution in `docs/CONSTITUTION.md`. A Tier 1 violation always blocks. The verdict and reason are logged to the Decision Log.

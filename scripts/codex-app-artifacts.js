@@ -28,6 +28,11 @@ if (mode === 'record') {
     route: arg('--route', null),
     status: arg('--status', 'recorded'),
     note: arg('--note', ''),
+    run_id: arg('--run-id', null),
+    agent_id: arg('--agent-id', null),
+    task_id: arg('--task-id', null),
+    parent_id: arg('--parent-id', null),
+    source_event_id: arg('--source-event-id', null),
   }), null, 2));
 } else if (mode === 'list') {
   console.log(JSON.stringify(readAppArtifacts(projectRoot), null, 2));
