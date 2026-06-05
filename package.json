@@ -17,6 +17,7 @@
     "deliver": "node scripts/deliver.js",
     "continue": "node scripts/continue-action.js",
     "deliver:package": "node scripts/package-delivery.js",
+    "pr:ready": "node scripts/pr-ready.js",
     "fleet:steward": "node scripts/fleet-steward.js",
     "fleet-steward": "node scripts/fleet-steward.js",
     "worktree-readiness": "node scripts/worktree-readiness.js",

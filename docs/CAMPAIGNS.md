@@ -162,6 +162,18 @@ creation, use:
 node scripts/continue-action.js --run
 ```
 
+To produce the final PR approval-readiness handoff, run verification through
+the PR finalizer:
+
+```bash
+node scripts/pr-ready.js --pr https://github.com/<owner>/<repo>/pull/<number> --run-verification
+```
+
+The finalizer writes `.planning/pr-readiness/<branch>.md` and exits nonzero
+unless the PR URL is valid, the worktree is clean, dashboard repairs are clear,
+and the verification command exits successfully. Use `--verification "<command>"`
+to override the default `npm run test`.
+
 When the implementation and verification phases are ready for review, create a
 deterministic review package:
 
