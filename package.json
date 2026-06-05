@@ -15,6 +15,7 @@
     "dashboard": "node scripts/dashboard.js",
     "campaign": "node scripts/campaign.js",
     "deliver": "node scripts/deliver.js",
+    "continue": "node scripts/continue-action.js",
     "deliver:package": "node scripts/package-delivery.js",
     "fleet:steward": "node scripts/fleet-steward.js",
     "fleet-steward": "node scripts/fleet-steward.js",

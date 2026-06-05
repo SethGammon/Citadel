@@ -149,6 +149,19 @@ The preflight creates `.planning/campaigns/<slug>.md`, marks the intake item
 `in-progress`, records claimed scope and acceptance criteria, and seeds the Exit
 Evidence table. Continue with `/do continue`.
 
+To inspect what `/do continue` will do without invoking a skill route:
+
+```bash
+node scripts/continue-action.js
+```
+
+To run any deterministic local continuation repair, such as review-package
+creation, use:
+
+```bash
+node scripts/continue-action.js --run
+```
+
 When the implementation and verification phases are ready for review, create a
 deterministic review package:
 

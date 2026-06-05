@@ -23,7 +23,7 @@ Use `/do` when the user wants something done but doesn't know (or care) which to
 |---|---|
 | `/do [anything]` | Classify intent, route to cheapest capable path |
 | `/do status` | Show full harness dashboard (/dashboard) |
-| `/do continue` | Resume most recent active campaign or fleet session |
+| `/do continue` | Resolve and run the deterministic continuation action |
 | `/do --list` | Show all skills grouped by category with trigger keywords |
 | `/do setup` | First-run experience — configure the harness for this project |
 
@@ -63,7 +63,7 @@ Regex/keyword on raw input. Catches trivial commands:
 | "build" | Run the project's build command |
 | "test" or "tests" | Run the project's test command |
 | "status", "dashboard", "what's happening", "what's going on", "show activity" | Show full harness dashboard (/dashboard) |
-| "continue" or "keep going" | Resume active campaign or fleet session |
+| "continue" or "keep going" | Run `node scripts/continue-action.js --run`; invoke the returned skill route if it prints `/archon continue` or `/fleet continue` |
 | "setup" | Run `/do setup` first-run experience |
 | "deliver <intake-file>" | Run `node scripts/deliver.js --intake <file>` to create an evidence-backed delivery campaign |
 | "deliver intake" or "deliver next intake" | Run `node scripts/deliver.js --next` to create an evidence-backed delivery campaign from the highest-priority pending intake item |
@@ -79,15 +79,26 @@ If matched → execute directly. Done.
 
 Check for active campaigns or fleet sessions that match the input scope:
 
+0. For input exactly equivalent to `continue`, first run:
+   ```bash
+   node scripts/continue-action.js --run
+   ```
+   - If it executes a local command such as `node scripts/package-delivery.js <slug>`, report the output and stop.
+   - If it returns `/archon continue`, invoke `/archon continue`.
+   - If it returns `/fleet continue`, invoke `/fleet continue`.
+   - If it returns no command, output "No active campaign or fleet session found. Nothing to continue."
 1. Read `.planning/campaigns/` for files with `Status: active` or `status: active` in frontmatter
 2. Read `.planning/fleet/` for session files with `status: active` or `needs-continue`
-3. **Improve campaigns (type: improve):** if the active campaign has `type: improve` in
+3. **Review-package campaigns:** if the campaign status is `needs-review-package`
+   or its `review-package` Exit Evidence row is pending while prior phases are
+   complete, route to `node scripts/package-delivery.js <slug>` before Archon.
+4. **Improve campaigns (type: improve):** if the active campaign has `type: improve` in
    frontmatter, route to `/improve {target} --continue` where `{target}` is the campaign's
    `target` field. Do NOT route improve campaigns to archon -- improve is its own orchestrator.
-4. If input scope matches a non-improve active campaign → `/archon continue`
-5. If fleet session needs continuation → `/fleet continue`
-6. If input mentions a campaign by name → resume it (check type field for routing)
-7. **If input is "continue" but NO active campaign or fleet session found:**
+5. If input scope matches a non-improve active campaign → `/archon continue`
+6. If fleet session needs continuation → `/fleet continue`
+7. If input mentions a campaign by name → resume it (check type field for routing)
+8. **If input is "continue" but NO active campaign or fleet session found:**
    - Output: "No active campaign or fleet session found. Nothing to continue."
    - **If `.planning/daemon.json` exists with `status: "running"`:** the daemon spawned
      this session but there's no work to do. Update daemon.json:
