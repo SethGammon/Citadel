@@ -39,6 +39,7 @@ const DELIVERY_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-deliver.js');
 const DELIVERY_PACKAGE_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-package-delivery.js');
 const CONTINUE_ACTION_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-continue-action.js');
 const NEXT_ACTION_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-next-action.js');
+const OPERATOR_CONSOLE_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-operator-console.js');
 const OPERATOR_JOURNEY_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-operator-journey.js');
 const VERIFICATION_PLAN_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-verification-plan.js');
 const PR_READY_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-pr-ready.js');
@@ -67,7 +68,7 @@ const WORKTREE_READINESS_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-worktree
 const STRICT = process.argv.includes('--strict');
 
 console.log('\nCitadel Full Test Suite\n' + '='.repeat(40));
-console.log('Running: hook smoke test + security tests + runtime contract test + runtime registry test + runtime matrix test + hook event test + skill lint + demo routing check + telemetry core check + telemetry integrity check + memory block check + evidence contract check + sandbox provider check + skill packaging check + map substrate check + delivery preflight check + delivery package check + continue action check + next action check + operator journey check + verification plan check + PR readiness check + coordination core check + hook installer check + campaign core check + discovery core check + discovery writer check + momentum synthesizer check + policy core check + Claude runtime check + Codex runtime check + Codex native integration check + Codex operational improvement check + installer check + project bootstrap check + compat fixtures + backward compat + cost tracker + dashboard + doc-sync + fleet session + worktree readiness\n');
+console.log('Running: hook smoke test + security tests + runtime contract test + runtime registry test + runtime matrix test + hook event test + skill lint + demo routing check + telemetry core check + telemetry integrity check + memory block check + evidence contract check + sandbox provider check + skill packaging check + map substrate check + delivery preflight check + delivery package check + continue action check + next action check + operator console check + operator journey check + verification plan check + PR readiness check + coordination core check + hook installer check + campaign core check + discovery core check + discovery writer check + momentum synthesizer check + policy core check + Claude runtime check + Codex runtime check + Codex native integration check + Codex operational improvement check + installer check + project bootstrap check + compat fixtures + backward compat + cost tracker + dashboard + doc-sync + fleet session + worktree readiness\n');
 
 function run(label, scriptPath, extraArgs = []) {
   console.log(`\n> ${label}`);
@@ -105,6 +106,7 @@ const deliveryPassed = run('Delivery Preflight Check', DELIVERY_TEST);
 const deliveryPackagePassed = run('Delivery Package Check', DELIVERY_PACKAGE_TEST);
 const continueActionPassed = run('Continue Action Check', CONTINUE_ACTION_TEST);
 const nextActionPassed = run('Next Action Check', NEXT_ACTION_TEST);
+const operatorConsolePassed = run('Operator Console Check', OPERATOR_CONSOLE_TEST);
 const operatorJourneyPassed = run('Operator Journey Check', OPERATOR_JOURNEY_TEST);
 const verificationPlanPassed = run('Verification Plan Check', VERIFICATION_PLAN_TEST);
 const prReadyPassed = run('PR Readiness Check', PR_READY_TEST);
@@ -151,6 +153,7 @@ console.log(`  Delivery preflight: ${deliveryPassed ? 'PASS' : 'FAIL'}`);
 console.log(`  Delivery package:   ${deliveryPackagePassed ? 'PASS' : 'FAIL'}`);
 console.log(`  Continue action:    ${continueActionPassed ? 'PASS' : 'FAIL'}`);
 console.log(`  Next action:        ${nextActionPassed ? 'PASS' : 'FAIL'}`);
+console.log(`  Operator console:   ${operatorConsolePassed ? 'PASS' : 'FAIL'}`);
 console.log(`  Operator journey:   ${operatorJourneyPassed ? 'PASS' : 'FAIL'}`);
 console.log(`  Verification plan:  ${verificationPlanPassed ? 'PASS' : 'FAIL'}`);
 console.log(`  PR readiness:       ${prReadyPassed ? 'PASS' : 'FAIL'}`);
@@ -177,7 +180,7 @@ console.log(`  Fleet session:      ${fleetSessionPassed ? 'PASS' : 'FAIL'}`);
 console.log(`  Worktree readiness: ${worktreeReadinessPassed ? 'PASS' : 'FAIL'}`);
 console.log('');
 
-if (hooksPassed && securityPassed && contractsPassed && runtimeRegistryPassed && runtimeMatrixPassed && hookEventsPassed && skillsPassed && demoPassed && telemetryPassed && telemetryIntegrityPassed && memoryBlockPassed && evidenceContractPassed && sandboxProviderPassed && skillPackagingPassed && mapSubstratePassed && deliveryPassed && deliveryPackagePassed && continueActionPassed && nextActionPassed && operatorJourneyPassed && verificationPlanPassed && prReadyPassed && coordinationPassed && hookInstallerPassed && campaignPassed && discoveryPassed && discoveryWriterPassed && momentumPassed && momentumWatcherPassed && policyPassed && claudeRuntimePassed && codexRuntimePassed && codexNativeIntegrationPassed && codexOperationalImprovementPassed && installerPassed && projectBootstrapPassed && compatFixturePassed && backwardCompatPassed && costTrackerPassed && dashboardPassed && docSyncPassed && fleetSessionPassed && worktreeReadinessPassed) {
+if (hooksPassed && securityPassed && contractsPassed && runtimeRegistryPassed && runtimeMatrixPassed && hookEventsPassed && skillsPassed && demoPassed && telemetryPassed && telemetryIntegrityPassed && memoryBlockPassed && evidenceContractPassed && sandboxProviderPassed && skillPackagingPassed && mapSubstratePassed && deliveryPassed && deliveryPackagePassed && continueActionPassed && nextActionPassed && operatorConsolePassed && operatorJourneyPassed && verificationPlanPassed && prReadyPassed && coordinationPassed && hookInstallerPassed && campaignPassed && discoveryPassed && discoveryWriterPassed && momentumPassed && momentumWatcherPassed && policyPassed && claudeRuntimePassed && codexRuntimePassed && codexNativeIntegrationPassed && codexOperationalImprovementPassed && installerPassed && projectBootstrapPassed && compatFixturePassed && backwardCompatPassed && costTrackerPassed && dashboardPassed && docSyncPassed && fleetSessionPassed && worktreeReadinessPassed) {
   console.log('All tests pass.\n');
   console.log('Next steps:');
   console.log('  node scripts/skill-bench.js --list      see benchmark scenarios');
@@ -206,6 +209,7 @@ const deliveryFail = !deliveryPassed ? 16 : 0;
 const deliveryPackageFail = !deliveryPackagePassed ? 32 : 0;
 const continueActionFail = !continueActionPassed ? 64 : 0;
 const nextActionFail = !nextActionPassed ? 64 : 0;
+const operatorConsoleFail = !operatorConsolePassed ? 128 : 0;
 const operatorJourneyFail = !operatorJourneyPassed ? 128 : 0;
 const verificationPlanFail = !verificationPlanPassed ? 128 : 0;
 const prReadyFail = !prReadyPassed ? 128 : 0;
@@ -230,7 +234,7 @@ const dashboardFail = !dashboardPassed ? 33554432 : 0;
 const docSyncFail = !docSyncPassed ? 33554432 : 0;
 const fleetSessionFail = !fleetSessionPassed ? 67108864 : 0;
 const worktreeReadinessFail = !worktreeReadinessPassed ? 134217728 : 0;
-const code = hookFail | securityFail | contractFail | runtimeRegistryFail | runtimeMatrixFail | hookEventFail | skillFail | demoFail | telemetryFail | telemetryIntegrityFail | memoryBlockFail | evidenceContractFail | sandboxProviderFail | skillPackagingFail | mapSubstrateFail | deliveryFail | deliveryPackageFail | continueActionFail | nextActionFail | operatorJourneyFail | verificationPlanFail | prReadyFail | coordinationFail | hookInstallerFail | campaignFail | discoveryFail | discoveryWriterFail | momentumFail | momentumWatcherFail | policyFail | claudeRuntimeFail | codexRuntimeFail | codexNativeIntegrationFail | codexOperationalImprovementFail | installerFail | projectBootstrapFail | compatFixtureFail | backwardCompatFail | costTrackerFail | dashboardFail | docSyncFail | fleetSessionFail | worktreeReadinessFail;
+const code = hookFail | securityFail | contractFail | runtimeRegistryFail | runtimeMatrixFail | hookEventFail | skillFail | demoFail | telemetryFail | telemetryIntegrityFail | memoryBlockFail | evidenceContractFail | sandboxProviderFail | skillPackagingFail | mapSubstrateFail | deliveryFail | deliveryPackageFail | continueActionFail | nextActionFail | operatorConsoleFail | operatorJourneyFail | verificationPlanFail | prReadyFail | coordinationFail | hookInstallerFail | campaignFail | discoveryFail | discoveryWriterFail | momentumFail | momentumWatcherFail | policyFail | claudeRuntimeFail | codexRuntimeFail | codexNativeIntegrationFail | codexOperationalImprovementFail | installerFail | projectBootstrapFail | compatFixtureFail | backwardCompatFail | costTrackerFail | dashboardFail | docSyncFail | fleetSessionFail | worktreeReadinessFail;
 
 if (!hooksPassed) console.log('Hook smoke test failed. Fix hook issues before proceeding.');
 if (!securityPassed) console.log('Security tests failed. DO NOT SHIP - critical vulnerabilities present.');
@@ -251,6 +255,7 @@ if (!deliveryPassed) console.log('Delivery preflight check failed. Fix intake pa
 if (!deliveryPackagePassed) console.log('Delivery package check failed. Fix review package generation or campaign evidence updates before shipping.');
 if (!continueActionPassed) console.log('Continue action check failed. Fix /do continue routing or local package execution before shipping.');
 if (!nextActionPassed) console.log('Next action check failed. Fix operator routing or deterministic repair execution before shipping.');
+if (!operatorConsolePassed) console.log('Operator console check failed. Fix decision-first operator rendering before shipping.');
 if (!operatorJourneyPassed) console.log('Operator journey check failed. Fix intake-to-package-to-archive operator flow before shipping.');
 if (!verificationPlanPassed) console.log('Verification plan check failed. Fix profile selection before shipping.');
 if (!prReadyPassed) console.log('PR readiness check failed. Fix final readiness gates or report generation before shipping.');

@@ -202,6 +202,39 @@ decision history. Each capsule records the requested command, boundary type,
 risk level, current dashboard context, runbook, and verification plan so the
 next human approval can be made without re-deriving the state from scratch.
 
+For a single decision-first operator cockpit, use:
+
+```bash
+node scripts/operator-console.js
+```
+
+The console combines the dashboard snapshot, next-action decision, approval
+boundary, artifact freshness, and selected verification profile into
+`.planning/operator-console/latest.md`. Use it when you want the shortest
+answer to: what is true, what should happen next, whether it can run locally,
+what needs approval, and how the result should be verified.
+
+For scripts and agents that need only the stable action contract, use:
+
+```bash
+npm run operator:summary
+```
+
+The summary includes status, command, run eligibility, approval boundary, risk,
+pending work counts, artifact freshness, historical stale artifact counts,
+attention-needed artifact counts, verification profile, and report paths without
+the nested dashboard payload.
+
+To let the console run deterministic local repairs before rendering the final
+state, use:
+
+```bash
+node scripts/operator-console.js --run
+```
+
+Like `next-action`, the console does not execute human/agent judgment routes.
+It stops at those boundaries and writes or refreshes the approval capsule.
+
 To produce the final PR approval-readiness handoff, run verification through
 the PR finalizer:
 

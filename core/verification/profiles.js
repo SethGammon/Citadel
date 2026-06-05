@@ -87,6 +87,7 @@ function profileForFiles(changedFiles, scripts = {}) {
   const broad = defaultCommand(scripts);
   const commands = [broad];
   const notes = [];
+  const touchesOperatorLoop = hasAny(files, (file) => file === 'scripts/dashboard.js' || file === 'scripts/next-action.js' || file === 'scripts/continue-action.js' || file === 'scripts/operator-console.js');
   let id = 'baseline';
   let label = 'Baseline regression';
   let reason = 'No narrower high-signal verification profile matched the changed paths.';
@@ -113,7 +114,7 @@ function profileForFiles(changedFiles, scripts = {}) {
     reason = 'Demo page changes affect the first-run public experience.';
     commands.unshift('node scripts/test-demo.js');
     notes.push('Demo routing checks are required because broad tests alone do not inspect the page copy and links deeply.');
-  } else if (hasAny(files, (file) => file === 'scripts/dashboard.js' || file === 'scripts/next-action.js' || file === 'scripts/continue-action.js')) {
+  } else if (touchesOperatorLoop) {
     id = 'operator-loop';
     label = 'Operator loop verification';
     reason = 'Operator changes affect the next-action, dashboard, and continuation path.';
@@ -121,6 +122,7 @@ function profileForFiles(changedFiles, scripts = {}) {
       'node scripts/test-dashboard.js',
       'node scripts/test-next-action.js',
       'node scripts/test-continue-action.js',
+      'node scripts/test-operator-console.js',
       'node scripts/test-operator-journey.js'
     );
     notes.push('Verify both focused operator behavior and the full intake-to-package journey.');
@@ -150,6 +152,17 @@ function profileForFiles(changedFiles, scripts = {}) {
     reason = 'Documentation changes should still preserve demo routes, skill docs, and broad harness contracts.';
     commands.unshift('node scripts/test-demo.js', 'node scripts/skill-lint.js');
     notes.push('Docs can affect the public demo and skill instructions; keep those checks visible.');
+  }
+
+  if (id !== 'operator-loop' && touchesOperatorLoop) {
+    commands.unshift(
+      'node scripts/test-dashboard.js',
+      'node scripts/test-next-action.js',
+      'node scripts/test-continue-action.js',
+      'node scripts/test-operator-console.js',
+      'node scripts/test-operator-journey.js'
+    );
+    notes.push('Operator files also changed; keep the decision-console and end-to-end operator journey checks visible.');
   }
 
   return {

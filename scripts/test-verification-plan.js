@@ -24,6 +24,10 @@ assert(profileForFiles(['hooks_src/protect-files.js'], { test: 'node test.js' })
 assert.equal(profileForFiles(['skills/do/SKILL.md'], { test: 'node test.js' }).id, 'skill-surface');
 assert.equal(profileForFiles(['docs/index.html'], { test: 'node test.js' }).id, 'demo-experience');
 assert.equal(profileForFiles(['scripts/dashboard.js'], { test: 'node test.js' }).id, 'operator-loop');
+assert.equal(profileForFiles(['scripts/operator-console.js'], { test: 'node test.js' }).id, 'operator-loop');
+assert(profileForFiles(['scripts/operator-console.js'], { test: 'node test.js' }).commands.includes('node scripts/test-operator-console.js'));
+assert.equal(profileForFiles(['skills/do/SKILL.md', 'scripts/operator-console.js'], { test: 'node test.js' }).id, 'skill-surface');
+assert(profileForFiles(['skills/do/SKILL.md', 'scripts/operator-console.js'], { test: 'node test.js' }).commands.includes('node scripts/test-operator-journey.js'));
 assert.equal(profileForFiles(['scripts/pr-ready.js'], { test: 'node test.js' }).id, 'review-readiness');
 assert(profileForFiles(['core/verification/profiles.js'], { test: 'node test.js' }).commands.includes('node scripts/test-verification-plan.js'));
 assert.equal(profileForFiles(['core/campaigns/update-campaign.js'], { test: 'node test.js' }).id, 'campaign-delivery');

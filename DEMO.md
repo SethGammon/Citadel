@@ -14,6 +14,7 @@ Run these commands:
 
 ```text
 /do setup --express
+/do next
 /do review README.md for first-time developer friction
 /do identify the project's safest verification command and run it
 /cost
@@ -22,6 +23,8 @@ Run these commands:
 ### What each command demonstrates
 
 **`/do setup --express`** creates or refreshes repo-local Citadel state. It detects the project, sets up the harness state Citadel uses, and installs or refreshes hooks where the runtime supports them.
+
+**`/do next`** shows the operator console. It answers what Citadel currently sees, what should happen next, whether a local repair can run, what needs approval, and which verification profile applies.
 
 **`/do review README.md for first-time developer friction`** demonstrates `/do` routing. The user describes an engineering intent, and Citadel routes the work to the right review workflow instead of requiring the user to pick a skill first.
 
@@ -55,6 +58,7 @@ You can substitute your own repository. The core demo is intentionally written a
 
 ```text
 /do setup --express
+/do next
 /do review README.md for first-time developer friction
 /do identify the project's safest verification command and run it
 /cost
