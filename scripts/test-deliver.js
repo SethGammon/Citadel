@@ -64,6 +64,7 @@ withTempProject((projectRoot) => {
   const campaign = fs.readFileSync(result.campaignPath, 'utf8');
   assert(campaign.includes('# Campaign: Add Auth Flow'));
   assert(campaign.includes('| phase:2 | implementation-diff | file_diff | yes | git diff --stat | pending | 2 | implement requested change |'));
+  assert(campaign.includes('| phase:4 | review-package | review_package | yes | .planning/review-packages/add-auth-flow.md | pending | 2 | package delivery for review |'));
   assert(campaign.includes('=== MAP SLICE: src/auth.js Add Auth Flow ==='));
   assert(campaign.includes('Phase: 2'));
 

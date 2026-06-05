@@ -34,16 +34,19 @@ const markdown = [
   '| phase:1 | screenshot | screenshot | yes | .planning/screenshots/missing.png | pass | 1 | capture screenshot |',
   '| phase:2 | docs | doc_update | yes | docs/result.md | pass | 1 | update docs |',
   '| task:7 | pr | pr_link | yes | https://github.com/acme/repo/pull/12 | resolved | 0 | none |',
+  '| phase:4 | package | review_package | yes | .planning/review-packages/result.md | resolved | 0 | none |',
 ].join('\n');
 
 withTempProject((projectRoot) => {
   fs.mkdirSync(path.join(projectRoot, 'docs'), { recursive: true });
+  fs.mkdirSync(path.join(projectRoot, '.planning', 'review-packages'), { recursive: true });
   fs.writeFileSync(path.join(projectRoot, 'docs', 'result.md'), 'done\n', 'utf8');
+  fs.writeFileSync(path.join(projectRoot, '.planning', 'review-packages', 'result.md'), 'done\n', 'utf8');
   const filePath = path.join(projectRoot, 'campaign.md');
   fs.writeFileSync(filePath, markdown, 'utf8');
 
   const items = parseExitEvidence(markdown);
-  assert.equal(items.length, 4);
+  assert.equal(items.length, 5);
   assert.equal(items[0].type, 'test_result');
 
   const phase1 = validateExitEvidence(markdown, { projectRoot, target: 'phase:1' });

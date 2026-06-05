@@ -105,9 +105,10 @@ For high-stakes decisions (abort, rollback, scope change), Archon may spawn 3 Ph
 Campaigns can also declare an `## Exit Evidence` table. Run
 `node scripts/evidence-validate.js --file <campaign.md> --target phase:<n>`
 before advancing a phase. Required rows support file diffs, command results,
-test results, screenshots, browser route checks, doc updates, PR links, review
-thread resolution, and hook status. Missing required evidence reports a repair
-task while retries remain, then blocks advancement when retries are exhausted.
+test results, screenshots, browser route checks, doc updates, PR links, local
+review packages, review thread resolution, and hook status. Missing required
+evidence reports a repair task while retries remain, then blocks advancement
+when retries are exhausted.
 
 ## Policy Enforcement
 
@@ -147,6 +148,21 @@ node scripts/deliver.js --intake .planning/intake/<item>.md
 The preflight creates `.planning/campaigns/<slug>.md`, marks the intake item
 `in-progress`, records claimed scope and acceptance criteria, and seeds the Exit
 Evidence table. Continue with `/do continue`.
+
+When the implementation and verification phases are ready for review, create a
+deterministic review package:
+
+```bash
+node scripts/package-delivery.js <campaign-slug>
+```
+
+This writes `.planning/review-packages/<campaign-slug>.md`, records that package
+in the campaign's `review-package` Exit Evidence row, and marks the packaging
+phase complete. If a pull request already exists, record it instead:
+
+```bash
+node scripts/package-delivery.js <campaign-slug> --pr https://github.com/<owner>/<repo>/pull/<number>
+```
 
 ## Repair States
 

@@ -11,6 +11,7 @@ const EVIDENCE_TYPES = [
   'browser_route_check',
   'doc_update',
   'pr_link',
+  'review_package',
   'review_thread_resolution',
   'hook_status',
 ];
@@ -86,7 +87,7 @@ function validateEvidenceItem(item, options = {}) {
   if (item.required && !item.evidence) issues.push('missing evidence');
   if (item.required && !PASS_STATUSES.has(item.status)) issues.push(`status is not passing: ${item.status || '(blank)'}`);
 
-  if (item.evidence && ['screenshot', 'doc_update', 'file_diff'].includes(item.type) && !pathExists(projectRoot, item.evidence)) {
+  if (item.evidence && ['screenshot', 'doc_update', 'file_diff', 'review_package'].includes(item.type) && !pathExists(projectRoot, item.evidence)) {
     issues.push(`evidence path not found: ${item.evidence}`);
   }
   if (item.type === 'pr_link' && item.evidence && !/^https?:\/\/.+\/pull\/\d+/i.test(item.evidence)) {

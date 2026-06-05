@@ -67,6 +67,7 @@ Regex/keyword on raw input. Catches trivial commands:
 | "setup" | Run `/do setup` first-run experience |
 | "deliver <intake-file>" | Run `node scripts/deliver.js --intake <file>` to create an evidence-backed delivery campaign |
 | "deliver intake" or "deliver next intake" | Run `node scripts/deliver.js --next` to create an evidence-backed delivery campaign from the highest-priority pending intake item |
+| "package delivery" or "review package" | Run `node scripts/package-delivery.js <campaign-slug>` to create a local review handoff and update campaign evidence |
 | "--list" or "list" | Show all available skills |
 | "fix typo in X" or "rename X to Y" | Direct edit (no orchestrator needed) |
 | "commit" | Stage and commit changes |
@@ -122,6 +123,7 @@ and any project-level custom skills in `.claude/skills/`.
 | "parallel", "simultaneous", "multiple agents", "at the same time", "both ... and" | `/fleet --quick` |
 | "intake", "process pending", "pipeline" | `/autopilot` |
 | "deliver", "deliver intake", "intake to pr", "intake to PR" | `node scripts/deliver.js --next` when no file is named, or `node scripts/deliver.js --intake <file>` when a file is named, then `/do continue` |
+| "package delivery", "review package", "local handoff" | `node scripts/package-delivery.js <campaign-slug>` after build and verification, or include `--pr <url>` when a PR exists |
 | "setup", "first run", "configure harness" | `/setup` |
 | "research", "investigate", "look into", "find out" | `/research` |
 | "experiment", "optimize", "try", "A/B", "measure" | `/experiment` |

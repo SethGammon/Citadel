@@ -142,6 +142,12 @@ For each phase:
      the phase active, and perform the repair task.
    - If it fails with no retries remaining: block advancement or mark the phase
      `partial`; do not mark it complete from prose alone.
+   - For package/review phases, use:
+     ```bash
+     node scripts/package-delivery.js {campaign-slug}
+     ```
+     or add `--pr <url>` when a pull request exists. This records the review
+     target in Exit Evidence before campaign completion.
 
 4.5. **Validate handoff** — spawn a Phase Validator (Haiku, read-only) to independently
    confirm the HANDOFF demonstrates each exit condition was met:
