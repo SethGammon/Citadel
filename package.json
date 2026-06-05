@@ -13,6 +13,8 @@
     "codex:install": "node scripts/codex-install.js",
     "codex:verify": "node scripts/codex-readiness-check.js --write",
     "dashboard": "node scripts/dashboard.js",
+    "campaign": "node scripts/campaign.js",
+    "deliver": "node scripts/deliver.js",
     "fleet:steward": "node scripts/fleet-steward.js",
     "fleet-steward": "node scripts/fleet-steward.js",
     "worktree-readiness": "node scripts/worktree-readiness.js",

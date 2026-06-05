@@ -7,6 +7,7 @@ const path = require('path');
 const { execFileSync } = require('child_process');
 
 const { parseCampaignContent } = require('../core/campaigns/parse-campaign');
+const { isPhaseComplete } = require('../core/campaigns/update-campaign');
 const { readJsonlDetailed } = require('../core/telemetry/io');
 const { getCoordinationStatus } = require('../core/coordination/instances');
 const { getClaimStatus } = require('../core/coordination/claims');
@@ -140,12 +141,20 @@ function extractDirection(content) {
 }
 
 function normalizeStatus(campaign) {
-  return String(
+  const status = String(
     campaign.frontmatter.status ||
     campaign.frontmatter.Status ||
     campaign.bodyStatus ||
     'unknown'
   ).toLowerCase();
+
+  const phases = campaign.phases || [];
+  const allPhasesComplete = phases.length > 0 && phases.every(isPhaseComplete);
+  if ((status === 'active' || status === 'needs-continue') && allPhasesComplete) {
+    return 'needs-completion';
+  }
+
+  return status;
 }
 
 function phaseSummary(campaign) {
@@ -192,10 +201,14 @@ function readCampaigns(projectRoot) {
       const slug = path.basename(filePath, '.md');
       const parsed = parseCampaignContent(content, { slug });
       const direction = extractDirection(content);
+      let status = normalizeStatus(parsed);
+      if (status === 'completed' && path.dirname(filePath) === campaignDir) {
+        status = 'needs-archive';
+      }
       campaigns.push({
         slug,
         filePath,
-        status: normalizeStatus(parsed),
+        status,
         direction,
         phase: phaseSummary(parsed),
         lastDecision: lastDecision(content),
@@ -209,6 +222,8 @@ function readCampaigns(projectRoot) {
   campaigns.sort((left, right) => {
     const rank = (status) => {
       if (status === 'active') return 0;
+      if (status === 'needs-completion') return 1;
+      if (status === 'needs-archive') return 1;
       if (status.includes('approval') || status.includes('pending') || status === 'needs-continue') return 1;
       if (status === 'parked' || status === 'paused') return 2;
       return 3;
@@ -348,7 +363,7 @@ function readQueueCounts(projectRoot) {
   return {
     docSync: countJsonlLines(path.join(telemetryDir, 'doc-sync-queue.jsonl')),
     mergeReviews: countJsonlLines(path.join(telemetryDir, 'merge-check-queue.jsonl')),
-    intakeItems: listFiles(intakeDir, (entry) => entry !== '.gitkeep').length,
+    intakeItems: listFiles(intakeDir, (entry) => entry.endsWith('.md') && entry !== '_TEMPLATE.md').length,
   };
 }
 
@@ -548,6 +563,10 @@ function collectDashboard(options = {}) {
 
 function chooseNextAction(snapshot) {
   if (!snapshot.planningExists) return 'Run /do setup to initialize Citadel state for this project.';
+  const needsCompletion = snapshot.campaigns.find((campaign) => campaign.status === 'needs-completion');
+  if (needsCompletion) return `Complete ${needsCompletion.slug}: node scripts/campaign.js complete ${needsCompletion.slug} --archive.`;
+  const needsArchive = snapshot.campaigns.find((campaign) => campaign.status === 'needs-archive');
+  if (needsArchive) return `Archive completed campaign ${needsArchive.slug}: node scripts/campaign.js complete ${needsArchive.slug} --archive.`;
   const active = snapshot.campaigns.find((campaign) => campaign.status === 'active' || campaign.status === 'needs-continue');
   if (active) return `Resume ${active.slug} with /do continue.`;
   const approval = snapshot.campaigns.find((campaign) => campaign.status.includes('approval') || campaign.status.includes('pending'));

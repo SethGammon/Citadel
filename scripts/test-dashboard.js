@@ -46,6 +46,73 @@ withTempProject((projectRoot) => {
 });
 
 withTempProject((projectRoot) => {
+  write(path.join(projectRoot, '.planning', 'intake', '_TEMPLATE.md'), 'status: pending\n');
+  const snapshot = collectDashboard({ projectRoot, now: '2026-06-04T12:00:00.000Z' });
+  assert.equal(snapshot.pending.intakeItems, 0);
+});
+
+withTempProject((projectRoot) => {
+  write(path.join(projectRoot, '.planning', 'campaigns', 'done-but-active.md'), [
+    '---',
+    'status: active',
+    '---',
+    '',
+    '# Campaign: Done But Active',
+    '',
+    'Direction: Prove completion repair appears.',
+    '',
+    'Status: active',
+    '',
+    '## Phases',
+    '',
+    '| # | Status | Type | Phase | Done When |',
+    '|---|--------|------|-------|-----------|',
+    '| 1 | complete | build | Build | done |',
+    '| 2 | completed | verify | Verify | tests pass |',
+  ].join('\n'));
+
+  const snapshot = collectDashboard({ projectRoot, now: '2026-06-04T12:00:00.000Z' });
+  const output = renderDashboard(snapshot);
+
+  assert.equal(snapshot.campaigns[0].status, 'needs-completion');
+  assert.equal(
+    snapshot.nextAction,
+    'Complete done-but-active: node scripts/campaign.js complete done-but-active --archive.'
+  );
+  assert(output.includes('done-but-active: Phase 2/2 - needs-completion'));
+});
+
+withTempProject((projectRoot) => {
+  write(path.join(projectRoot, '.planning', 'campaigns', 'done-in-active-dir.md'), [
+    '---',
+    'status: completed',
+    '---',
+    '',
+    '# Campaign: Done In Active Dir',
+    '',
+    'Direction: Prove archive repair appears.',
+    '',
+    'Status: completed',
+    '',
+    '## Phases',
+    '',
+    '| # | Status | Type | Phase | Done When |',
+    '|---|--------|------|-------|-----------|',
+    '| 1 | complete | build | Build | done |',
+  ].join('\n'));
+
+  const snapshot = collectDashboard({ projectRoot, now: '2026-06-04T12:00:00.000Z' });
+  const output = renderDashboard(snapshot);
+
+  assert.equal(snapshot.campaigns[0].status, 'needs-archive');
+  assert.equal(
+    snapshot.nextAction,
+    'Archive completed campaign done-in-active-dir: node scripts/campaign.js complete done-in-active-dir --archive.'
+  );
+  assert(output.includes('done-in-active-dir: Phase 1/1 - needs-archive'));
+});
+
+withTempProject((projectRoot) => {
   write(path.join(projectRoot, '.planning', 'campaigns', 'test-campaign.md'), [
     '---',
     'slug: test-campaign',

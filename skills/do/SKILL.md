@@ -65,6 +65,7 @@ Regex/keyword on raw input. Catches trivial commands:
 | "status", "dashboard", "what's happening", "what's going on", "show activity" | Show full harness dashboard (/dashboard) |
 | "continue" or "keep going" | Resume active campaign or fleet session |
 | "setup" | Run `/do setup` first-run experience |
+| "deliver <intake-file>" or "deliver intake" | Run `node scripts/deliver.js --intake <file>` to create an evidence-backed delivery campaign |
 | "--list" or "list" | Show all available skills |
 | "fix typo in X" or "rename X to Y" | Direct edit (no orchestrator needed) |
 | "commit" | Stage and commit changes |
@@ -119,6 +120,7 @@ and any project-level custom skills in `.claude/skills/`.
 | "campaign", "multi-session", "phases" | `/archon` |
 | "parallel", "simultaneous", "multiple agents", "at the same time", "both ... and" | `/fleet --quick` |
 | "intake", "process pending", "pipeline" | `/autopilot` |
+| "deliver", "deliver intake", "intake to pr", "intake to PR" | `node scripts/deliver.js --intake <file>` then `/do continue` |
 | "setup", "first run", "configure harness" | `/setup` |
 | "research", "investigate", "look into", "find out" | `/research` |
 | "experiment", "optimize", "try", "A/B", "measure" | `/experiment` |

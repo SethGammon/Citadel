@@ -57,6 +57,11 @@ exist, treat it as empty. Never crash on missing state.
   - `Direction:` field (truncate to 60 chars)
   - Phase progress (search for `Phase N of M` or `## Phase` headings)
   - Most recent line starting with `- [` from the Decision Log
+- If all phases are complete but status is still active, report
+  `needs-completion` and show:
+  `node scripts/campaign.js complete <slug> --archive`
+- If a campaign is marked completed but still lives in `.planning/campaigns/`,
+  report `needs-archive` and show the same archive command.
 
 **Cost Data (two sources, prefer real):**
 
@@ -185,6 +190,7 @@ QUICK COMMANDS
 **Large telemetry files:** Read last 50 lines only.
 **Missing timestamps:** Fall back to file modification time; display entry without timestamp if unavailable.
 **All campaigns completed:** Note "No active campaigns" at top of CAMPAIGNS section.
+**Completed campaign still active:** Show the exact `node scripts/campaign.js complete <slug> --archive` repair command; do not tell the user to `/do continue`.
 **All fleet sessions idle:** Note "No active fleet sessions" under FLEET SESSIONS.
 **Mixed state:** Proceed with whatever state exists; note each missing directory inline.
 

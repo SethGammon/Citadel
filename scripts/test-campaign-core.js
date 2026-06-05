@@ -3,13 +3,14 @@
 'use strict';
 
 const assert = require('assert');
+const childProcess = require('child_process');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
 
 const { parseCampaignContent } = require('../core/campaigns/parse-campaign');
 const { findActiveCampaign, getCampaignPaths, readCampaignStats } = require('../core/campaigns/load-campaign');
-const { archiveCampaign, updateCampaignStatus } = require('../core/campaigns/update-campaign');
+const { archiveCampaign, completeCampaign, updateCampaignStatus } = require('../core/campaigns/update-campaign');
 
 function withTempProject(run) {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'citadel-campaign-'));
@@ -39,6 +40,25 @@ function makeCampaign(name, status = 'active') {
     '',
     '## Restricted Files',
     '- .env.production',
+  ].join('\n');
+}
+
+function makePhasedCampaign(name, phaseStatuses, status = 'active') {
+  return [
+    '---',
+    'version: 1',
+    `status: ${status}`,
+    '---',
+    '',
+    `# Campaign: ${name}`,
+    '',
+    `Status: ${status}`,
+    '',
+    '## Phases',
+    '',
+    '| # | Status | Type | Phase | Done When |',
+    '|---|--------|------|-------|-----------|',
+    ...phaseStatuses.map((phaseStatus, index) => `| ${index + 1} | ${phaseStatus} | build | Phase ${index + 1} | done |`),
   ].join('\n');
 }
 
@@ -73,6 +93,46 @@ withTempProject((projectRoot) => {
   const stats = readCampaignStats(projectRoot);
   assert.deepEqual(stats.active, [], 'no active campaigns should remain after archive');
   assert.equal(stats.completed_count, 2, 'completed count should include archived campaign');
+});
+
+withTempProject((projectRoot) => {
+  const paths = getCampaignPaths(projectRoot);
+  fs.mkdirSync(paths.campaignsDir, { recursive: true });
+
+  const incompleteFile = path.join(paths.campaignsDir, 'incomplete.md');
+  fs.writeFileSync(incompleteFile, makePhasedCampaign('Incomplete', ['complete', 'pending']));
+  assert.throws(
+    () => completeCampaign(incompleteFile, projectRoot, { archive: true }),
+    /incomplete phases/,
+    'completion should reject incomplete phases without force'
+  );
+
+  const completeFile = path.join(paths.campaignsDir, 'complete.md');
+  fs.writeFileSync(completeFile, makePhasedCampaign('Complete', ['complete', 'completed']));
+  const result = completeCampaign(completeFile, projectRoot, {
+    archive: true,
+    pr: 'https://github.com/example/repo/pull/1',
+    mergeSha: 'abc123',
+    verification: 'npm run test',
+  });
+  assert.equal(result.frontmatter.status, 'completed');
+  assert.equal(result.bodyStatus, 'completed');
+  assert(result.content.includes('## Completion Record'));
+  assert(result.content.includes('https://github.com/example/repo/pull/1'));
+  assert(fs.existsSync(path.join(paths.completedDir, 'complete.md')), 'completed campaign should be archived');
+
+  const cliFile = path.join(paths.campaignsDir, 'cli.md');
+  fs.writeFileSync(cliFile, makePhasedCampaign('Cli', ['complete']));
+  const output = childProcess.execFileSync(process.execPath, [
+    path.join(__dirname, 'campaign.js'),
+    'complete',
+    'cli',
+    '--archive',
+    '--project-root',
+    projectRoot,
+  ], { encoding: 'utf8' });
+  assert(output.includes('Campaign completed.'));
+  assert(fs.existsSync(path.join(paths.completedDir, 'cli.md')), 'CLI should archive completed campaign');
 });
 
 console.log('campaign core tests passed');

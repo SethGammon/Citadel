@@ -18,6 +18,16 @@ Intake → Brief → Plan → Build → Verify → Archive
 5. **Verify**: Typecheck, tests, quality checks
 6. **Archive**: Campaign moves to `campaigns/completed/`
 
+Complete and archive a finished campaign with:
+
+```bash
+node scripts/campaign.js complete <campaign-slug> --archive
+```
+
+The command refuses to complete campaigns with unfinished phases unless
+`--force` is used after human review. It also writes a `## Completion Record`
+for merge links, verification notes, and final evidence.
+
 ## Campaign File Format
 
 ```markdown
@@ -120,6 +130,15 @@ Description of what needs to be done...
 
 The SessionStart hook reports pending items on every new session.
 Process them with `/autopilot` or manually with `/do`.
+
+## Repair States
+
+The dashboard reports campaign truth problems with executable repairs:
+
+| Status | Meaning | Repair |
+|---|---|---|
+| `needs-completion` | All phases are complete, but campaign status is still active | `node scripts/campaign.js complete <slug> --archive` |
+| `needs-archive` | Campaign status is completed, but the file is still in `.planning/campaigns/` | `node scripts/campaign.js complete <slug> --archive` |
 
 ## See Also
 
