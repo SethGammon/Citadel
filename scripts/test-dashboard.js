@@ -118,13 +118,15 @@ withTempProject((projectRoot) => {
   write(path.join(projectRoot, '.planning', 'telemetry', 'doc-sync-queue.jsonl'), [
     JSON.stringify({ event: 'session-end', status: 'pending' }),
     JSON.stringify({ event: 'session-end', status: 'pending' }),
+    JSON.stringify({ event: 'session-end', status: 'surfaced' }),
   ].join('\n') + '\n');
 
   const snapshot = collectDashboard({ projectRoot, now: '2026-06-04T12:00:00.000Z' });
   const output = renderDashboard(snapshot);
 
+  assert.equal(snapshot.pending.docSync, 2);
   assert.equal(snapshot.nextAction.label, 'Drain doc-sync queue');
-  assert.equal(snapshot.nextAction.command, '/learn');
+  assert.equal(snapshot.nextAction.command, '/learn --doc-sync');
   assert.equal(snapshot.repairs[0].runbook, 'skills/learn/SKILL.md');
   assert(output.includes('repair | medium | Drain doc-sync queue'));
   assert(output.includes('why: 2 doc-sync item(s) are queued'));

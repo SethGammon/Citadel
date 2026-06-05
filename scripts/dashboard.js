@@ -97,6 +97,13 @@ function countJsonlLines(filePath) {
   return raw.split(/\r?\n/).filter(Boolean).length;
 }
 
+function countActionableJsonl(filePath, actionableStatuses = ['needs-review', 'pending']) {
+  const detail = readJsonlDetailed(filePath);
+  if (!detail.exists) return 0;
+  const statuses = new Set(actionableStatuses);
+  return detail.entries.filter((entry) => statuses.has(entry.status)).length;
+}
+
 function truncate(value, max) {
   const text = String(value || '').replace(/\s+/g, ' ').trim();
   if (text.length <= max) return text;
@@ -361,7 +368,7 @@ function readQueueCounts(projectRoot) {
   const intakeDir = path.join(planningDir, 'intake');
 
   return {
-    docSync: countJsonlLines(path.join(telemetryDir, 'doc-sync-queue.jsonl')),
+    docSync: countActionableJsonl(path.join(telemetryDir, 'doc-sync-queue.jsonl')),
     mergeReviews: countJsonlLines(path.join(telemetryDir, 'merge-check-queue.jsonl')),
     intakeItems: listFiles(intakeDir, (entry) => entry.endsWith('.md') && entry !== '_TEMPLATE.md').length,
   };
@@ -667,7 +674,7 @@ function buildRepairItems(snapshot) {
   if (snapshot.pending.docSync > 0) {
     repairs.push(action({
       label: 'Drain doc-sync queue',
-      command: '/learn',
+      command: '/learn --doc-sync',
       why: `${snapshot.pending.docSync} doc-sync item(s) are queued; project guidance may be stale.`,
       confidence: snapshot.pending.docSync > 50 ? 'high' : 'medium',
       repairAvailable: true,

@@ -90,7 +90,7 @@ exist, treat it as empty. Never crash on missing state.
 - For `event: "counter"` entries: extract metric name as the "event" column with count context
 
 **Pending Queues:**
-- Count lines in `.planning/telemetry/doc-sync-queue.jsonl` (or 0 if missing)
+- Count actionable entries in `.planning/telemetry/doc-sync-queue.jsonl` where `status` is `pending` or `needs-review` (or 0 if missing)
 - Count lines in `.planning/telemetry/merge-check-queue.jsonl` (or 0 if missing)
 - Count files in `.planning/intake/` (or 0 if missing)
 
@@ -206,7 +206,7 @@ QUICK COMMANDS
 **Completed campaign still active:** Show the exact `node scripts/campaign.js complete <slug> --archive` repair command; do not tell the user to `/do continue`.
 **All fleet sessions idle:** Note "No active fleet sessions" under FLEET SESSIONS.
 **Mixed state:** Proceed with whatever state exists; note each missing directory inline.
-**Doc-sync backlog:** Surface `/learn` as a repair action with `skills/learn/SKILL.md` as runbook.
+**Doc-sync backlog:** Surface `/learn --doc-sync` as a repair action with `skills/learn/SKILL.md` as runbook.
 **Dirty worktree:** Surface `git status --short` as a review action; do not suggest destructive cleanup.
 
 ## Contextual Gates

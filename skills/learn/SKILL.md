@@ -39,6 +39,7 @@ contradictions. A wiki is a compiler; a log is an interpreter.
 /learn --lint                       — lint-only pass (no new extraction)
 /learn --compile                    — re-compile staging area into wiki (no new extraction)
 /learn --memory                     — compile semantic memory blocks from planning artifacts
+/learn --doc-sync                   — process doc-sync queue into .planning/doc-sync/latest.md
 ```
 
 ## Inputs
@@ -67,6 +68,14 @@ contradictions. A wiki is a compiler; a log is an interpreter.
 - Read `.planning/evolve/{target}/pattern-library.md` — this is the source
 - If `--cycle {n}`: filter to sections beginning with `## Cycle {n}` only
 - If file not found: "No evolve pattern library for '{target}'." Stop.
+
+**If `/learn --doc-sync`:** Run:
+```
+node hooks_src/doc-sync.js
+```
+Then review `.planning/doc-sync/latest.md`. Stop after reporting the queue count,
+files surfaced, skipped deleted files, and report path. Do not run campaign
+extraction unless the user separately asks for it.
 
 **If `/learn --lint`, `/learn --compile`, or `/learn --memory`:** Skip to Step 4, 5, or 5.5 respectively.
 
@@ -259,6 +268,10 @@ Next: review .planning/wiki/index.md — promote stable patterns to CLAUDE.md fo
 **Memory compile has missing sources:** Report the missing source paths and keep
 the existing memory blocks untouched until the source issue is resolved.
 
+**Doc-sync queue empty:** Output "No doc-sync work is queued." Stop.
+
+**Doc-sync queue has only surfaced entries:** Output "All doc-sync items are already surfaced." Stop.
+
 **evolve pattern-library.md missing:** "No evolve pattern library for '{target}'. Run /evolve {target} first to generate patterns." Stop.
 
 ## Contextual Gates
@@ -276,6 +289,8 @@ the existing memory blocks untouched until the source issue is resolved.
 - Wiki index must be updated on every compile run
 - Lint must run after every compile (not skipped)
 - Memory block lint must pass after `--memory` or the Step 5.5 compile pass
+- `/learn --doc-sync` must leave no `pending` or `needs-review` entries for
+  processed queue items unless run with `--dry-run`
 - Conflicts must be flagged, never silently resolved
 - Summary output must include counts for all phases
 
