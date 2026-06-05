@@ -479,6 +479,30 @@ function readWorktrees(projectRoot) {
   }
 }
 
+function readGitStatus(projectRoot) {
+  try {
+    const output = execFileSync('git', ['status', '--short'], {
+      cwd: projectRoot,
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'ignore'],
+    });
+    const lines = output.split(/\r?\n/).map((line) => line.trimEnd()).filter(Boolean);
+    return {
+      available: true,
+      dirty: lines.length > 0,
+      changedFiles: lines.length,
+      sample: lines.slice(0, 8),
+    };
+  } catch {
+    return {
+      available: false,
+      dirty: false,
+      changedFiles: 0,
+      sample: [],
+    };
+  }
+}
+
 function readWorktreeReadiness(projectRoot) {
   return listReadinessReports(projectRoot).slice(0, 8).map((report) => ({
     status: report.status || 'unknown',
@@ -521,7 +545,10 @@ function collectDashboard(options = {}) {
   const cost = safeCostDashboard();
   const coordination = readCoordination(projectRoot);
   const worktrees = readWorktrees(projectRoot);
+  const gitStatus = readGitStatus(projectRoot);
   const worktreeReadiness = readWorktreeReadiness(projectRoot);
+  const pending = readQueueCounts(projectRoot);
+  const problems = readProblems(projectRoot);
 
   const mostRecentTimestamp = [
     ...recentActivity.map((entry) => entry.timestamp),
@@ -530,7 +557,7 @@ function collectDashboard(options = {}) {
     ...fleetSessions.map((session) => session.modifiedAt),
   ].filter(Boolean).sort((left, right) => new Date(right).getTime() - new Date(left).getTime())[0] || now.toISOString();
 
-  return {
+  const snapshot = {
     projectRoot,
     generatedAt: now.toISOString(),
     asOf: relativeTime(mostRecentTimestamp, now),
@@ -542,38 +569,161 @@ function collectDashboard(options = {}) {
     recentActivity,
     hookActivity,
     hookValue,
-    pending: readQueueCounts(projectRoot),
+    pending,
     health: {
       ...health,
       circuitBreakerTripsThisSession: hookValue.circuitBreakerTrips,
     },
     coordination,
     worktrees,
+    gitStatus,
     worktreeReadiness,
-    problems: readProblems(projectRoot),
-    nextAction: chooseNextAction({
-      planningExists,
-      campaigns: campaigns.campaigns,
-      fleetSessions,
-      problems: readProblems(projectRoot),
-      pending: readQueueCounts(projectRoot),
-    }),
+    problems,
   };
+
+  snapshot.repairs = buildRepairItems(snapshot);
+  snapshot.nextAction = chooseNextAction(snapshot);
+  return snapshot;
+}
+
+function action({ label, command, why, confidence = 'medium', repairAvailable = false, runbook = null }) {
+  return { label, command, why, confidence, repairAvailable, runbook };
+}
+
+function buildRepairItems(snapshot) {
+  const repairs = [];
+
+  if (!snapshot.planningExists) {
+    repairs.push(action({
+      label: 'Initialize Citadel state',
+      command: '/do setup',
+      why: '.planning/ is missing, so campaigns, intake, telemetry, and dashboard state cannot be trusted yet.',
+      confidence: 'high',
+      repairAvailable: true,
+      runbook: 'skills/setup/SKILL.md',
+    }));
+    return repairs;
+  }
+
+  const needsCompletion = snapshot.campaigns.find((campaign) => campaign.status === 'needs-completion');
+  if (needsCompletion) {
+    repairs.push(action({
+      label: `Complete ${needsCompletion.slug}`,
+      command: `node scripts/campaign.js complete ${needsCompletion.slug} --archive`,
+      why: 'Every campaign phase is complete, but the campaign status still says active.',
+      confidence: 'high',
+      repairAvailable: true,
+      runbook: 'docs/CAMPAIGNS.md#repair-states',
+    }));
+  }
+
+  const needsArchive = snapshot.campaigns.find((campaign) => campaign.status === 'needs-archive');
+  if (needsArchive) {
+    repairs.push(action({
+      label: `Archive completed campaign ${needsArchive.slug}`,
+      command: `node scripts/campaign.js complete ${needsArchive.slug} --archive`,
+      why: 'The campaign is completed but still lives in the active campaign directory.',
+      confidence: 'high',
+      repairAvailable: true,
+      runbook: 'docs/CAMPAIGNS.md#repair-states',
+    }));
+  }
+
+  const active = snapshot.campaigns.find((campaign) => campaign.status === 'active' || campaign.status === 'needs-continue');
+  if (active) {
+    repairs.push(action({
+      label: `Resume ${active.slug}`,
+      command: '/do continue',
+      why: 'An active campaign is available and should be advanced or deliberately parked.',
+      confidence: 'high',
+      repairAvailable: true,
+      runbook: 'docs/CAMPAIGNS.md#continuation-across-sessions',
+    }));
+  }
+
+  const approval = snapshot.campaigns.find((campaign) => campaign.status.includes('approval') || campaign.status.includes('pending'));
+  if (approval) {
+    repairs.push(action({
+      label: `Review ${approval.slug}`,
+      command: '/do continue',
+      why: 'A campaign is waiting on approval, pending work, or a decision.',
+      confidence: 'medium',
+      repairAvailable: true,
+      runbook: 'docs/CAMPAIGNS.md',
+    }));
+  }
+
+  if (snapshot.pending.mergeReviews > 0) {
+    repairs.push(action({
+      label: 'Review pending Fleet merges',
+      command: '/merge-review',
+      why: `${snapshot.pending.mergeReviews} merge review item(s) are queued.`,
+      confidence: 'high',
+      repairAvailable: true,
+      runbook: 'skills/merge-review/SKILL.md',
+    }));
+  }
+
+  if (snapshot.pending.docSync > 0) {
+    repairs.push(action({
+      label: 'Drain doc-sync queue',
+      command: '/learn',
+      why: `${snapshot.pending.docSync} doc-sync item(s) are queued; project guidance may be stale.`,
+      confidence: snapshot.pending.docSync > 50 ? 'high' : 'medium',
+      repairAvailable: true,
+      runbook: 'skills/learn/SKILL.md',
+    }));
+  }
+
+  if (snapshot.pending.intakeItems > 0) {
+    repairs.push(action({
+      label: 'Process intake queue',
+      command: '/autopilot',
+      why: `${snapshot.pending.intakeItems} real intake item(s) are waiting in .planning/intake/.`,
+      confidence: 'medium',
+      repairAvailable: true,
+      runbook: 'skills/autopilot/SKILL.md',
+    }));
+  }
+
+  if (snapshot.gitStatus && snapshot.gitStatus.dirty) {
+    repairs.push(action({
+      label: 'Review uncommitted worktree changes',
+      command: 'git status --short',
+      why: `${snapshot.gitStatus.changedFiles} uncommitted file(s) are present; package or clear them before starting unrelated work.`,
+      confidence: 'high',
+      repairAvailable: false,
+      runbook: 'docs/CAMPAIGNS.md',
+    }));
+  }
+
+  if (snapshot.problems.length > 0) {
+    repairs.push(action({
+      label: 'Review recent hook problems',
+      command: '/telemetry',
+      why: `${snapshot.problems.length} recent hook problem(s) are recorded. Check whether they are stale, expected, or blocking.`,
+      confidence: 'medium',
+      repairAvailable: true,
+      runbook: 'skills/telemetry/SKILL.md',
+    }));
+  }
+
+  return repairs;
 }
 
 function chooseNextAction(snapshot) {
-  if (!snapshot.planningExists) return 'Run /do setup to initialize Citadel state for this project.';
-  const needsCompletion = snapshot.campaigns.find((campaign) => campaign.status === 'needs-completion');
-  if (needsCompletion) return `Complete ${needsCompletion.slug}: node scripts/campaign.js complete ${needsCompletion.slug} --archive.`;
-  const needsArchive = snapshot.campaigns.find((campaign) => campaign.status === 'needs-archive');
-  if (needsArchive) return `Archive completed campaign ${needsArchive.slug}: node scripts/campaign.js complete ${needsArchive.slug} --archive.`;
-  const active = snapshot.campaigns.find((campaign) => campaign.status === 'active' || campaign.status === 'needs-continue');
-  if (active) return `Resume ${active.slug} with /do continue.`;
-  const approval = snapshot.campaigns.find((campaign) => campaign.status.includes('approval') || campaign.status.includes('pending'));
-  if (approval) return `Review ${approval.slug}; it is waiting on approval or a decision.`;
-  if (snapshot.problems.length > 0) return 'Review recent hook problems before starting new work.';
-  if (snapshot.pending.mergeReviews > 0) return 'Run /merge-review to inspect pending merge work.';
-  return 'No urgent Citadel action detected.';
+  if (!snapshot.repairs || snapshot.repairs.length === 0) {
+    return action({
+      label: 'No urgent Citadel action detected',
+      command: 'npm run dashboard',
+      why: 'Campaigns, queues, worktree status, and recent hook state do not show an immediate repair.',
+      confidence: 'medium',
+      repairAvailable: false,
+      runbook: 'skills/dashboard/SKILL.md',
+    });
+  }
+
+  return snapshot.repairs[0];
 }
 
 function money(value) {
@@ -588,9 +738,27 @@ function renderDashboard(snapshot) {
   lines.push(`Project: ${snapshot.projectRoot}`);
   lines.push('');
   lines.push('NEXT ACTION');
-  lines.push(`  ${snapshot.nextAction}`);
+  lines.push(`  Command: ${snapshot.nextAction.command}`);
+  lines.push(`  Why: ${snapshot.nextAction.why}`);
+  lines.push(`  Confidence: ${snapshot.nextAction.confidence}`);
+  lines.push(`  Repair available: ${snapshot.nextAction.repairAvailable ? 'yes' : 'no'}`);
+  if (snapshot.nextAction.runbook) lines.push(`  Runbook: ${snapshot.nextAction.runbook}`);
   if (!snapshot.planningExists) {
     lines.push('  Run /do setup to initialize.');
+  }
+
+  lines.push('');
+  lines.push('REPAIR CONSOLE');
+  if (!snapshot.repairs || snapshot.repairs.length === 0) {
+    lines.push('  (no repairs queued)');
+  } else {
+    for (const repair of snapshot.repairs.slice(0, 6)) {
+      const repairFlag = repair.repairAvailable ? 'repair' : 'review';
+      lines.push(`  ${repairFlag} | ${repair.confidence} | ${repair.label}`);
+      lines.push(`    command: ${repair.command}`);
+      lines.push(`    why: ${truncate(repair.why, 110)}`);
+      if (repair.runbook) lines.push(`    runbook: ${repair.runbook}`);
+    }
   }
 
   lines.push('');
@@ -617,6 +785,14 @@ function renderDashboard(snapshot) {
   }
   lines.push(`  Active instances: ${snapshot.coordination.instances.length}`);
   lines.push(`  Active claims:    ${snapshot.coordination.claims.length}`);
+  if (snapshot.gitStatus && snapshot.gitStatus.available) {
+    lines.push(`  Git changes:      ${snapshot.gitStatus.changedFiles}`);
+    for (const line of snapshot.gitStatus.sample.slice(0, 3)) {
+      lines.push(`    ${line}`);
+    }
+  } else {
+    lines.push('  Git changes:      unavailable');
+  }
 
   lines.push('');
   lines.push('WORKTREE READINESS');

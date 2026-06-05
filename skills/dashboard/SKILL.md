@@ -127,6 +127,19 @@ Output verbatim, substituting real values. Always show section headers even when
 === Citadel Dashboard ===
 As of: {relative timestamp of most recent event, or "now"}
 
+NEXT ACTION
+  Command: {exact command}
+  Why: {why this is next}
+  Confidence: {low | medium | high}
+  Repair available: {yes | no}
+  Runbook: {docs or skill path}
+
+REPAIR CONSOLE
+  {repair|review} | {confidence} | {label}
+    command: {exact command}
+    why: {short reason}
+    runbook: {docs or skill path}
+
 CAMPAIGNS
   {slug}: Phase {N}/{total} — {direction, max 60 chars, ellipsis if truncated}
   Last event: {most recent telemetry entry for this campaign, or "no telemetry"}
@@ -193,6 +206,8 @@ QUICK COMMANDS
 **Completed campaign still active:** Show the exact `node scripts/campaign.js complete <slug> --archive` repair command; do not tell the user to `/do continue`.
 **All fleet sessions idle:** Note "No active fleet sessions" under FLEET SESSIONS.
 **Mixed state:** Proceed with whatever state exists; note each missing directory inline.
+**Doc-sync backlog:** Surface `/learn` as a repair action with `skills/learn/SKILL.md` as runbook.
+**Dirty worktree:** Surface `git status --short` as a review action; do not suggest destructive cleanup.
 
 ## Contextual Gates
 
@@ -207,6 +222,8 @@ QUICK COMMANDS
 - Never display raw JSON to the user — always parse and format
 - Relative timestamps required — never show raw ISO strings in output
 - Campaign direction truncated to 60 chars with "..." if longer
+- NEXT ACTION must include command, why, confidence, repair availability, and runbook when known
+- REPAIR CONSOLE must list actionable repairs before raw activity logs
 - Total output must be skimmable in under 30 seconds
 
 ## Exit Protocol

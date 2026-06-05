@@ -37,7 +37,10 @@ withTempProject((projectRoot) => {
 
   assert(output.includes('Citadel Dashboard'));
   assert(output.includes('NEXT ACTION'));
-  assert(output.includes('/do setup'));
+  assert.equal(snapshot.nextAction.command, '/do setup');
+  assert.equal(snapshot.nextAction.repairAvailable, true);
+  assert(output.includes('Command: /do setup'));
+  assert(output.includes('REPAIR CONSOLE'));
   assert(output.includes('CAMPAIGNS'));
   assert(output.includes('FLEET SESSIONS'));
   assert(output.includes('HEALTH'));
@@ -75,10 +78,10 @@ withTempProject((projectRoot) => {
   const output = renderDashboard(snapshot);
 
   assert.equal(snapshot.campaigns[0].status, 'needs-completion');
-  assert.equal(
-    snapshot.nextAction,
-    'Complete done-but-active: node scripts/campaign.js complete done-but-active --archive.'
-  );
+  assert.equal(snapshot.nextAction.label, 'Complete done-but-active');
+  assert.equal(snapshot.nextAction.command, 'node scripts/campaign.js complete done-but-active --archive');
+  assert.equal(snapshot.nextAction.confidence, 'high');
+  assert(output.includes('repair | high | Complete done-but-active'));
   assert(output.includes('done-but-active: Phase 2/2 - needs-completion'));
 });
 
@@ -105,11 +108,26 @@ withTempProject((projectRoot) => {
   const output = renderDashboard(snapshot);
 
   assert.equal(snapshot.campaigns[0].status, 'needs-archive');
-  assert.equal(
-    snapshot.nextAction,
-    'Archive completed campaign done-in-active-dir: node scripts/campaign.js complete done-in-active-dir --archive.'
-  );
+  assert.equal(snapshot.nextAction.label, 'Archive completed campaign done-in-active-dir');
+  assert.equal(snapshot.nextAction.command, 'node scripts/campaign.js complete done-in-active-dir --archive');
+  assert(output.includes('repair | high | Archive completed campaign done-in-active-dir'));
   assert(output.includes('done-in-active-dir: Phase 1/1 - needs-archive'));
+});
+
+withTempProject((projectRoot) => {
+  write(path.join(projectRoot, '.planning', 'telemetry', 'doc-sync-queue.jsonl'), [
+    JSON.stringify({ event: 'session-end', status: 'pending' }),
+    JSON.stringify({ event: 'session-end', status: 'pending' }),
+  ].join('\n') + '\n');
+
+  const snapshot = collectDashboard({ projectRoot, now: '2026-06-04T12:00:00.000Z' });
+  const output = renderDashboard(snapshot);
+
+  assert.equal(snapshot.nextAction.label, 'Drain doc-sync queue');
+  assert.equal(snapshot.nextAction.command, '/learn');
+  assert.equal(snapshot.repairs[0].runbook, 'skills/learn/SKILL.md');
+  assert(output.includes('repair | medium | Drain doc-sync queue'));
+  assert(output.includes('why: 2 doc-sync item(s) are queued'));
 });
 
 withTempProject((projectRoot) => {
@@ -184,6 +202,8 @@ withTempProject((projectRoot) => {
 
   assert.equal(snapshot.campaigns.length, 1);
   assert.equal(snapshot.campaigns[0].phase.label, 'Phase 2/3');
+  assert.equal(snapshot.nextAction.label, 'Resume test-campaign');
+  assert.equal(snapshot.nextAction.command, '/do continue');
   assert.equal(snapshot.fleetSessions.length, 1);
   assert.equal(snapshot.worktreeReadiness.length, 1);
   assert(output.includes('test-campaign: Phase 2/3 - active'));
@@ -196,6 +216,8 @@ withTempProject((projectRoot) => {
   assert(output.includes('missing verification evidence'));
   assert(output.includes('HOOK ACTIVITY'));
   assert(output.includes('quality-gate'));
+  assert(output.includes('REPAIR CONSOLE'));
+  assert(output.includes('repair | high | Resume test-campaign'));
   assert(output.includes('Trust level:                        familiar'));
   assert(!output.includes('{"hook"'));
   assert(!output.includes('undefined'));
