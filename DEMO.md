@@ -102,3 +102,6 @@ For a 90-second proof clip, record the core demo in a real terminal or agent win
 7. Show the final report and the `.planning/` evidence.
 
 Keep the recording practical: real repo, real commands, real output.
+
+For the evidence checklist behind this recording, see
+[Operating Loop Proof](docs/OPERATING_LOOP_PROOF.md).

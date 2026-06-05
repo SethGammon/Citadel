@@ -170,6 +170,11 @@ Citadel is not a pitch deck. The repository contains the harness:
 - Installer and verification scripts under [`scripts/`](scripts/), including `scripts/test-all.js`, hook verification, runtime checks, and skill linting.
 - Public docs for [campaigns](docs/CAMPAIGNS.md), [report artifacts](docs/REPORT_ARTIFACTS.md), [fleet coordination](docs/FLEET.md), [hooks](docs/HOOKS.md), [Codex install](docs/CODEX_INSTALLATION_GUIDE.md), and [Claude Code install](docs/CLAUDE_INSTALLATION_GUIDE.md).
 
+The operating proof is the loop: setup in a real repository, inspect the next
+action, route a plain-English task, run the project's safest verification
+command, and leave an artifact another session can read. See the
+[operating loop proof guide](docs/OPERATING_LOOP_PROOF.md) for the checklist.
+
 Run the local verification suite from a Citadel clone:
 
 ```bash
@@ -229,6 +234,7 @@ The priority is reliability over novelty: make the harness easier to install, ea
 
 - [Install](INSTALL.md) - manual setup for Codex and Claude Code
 - [Demo workflow](DEMO.md) - copyable operating-loop demo for a real repo
+- [Operating loop proof](docs/OPERATING_LOOP_PROOF.md) - evidence checklist for demos and PRs
 - [Quickstart](QUICKSTART.md) - first-run paths for both runtimes
 - [Interactive routing demo](https://sethgammon.github.io/Citadel/) - watch the tier cascade animate
 - [Routing preview guide](docs/ROUTING_PREVIEW.md) - compare Skill, Marshal, Archon, and Fleet before heavier work
