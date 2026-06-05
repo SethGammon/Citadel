@@ -231,6 +231,7 @@ The priority is reliability over novelty: make the harness easier to install, ea
 - [Demo workflow](DEMO.md) - copyable operating-loop demo for a real repo
 - [Quickstart](QUICKSTART.md) - first-run paths for both runtimes
 - [Interactive routing demo](https://sethgammon.github.io/Citadel/) - watch the tier cascade animate
+- [Routing preview guide](docs/ROUTING_PREVIEW.md) - compare Skill, Marshal, Archon, and Fleet before heavier work
 - [Skills reference](docs/SKILLS.md) - all built-in skills with invocation and examples
 - [Hooks reference](docs/HOOKS.md) - lifecycle events and enforcement behavior
 - [Campaign guide](docs/CAMPAIGNS.md) - persistent state, phases, and handoffs
