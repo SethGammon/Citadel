@@ -28,7 +28,7 @@ withTempProject((projectRoot) => {
   const dashboard = collectDashboard({ projectRoot, now: '2026-06-05T12:00:00.000Z' });
   const dashboardOutput = renderDashboard(dashboard);
 
-  assert.equal(dashboard.nextAction.command, '/do setup');
+  assert.equal(dashboard.nextAction.command, '/do setup --express');
   assert(!dashboardOutput.includes('undefined'));
   assert(!dashboardOutput.includes('ENOENT'));
 });
@@ -38,14 +38,14 @@ withTempProject((projectRoot) => {
   const consoleOutput = renderConsole(consoleState);
 
   assert.equal(consoleState.status, 'approval-needed');
-  assert.equal(consoleState.summary.command, '/do setup');
+  assert.equal(consoleState.summary.command, '/do setup --express');
   assert.equal(consoleState.summary.boundary, 'project-setup');
   assert.equal(consoleState.summary.risk, 'medium');
   assert.equal(consoleState.summary.canRunNow, false);
   assert.equal(consoleState.summary.approvalCapsulePath.startsWith('.planning/approval-capsules/'), true);
   assert.equal(consoleState.summary.latestApprovalCapsulePath, '.planning/approval-capsules/latest.md');
   assert(fs.existsSync(path.join(projectRoot, '.planning', 'approval-capsules', 'latest.md')));
-  assert(consoleOutput.includes('Approve running `/do setup` for this project.'));
+  assert(consoleOutput.includes('Approve running `/do setup --express` for this project.'));
   assert(consoleOutput.includes('Runbook: skills/setup/SKILL.md'));
   assert(!consoleOutput.includes('undefined'));
   assert(!consoleOutput.includes('ENOENT'));

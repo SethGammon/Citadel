@@ -935,7 +935,7 @@ function buildRepairItems(snapshot) {
   if (!snapshot.planningExists) {
     repairs.push(action({
       label: 'Initialize Citadel state',
-      command: '/do setup',
+      command: '/do setup --express',
       why: '.planning/ is missing, so campaigns, intake, telemetry, and dashboard state cannot be trusted yet.',
       confidence: 'high',
       repairAvailable: true,
@@ -1103,7 +1103,7 @@ function renderDashboard(snapshot) {
   lines.push(`  Repair available: ${snapshot.nextAction.repairAvailable ? 'yes' : 'no'}`);
   if (snapshot.nextAction.runbook) lines.push(`  Runbook: ${snapshot.nextAction.runbook}`);
   if (!snapshot.planningExists) {
-    lines.push('  Run /do setup to initialize.');
+    lines.push('  Run /do setup --express to initialize.');
   }
 
   lines.push('');
