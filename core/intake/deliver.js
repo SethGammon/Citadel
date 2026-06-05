@@ -40,6 +40,51 @@ function readIntakeFile(filePath) {
   };
 }
 
+const PRIORITY_RANK = {
+  urgent: 0,
+  high: 1,
+  normal: 2,
+  medium: 2,
+  low: 3,
+};
+
+function listPendingIntakes(projectRoot) {
+  const intakeDir = path.join(path.resolve(projectRoot || process.cwd()), '.planning', 'intake');
+  if (!fs.existsSync(intakeDir)) return [];
+
+  return fs.readdirSync(intakeDir)
+    .filter((entry) => entry.endsWith('.md') && entry !== '_TEMPLATE.md')
+    .map((entry) => path.join(intakeDir, entry))
+    .map((filePath) => {
+      const intake = readIntakeFile(filePath);
+      const stat = fs.statSync(filePath);
+      return {
+        filePath,
+        title: intake.title,
+        status: intake.status,
+        priority: intake.priority,
+        target: intake.target,
+        modifiedMs: stat.mtimeMs,
+      };
+    })
+    .filter((intake) => intake.status === 'pending')
+    .sort((left, right) => {
+      const leftRank = Object.prototype.hasOwnProperty.call(PRIORITY_RANK, left.priority) ? PRIORITY_RANK[left.priority] : PRIORITY_RANK.normal;
+      const rightRank = Object.prototype.hasOwnProperty.call(PRIORITY_RANK, right.priority) ? PRIORITY_RANK[right.priority] : PRIORITY_RANK.normal;
+      if (leftRank !== rightRank) return leftRank - rightRank;
+      if (right.modifiedMs !== left.modifiedMs) return right.modifiedMs - left.modifiedMs;
+      return left.filePath.localeCompare(right.filePath);
+    });
+}
+
+function resolveNextIntake(projectRoot) {
+  const pending = listPendingIntakes(projectRoot);
+  if (pending.length === 0) {
+    throw new Error('No pending intake items found in .planning/intake/.');
+  }
+  return pending[0].filePath;
+}
+
 function updateIntakeFrontmatter(content, updates) {
   if (!content.startsWith('---')) return content;
   return content.replace(/^---\r?\n([\s\S]*?)\r?\n---/, (_match, body) => {
@@ -191,8 +236,10 @@ function createDeliveryFromIntake(projectRoot, intakePath, options = {}) {
 
 module.exports = {
   createDeliveryFromIntake,
+  listPendingIntakes,
   readIntakeFile,
   renderCampaign,
+  resolveNextIntake,
   slugify,
   updateIntakeFrontmatter,
 };

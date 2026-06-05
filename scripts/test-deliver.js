@@ -6,7 +6,7 @@ const childProcess = require('child_process');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
-const { createDeliveryFromIntake, readIntakeFile, slugify } = require('../core/intake/deliver');
+const { createDeliveryFromIntake, listPendingIntakes, readIntakeFile, resolveNextIntake, slugify } = require('../core/intake/deliver');
 const { generateMapIndex, writeMapIndex, defaultOutputPath } = require('../core/map');
 
 function write(filePath, content) {
@@ -98,6 +98,82 @@ withTempProject((projectRoot) => {
   ], { encoding: 'utf8' });
   assert(output.includes('Delivery campaign created.'));
   assert(output.includes('document-cli'));
+});
+
+withTempProject((projectRoot) => {
+  const lowIntake = path.join(projectRoot, '.planning', 'intake', 'low.md');
+  write(lowIntake, [
+    '---',
+    'title: "Low Priority Docs"',
+    'status: pending',
+    'priority: low',
+    'target: docs/',
+    '---',
+    '',
+    '## Description',
+    'Document later.',
+  ].join('\n'));
+
+  const highIntake = path.join(projectRoot, '.planning', 'intake', 'high.md');
+  write(highIntake, [
+    '---',
+    'title: "High Priority API"',
+    'status: pending',
+    'priority: high',
+    'target: src/api.js',
+    '---',
+    '',
+    '## Description',
+    'Implement now.',
+  ].join('\n'));
+
+  const pending = listPendingIntakes(projectRoot);
+  assert.equal(pending.length, 2);
+  assert.equal(path.basename(pending[0].filePath), 'high.md');
+  assert.equal(resolveNextIntake(projectRoot), highIntake);
+
+  const output = childProcess.execFileSync(process.execPath, [
+    path.join(__dirname, 'deliver.js'),
+    '--project-root',
+    projectRoot,
+    '--next',
+  ], { encoding: 'utf8' });
+  assert(output.includes('Delivery campaign created.'));
+  assert(output.includes('high-priority-api'));
+
+  const updatedHigh = fs.readFileSync(highIntake, 'utf8');
+  assert(updatedHigh.includes('status: in-progress'));
+  assert(fs.readFileSync(lowIntake, 'utf8').includes('status: pending'));
+});
+
+withTempProject((projectRoot) => {
+  const intakePath = path.join(projectRoot, '.planning', 'intake', 'alias.md');
+  write(intakePath, [
+    '---',
+    'title: "Alias Intake"',
+    'status: pending',
+    'priority: normal',
+    '---',
+    '',
+    '## Description',
+    'Prove the intake alias selects the next pending item.',
+  ].join('\n'));
+
+  const output = childProcess.execFileSync(process.execPath, [
+    path.join(__dirname, 'deliver.js'),
+    '--project-root',
+    projectRoot,
+    'intake',
+  ], { encoding: 'utf8' });
+  assert(output.includes('alias-intake'));
+});
+
+withTempProject((projectRoot) => {
+  assert.throws(
+    () => resolveNextIntake(projectRoot),
+    /No pending intake items/,
+    'next intake resolution should fail clearly when queue is empty'
+  );
 });
 
 console.log('delivery preflight tests passed');

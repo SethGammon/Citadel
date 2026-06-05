@@ -131,6 +131,23 @@ Description of what needs to be done...
 The SessionStart hook reports pending items on every new session.
 Process them with `/autopilot` or manually with `/do`.
 
+To convert the highest-priority pending item into an evidence-backed delivery
+campaign:
+
+```bash
+node scripts/deliver.js --next
+```
+
+To convert a specific intake file:
+
+```bash
+node scripts/deliver.js --intake .planning/intake/<item>.md
+```
+
+The preflight creates `.planning/campaigns/<slug>.md`, marks the intake item
+`in-progress`, records claimed scope and acceptance criteria, and seeds the Exit
+Evidence table. Continue with `/do continue`.
+
 ## Repair States
 
 The dashboard reports campaign truth problems with executable repairs:

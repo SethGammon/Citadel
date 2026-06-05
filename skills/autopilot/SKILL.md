@@ -34,6 +34,15 @@ the deterministic delivery preflight before freeform build work:
 node scripts/deliver.js --intake .planning/intake/{item}.md
 ```
 
+If no specific intake file is named, use:
+
+```
+node scripts/deliver.js --next
+```
+
+This selects the highest-priority pending item in `.planning/intake/` and keeps
+the golden path deterministic.
+
 This creates an active campaign with claimed scope, acceptance criteria, map
 context, and exit evidence rows, then marks the intake item `in-progress`.
 Continue from the created campaign with `/do continue`.

@@ -2,7 +2,7 @@
 'use strict';
 
 const path = require('path');
-const { createDeliveryFromIntake } = require('../core/intake/deliver');
+const { createDeliveryFromIntake, resolveNextIntake } = require('../core/intake/deliver');
 
 function parseArgs(argv) {
   const args = {
@@ -11,6 +11,7 @@ function parseArgs(argv) {
     slug: '',
     force: false,
     verification: '',
+    next: false,
     help: false,
   };
 
@@ -18,6 +19,7 @@ function parseArgs(argv) {
     const arg = argv[index];
     if (arg === '--project-root') args.projectRoot = path.resolve(argv[++index] || '.');
     else if (arg === '--intake') args.intake = argv[++index] || '';
+    else if (arg === '--next') args.next = true;
     else if (arg === '--slug') args.slug = argv[++index] || '';
     else if (arg === '--verification') args.verification = argv[++index] || '';
     else if (arg === '--force') args.force = true;
@@ -32,21 +34,27 @@ function usage() {
   return [
     'Usage:',
     '  node scripts/deliver.js --intake .planning/intake/item.md [--verification "npm run test"]',
+    '  node scripts/deliver.js --next',
     '  node scripts/deliver.js .planning/intake/item.md',
+    '  node scripts/deliver.js intake',
     '',
     'Creates an active delivery campaign from a real intake item and marks the intake item in-progress.',
+    '--next selects the highest-priority pending item in .planning/intake/.',
   ].join('\n');
 }
 
 function main() {
   const args = parseArgs(process.argv.slice(2));
-  if (args.help || !args.intake) {
+  if (args.intake === 'intake' || args.intake === 'pending') args.next = true;
+
+  if (args.help || (!args.intake && !args.next)) {
     console.log(usage());
     return;
   }
 
   try {
-    const result = createDeliveryFromIntake(args.projectRoot, args.intake, {
+    const intakePath = args.next ? resolveNextIntake(args.projectRoot) : args.intake;
+    const result = createDeliveryFromIntake(args.projectRoot, intakePath, {
       slug: args.slug,
       force: args.force,
       verification: args.verification || undefined,
