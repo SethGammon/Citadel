@@ -158,11 +158,11 @@ function assessReadiness(projectRoot, options = {}) {
   const root = path.resolve(projectRoot || process.cwd());
   const branch = runGit(root, ['branch', '--show-current']) || 'detached';
   const head = runGit(root, ['rev-parse', '--short', 'HEAD']);
-  const snapshot = collectDashboard({ projectRoot: root });
-  const dashboard = summarizeDashboard(snapshot);
   const verification = options.runVerification
     ? runVerification(root, options.verification)
     : { status: 'not-run', command: options.verification || '', exitCode: null, stdout: '', stderr: '' };
+  const snapshot = collectDashboard({ projectRoot: root });
+  const dashboard = summarizeDashboard(snapshot);
   const prIssue = validatePrUrl(options.pr || '');
 
   const gates = {

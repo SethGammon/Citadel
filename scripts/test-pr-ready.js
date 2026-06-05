@@ -141,4 +141,28 @@ withTempProject((projectRoot) => {
   assert(readiness.blockers.some((blocker) => blocker.includes('doc-sync')));
 });
 
+withTempProject((projectRoot) => {
+  initGit(projectRoot);
+  initPlanning(projectRoot);
+  write(path.join(projectRoot, 'verify.js'), [
+    "const fs = require('fs');",
+    "const path = require('path');",
+    "const queue = path.join(process.cwd(), '.planning', 'telemetry', 'doc-sync-queue.jsonl');",
+    "fs.appendFileSync(queue, `${JSON.stringify({ status: 'pending' })}\\n`, 'utf8');",
+  ].join('\n'));
+  childProcess.execFileSync('git', ['add', '.'], { cwd: projectRoot, stdio: 'ignore' });
+  childProcess.execFileSync('git', ['commit', '-m', 'init'], { cwd: projectRoot, stdio: 'ignore' });
+
+  const readiness = assessReadiness(projectRoot, {
+    pr: 'https://github.com/acme/repo/pull/12',
+    runVerification: true,
+    verification: 'node verify.js',
+  });
+
+  assert.equal(readiness.ready, false);
+  assert.equal(readiness.gates.verification.pass, true);
+  assert.equal(readiness.gates.dashboard.pass, false);
+  assert(readiness.blockers.some((blocker) => blocker.includes('doc-sync')));
+});
+
 console.log('pr readiness tests passed');
