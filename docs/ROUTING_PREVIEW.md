@@ -8,6 +8,12 @@ approval or verification boundary.
 Use this guide when a task could plausibly route to more than one level, such as
 a single skill, Marshal, Archon, or Fleet.
 
+Run it locally with:
+
+```bash
+node scripts/route-preview.js -- "audit the auth module and fix the highest-risk issue"
+```
+
 ## Preview Contract
 
 A useful preview answers:
@@ -50,6 +56,12 @@ Alternatives:
 
 Boundary: can run after worktree review.
 Verify: npm run test, or the project's selected auth/test profile.
+```
+
+The machine-readable version is:
+
+```bash
+node scripts/route-preview.js --json -- "review src/auth.ts"
 ```
 
 ## Proportionality Checks
@@ -97,6 +109,7 @@ Bad stops:
 - `/do next` and `node scripts/operator-console.js` show the next action,
   boundary, risk, and verification profile.
 - The public router demo visualizes tier selection.
+- `node scripts/route-preview.js` provides a local preflight for route choice.
 - PR bodies should describe route choice when a branch adds or changes an
   operator workflow.
-- Future dry-run routing features should follow the preview contract above.
+- Future dry-run routing features should preserve the same preview contract.

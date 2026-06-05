@@ -25,6 +25,7 @@ Use `/do` when the user wants something done but doesn't know (or care) which to
 | `/do status` | Show full harness dashboard (/dashboard) |
 | `/do next` | Run the decision-first operator console for the next useful harness action |
 | `/do operator` | Show the operator console without executing repairs |
+| `/do preview <request>` | Show route, alternatives, boundary, and verification without executing |
 | `/do continue` | Resolve and run the deterministic continuation action |
 | `/do --list` | Show all skills grouped by category with trigger keywords |
 | `/do setup` | First-run experience — configure the harness for this project |
@@ -67,6 +68,7 @@ Regex/keyword on raw input. Catches trivial commands:
 | "status", "dashboard", "what's happening", "what's going on", "show activity" | Show full harness dashboard (/dashboard) |
 | "next", "what should I do next", "fix harness state", "repair harness" | Run `node scripts/operator-console.js --run`; if it stops on a skill route or human-review action, report the boundary, risk, next command, and verification profile |
 | "operator", "operator console", "what's up", "what should happen next", "approval capsule" | Run `node scripts/operator-console.js`; report the decision, boundary, artifact freshness, and verification profile |
+| "preview route", "route preview", "dry run route", "what would /do do" | Run `node scripts/route-preview.js -- "<request>"`; report selected route, alternatives, boundary, and verification profile |
 | "continue" or "keep going" | Run `node scripts/continue-action.js --run`; invoke the returned skill route if it prints `/archon continue` or `/fleet continue` |
 | "setup" | Run `/do setup` first-run experience |
 | "deliver <intake-file>" | Run `node scripts/deliver.js --intake <file>` to create an evidence-backed delivery campaign |
@@ -143,6 +145,7 @@ and any project-level custom skills in `.claude/skills/`.
 | "pr ready", "ready for review", "finalize pr", "approval ready" | `node scripts/pr-ready.js --pr <pull-request-url> --run-verification` after the branch is pushed |
 | "next", "what should I do next", "repair harness", "fix harness state" | `node scripts/operator-console.js --run`; auto-runs deterministic local repairs and stops at skill/human routes with a console report |
 | "operator", "operator console", "what's up", "what should happen next", "approval capsule" | `node scripts/operator-console.js`; inspect-only decision cockpit |
+| "preview route", "route preview", "dry run route", "what would /do do" | `node scripts/route-preview.js -- "<request>"`; route preflight without execution |
 | "setup", "first run", "configure harness" | `/setup` |
 | "research", "investigate", "look into", "find out" | `/research` |
 | "experiment", "optimize", "try", "A/B", "measure" | `/experiment` |
