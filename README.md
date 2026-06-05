@@ -169,6 +169,7 @@ Citadel is not a pitch deck. The repository contains the harness:
 - Runtime adapters for Claude Code and Codex under [`runtimes/`](runtimes/) plus package surfaces under [`packages/`](packages/).
 - Installer and verification scripts under [`scripts/`](scripts/), including `scripts/test-all.js`, hook verification, runtime checks, and skill linting.
 - Public docs for [campaigns](docs/CAMPAIGNS.md), [fleet coordination](docs/FLEET.md), [hooks](docs/HOOKS.md), [Codex install](docs/CODEX_INSTALLATION_GUIDE.md), and [Claude Code install](docs/CLAUDE_INSTALLATION_GUIDE.md).
+- Trust-boundary docs in [SECURITY.md](SECURITY.md) and [THREAT_MODEL.md](THREAT_MODEL.md), covering local automation risk, generated state, hooks, approval gates, and public-artifact review.
 
 Run the local verification suite from a Citadel clone:
 
