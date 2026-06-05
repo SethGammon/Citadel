@@ -7,6 +7,15 @@ is that a later session can inspect what happened and continue from evidence.
 Use this checklist when recording a demo, reviewing a PR, or deciding whether a
 new workflow belongs in Citadel.
 
+Run the local proof preflight with:
+
+```bash
+node scripts/operating-proof.js --write
+```
+
+Use `--run-verification` when you want the proof to execute the selected
+verification command instead of only reporting it.
+
 ## The Loop
 
 | Step | Command or surface | Evidence to inspect | What it proves |
@@ -50,6 +59,8 @@ A short public proof clip should show this sequence:
 
 Then show one concrete artifact: a `.planning/` report, a PR body with
 verification, or a final handoff that names the files and commands involved.
+
+For a command-generated artifact, use `.planning/operating-proof/latest.md`.
 
 If cost telemetry is unavailable in the current runtime, show that message. The
 point is visibility, not pretending every adapter has the same data.

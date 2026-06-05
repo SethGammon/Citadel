@@ -19,6 +19,7 @@
     "next": "node scripts/next-action.js",
     "operator": "node scripts/operator-console.js",
     "operator:summary": "node scripts/operator-console.js --summary",
+    "operating:proof": "node scripts/operating-proof.js",
     "route:preview": "node scripts/route-preview.js",
     "stack:plan": "node scripts/stack-plan.js",
     "stack:plan:json": "node scripts/stack-plan.js --json",
