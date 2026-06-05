@@ -8,6 +8,7 @@ const { execFileSync } = require('child_process');
 
 const { parseCampaignContent } = require('../core/campaigns/parse-campaign');
 const { isPhaseComplete } = require('../core/campaigns/update-campaign');
+const { validateExitEvidence } = require('../core/evidence/contracts');
 const { readJsonlDetailed } = require('../core/telemetry/io');
 const { getCoordinationStatus } = require('../core/coordination/instances');
 const { getClaimStatus } = require('../core/coordination/claims');
@@ -195,6 +196,40 @@ function lastDecision(content) {
   return decisions.length > 0 ? decisions[decisions.length - 1].replace(/^- /, '') : null;
 }
 
+function packagePhaseReadiness(parsed) {
+  const phases = parsed.phases || [];
+  const packagePhase = phases.find((phase) => {
+    return String(phase.type || '').toLowerCase() === 'package' ||
+      /package|review/i.test(String(phase.name || ''));
+  });
+  if (!packagePhase) return { hasPackagePhase: false, readyForPackage: false };
+
+  const prior = phases.filter((phase) => phase.number < packagePhase.number);
+  return {
+    hasPackagePhase: true,
+    phaseNumber: packagePhase.number,
+    status: packagePhase.status,
+    readyForPackage: !isPhaseComplete(packagePhase) && prior.every(isPhaseComplete),
+  };
+}
+
+function reviewPackageEvidenceStatus(content, projectRoot) {
+  const report = validateExitEvidence(content, {
+    projectRoot,
+    target: 'review-package',
+  });
+  if (report.missingDeclarations) return null;
+
+  const failure = report.failures[0] || null;
+  const item = report.items[0] || null;
+  return {
+    pass: report.pass && !report.missingDeclarations,
+    item,
+    failure,
+    issues: failure ? failure.issues : [],
+  };
+}
+
 function readCampaigns(projectRoot) {
   const campaignDir = path.join(projectRoot, '.planning', 'campaigns');
   const files = listFiles(campaignDir, (entry) => entry.endsWith('.md'));
@@ -209,6 +244,15 @@ function readCampaigns(projectRoot) {
       const parsed = parseCampaignContent(content, { slug });
       const direction = extractDirection(content);
       let status = normalizeStatus(parsed);
+      const packagePhase = packagePhaseReadiness(parsed);
+      const reviewPackageEvidence = reviewPackageEvidenceStatus(content, projectRoot);
+      if (
+        reviewPackageEvidence &&
+        !reviewPackageEvidence.pass &&
+        (packagePhase.readyForPackage || status === 'needs-completion')
+      ) {
+        status = 'needs-review-package';
+      }
       if (status === 'completed' && path.dirname(filePath) === campaignDir) {
         status = 'needs-archive';
       }
@@ -218,6 +262,8 @@ function readCampaigns(projectRoot) {
         status,
         direction,
         phase: phaseSummary(parsed),
+        packagePhase,
+        reviewPackageEvidence,
         lastDecision: lastDecision(content),
         modifiedAt: fs.statSync(filePath).mtime.toISOString(),
       });
@@ -229,6 +275,7 @@ function readCampaigns(projectRoot) {
   campaigns.sort((left, right) => {
     const rank = (status) => {
       if (status === 'active') return 0;
+      if (status === 'needs-review-package') return 1;
       if (status === 'needs-completion') return 1;
       if (status === 'needs-archive') return 1;
       if (status.includes('approval') || status.includes('pending') || status === 'needs-continue') return 1;
@@ -733,6 +780,25 @@ function buildRepairItems(snapshot) {
   }
 
   const needsCompletion = snapshot.campaigns.find((campaign) => campaign.status === 'needs-completion');
+  const needsReviewPackage = snapshot.campaigns.find((campaign) => {
+    if (!campaign.reviewPackageEvidence || campaign.reviewPackageEvidence.pass) return false;
+    if (campaign.packagePhase && campaign.packagePhase.readyForPackage) return true;
+    return campaign.status === 'needs-review-package' || campaign.status === 'needs-completion';
+  });
+  if (needsReviewPackage) {
+    const issues = needsReviewPackage.reviewPackageEvidence.issues || [];
+    repairs.push(action({
+      label: `Package ${needsReviewPackage.slug} for review`,
+      command: `node scripts/package-delivery.js ${needsReviewPackage.slug}`,
+      why: issues.length > 0
+        ? `The campaign review-package evidence is not ready: ${issues.join('; ')}.`
+        : 'The campaign is ready for review packaging, but review-package evidence is still pending.',
+      confidence: 'high',
+      repairAvailable: true,
+      runbook: 'docs/CAMPAIGNS.md#intake-items',
+    }));
+  }
+
   if (needsCompletion) {
     repairs.push(action({
       label: `Complete ${needsCompletion.slug}`,

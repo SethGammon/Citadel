@@ -62,6 +62,10 @@ exist, treat it as empty. Never crash on missing state.
   `node scripts/campaign.js complete <slug> --archive`
 - If a campaign is marked completed but still lives in `.planning/campaigns/`,
   report `needs-archive` and show the same archive command.
+- If prior build/verify phases are complete but the `review-package` Exit
+  Evidence row is still pending, missing, or points at a missing local package,
+  report a repair before campaign completion:
+  `node scripts/package-delivery.js <slug>`
 
 **Cost Data (two sources, prefer real):**
 
@@ -233,6 +237,7 @@ QUICK COMMANDS
 **Missing timestamps:** Fall back to file modification time; display entry without timestamp if unavailable.
 **All campaigns completed:** Note "No active campaigns" at top of CAMPAIGNS section.
 **Completed campaign still active:** Show the exact `node scripts/campaign.js complete <slug> --archive` repair command; do not tell the user to `/do continue`.
+**Campaign ready for review package:** Show the exact `node scripts/package-delivery.js <slug>` repair command before showing campaign completion.
 **All fleet sessions idle:** Note "No active fleet sessions" under FLEET SESSIONS.
 **Mixed state:** Proceed with whatever state exists; note each missing directory inline.
 **Doc-sync backlog:** Surface `/learn --doc-sync` as a repair action with `skills/learn/SKILL.md` as runbook.

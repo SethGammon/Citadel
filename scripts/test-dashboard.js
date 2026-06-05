@@ -167,6 +167,116 @@ withTempProject((projectRoot) => {
 });
 
 withTempProject((projectRoot) => {
+  write(path.join(projectRoot, '.planning', 'campaigns', 'ready-for-package.md'), [
+    '---',
+    'status: active',
+    '---',
+    '',
+    '# Campaign: Ready For Package',
+    '',
+    'Direction: Prove review package repair appears.',
+    '',
+    'Status: active',
+    '',
+    '## Phases',
+    '',
+    '| # | Status | Type | Phase | Done When |',
+    '|---|--------|------|-------|-----------|',
+    '| 1 | complete | brief | Intake preflight | done |',
+    '| 2 | complete | build | Build | done |',
+    '| 3 | complete | verify | Verify | tests pass |',
+    '| 4 | pending | package | Package for review | review package exists |',
+    '',
+    '## Exit Evidence',
+    '',
+    '| Target | ID | Type | Required | Evidence | Status | Retries Remaining | Next Action |',
+    '|---|---|---|---|---|---|---|---|',
+    '| phase:2 | implementation-diff | file_diff | yes | git diff --stat | resolved | 2 | implement requested change |',
+    '| phase:3 | verification-command | test_result | yes | npm run test | pass | 2 | fix verification failures |',
+    '| phase:4 | review-package | review_package | yes | .planning/review-packages/ready-for-package.md | pending | 2 | package delivery for review |',
+  ].join('\n'));
+
+  const snapshot = collectDashboard({ projectRoot, now: '2026-06-04T12:00:00.000Z' });
+  const output = renderDashboard(snapshot);
+
+  assert.equal(snapshot.campaigns[0].status, 'needs-review-package');
+  assert.equal(snapshot.nextAction.label, 'Package ready-for-package for review');
+  assert.equal(snapshot.nextAction.command, 'node scripts/package-delivery.js ready-for-package');
+  assert.equal(snapshot.nextAction.confidence, 'high');
+  assert(output.includes('repair | high | Package ready-for-package for review'));
+  assert(output.includes('campaign review-package evidence is not ready'));
+});
+
+withTempProject((projectRoot) => {
+  write(path.join(projectRoot, '.planning', 'campaigns', 'not-ready-for-package.md'), [
+    '---',
+    'status: active',
+    '---',
+    '',
+    '# Campaign: Not Ready For Package',
+    '',
+    'Direction: Prove package repair waits for prior phases.',
+    '',
+    'Status: active',
+    '',
+    '## Phases',
+    '',
+    '| # | Status | Type | Phase | Done When |',
+    '|---|--------|------|-------|-----------|',
+    '| 1 | complete | brief | Intake preflight | done |',
+    '| 2 | pending | build | Build | done |',
+    '| 3 | pending | verify | Verify | tests pass |',
+    '| 4 | pending | package | Package for review | review package exists |',
+    '',
+    '## Exit Evidence',
+    '',
+    '| Target | ID | Type | Required | Evidence | Status | Retries Remaining | Next Action |',
+    '|---|---|---|---|---|---|---|---|',
+    '| phase:4 | review-package | review_package | yes | .planning/review-packages/not-ready-for-package.md | pending | 2 | package delivery for review |',
+  ].join('\n'));
+
+  const snapshot = collectDashboard({ projectRoot, now: '2026-06-04T12:00:00.000Z' });
+
+  assert.equal(snapshot.nextAction.label, 'Resume not-ready-for-package');
+  assert.equal(snapshot.nextAction.command, '/do continue');
+  assert(!snapshot.repairs.some((repair) => repair.command === 'node scripts/package-delivery.js not-ready-for-package'));
+});
+
+withTempProject((projectRoot) => {
+  write(path.join(projectRoot, '.planning', 'campaigns', 'complete-but-unpackaged.md'), [
+    '---',
+    'status: active',
+    '---',
+    '',
+    '# Campaign: Complete But Unpackaged',
+    '',
+    'Direction: Prove packaging outranks completion.',
+    '',
+    'Status: active',
+    '',
+    '## Phases',
+    '',
+    '| # | Status | Type | Phase | Done When |',
+    '|---|--------|------|-------|-----------|',
+    '| 1 | complete | build | Build | done |',
+    '| 2 | complete | verify | Verify | tests pass |',
+    '| 3 | complete | package | Package for review | review package exists |',
+    '',
+    '## Exit Evidence',
+    '',
+    '| Target | ID | Type | Required | Evidence | Status | Retries Remaining | Next Action |',
+    '|---|---|---|---|---|---|---|---|',
+    '| phase:3 | review-package | review_package | yes | .planning/review-packages/complete-but-unpackaged.md | pending | 2 | package delivery for review |',
+  ].join('\n'));
+
+  const snapshot = collectDashboard({ projectRoot, now: '2026-06-04T12:00:00.000Z' });
+
+  assert.equal(snapshot.campaigns[0].status, 'needs-review-package');
+  assert.equal(snapshot.nextAction.label, 'Package complete-but-unpackaged for review');
+  assert(!snapshot.repairs.some((repair) => repair.label === 'Complete complete-but-unpackaged'));
+});
+
+withTempProject((projectRoot) => {
   write(path.join(projectRoot, '.planning', 'telemetry', 'doc-sync-queue.jsonl'), [
     JSON.stringify({ event: 'session-end', status: 'pending' }),
     JSON.stringify({ event: 'session-end', status: 'pending' }),

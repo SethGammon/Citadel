@@ -170,6 +170,7 @@ The dashboard reports campaign truth problems with executable repairs:
 
 | Status | Meaning | Repair |
 |---|---|---|
+| `needs-review-package` | Build and verification phases are ready, but review package evidence is still pending or invalid | `node scripts/package-delivery.js <slug>` |
 | `needs-completion` | All phases are complete, but campaign status is still active | `node scripts/campaign.js complete <slug> --archive` |
 | `needs-archive` | Campaign status is completed, but the file is still in `.planning/campaigns/` | `node scripts/campaign.js complete <slug> --archive` |
 
