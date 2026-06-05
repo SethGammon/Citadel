@@ -435,6 +435,16 @@ function renderApprovalCapsule(capsule) {
   lines.push('Verification Plan');
   for (const item of capsule.verification) lines.push(`  - ${item}`);
 
+  if (Array.isArray(capsule.postApprovalRunbook) && capsule.postApprovalRunbook.length > 0) {
+    lines.push('');
+    lines.push('Post-Approval Landing Runbook');
+    for (const [index, item] of capsule.postApprovalRunbook.entries()) {
+      lines.push(`  ${index + 1}. ${item.step}`);
+      lines.push(`     Gate: ${item.gate}`);
+      lines.push(`     Action: ${item.action}`);
+    }
+  }
+
   lines.push('');
   lines.push('---HANDOFF---');
   lines.push(`- Approval requested: ${capsule.action.command}`);

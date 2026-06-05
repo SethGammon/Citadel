@@ -202,6 +202,48 @@ function buildNextAction(status, ordered) {
   };
 }
 
+function buildPostApprovalRunbook(status, ordered) {
+  if (status === 'no-stack') {
+    return [
+      {
+        step: 'Generate PR readiness reports',
+        gate: 'At least one report exists in .planning/pr-readiness.',
+        action: 'Run node scripts/pr-ready.js --pr <pull-request-url> --run-verification for each PR.',
+      },
+    ];
+  }
+  if (status === 'blocked') {
+    return [
+      {
+        step: 'Refresh blocked readiness reports',
+        gate: 'Every report status is ready and every readiness gate passes.',
+        action: 'Fix the blocked PRs, then rerun node scripts/pr-ready.js --pr <pull-request-url> --run-verification.',
+      },
+    ];
+  }
+  const steps = [
+    {
+      step: 'Reconfirm stack state',
+      gate: 'npm run stack:plan reports approval-needed with zero blocked items.',
+      action: 'Read .planning/stack-readiness/latest.md and .planning/approval-capsules/latest.md.',
+    },
+  ];
+  for (const [index, report] of ordered.entries()) {
+    const label = report.pr || report.branch;
+    steps.push({
+      step: `Land ${index + 1}: ${label}`,
+      gate: `Readiness report ${report.path} is ready and branch head is ${report.currentHead || report.head || 'current'}.`,
+      action: 'Mark ready or merge only after the prior PR in this stack has landed cleanly.',
+    });
+  }
+  steps.push({
+    step: 'Verify landed main',
+    gate: 'Main contains the final stack head and the selected verification command passes.',
+    action: 'Run npm run test, then run npm run stack:plan to confirm no stale readiness remains.',
+  });
+  return steps;
+}
+
 function buildStackApprovalCapsule(projectRoot, stack) {
   if (stack.status !== 'approval-needed') return null;
   return {
@@ -236,6 +278,7 @@ function buildStackApprovalCapsule(projectRoot, stack) {
       'Confirm each listed PR readiness report is current and has no blocked gates.',
       'After approval, mark or merge PRs in the listed order only.',
     ],
+    postApprovalRunbook: stack.postApprovalRunbook,
   };
 }
 
@@ -256,6 +299,7 @@ function assessStack(projectRoot, options = {}) {
     blocked,
     nextAction: buildNextAction(status, ordered),
   };
+  stack.postApprovalRunbook = buildPostApprovalRunbook(status, ordered);
   stack.approvalCapsule = buildStackApprovalCapsule(root, stack);
   if (stack.approvalCapsule && options.writeReport !== false && options.writeApprovalCapsule !== false) {
     writeApprovalCapsule(root, stack.approvalCapsule);
@@ -317,6 +361,14 @@ function renderStackPlan(stack) {
   }
 
   lines.push('');
+  lines.push('Post-Approval Landing Runbook');
+  for (const [index, item] of stack.postApprovalRunbook.entries()) {
+    lines.push(`  ${index + 1}. ${item.step}`);
+    lines.push(`     Gate: ${item.gate}`);
+    lines.push(`     Action: ${item.action}`);
+  }
+
+  lines.push('');
   lines.push('---HANDOFF---');
   lines.push(`- Status: ${stack.status}`);
   lines.push(`- PRs: ${stack.reports.length}`);
@@ -358,6 +410,7 @@ module.exports = {
   annotateCurrentHeads,
   buildStackApprovalCapsule,
   buildNextAction,
+  buildPostApprovalRunbook,
   orderReports,
   parseArgs,
   parseReadinessReport,
