@@ -418,6 +418,14 @@ function renderApprovalCapsule(capsule) {
       lines.push(`    - ${campaign.slug}: ${campaign.status}${campaign.phase ? ` (${campaign.phase})` : ''}`);
     }
   }
+  if (Array.isArray(capsule.context.stack) && capsule.context.stack.length > 0) {
+    lines.push('  Stack:');
+    for (const [index, item] of capsule.context.stack.entries()) {
+      lines.push(`    ${index + 1}. ${item.pr || item.branch} (${item.branch})`);
+      lines.push(`       head=${item.head || '(unknown)'}, current=${item.currentHead || '(unknown)'}, readiness=${item.readiness || '(unknown)'}`);
+      if (item.report) lines.push(`       report=${item.report}`);
+    }
+  }
 
   lines.push('');
   lines.push('Verification Plan');

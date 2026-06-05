@@ -11,6 +11,7 @@ const {
   writeApprovalCapsule,
   writeReport: writeNextReport,
 } = require('./next-action');
+const { assessStack } = require('./stack-plan');
 const { selectVerificationProfile } = require('../core/verification/profiles');
 
 function parseArgs(argv) {
@@ -144,6 +145,71 @@ function boundaryForDecision(decision) {
   };
 }
 
+function boundaryForStack(stack) {
+  if (stack.status === 'blocked') {
+    return {
+      kind: 'stack-readiness-blocked',
+      risk: 'medium',
+      request: 'Resolve blocked PR readiness reports before requesting stack approval.',
+      verification: [
+        'Run `npm run stack:plan` and confirm blocked PR readiness reports are identified.',
+        'Rerun `node scripts/pr-ready.js --pr <pull-request-url> --run-verification` for each blocked PR.',
+      ],
+    };
+  }
+  return {
+    kind: 'stack-approval',
+    risk: 'medium-high',
+    request: `Approve landing stack in order: ${stack.nextAction.command}`,
+    verification: [
+      'Run `npm run stack:plan` and confirm the landing order matches the intended stack.',
+      'Confirm each listed PR readiness report is current before marking drafts ready or merging.',
+    ],
+  };
+}
+
+function applyStackDecision(consoleState, stack) {
+  consoleState.stack = stack ? {
+    status: stack.status,
+    ready: stack.ready,
+    prCount: stack.reports.length,
+    blockedCount: stack.blocked.length,
+    nextAction: stack.nextAction,
+    reportPath: stack.reportPath,
+    approvalCapsulePath: stack.approvalCapsule?.path || null,
+    latestApprovalCapsulePath: stack.approvalCapsule?.latestPath || null,
+    reports: stack.reports.map((report) => ({
+      branch: report.branch,
+      pr: report.pr,
+      head: report.head,
+      currentHead: report.currentHead || null,
+      status: report.status,
+      path: report.path,
+    })),
+  } : null;
+
+  if (
+    consoleState.mode !== 'run' &&
+    consoleState.status === 'idle' &&
+    stack &&
+    stack.reports.length > 0 &&
+    (stack.status === 'approval-needed' || stack.status === 'blocked')
+  ) {
+    consoleState.status = stack.status === 'blocked' ? 'needs-review' : 'approval-needed';
+    consoleState.nextAction = {
+      label: stack.nextAction.label,
+      command: stack.nextAction.command,
+      why: stack.nextAction.why,
+      confidence: 'high',
+      runbook: 'docs/CAMPAIGNS.md',
+      canRunNow: false,
+    };
+    consoleState.boundary = boundaryForStack(stack);
+  }
+
+  return consoleState;
+}
+
 function compactConsoleSummary(consoleState) {
   const artifacts = consoleState.dashboard.artifacts;
   const staleArtifacts = [
@@ -169,6 +235,12 @@ function compactConsoleSummary(consoleState) {
     artifactsStale: staleArtifacts.length,
     artifactsNeedAttention: staleArtifacts.length - historicalStaleArtifacts.length,
     historicalArtifactsStale: historicalStaleArtifacts.length,
+    stackStatus: consoleState.stack?.status || 'unknown',
+    stackPrs: consoleState.stack?.prCount || 0,
+    stackBlocked: consoleState.stack?.blockedCount || 0,
+    stackReportPath: consoleState.stack?.reportPath || null,
+    stackApprovalCapsulePath: consoleState.stack?.approvalCapsulePath || null,
+    latestStackApprovalCapsulePath: consoleState.stack?.latestApprovalCapsulePath || null,
     verificationProfile: consoleState.verificationProfile.id,
     primaryVerification: consoleState.verificationProfile.primaryCommand,
     reportPath: consoleState.reportPath || null,
@@ -199,6 +271,7 @@ function buildConsole(projectRoot, options = {}) {
   decision.reportPath = writeNextReport(root, decision);
 
   const snapshot = collectDashboard({ projectRoot: root });
+  const stack = assessStack(root);
   const verificationProfile = selectVerificationProfile(root);
   const finalAction = decision.final?.nextAction || decision.initial?.nextAction || {};
   const canRunNow = Boolean(localRepairFor(finalAction)) && !options.run;
@@ -220,6 +293,7 @@ function buildConsole(projectRoot, options = {}) {
     verificationProfile,
     decision,
   };
+  applyStackDecision(consoleState, stack);
   consoleState.reportPath = writeConsoleReport(root, consoleState);
   consoleState.summary = compactConsoleSummary(consoleState);
   return consoleState;
@@ -243,6 +317,7 @@ function renderConsole(consoleState) {
   const campaigns = consoleState.dashboard.campaigns;
   const fleet = consoleState.dashboard.fleet;
   const problems = consoleState.dashboard.problems;
+  const stack = consoleState.stack || { status: 'unknown', prCount: 0, blockedCount: 0 };
   const profile = consoleState.verificationProfile;
 
   const lines = [
@@ -271,6 +346,7 @@ function renderConsole(consoleState) {
     `  Git: ${git.available ? (git.dirty ? `${git.changedFiles} changed file(s)` : 'clean') : 'unavailable'}`,
     `  Campaigns: active=${campaigns.active}, package=${campaigns.needsReviewPackage}, complete=${campaigns.needsCompletion}, archive=${campaigns.needsArchive}`,
     `  Fleet: active=${fleet.active}, visible=${fleet.totalVisible}`,
+    `  Stack: status=${stack.status}, prs=${stack.prCount}, blocked=${stack.blockedCount}`,
     `  Problems: actionable=${problems.actionable}, safetyBlocks=${problems.safetyBlocks}, stale=${problems.stale}`,
     '',
     'Artifacts',
@@ -312,6 +388,12 @@ function renderConsole(consoleState) {
   if (consoleState.decision.approvalCapsule) {
     lines.push(`  Approval capsule: ${consoleState.decision.approvalCapsule.path || '(pending)'}`);
   }
+  if (consoleState.stack?.reportPath) {
+    lines.push(`  Stack plan: ${consoleState.stack.reportPath}`);
+  }
+  if (consoleState.stack?.approvalCapsulePath) {
+    lines.push(`  Stack approval capsule: ${consoleState.stack.approvalCapsulePath}`);
+  }
 
   lines.push('');
   lines.push('---HANDOFF---');
@@ -352,8 +434,10 @@ if (require.main === module) main();
 
 module.exports = {
   boundaryForDecision,
+  boundaryForStack,
   buildConsole,
   compactConsoleSummary,
+  applyStackDecision,
   parseArgs,
   renderConsole,
   summarizeDashboard,

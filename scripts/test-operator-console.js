@@ -7,7 +7,7 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 
-const { buildConsole, renderConsole } = require('./operator-console');
+const { applyStackDecision, buildConsole, renderConsole } = require('./operator-console');
 
 function write(filePath, content) {
   fs.mkdirSync(path.dirname(filePath), { recursive: true });
@@ -21,6 +21,27 @@ function withTempProject(run) {
   } finally {
     fs.rmSync(dir, { recursive: true, force: true });
   }
+}
+
+function readinessReport({ branch, head, pr, generated }) {
+  return [
+    `# PR Readiness: ${branch}`,
+    '',
+    `Generated: ${generated}`,
+    'Status: ready',
+    `PR: ${pr}`,
+    `Branch: ${branch}`,
+    `Head: ${head}`,
+    '',
+    '## Gates',
+    '',
+    '| Gate | Status | Detail |',
+    '|---|---|---|',
+    `| Pull request URL | pass | ${pr} |`,
+    '| Git worktree | pass | clean |',
+    '| Dashboard repairs | pass | no queued repairs |',
+    '| Verification | pass | npm run test exited 0 |',
+  ].join('\n');
 }
 
 withTempProject((projectRoot) => {
@@ -117,6 +138,77 @@ withTempProject((projectRoot) => {
   assert(output.includes('Risk: medium'));
   assert(output.includes('Boundary checks:'));
 });
+
+withTempProject((projectRoot) => {
+  write(path.join(projectRoot, '.planning', 'pr-readiness', 'base.md'), readinessReport({
+    branch: 'codex/base',
+    head: 'a111111',
+    pr: 'https://github.com/SethGammon/Citadel/pull/1',
+    generated: '2026-06-05T12:01:00.000Z',
+  }));
+  write(path.join(projectRoot, '.planning', 'pr-readiness', 'top.md'), readinessReport({
+    branch: 'codex/top',
+    head: 'b222222',
+    pr: 'https://github.com/SethGammon/Citadel/pull/2',
+    generated: '2026-06-05T12:02:00.000Z',
+  }));
+
+  const consoleState = buildConsole(projectRoot, { run: false });
+  const output = renderConsole(consoleState);
+
+  assert.equal(consoleState.status, 'approval-needed');
+  assert.equal(consoleState.nextAction.label, 'Approve stack landing order');
+  assert(consoleState.nextAction.command.includes('/pull/1 -> https://github.com/SethGammon/Citadel/pull/2'));
+  assert.equal(consoleState.boundary.kind, 'stack-approval');
+  assert.equal(consoleState.boundary.risk, 'medium-high');
+  assert.equal(consoleState.summary.stackStatus, 'approval-needed');
+  assert.equal(consoleState.summary.stackPrs, 2);
+  assert.equal(consoleState.summary.stackBlocked, 0);
+  assert.equal(consoleState.summary.stackReportPath, '.planning/stack-readiness/latest.md');
+  assert(consoleState.summary.stackApprovalCapsulePath.startsWith('.planning/approval-capsules/'));
+  assert.equal(consoleState.summary.latestStackApprovalCapsulePath, '.planning/approval-capsules/latest.md');
+  assert(fs.existsSync(path.join(projectRoot, '.planning', 'stack-readiness', 'latest.md')));
+  assert(fs.existsSync(path.join(projectRoot, '.planning', 'approval-capsules', 'latest.md')));
+  assert(output.includes('Stack: status=approval-needed, prs=2, blocked=0'));
+  assert(output.includes('Kind: stack-approval'));
+  assert(output.includes('Stack approval capsule: .planning/approval-capsules/'));
+});
+
+{
+  const consoleState = applyStackDecision({
+    mode: 'inspect',
+    status: 'idle',
+    nextAction: { label: 'No urgent Citadel action detected', command: 'npm run dashboard', canRunNow: false },
+    boundary: { kind: 'none', risk: 'low', request: 'No approval required.', verification: [] },
+  }, {
+    status: 'blocked',
+    ready: false,
+    reportPath: '.planning/stack-readiness/latest.md',
+    nextAction: {
+      label: 'Resolve blocked PR readiness report',
+      command: 'node scripts/pr-ready.js --pr <pull-request-url> --run-verification',
+      canRunNow: false,
+      why: 'At least one PR readiness report is blocked or missing a passing gate.',
+    },
+    reports: [{
+      branch: 'codex/stale',
+      pr: 'https://github.com/SethGammon/Citadel/pull/7',
+      head: '0000000',
+      currentHead: '1111111',
+      status: 'ready',
+      path: '.planning/pr-readiness/codex-stale.md',
+    }],
+    blocked: [{ reasons: ['readiness head 0000000 does not match current branch head 1111111'] }],
+  });
+
+  assert.equal(consoleState.status, 'needs-review');
+  assert.equal(consoleState.nextAction.label, 'Resolve blocked PR readiness report');
+  assert.equal(consoleState.boundary.kind, 'stack-readiness-blocked');
+  assert.equal(consoleState.boundary.risk, 'medium');
+  assert.equal(consoleState.stack.status, 'blocked');
+  assert.equal(consoleState.stack.blockedCount, 1);
+  assert.equal(consoleState.stack.reports[0].currentHead, '1111111');
+}
 
 withTempProject((projectRoot) => {
   write(path.join(projectRoot, '.planning', 'approval-capsules', 'latest.md'), [

@@ -247,6 +247,26 @@ unless the PR URL is valid, the worktree is clean, dashboard repairs are clear,
 and the verification command exits successfully. Use `--verification "<command>"`
 to override the selected primary command.
 
+When multiple stacked PRs have readiness reports, generate the landing order:
+
+```bash
+npm run stack:plan
+```
+
+The stack plan reads `.planning/pr-readiness/*.md`, orders ready PRs by local git
+ancestry, writes `.planning/stack-readiness/latest.md`, and stops at a human
+approval boundary. It never marks drafts ready, merges PRs, or pushes branches.
+Use `npm run stack:plan:json` for the same decision contract as JSON.
+When the stack is ready, it also writes an approval capsule under
+`.planning/approval-capsules/` so the merge request has the same paper trail as
+other human-boundary operator actions.
+If a local or remote branch ref has moved since its PR readiness report was
+generated, the stack plan blocks approval until the PR finalizer is rerun for
+that branch.
+The operator console also reads this stack state: when local repairs are clear
+and every visible PR readiness report is ready, the console promotes stack
+approval as the next action instead of reporting an idle project.
+
 Citadel selects a verification profile from changed paths when no explicit
 verification command is supplied. Inspect the selected profile with:
 
