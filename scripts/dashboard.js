@@ -435,22 +435,141 @@ function readHealth(projectRoot) {
   };
 }
 
-function readProblems(projectRoot) {
+function extractBlockedCommand(detail) {
+  const text = String(detail || '');
+  const match = text.match(/^[^:]+:\s+(.+)$/);
+  return (match ? match[1] : text).trim();
+}
+
+function normalizeCommandForMatch(command) {
+  return String(command || '')
+    .replace(/\s+/g, ' ')
+    .replace(/^git push -u /, 'git push ')
+    .trim();
+}
+
+function hasLaterMatchingToolCall(entry, auditEntries = []) {
+  const detail = entry.detail || entry.reason || entry.message || entry.error || '';
+  const command = normalizeCommandForMatch(extractBlockedCommand(detail));
+  if (!command) return false;
+
+  const blockedAt = new Date(eventTimestamp(entry) || 0).getTime();
+  return auditEntries.some((auditEntry) => {
+    if ((auditEntry.event || '') !== 'tool-call') return false;
+    const target = normalizeCommandForMatch(auditEntry.target || auditEntry.command || '');
+    if (!target || target !== command) return false;
+    const calledAt = new Date(eventTimestamp(auditEntry) || 0).getTime();
+    return calledAt + 5000 >= blockedAt;
+  });
+}
+
+function classifyHookProblem(entry, now = new Date(), context = {}) {
+  const hook = entry.hook || 'hook';
+  const actionName = entry.action || entry.outcome || entry.status || 'recorded';
+  const detail = entry.detail || entry.reason || entry.message || entry.error || entry.action || 'hook issue recorded';
+  const timestamp = eventTimestamp(entry);
+  const ageMs = timestamp ? now.getTime() - new Date(timestamp).getTime() : 0;
+  const stale = timestamp ? ageMs > 24 * 60 * 60 * 1000 : false;
+  const description = truncate(detail, 90);
+  const text = `${hook} ${actionName} ${detail}`.toLowerCase();
+
+  let category = 'attention';
+  let severity = 'medium';
+  let actionable = true;
+
+  if (stale) {
+    category = 'stale';
+    severity = 'low';
+    actionable = false;
+  } else if (actionName === 'error' || actionName === 'parse-fail' || text.includes('unknown error')) {
+    category = 'hook-failure';
+    severity = 'high';
+    actionable = true;
+  } else if (actionName === 'blocked-restricted') {
+    category = 'restricted-scope-block';
+    severity = 'high';
+    actionable = true;
+  } else if (
+    hook === 'external-action-gate' &&
+    (actionName === 'first-encounter' || actionName === 'consent-block') &&
+    hasLaterMatchingToolCall(entry, context.auditEntries || [])
+  ) {
+    category = 'resolved-approval';
+    severity = 'info';
+    actionable = false;
+  } else if (
+    hook === 'external-action-gate' &&
+    (actionName === 'first-encounter' || actionName === 'consent-block') &&
+    timestamp &&
+    ageMs > 15 * 60 * 1000
+  ) {
+    category = 'stale-approval';
+    severity = 'low';
+    actionable = false;
+  } else if (hook === 'external-action-gate' && (actionName === 'first-encounter' || actionName === 'consent-block')) {
+    category = 'approval-needed';
+    severity = 'medium';
+    actionable = true;
+  } else if (
+    hook === 'protect-files' ||
+    (hook === 'external-action-gate' && actionName === 'blocked')
+  ) {
+    category = 'safety-block';
+    severity = 'info';
+    actionable = false;
+  }
+
+  return {
+    hook,
+    action: actionName,
+    category,
+    severity,
+    actionable,
+    stale,
+    relative: relativeTime(timestamp, now),
+    description,
+  };
+}
+
+function summarizeProblemTaxonomy(problems) {
+  const summary = {
+    total: problems.length,
+    actionable: 0,
+    safetyBlocks: 0,
+    stale: 0,
+    hookFailures: 0,
+    approvalNeeded: 0,
+    resolvedApprovals: 0,
+  };
+
+  for (const problem of problems) {
+    if (problem.actionable) summary.actionable++;
+    if (problem.category === 'safety-block') summary.safetyBlocks++;
+    if (problem.category === 'stale' || problem.category === 'stale-approval') summary.stale++;
+    if (problem.category === 'hook-failure') summary.hookFailures++;
+    if (problem.category === 'approval-needed') summary.approvalNeeded++;
+    if (problem.category === 'resolved-approval') summary.resolvedApprovals++;
+  }
+
+  return summary;
+}
+
+function readProblems(projectRoot, now = new Date()) {
   const telemetryDir = path.join(projectRoot, '.planning', 'telemetry');
   const errors = tailJsonl(path.join(telemetryDir, 'hook-errors.jsonl'), 100);
-  return errors.slice(-5).reverse().map((entry) => ({
-    hook: entry.hook || 'hook',
-    relative: relativeTime(eventTimestamp(entry)),
-    description: truncate(
-      entry.detail ||
-      entry.reason ||
-      entry.message ||
-      entry.error ||
-      entry.action ||
-      'hook issue recorded',
-      90
-    ),
-  }));
+  const auditEntries = tailJsonl(path.join(telemetryDir, 'audit.jsonl'), 300);
+  const problems = errors
+    .map((entry) => classifyHookProblem(entry, now, { auditEntries }))
+    .sort((left, right) => {
+      const severityOrder = { high: 0, medium: 1, info: 2, low: 3 };
+      if (left.actionable !== right.actionable) return left.actionable ? -1 : 1;
+      return (severityOrder[left.severity] || 4) - (severityOrder[right.severity] || 4);
+    });
+
+  return {
+    items: problems.slice(0, 8),
+    summary: summarizeProblemTaxonomy(problems),
+  };
 }
 
 function readCoordination(projectRoot) {
@@ -555,7 +674,7 @@ function collectDashboard(options = {}) {
   const gitStatus = readGitStatus(projectRoot);
   const worktreeReadiness = readWorktreeReadiness(projectRoot);
   const pending = readQueueCounts(projectRoot);
-  const problems = readProblems(projectRoot);
+  const problems = readProblems(projectRoot, now);
 
   const mostRecentTimestamp = [
     ...recentActivity.map((entry) => entry.timestamp),
@@ -585,7 +704,8 @@ function collectDashboard(options = {}) {
     worktrees,
     gitStatus,
     worktreeReadiness,
-    problems,
+    problems: problems.items,
+    problemSummary: problems.summary,
   };
 
   snapshot.repairs = buildRepairItems(snapshot);
@@ -704,11 +824,12 @@ function buildRepairItems(snapshot) {
     }));
   }
 
-  if (snapshot.problems.length > 0) {
+  const actionableProblems = snapshot.problemSummary?.actionable || 0;
+  if (actionableProblems > 0) {
     repairs.push(action({
       label: 'Review recent hook problems',
       command: '/telemetry',
-      why: `${snapshot.problems.length} recent hook problem(s) are recorded. Check whether they are stale, expected, or blocking.`,
+      why: `${actionableProblems} actionable hook problem(s) are recorded. Safety blocks and stale entries are categorized separately.`,
       confidence: 'medium',
       repairAvailable: true,
       runbook: 'skills/telemetry/SKILL.md',
@@ -856,11 +977,14 @@ function renderDashboard(snapshot) {
 
   lines.push('');
   lines.push('PROBLEMS');
+  if (snapshot.problemSummary) {
+    lines.push(`  Actionable: ${snapshot.problemSummary.actionable} | Safety blocks: ${snapshot.problemSummary.safetyBlocks} | Resolved approvals: ${snapshot.problemSummary.resolvedApprovals} | Stale: ${snapshot.problemSummary.stale}`);
+  }
   if (snapshot.problems.length === 0) {
     lines.push('  (none recorded)');
   } else {
     for (const problem of snapshot.problems) {
-      lines.push(`  ${problem.relative} | ${problem.hook} | ${problem.description}`);
+      lines.push(`  ${problem.relative} | ${problem.severity} | ${problem.category} | ${problem.hook} | ${problem.description}`);
     }
   }
 
@@ -930,8 +1054,10 @@ if (require.main === module) {
 }
 
 module.exports = {
+  classifyHookProblem,
   collectDashboard,
   renderDashboard,
   relativeTime,
   parseArgs,
+  summarizeProblemTaxonomy,
 };
