@@ -168,7 +168,7 @@ Citadel is not a pitch deck. The repository contains the harness:
 - Hook source under [`hooks_src/`](hooks_src/) and generated hook manifests under [`hooks/`](hooks/) for project installation.
 - Runtime adapters for Claude Code and Codex under [`runtimes/`](runtimes/) plus package surfaces under [`packages/`](packages/).
 - Installer and verification scripts under [`scripts/`](scripts/), including `scripts/test-all.js`, hook verification, runtime checks, and skill linting.
-- Public docs for [campaigns](docs/CAMPAIGNS.md), [fleet coordination](docs/FLEET.md), [hooks](docs/HOOKS.md), [Codex install](docs/CODEX_INSTALLATION_GUIDE.md), and [Claude Code install](docs/CLAUDE_INSTALLATION_GUIDE.md).
+- Public docs for [campaigns](docs/CAMPAIGNS.md), [report artifacts](docs/REPORT_ARTIFACTS.md), [fleet coordination](docs/FLEET.md), [hooks](docs/HOOKS.md), [Codex install](docs/CODEX_INSTALLATION_GUIDE.md), and [Claude Code install](docs/CLAUDE_INSTALLATION_GUIDE.md).
 
 Run the local verification suite from a Citadel clone:
 
