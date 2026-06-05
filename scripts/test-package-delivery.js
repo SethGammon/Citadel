@@ -81,6 +81,7 @@ withTempProject((projectRoot) => {
 
   const reviewPackage = fs.readFileSync(result.packagePath, 'utf8');
   assert(reviewPackage.includes('# Delivery Review Package: Add Review Package'));
+  assert(reviewPackage.includes('Outcome: review-package'));
   assert(reviewPackage.includes('Readiness: ready'));
   assert(reviewPackage.includes('---HANDOFF---'));
   assert(reviewPackage.includes('- Review target: .planning/review-packages/add-review-package.md'));

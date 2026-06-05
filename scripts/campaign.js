@@ -17,6 +17,7 @@ function parseArgs(argv) {
     mergeSha: '',
     verification: '',
     note: '',
+    outcome: '',
   };
 
   for (let index = 2; index < argv.length; index++) {
@@ -28,6 +29,7 @@ function parseArgs(argv) {
     else if (arg === '--merge-sha') args.mergeSha = argv[++index] || '';
     else if (arg === '--verification') args.verification = argv[++index] || '';
     else if (arg === '--note') args.note = argv[++index] || '';
+    else if (arg === '--outcome') args.outcome = argv[++index] || '';
     else if (arg === '--help' || arg === '-h') args.help = true;
   }
 
@@ -37,9 +39,10 @@ function parseArgs(argv) {
 function usage() {
   return [
     'Usage:',
-    '  node scripts/campaign.js complete <slug-or-path> [--archive] [--pr <url>] [--merge-sha <sha>] [--verification <text>] [--note <text>]',
+    '  node scripts/campaign.js complete <slug-or-path> [--archive] [--pr <url>] [--merge-sha <sha>] [--verification <text>] [--note <text>] [--outcome <type>]',
     '',
     'Completes a campaign only when every phase is complete, completed, done, or skipped.',
+    'Outcome types: shipped-pr, review-package, implementation-plan, blocked-decision, archived-completion.',
     'Use --force only after human review of incomplete phases.',
   ].join('\n');
 }
@@ -84,6 +87,7 @@ function main() {
       mergeSha: args.mergeSha,
       verification: args.verification,
       note: args.note,
+      outcome: args.outcome,
     });
 
     console.log('Campaign completed.');

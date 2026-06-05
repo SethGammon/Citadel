@@ -56,10 +56,13 @@ withTempProject((projectRoot) => {
     pr: 'https://github.com/acme/repo/pull/12',
     runVerification: true,
     verification: 'npm run test',
+    changedFiles: ['hooks_src/protect-files.js'],
     now: '2026-06-05T00:00:00.000Z',
   });
 
   assert.equal(readiness.ready, true);
+  assert.equal(readiness.verificationProfile.id, 'hook-runtime');
+  assert(readiness.verificationProfile.commands.includes('node scripts/verify-hooks.js'));
   assert.equal(readiness.gates.prUrl.pass, true);
   assert.equal(readiness.gates.git.pass, true);
   assert.equal(readiness.gates.dashboard.pass, true);
@@ -67,6 +70,9 @@ withTempProject((projectRoot) => {
   assert.equal(readiness.reportPath, '.planning/pr-readiness/codex-test-ready.md');
   const report = fs.readFileSync(path.join(projectRoot, readiness.reportPath), 'utf8');
   assert(report.includes('Status: ready'));
+  assert(report.includes('## Verification Plan'));
+  assert(report.includes('Profile: hook-runtime'));
+  assert(report.includes('| node scripts/verify-hooks.js | recommended |'));
   assert(report.includes('---HANDOFF---'));
 });
 

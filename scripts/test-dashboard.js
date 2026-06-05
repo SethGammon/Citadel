@@ -7,7 +7,7 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 
-const { classifyHookProblem, collectDashboard, renderDashboard, relativeTime } = require('./dashboard');
+const { classifyHookProblem, collectDashboard, readOperatorArtifacts, renderDashboard, relativeTime } = require('./dashboard');
 
 function withTempProject(run) {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'citadel-dashboard-'));
@@ -92,6 +92,8 @@ withTempProject((projectRoot) => {
   assert.equal(snapshot.nextAction.command, '/do setup');
   assert.equal(snapshot.nextAction.repairAvailable, true);
   assert(output.includes('Command: /do setup'));
+  assert(output.includes('OPERATOR ARTIFACTS'));
+  assert(output.includes('(none recorded yet - run npm run next)'));
   assert(output.includes('REPAIR CONSOLE'));
   assert(output.includes('CAMPAIGNS'));
   assert(output.includes('FLEET SESSIONS'));
@@ -101,9 +103,146 @@ withTempProject((projectRoot) => {
 });
 
 withTempProject((projectRoot) => {
+  write(path.join(projectRoot, '.planning', 'next-actions', 'latest.md'), [
+    'Citadel Next Action',
+    '========================================',
+    'Generated: 2026-06-04T11:59:00.000Z',
+    'Mode: run',
+    'Outcome: needs-human',
+    '',
+    '---HANDOFF---',
+    '- Final command: /do continue',
+    '---',
+  ].join('\n'));
+  write(path.join(projectRoot, '.planning', 'approval-capsules', 'latest.md'), [
+    'Citadel Approval Capsule',
+    '========================================',
+    'Generated: 2026-06-04T11:59:00.000Z',
+    'Boundary: agent-continuation',
+    'Risk: medium',
+    '',
+    'Request',
+    'Approve running `/do continue` for this project.',
+    '',
+    'Action',
+    '  Command: /do continue',
+  ].join('\n'));
+
+  const artifacts = readOperatorArtifacts(projectRoot);
+  assert.equal(artifacts.nextActionReport.path, '.planning/next-actions/latest.md');
+  assert.equal(artifacts.nextActionReport.outcome, 'needs-human');
+  assert.equal(artifacts.nextActionReport.mode, 'run');
+  assert.equal(artifacts.approvalCapsule.path, '.planning/approval-capsules/latest.md');
+  assert.equal(artifacts.approvalCapsule.boundary, 'agent-continuation');
+  assert.equal(artifacts.approvalCapsule.risk, 'medium');
+  assert.equal(artifacts.approvalCapsule.request, 'Approve running `/do continue` for this project.');
+
+  const snapshot = collectDashboard({ projectRoot, now: '2026-06-04T12:00:00.000Z' });
+  const output = renderDashboard(snapshot);
+  assert.equal(snapshot.operatorArtifacts.nextActionReport.freshness, 'stale');
+  assert.equal(snapshot.operatorArtifacts.approvalCapsule.freshness, 'stale');
+  assert(output.includes('OPERATOR ARTIFACTS'));
+  assert(output.includes('Next report: .planning/next-actions/latest.md'));
+  assert(output.includes('outcome: needs-human | mode: run | freshness: stale'));
+  assert(output.includes('Approval capsule: .planning/approval-capsules/latest.md'));
+  assert(output.includes('boundary: agent-continuation | risk: medium | freshness: stale'));
+  assert(output.includes('request: Approve running `/do continue` for this project.'));
+  assert(output.includes('stale: latest report final command is /do continue, current command is npm run dashboard'));
+  assert(output.includes('stale: no current repair or approval boundary is queued'));
+});
+
+withTempProject((projectRoot) => {
   write(path.join(projectRoot, '.planning', 'intake', '_TEMPLATE.md'), 'status: pending\n');
+  write(path.join(projectRoot, '.planning', 'intake', 'active.md'), [
+    '---',
+    'status: in-progress',
+    '---',
+    '',
+    'Already claimed.',
+  ].join('\n'));
+  write(path.join(projectRoot, '.planning', 'intake', 'done.md'), [
+    '---',
+    'status: completed',
+    '---',
+    '',
+    'Already completed.',
+  ].join('\n'));
   const snapshot = collectDashboard({ projectRoot, now: '2026-06-04T12:00:00.000Z' });
   assert.equal(snapshot.pending.intakeItems, 0);
+});
+
+withTempProject((projectRoot) => {
+  write(path.join(projectRoot, '.planning', 'campaigns', 'completed', 'shipped.md'), [
+    '---',
+    'status: completed',
+    '---',
+    '',
+    '# Campaign: Shipped',
+    '',
+    'Status: completed',
+    '',
+    '## Completion Record',
+    '',
+    '- Completed At: 2026-06-04T11:59:00.000Z',
+    '- Outcome: shipped-pr',
+    '- PR: https://github.com/acme/repo/pull/7',
+    '- Merge SHA: abc123',
+    '- Verification: npm run test',
+  ].join('\n'));
+
+  const snapshot = collectDashboard({ projectRoot, now: '2026-06-04T12:00:00.000Z' });
+  const output = renderDashboard(snapshot);
+  assert.equal(snapshot.outcomeLedger.length, 1);
+  assert.equal(snapshot.outcomeLedger[0].slug, 'shipped');
+  assert.equal(snapshot.outcomeLedger[0].outcome, 'shipped-pr');
+  assert.equal(snapshot.outcomeLedger[0].pr, 'https://github.com/acme/repo/pull/7');
+  assert(output.includes('OUTCOMES'));
+  assert(output.includes('shipped: shipped-pr - https://github.com/acme/repo/pull/7'));
+  assert(output.includes('verification: npm run test'));
+});
+
+withTempProject((projectRoot) => {
+  write(path.join(projectRoot, '.planning', 'campaigns', 'completed', 'legacy-pr.md'), [
+    '---',
+    'status: completed',
+    '---',
+    '',
+    '# Campaign: Legacy PR',
+    '',
+    'Status: completed',
+    '',
+    '## Completion Record',
+    '',
+    '- Completed At: 2026-06-04T11:59:00.000Z',
+    '- PR: https://github.com/acme/repo/pull/8',
+  ].join('\n'));
+
+  write(path.join(projectRoot, '.planning', 'campaigns', 'completed', 'legacy-archive.md'), [
+    '---',
+    'status: completed',
+    '---',
+    '',
+    '# Campaign: Legacy Archive',
+    '',
+    'Status: completed',
+  ].join('\n'));
+
+  const snapshot = collectDashboard({ projectRoot, now: '2026-06-04T12:00:00.000Z' });
+  assert.equal(snapshot.outcomeLedger.find((entry) => entry.slug === 'legacy-pr').outcome, 'review-package');
+  assert.equal(snapshot.outcomeLedger.find((entry) => entry.slug === 'legacy-archive').outcome, 'archived-completion');
+});
+
+withTempProject((projectRoot) => {
+  write(path.join(projectRoot, '.planning', 'intake', 'pending.md'), [
+    '---',
+    'status: pending',
+    '---',
+    '',
+    'Ready to process.',
+  ].join('\n'));
+
+  const snapshot = collectDashboard({ projectRoot, now: '2026-06-04T12:00:00.000Z' });
+  assert.equal(snapshot.pending.intakeItems, 1);
 });
 
 withTempProject((projectRoot) => {

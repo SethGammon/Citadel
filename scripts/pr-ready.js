@@ -5,12 +5,14 @@ const fs = require('fs');
 const path = require('path');
 const { spawnSync } = require('child_process');
 const { collectDashboard } = require('./dashboard');
+const { selectVerificationProfile } = require('../core/verification/profiles');
 
 function parseArgs(argv) {
   const args = {
     projectRoot: process.cwd(),
     pr: '',
-    verification: 'npm run test',
+    verification: '',
+    verificationSpecified: false,
     runVerification: false,
     json: false,
     help: false,
@@ -20,7 +22,10 @@ function parseArgs(argv) {
     const arg = argv[index];
     if (arg === '--project-root') args.projectRoot = path.resolve(argv[++index] || '.');
     else if (arg === '--pr') args.pr = argv[++index] || '';
-    else if (arg === '--verification') args.verification = argv[++index] || '';
+    else if (arg === '--verification') {
+      args.verification = argv[++index] || '';
+      args.verificationSpecified = true;
+    }
     else if (arg === '--run-verification') args.runVerification = true;
     else if (arg === '--json') args.json = true;
     else if (arg === '--help' || arg === '-h') args.help = true;
@@ -36,6 +41,7 @@ function usage() {
     '  node scripts/pr-ready.js --pr <pull-request-url> --verification "npm run test"',
     '',
     'Writes .planning/pr-readiness/<branch>.md and exits 0 only when local readiness gates pass.',
+    'When --verification is omitted, Citadel selects a verification profile from changed paths.',
   ].join('\n');
 }
 
@@ -137,6 +143,16 @@ function renderReport(readiness) {
     `| Dashboard repairs | ${readiness.gates.dashboard.pass ? 'pass' : 'fail'} | ${readiness.gates.dashboard.detail} |`,
     `| Verification | ${readiness.gates.verification.pass ? 'pass' : 'fail'} | ${readiness.gates.verification.detail} |`,
     '',
+    '## Verification Plan',
+    '',
+    `Profile: ${readiness.verificationProfile.id} (${readiness.verificationProfile.label})`,
+    `Reason: ${readiness.verificationProfile.reason}`,
+    `Primary command: ${readiness.verificationProfile.primaryCommand}`,
+    '',
+    '| Command | Role |',
+    '|---|---|',
+    ...readiness.verificationProfile.commands.map((command) => `| ${command} | ${command === readiness.verificationProfile.primaryCommand ? 'primary' : 'recommended'} |`),
+    '',
     '## Next Action',
     '',
     readiness.ready
@@ -158,9 +174,18 @@ function assessReadiness(projectRoot, options = {}) {
   const root = path.resolve(projectRoot || process.cwd());
   const branch = runGit(root, ['branch', '--show-current']) || 'detached';
   const head = runGit(root, ['rev-parse', '--short', 'HEAD']);
+  const verificationProfile = selectVerificationProfile(root, {
+    changedFiles: options.changedFiles,
+  });
+  const verificationCommand = options.verification || verificationProfile.primaryCommand;
+  verificationProfile.primaryCommand = verificationCommand;
+  verificationProfile.commands = Array.from(new Set([
+    verificationCommand,
+    ...verificationProfile.commands,
+  ]));
   const verification = options.runVerification
-    ? runVerification(root, options.verification)
-    : { status: 'not-run', command: options.verification || '', exitCode: null, stdout: '', stderr: '' };
+    ? runVerification(root, verificationCommand)
+    : { status: 'not-run', command: verificationCommand || '', exitCode: null, stdout: '', stderr: '' };
   const snapshot = collectDashboard({ projectRoot: root });
   const dashboard = summarizeDashboard(snapshot);
   const prIssue = validatePrUrl(options.pr || '');
@@ -200,6 +225,7 @@ function assessReadiness(projectRoot, options = {}) {
     blockers,
     gates,
     verification,
+    verificationProfile,
     dashboard: {
       pending: snapshot.pending,
       problemSummary: snapshot.problemSummary,
