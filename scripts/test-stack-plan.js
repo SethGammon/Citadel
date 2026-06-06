@@ -10,6 +10,7 @@ const path = require('path');
 const {
   assessStack,
   blockerReasons,
+  buildPostApprovalRunbook,
   parseReadinessReport,
 } = require('./stack-plan');
 
@@ -104,13 +105,22 @@ withTempProject((projectRoot) => {
   assert.deepEqual(stack.reports.map((report) => report.branch), ['codex/base', 'codex/middle', 'codex/top']);
   assert.equal(stack.nextAction.label, 'Approve stack landing order');
   assert.equal(stack.nextAction.canRunNow, false);
+  assert.equal(stack.postApprovalRunbook.length, 5);
+  assert.equal(stack.postApprovalRunbook[0].step, 'Reconfirm stack state');
+  assert.equal(stack.postApprovalRunbook[1].step, 'Land 1: https://github.com/SethGammon/Citadel/pull/1');
+  assert.equal(stack.postApprovalRunbook[3].step, 'Land 3: https://github.com/SethGammon/Citadel/pull/3');
+  assert.equal(stack.postApprovalRunbook[4].step, 'Verify landed main');
   assert(stack.approvalCapsule);
   assert.equal(stack.approvalCapsule.boundary, 'stack-approval');
   assert.equal(stack.approvalCapsule.risk, 'medium-high');
+  assert.equal(stack.approvalCapsule.postApprovalRunbook.length, stack.postApprovalRunbook.length);
   assert(stack.approvalCapsule.path.startsWith('.planning/approval-capsules/'));
   assert(fs.existsSync(path.join(projectRoot, '.planning', 'approval-capsules', 'latest.md')));
   assert(fs.readFileSync(path.join(projectRoot, '.planning', 'stack-readiness', 'latest.md'), 'utf8').includes('Approval capsule: .planning/approval-capsules/'));
+  assert(fs.readFileSync(path.join(projectRoot, '.planning', 'stack-readiness', 'latest.md'), 'utf8').includes('Post-Approval Landing Runbook'));
   assert(fs.readFileSync(path.join(projectRoot, '.planning', 'approval-capsules', 'latest.md'), 'utf8').includes('Stack:'));
+  assert(fs.readFileSync(path.join(projectRoot, '.planning', 'approval-capsules', 'latest.md'), 'utf8').includes('Post-Approval Landing Runbook'));
+  assert(fs.readFileSync(path.join(projectRoot, '.planning', 'approval-capsules', 'latest.md'), 'utf8').includes('Verify landed main'));
   assert(fs.existsSync(path.join(projectRoot, '.planning', 'stack-readiness', 'latest.md')));
 });
 
@@ -146,6 +156,16 @@ withTempProject((projectRoot) => {
   assert.equal(stack.reports[0].currentHead, 'f777777');
   assert(stack.blocked[0].reasons.some((reason) => reason.includes('does not match current branch head f777777')));
 });
+
+assert.deepEqual(buildPostApprovalRunbook('no-stack', []), [
+  {
+    step: 'Generate PR readiness reports',
+    gate: 'At least one report exists in .planning/pr-readiness.',
+    action: 'Run node scripts/pr-ready.js --pr <pull-request-url> --run-verification for each PR.',
+  },
+]);
+
+assert.equal(buildPostApprovalRunbook('blocked', []).length, 1);
 
 withTempProject((projectRoot) => {
   write(path.join(projectRoot, '.planning', 'pr-readiness', 'ready.md'), readinessReport({

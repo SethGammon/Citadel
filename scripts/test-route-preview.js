@@ -29,6 +29,19 @@ assert.deepEqual(parseArgs(['--json', '--project-root', '.', '--', 'review', 'au
 }
 
 {
+  const route = selectRoute('review README.md for first-time developer friction');
+  assert.equal(route.selected, '/review');
+  assert.equal(route.tier, 2);
+  assert(route.reason.includes('review intent'));
+}
+
+{
+  const route = selectRoute('document README.md setup steps');
+  assert.equal(route.selected, '/doc-gen');
+  assert.equal(route.tier, 2);
+}
+
+{
   const route = selectRoute('research competitors and write implementation phases');
   assert.equal(route.selected, '/marshal');
   assert.equal(route.tier, 3);

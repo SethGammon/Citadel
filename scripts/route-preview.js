@@ -173,6 +173,24 @@ function keywordMatches(input) {
     .sort((a, b) => b.matches.length - a.matches.length || a.keywords.length - b.keywords.length);
 }
 
+function explicitIntentRoute(input, matches) {
+  const lower = normalized(input).trim();
+  const routes = new Set(matches.map((item) => item.route));
+  if (/^(code\s+)?review\b/.test(lower) && routes.has('/review')) {
+    return {
+      route: '/review',
+      reason: 'explicit leading review intent wins over secondary file or documentation keywords.',
+    };
+  }
+  if (/^(document|docs|write docs|update docs)\b/.test(lower) && routes.has('/doc-gen')) {
+    return {
+      route: '/doc-gen',
+      reason: 'explicit leading documentation intent wins over secondary file keywords.',
+    };
+  }
+  return null;
+}
+
 function hasSingleFileSignal(input) {
   return /\b[\w.-]+\.(js|jsx|ts|tsx|mjs|cjs|json|md|css|html|py|rb|go|rs|java|cs)\b/i.test(input);
 }
@@ -199,6 +217,7 @@ function selectTier0(input) {
   return TIER0.find((entry) => {
     if (!entry.pattern.test(input)) return false;
     if (entry.id === 'status' && hasSingleFileSignal(input)) return false;
+    if (entry.id === 'setup' && /^(document|docs|write docs|update docs)\b/i.test(input.trim())) return false;
     return true;
   }) || null;
 }
@@ -253,6 +272,20 @@ function selectRoute(input) {
   }
 
   if (matches.length > 1) {
+    const explicit = explicitIntentRoute(input, matches);
+    if (explicit) {
+      return {
+        tier: 2,
+        selected: explicit.route,
+        command: explicit.route,
+        reason: explicit.reason,
+        confidence: 'high',
+        alternatives: alternativesFor(input, matches),
+        verification: verificationFor(explicit.route),
+        dimensions,
+      };
+    }
+
     return {
       tier: 3,
       selected: '/marshal',
