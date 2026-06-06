@@ -16,6 +16,8 @@
     "campaign": "node scripts/campaign.js",
     "deliver": "node scripts/deliver.js",
     "continue": "node scripts/continue-action.js",
+    "next": "node scripts/next-action.js",
+    "verify:plan": "node scripts/verification-plan.js",
     "deliver:package": "node scripts/package-delivery.js",
     "pr:ready": "node scripts/pr-ready.js",
     "fleet:steward": "node scripts/fleet-steward.js",

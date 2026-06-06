@@ -113,6 +113,7 @@ function renderReviewPackage(projectRoot, campaign, options = {}) {
     `# Delivery Review Package: ${campaign.title || campaign.slug}`,
     '',
     `Generated: ${now}`,
+    'Outcome: review-package',
     `Campaign: ${campaignPath}`,
     `Review Target: ${target || packagePath}`,
     `Review Target Type: ${targetKind}`,

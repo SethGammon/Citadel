@@ -11,6 +11,7 @@ const path = require('path');
 const { parseCampaignContent } = require('../core/campaigns/parse-campaign');
 const { findActiveCampaign, getCampaignPaths, readCampaignStats } = require('../core/campaigns/load-campaign');
 const { archiveCampaign, completeCampaign, updateCampaignStatus } = require('../core/campaigns/update-campaign');
+const { extractCompletionOutcome } = require('../core/campaigns/outcomes');
 
 function withTempProject(run) {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'citadel-campaign-'));
@@ -118,7 +119,9 @@ withTempProject((projectRoot) => {
   assert.equal(result.frontmatter.status, 'completed');
   assert.equal(result.bodyStatus, 'completed');
   assert(result.content.includes('## Completion Record'));
+  assert(result.content.includes('- Outcome: shipped-pr'));
   assert(result.content.includes('https://github.com/example/repo/pull/1'));
+  assert.equal(extractCompletionOutcome(result.content), 'shipped-pr');
   assert(fs.existsSync(path.join(paths.completedDir, 'complete.md')), 'completed campaign should be archived');
 
   const cliFile = path.join(paths.campaignsDir, 'cli.md');
@@ -130,9 +133,20 @@ withTempProject((projectRoot) => {
     '--archive',
     '--project-root',
     projectRoot,
+    '--outcome',
+    'implementation-plan',
   ], { encoding: 'utf8' });
   assert(output.includes('Campaign completed.'));
   assert(fs.existsSync(path.join(paths.completedDir, 'cli.md')), 'CLI should archive completed campaign');
+  assert(fs.readFileSync(path.join(paths.completedDir, 'cli.md'), 'utf8').includes('- Outcome: implementation-plan'));
+
+  const invalidFile = path.join(paths.campaignsDir, 'invalid.md');
+  fs.writeFileSync(invalidFile, makePhasedCampaign('Invalid', ['complete']));
+  assert.throws(
+    () => completeCampaign(invalidFile, projectRoot, { outcome: 'not-real' }),
+    /Unknown campaign outcome/,
+    'completion should reject unknown outcome labels'
+  );
 });
 
 console.log('campaign core tests passed');

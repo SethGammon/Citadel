@@ -28,6 +28,19 @@ The command refuses to complete campaigns with unfinished phases unless
 `--force` is used after human review. It also writes a `## Completion Record`
 for merge links, verification notes, and final evidence.
 
+Every completion record includes a concrete outcome label:
+
+| Outcome | Meaning |
+|---|---|
+| `shipped-pr` | A PR was merged or a merge SHA is recorded. |
+| `review-package` | The campaign produced a PR or local review package ready for review. |
+| `implementation-plan` | The requested deliverable is a plan rather than code. |
+| `blocked-decision` | Work intentionally stops on a documented decision or approval. |
+| `archived-completion` | Work is complete and archived without a more specific delivery target. |
+
+Use `--outcome <type>` when Citadel cannot infer the right label from PR,
+merge, or review-package evidence.
+
 ## Campaign File Format
 
 ```markdown
@@ -162,6 +175,33 @@ creation, use:
 node scripts/continue-action.js --run
 ```
 
+To ask Citadel for the next useful harness action, inspect the dashboard-derived
+operator decision:
+
+```bash
+node scripts/next-action.js
+```
+
+To let Citadel execute only deterministic local repairs, such as doc-sync drain,
+review-package creation, or completed-campaign archiving, run:
+
+```bash
+node scripts/next-action.js --run
+```
+
+The operator loop re-checks dashboard state after each repair and stops at
+human/agent routes such as `/do continue`, `/autopilot`, `/merge-review`, or
+dirty-worktree review instead of pretending those are safe unattended repairs.
+Each run writes `.planning/next-actions/latest.md` as a local operator handoff
+report.
+
+When the operator stops at a human/agent route, it also writes an approval
+capsule in `.planning/approval-capsules/`. The latest capsule is available at
+`.planning/approval-capsules/latest.md`, and timestamped copies preserve the
+decision history. Each capsule records the requested command, boundary type,
+risk level, current dashboard context, runbook, and verification plan so the
+next human approval can be made without re-deriving the state from scratch.
+
 To produce the final PR approval-readiness handoff, run verification through
 the PR finalizer:
 
@@ -172,7 +212,20 @@ node scripts/pr-ready.js --pr https://github.com/<owner>/<repo>/pull/<number> --
 The finalizer writes `.planning/pr-readiness/<branch>.md` and exits nonzero
 unless the PR URL is valid, the worktree is clean, dashboard repairs are clear,
 and the verification command exits successfully. Use `--verification "<command>"`
-to override the default `npm run test`.
+to override the selected primary command.
+
+Citadel selects a verification profile from changed paths when no explicit
+verification command is supplied. Inspect the selected profile with:
+
+```bash
+node scripts/verification-plan.js
+```
+
+Profiles keep `npm run test` as the conservative PR-readiness primary command
+when it exists, while surfacing focused recommended checks such as hook smoke
+tests, skill lint, demo routing, dashboard tests, or campaign delivery tests.
+The selected profile is recorded in the PR readiness report so reviewers can
+see both the command that ran and the additional checks relevant to the work.
 
 When the implementation and verification phases are ready for review, create a
 deterministic review package:
@@ -183,7 +236,9 @@ node scripts/package-delivery.js <campaign-slug>
 
 This writes `.planning/review-packages/<campaign-slug>.md`, records that package
 in the campaign's `review-package` Exit Evidence row, and marks the packaging
-phase complete. If a pull request already exists, record it instead:
+phase complete. Review packages record `Outcome: review-package`, so dashboard
+outcome history can distinguish review-ready work from shipped or archived work.
+If a pull request already exists, record it instead:
 
 ```bash
 node scripts/package-delivery.js <campaign-slug> --pr https://github.com/<owner>/<repo>/pull/<number>

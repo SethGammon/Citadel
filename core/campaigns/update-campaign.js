@@ -3,6 +3,7 @@
 const fs = require('fs');
 const path = require('path');
 const { getCampaignPaths, readCampaignFile } = require('./load-campaign');
+const { inferCompletionOutcome } = require('./outcomes');
 
 const COMPLETE_PHASE_STATUSES = new Set(['complete', 'completed', 'done', 'skipped']);
 
@@ -32,6 +33,7 @@ function appendCompletionRecord(filePath, details = {}) {
     '## Completion Record',
     '',
     `- Completed At: ${details.completedAt || new Date().toISOString()}`,
+    `- Outcome: ${details.outcome}`,
   ];
 
   if (details.pr) lines.push(`- PR: ${details.pr}`);
@@ -63,6 +65,7 @@ function completeCampaign(filePath, projectRoot, options = {}) {
   updateCampaignStatus(filePath, 'completed');
   const recorded = appendCompletionRecord(filePath, {
     completedAt: options.completedAt,
+    outcome: inferCompletionOutcome(campaign.content, options),
     pr: options.pr,
     mergeSha: options.mergeSha,
     verification: options.verification,

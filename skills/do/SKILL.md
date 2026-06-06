@@ -23,6 +23,7 @@ Use `/do` when the user wants something done but doesn't know (or care) which to
 |---|---|
 | `/do [anything]` | Classify intent, route to cheapest capable path |
 | `/do status` | Show full harness dashboard (/dashboard) |
+| `/do next` | Run the dashboard-derived operator loop for the next useful harness action |
 | `/do continue` | Resolve and run the deterministic continuation action |
 | `/do --list` | Show all skills grouped by category with trigger keywords |
 | `/do setup` | First-run experience — configure the harness for this project |
@@ -63,6 +64,7 @@ Regex/keyword on raw input. Catches trivial commands:
 | "build" | Run the project's build command |
 | "test" or "tests" | Run the project's test command |
 | "status", "dashboard", "what's happening", "what's going on", "show activity" | Show full harness dashboard (/dashboard) |
+| "next", "what should I do next", "fix harness state", "repair harness" | Run `node scripts/next-action.js --run`; if it stops on a skill route or human-review action, report that next command |
 | "continue" or "keep going" | Run `node scripts/continue-action.js --run`; invoke the returned skill route if it prints `/archon continue` or `/fleet continue` |
 | "setup" | Run `/do setup` first-run experience |
 | "deliver <intake-file>" | Run `node scripts/deliver.js --intake <file>` to create an evidence-backed delivery campaign |
@@ -137,6 +139,7 @@ and any project-level custom skills in `.claude/skills/`.
 | "deliver", "deliver intake", "intake to pr", "intake to PR" | `node scripts/deliver.js --next` when no file is named, or `node scripts/deliver.js --intake <file>` when a file is named, then `/do continue` |
 | "package delivery", "review package", "local handoff" | `node scripts/package-delivery.js <campaign-slug>` after build and verification, or include `--pr <url>` when a PR exists |
 | "pr ready", "ready for review", "finalize pr", "approval ready" | `node scripts/pr-ready.js --pr <pull-request-url> --run-verification` after the branch is pushed |
+| "next", "what should I do next", "repair harness", "fix harness state" | `node scripts/next-action.js --run`; auto-runs deterministic local repairs and stops at skill/human routes |
 | "setup", "first run", "configure harness" | `/setup` |
 | "research", "investigate", "look into", "find out" | `/research` |
 | "experiment", "optimize", "try", "A/B", "measure" | `/experiment` |

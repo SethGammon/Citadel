@@ -6,8 +6,9 @@ const fs = require('fs');
 const path = require('path');
 const { execFileSync } = require('child_process');
 
-const { parseCampaignContent } = require('../core/campaigns/parse-campaign');
+const { parseCampaignContent, parseFrontmatter } = require('../core/campaigns/parse-campaign');
 const { isPhaseComplete } = require('../core/campaigns/update-campaign');
+const { extractCompletionOutcome } = require('../core/campaigns/outcomes');
 const { validateExitEvidence } = require('../core/evidence/contracts');
 const { readJsonlDetailed } = require('../core/telemetry/io');
 const { getCoordinationStatus } = require('../core/coordination/instances');
@@ -196,6 +197,29 @@ function lastDecision(content) {
   return decisions.length > 0 ? decisions[decisions.length - 1].replace(/^- /, '') : null;
 }
 
+function completionRecordSummary(content) {
+  const values = {};
+  let inSection = false;
+  for (const line of String(content || '').split(/\r?\n/)) {
+    if (/^##\s+Completion Record\s*$/i.test(line.trim())) {
+      inSection = true;
+      continue;
+    }
+    if (inSection && /^##\s+/.test(line.trim())) break;
+    if (!inSection) continue;
+    const match = line.match(/^-\s+([^:]+):\s*(.+)$/);
+    if (match) values[match[1].trim().toLowerCase()] = match[2].trim();
+  }
+  return {
+    completedAt: values['completed at'] || null,
+    outcome: values.outcome || extractCompletionOutcome(content),
+    pr: values.pr || null,
+    mergeSha: values['merge sha'] || null,
+    verification: values.verification || null,
+    note: values.note || null,
+  };
+}
+
 function packagePhaseReadiness(parsed) {
   const phases = parsed.phases || [];
   const packagePhase = phases.find((phase) => {
@@ -289,6 +313,38 @@ function readCampaigns(projectRoot) {
   return { campaigns, skipped };
 }
 
+function readOutcomeLedger(projectRoot) {
+  const completedDir = path.join(projectRoot, '.planning', 'campaigns', 'completed');
+  return listFiles(completedDir, (entry) => entry.endsWith('.md'))
+    .map((filePath) => {
+      const content = readText(filePath) || '';
+      const parsed = parseCampaignContent(content, { slug: path.basename(filePath, '.md') });
+      const record = completionRecordSummary(content);
+      const outcome = record.outcome ||
+        (record.mergeSha ? 'shipped-pr' : '') ||
+        (record.pr ? 'review-package' : '') ||
+        'archived-completion';
+      return {
+        slug: parsed.slug,
+        title: parsed.title,
+        path: relativeProjectPath(projectRoot, filePath),
+        outcome,
+        completedAt: record.completedAt,
+        pr: record.pr,
+        mergeSha: record.mergeSha,
+        verification: record.verification,
+        note: record.note,
+        modifiedAt: safeMtime(filePath),
+      };
+    })
+    .sort((left, right) => {
+      const leftTime = new Date(left.completedAt || left.modifiedAt || 0).getTime();
+      const rightTime = new Date(right.completedAt || right.modifiedAt || 0).getTime();
+      return rightTime - leftTime;
+    })
+    .slice(0, 8);
+}
+
 function parseFrontmatterLike(content, key) {
   const pattern = new RegExp(`^${key}:\\s*(.+)$`, 'im');
   const match = content.match(pattern);
@@ -333,6 +389,100 @@ function safeMtime(filePath) {
   } catch {
     return null;
   }
+}
+
+function relativeProjectPath(projectRoot, filePath) {
+  return path.relative(projectRoot, filePath).replace(/\\/g, '/');
+}
+
+function escapeRegExp(value) {
+  return String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function extractReportLines(content, label) {
+  const pattern = new RegExp(`^(?:[-*]\\s*)?\\s*${escapeRegExp(label)}:\\s*(.+)$`, 'gim');
+  return Array.from(content.matchAll(pattern)).map((match) => match[1].trim());
+}
+
+function extractReportLine(content, label) {
+  const lines = extractReportLines(content, label);
+  return lines.length > 0 ? lines[0] : null;
+}
+
+function extractLastReportLine(content, label) {
+  const lines = extractReportLines(content, label);
+  return lines.length > 0 ? lines[lines.length - 1] : null;
+}
+
+function extractBlockLine(content, heading) {
+  const match = content.match(new RegExp(`^${escapeRegExp(heading)}\\s*\\r?\\n([^\\r\\n]+)`, 'im'));
+  return match ? match[1].trim() : null;
+}
+
+function freshness(status, staleReasons) {
+  return {
+    stale: staleReasons.length > 0,
+    freshness: staleReasons.length > 0 ? 'stale' : status,
+    staleReasons,
+  };
+}
+
+function readOperatorArtifacts(projectRoot) {
+  const nextReportPath = path.join(projectRoot, '.planning', 'next-actions', 'latest.md');
+  const approvalCapsulePath = path.join(projectRoot, '.planning', 'approval-capsules', 'latest.md');
+  const nextContent = readText(nextReportPath);
+  const approvalContent = readText(approvalCapsulePath);
+
+  return {
+    nextActionReport: nextContent ? {
+      path: relativeProjectPath(projectRoot, nextReportPath),
+      modifiedAt: safeMtime(nextReportPath),
+      generatedAt: extractReportLine(nextContent, 'Generated'),
+      mode: extractReportLine(nextContent, 'Mode'),
+      outcome: extractReportLine(nextContent, 'Outcome'),
+      finalCommand: extractLastReportLine(nextContent, 'Final command') ||
+        extractLastReportLine(nextContent, 'Command') ||
+        null,
+    } : null,
+    approvalCapsule: approvalContent ? {
+      path: relativeProjectPath(projectRoot, approvalCapsulePath),
+      modifiedAt: safeMtime(approvalCapsulePath),
+      generatedAt: extractReportLine(approvalContent, 'Generated'),
+      boundary: extractReportLine(approvalContent, 'Boundary'),
+      risk: extractReportLine(approvalContent, 'Risk'),
+      request: extractBlockLine(approvalContent, 'Request'),
+      command: extractLastReportLine(approvalContent, 'Command'),
+    } : null,
+  };
+}
+
+function annotateOperatorArtifacts(snapshot) {
+  const artifacts = snapshot.operatorArtifacts || {};
+  const currentCommand = snapshot.nextAction?.command || '';
+  const hasRepairs = (snapshot.repairs || []).length > 0;
+
+  if (artifacts.nextActionReport) {
+    const staleReasons = [];
+    if (artifacts.nextActionReport.outcome === 'idle' && hasRepairs) {
+      staleReasons.push('latest report says idle but dashboard has a queued action');
+    }
+    if (artifacts.nextActionReport.finalCommand && artifacts.nextActionReport.finalCommand !== currentCommand) {
+      staleReasons.push(`latest report final command is ${artifacts.nextActionReport.finalCommand}, current command is ${currentCommand}`);
+    }
+    Object.assign(artifacts.nextActionReport, freshness('current', staleReasons));
+  }
+
+  if (artifacts.approvalCapsule) {
+    const staleReasons = [];
+    if (!hasRepairs) {
+      staleReasons.push('no current repair or approval boundary is queued');
+    } else if (artifacts.approvalCapsule.command && artifacts.approvalCapsule.command !== currentCommand) {
+      staleReasons.push(`capsule command is ${artifacts.approvalCapsule.command}, current command is ${currentCommand}`);
+    }
+    Object.assign(artifacts.approvalCapsule, freshness('current', staleReasons));
+  }
+
+  return artifacts;
 }
 
 function describeTelemetry(entry) {
@@ -417,8 +567,18 @@ function readQueueCounts(projectRoot) {
   return {
     docSync: countActionableJsonl(path.join(telemetryDir, 'doc-sync-queue.jsonl')),
     mergeReviews: countJsonlLines(path.join(telemetryDir, 'merge-check-queue.jsonl')),
-    intakeItems: listFiles(intakeDir, (entry) => entry.endsWith('.md') && entry !== '_TEMPLATE.md').length,
+    intakeItems: countPendingIntakeItems(intakeDir),
   };
+}
+
+function countPendingIntakeItems(intakeDir) {
+  return listFiles(intakeDir, (entry) => entry.endsWith('.md') && entry !== '_TEMPLATE.md')
+    .filter((filePath) => {
+      const content = readText(filePath);
+      if (!content) return false;
+      const frontmatter = parseFrontmatter(content);
+      return String(frontmatter.status || 'pending').toLowerCase() === 'pending';
+    }).length;
 }
 
 function readHookValue(projectRoot) {
@@ -710,6 +870,7 @@ function collectDashboard(options = {}) {
   const planningExists = fileExists(path.join(projectRoot, '.planning'));
 
   const campaigns = readCampaigns(projectRoot);
+  const outcomeLedger = readOutcomeLedger(projectRoot);
   const fleetSessions = readFleetSessions(projectRoot);
   const recentActivity = readRecentActivity(projectRoot, recentLimit, now);
   const hookActivity = readHookActivity(projectRoot, recentLimit, now);
@@ -720,6 +881,7 @@ function collectDashboard(options = {}) {
   const worktrees = readWorktrees(projectRoot);
   const gitStatus = readGitStatus(projectRoot);
   const worktreeReadiness = readWorktreeReadiness(projectRoot);
+  const operatorArtifacts = readOperatorArtifacts(projectRoot);
   const pending = readQueueCounts(projectRoot);
   const problems = readProblems(projectRoot, now);
 
@@ -737,6 +899,7 @@ function collectDashboard(options = {}) {
     planningExists,
     campaigns: campaigns.campaigns,
     skippedCampaigns: campaigns.skipped,
+    outcomeLedger,
     fleetSessions,
     cost,
     recentActivity,
@@ -751,12 +914,14 @@ function collectDashboard(options = {}) {
     worktrees,
     gitStatus,
     worktreeReadiness,
+    operatorArtifacts,
     problems: problems.items,
     problemSummary: problems.summary,
   };
 
   snapshot.repairs = buildRepairItems(snapshot);
   snapshot.nextAction = chooseNextAction(snapshot);
+  snapshot.operatorArtifacts = annotateOperatorArtifacts(snapshot);
   return snapshot;
 }
 
@@ -942,6 +1107,31 @@ function renderDashboard(snapshot) {
   }
 
   lines.push('');
+  lines.push('OPERATOR ARTIFACTS');
+  const operatorArtifacts = snapshot.operatorArtifacts || {};
+  if (!operatorArtifacts.nextActionReport && !operatorArtifacts.approvalCapsule) {
+    lines.push('  (none recorded yet - run npm run next)');
+  } else {
+    if (operatorArtifacts.nextActionReport) {
+      const report = operatorArtifacts.nextActionReport;
+      lines.push(`  Next report: ${report.path}`);
+      lines.push(`    outcome: ${report.outcome || 'unknown'} | mode: ${report.mode || 'unknown'} | freshness: ${report.freshness || 'unknown'}`);
+      for (const reason of (report.staleReasons || []).slice(0, 2)) {
+        lines.push(`    stale: ${truncate(reason, 110)}`);
+      }
+    }
+    if (operatorArtifacts.approvalCapsule) {
+      const capsule = operatorArtifacts.approvalCapsule;
+      lines.push(`  Approval capsule: ${capsule.path}`);
+      lines.push(`    boundary: ${capsule.boundary || 'unknown'} | risk: ${capsule.risk || 'unknown'} | freshness: ${capsule.freshness || 'unknown'}`);
+      if (capsule.request) lines.push(`    request: ${truncate(capsule.request, 110)}`);
+      for (const reason of (capsule.staleReasons || []).slice(0, 2)) {
+        lines.push(`    stale: ${truncate(reason, 110)}`);
+      }
+    }
+  }
+
+  lines.push('');
   lines.push('REPAIR CONSOLE');
   if (!snapshot.repairs || snapshot.repairs.length === 0) {
     lines.push('  (no repairs queued)');
@@ -968,6 +1158,18 @@ function renderDashboard(snapshot) {
   }
   if (snapshot.skippedCampaigns.length > 0) {
     lines.push(`  (${snapshot.skippedCampaigns.length} campaign file(s) skipped - malformed)`);
+  }
+
+  lines.push('');
+  lines.push('OUTCOMES');
+  if (!snapshot.outcomeLedger || snapshot.outcomeLedger.length === 0) {
+    lines.push('  (no completed outcomes recorded yet)');
+  } else {
+    for (const outcome of snapshot.outcomeLedger.slice(0, 6)) {
+      const target = outcome.pr || outcome.mergeSha || outcome.path;
+      lines.push(`  ${outcome.slug}: ${outcome.outcome} - ${truncate(target, 80)}`);
+      if (outcome.verification) lines.push(`    verification: ${truncate(outcome.verification, 90)}`);
+    }
   }
 
   lines.push('');
@@ -1123,6 +1325,7 @@ module.exports = {
   classifyHookProblem,
   collectDashboard,
   renderDashboard,
+  readOperatorArtifacts,
   relativeTime,
   parseArgs,
   summarizeProblemTaxonomy,
