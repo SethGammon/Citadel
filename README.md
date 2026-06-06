@@ -230,9 +230,11 @@ The priority is reliability over novelty: make the harness easier to install, ea
 
 - [Install](INSTALL.md) - manual setup for Codex and Claude Code
 - [Demo workflow](DEMO.md) - copyable operating-loop demo for a real repo
+- [Operating loop proof](docs/OPERATING_LOOP_PROOF.md) - evidence checklist for demos and PRs
 - [Quickstart](QUICKSTART.md) - first-run paths for both runtimes
 - [Interactive routing demo](https://sethgammon.github.io/Citadel/) - watch the tier cascade animate
 - [Routing preview guide](docs/ROUTING_PREVIEW.md) - compare Skill, Marshal, Archon, and Fleet before heavier work
+- [Public positioning](docs/PUBLIC_POSITIONING.md) - how to describe Citadel without overclaiming
 - [Skill and memory visibility](docs/SKILL_MEMORY_VISIBILITY.md) - inspect available skills and compiled project memory
 - [Skills reference](docs/SKILLS.md) - all built-in skills with invocation and examples
 - [Hooks reference](docs/HOOKS.md) - lifecycle events and enforcement behavior
