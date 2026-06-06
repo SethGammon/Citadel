@@ -28,10 +28,11 @@ Manual path:
 
    ```text
    /do setup --express
+   /do next
    /do review src/main.ts
    ```
 
-Both runtimes converge on the same harness commands once the runtime-specific install step is done.
+Both runtimes converge on the same harness commands once the runtime-specific install step is done. `/do next` is the fastest check that Citadel sees the project state and can explain the next action, approval boundary, and verification profile.
 
 ---
 

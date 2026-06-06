@@ -17,6 +17,8 @@
     "deliver": "node scripts/deliver.js",
     "continue": "node scripts/continue-action.js",
     "next": "node scripts/next-action.js",
+    "operator": "node scripts/operator-console.js",
+    "operator:summary": "node scripts/operator-console.js --summary",
     "verify:plan": "node scripts/verification-plan.js",
     "deliver:package": "node scripts/package-delivery.js",
     "pr:ready": "node scripts/pr-ready.js",

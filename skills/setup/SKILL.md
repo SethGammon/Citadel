@@ -349,6 +349,7 @@ Show: run `/review` on the file from Step 6 if not already done.
 
 **Family 5: Observability (1 min)**
 ```
+/do next               — operator console: next action, risk, verification
 /dashboard             — live view of campaigns, costs, hooks value, queues
 /cost                  — session and campaign cost breakdown from real token data
 /learn                 — extract reusable patterns from a completed campaign
@@ -378,6 +379,7 @@ Print the reference card with actual counts from detected config.
 │  /do why is [thing] broken   Root cause analysis         │
 │  /do build [feature]         Scaffold + implement        │
 │  /do test [file]             Generate tests              │
+│  /do next                    What should happen next     │
 │  /do status                  What's happening            │
 │  /do continue                Resume active campaign      │
 │                                                          │

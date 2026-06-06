@@ -114,6 +114,7 @@ After install, copy this into Claude Code or Codex from your project root:
 
 ```text
 /do setup --express
+/do next
 /do review README.md
 /do identify the project's safest verification command and run it
 /do generate tests for the changed files
@@ -152,6 +153,8 @@ Citadel exists to make Claude Code and Codex easier to operate as engineering sy
 **Safety hooks.** Node-based hooks run across lifecycle events to protect files, gate risky external actions, track edits, enforce policy, and record handoffs.
 
 **Cost tracking.** Runtime-native telemetry feeds `/cost`, `/dashboard`, and local reports so token usage and session spend are visible instead of guessed.
+
+**Operator console.** `/do next` gives a decision-first cockpit: current state, next action, risk boundary, approval request, artifact freshness, and the verification profile to run.
 
 **Parallel agents in isolated worktrees.** Fleet mode decomposes broad work, assigns scopes to agents, shares discoveries between waves, and keeps merge review organized.
 
