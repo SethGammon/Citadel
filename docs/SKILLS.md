@@ -172,6 +172,9 @@ Use `node scripts/skill-catalog.js` to view skills grouped by inferred or declar
 task class and risk. Existing skills do not need to declare these fields; when
 present, `node scripts/skill-lint.js` validates them.
 
+For the operator-facing workflow that pairs this catalog with compiled project
+memory, see [Skill and Memory Visibility](SKILL_MEMORY_VISIBILITY.md).
+
 ## Skill Discovery
 
 The `/do` router finds built-in skills from the Citadel plugin and custom
