@@ -14,6 +14,7 @@ function parseArgs(argv) {
     verification: '',
     verificationSpecified: false,
     runVerification: false,
+    branch: '',
     json: false,
     help: false,
   };
@@ -27,6 +28,7 @@ function parseArgs(argv) {
       args.verificationSpecified = true;
     }
     else if (arg === '--run-verification') args.runVerification = true;
+    else if (arg === '--branch') args.branch = argv[++index] || '';
     else if (arg === '--json') args.json = true;
     else if (arg === '--help' || arg === '-h') args.help = true;
   }
@@ -39,6 +41,7 @@ function usage() {
     'Usage:',
     '  node scripts/pr-ready.js --pr <pull-request-url> --run-verification',
     '  node scripts/pr-ready.js --pr <pull-request-url> --verification "npm run test"',
+    '  node scripts/pr-ready.js --pr <pull-request-url> --branch <branch-name> --run-verification',
     '',
     'Writes .planning/pr-readiness/<branch>.md and exits 0 only when local readiness gates pass.',
     'When --verification is omitted, Citadel selects a verification profile from changed paths.',
@@ -172,7 +175,7 @@ function renderReport(readiness) {
 
 function assessReadiness(projectRoot, options = {}) {
   const root = path.resolve(projectRoot || process.cwd());
-  const branch = runGit(root, ['branch', '--show-current']) || 'detached';
+  const branch = options.branch || runGit(root, ['branch', '--show-current']) || 'detached';
   const head = runGit(root, ['rev-parse', '--short', 'HEAD']);
   const verificationProfile = selectVerificationProfile(root, {
     changedFiles: options.changedFiles,
@@ -252,6 +255,7 @@ function main() {
     pr: args.pr,
     verification: args.verification,
     runVerification: args.runVerification,
+    branch: args.branch,
   });
 
   if (args.json) {

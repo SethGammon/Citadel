@@ -89,9 +89,9 @@ withTempProject((projectRoot) => {
 
   assert(output.includes('Citadel Dashboard'));
   assert(output.includes('NEXT ACTION'));
-  assert.equal(snapshot.nextAction.command, '/do setup');
+  assert.equal(snapshot.nextAction.command, '/do setup --express');
   assert.equal(snapshot.nextAction.repairAvailable, true);
-  assert(output.includes('Command: /do setup'));
+  assert(output.includes('Command: /do setup --express'));
   assert(output.includes('OPERATOR ARTIFACTS'));
   assert(output.includes('(none recorded yet - run npm run next)'));
   assert(output.includes('REPAIR CONSOLE'));

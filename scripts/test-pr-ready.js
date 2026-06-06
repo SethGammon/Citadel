@@ -88,6 +88,29 @@ withTempProject((projectRoot) => {
 
   const readiness = assessReadiness(projectRoot, {
     pr: 'https://github.com/acme/repo/pull/12',
+    runVerification: true,
+    verification: 'npm run test',
+    branch: 'codex/explicit-pr-branch',
+  });
+
+  assert.equal(readiness.ready, true);
+  assert.equal(readiness.branch, 'codex/explicit-pr-branch');
+  assert.equal(readiness.reportPath, '.planning/pr-readiness/codex-explicit-pr-branch.md');
+  assert(fs.existsSync(path.join(projectRoot, readiness.reportPath)));
+});
+
+withTempProject((projectRoot) => {
+  initGit(projectRoot);
+  initPlanning(projectRoot);
+  write(path.join(projectRoot, 'package.json'), JSON.stringify({
+    scripts: { test: 'node test.js' },
+  }, null, 2));
+  write(path.join(projectRoot, 'test.js'), 'process.exit(0);\n');
+  childProcess.execFileSync('git', ['add', '.'], { cwd: projectRoot, stdio: 'ignore' });
+  childProcess.execFileSync('git', ['commit', '-m', 'init'], { cwd: projectRoot, stdio: 'ignore' });
+
+  const readiness = assessReadiness(projectRoot, {
+    pr: 'https://github.com/acme/repo/pull/12',
     runVerification: false,
     verification: 'npm run test',
     now: '2026-06-05T00:00:00.000Z',
@@ -123,6 +146,36 @@ withTempProject((projectRoot) => {
   assert.equal(readiness.ready, false);
   assert.equal(readiness.gates.prUrl.pass, false);
   assert.equal(readiness.gates.verification.pass, false);
+});
+
+withTempProject((projectRoot) => {
+  initGit(projectRoot);
+  initPlanning(projectRoot);
+  write(path.join(projectRoot, 'package.json'), JSON.stringify({
+    scripts: { test: 'node test.js' },
+  }, null, 2));
+  write(path.join(projectRoot, 'test.js'), 'process.exit(0);\n');
+  childProcess.execFileSync('git', ['add', '.'], { cwd: projectRoot, stdio: 'ignore' });
+  childProcess.execFileSync('git', ['commit', '-m', 'init'], { cwd: projectRoot, stdio: 'ignore' });
+
+  const output = childProcess.spawnSync(process.execPath, [
+    path.join(__dirname, 'pr-ready.js'),
+    '--project-root',
+    projectRoot,
+    '--pr',
+    'https://github.com/acme/repo/pull/12',
+    '--branch',
+    'codex/cli-pr-branch',
+    '--run-verification',
+    '--verification',
+    'npm run test',
+    '--json',
+  ], { encoding: 'utf8' });
+
+  assert.equal(output.status, 0);
+  const readiness = JSON.parse(output.stdout);
+  assert.equal(readiness.branch, 'codex/cli-pr-branch');
+  assert.equal(readiness.reportPath, '.planning/pr-readiness/codex-cli-pr-branch.md');
 });
 
 withTempProject((projectRoot) => {

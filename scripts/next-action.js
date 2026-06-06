@@ -124,13 +124,17 @@ function compactTimestamp(value) {
   return date.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}Z$/, 'Z');
 }
 
+function isSetupCommand(command) {
+  return command === '/do setup' || command === '/do setup --express';
+}
+
 function approvalBoundaryFor(action) {
   const command = String(action?.command || '').trim();
   if (!command) return 'manual-review';
   if (command === '/autopilot') return 'campaign-intake';
   if (command === '/do continue') return 'agent-continuation';
   if (command === '/merge-review') return 'merge-review';
-  if (command === '/do setup') return 'project-setup';
+  if (isSetupCommand(command)) return 'project-setup';
   if (command === '/telemetry') return 'telemetry-review';
   if (command.startsWith('/')) return 'agent-route';
   if (command.startsWith('git status')) return 'worktree-review';
@@ -142,7 +146,7 @@ function approvalRiskFor(action) {
   if (command === '/autopilot') return 'medium-high';
   if (command === '/do continue') return 'medium';
   if (command === '/merge-review') return 'medium';
-  if (command === '/do setup') return 'medium';
+  if (isSetupCommand(command)) return 'medium';
   if (command === '/telemetry') return 'low';
   if (command.startsWith('git status')) return 'low';
   return 'medium';
@@ -171,7 +175,7 @@ function verificationPlanFor(action) {
       'Confirm dashboard merge-review queue count falls or the remaining blocker is documented.',
     ];
   }
-  if (command === '/do setup') {
+  if (isSetupCommand(command)) {
     return [
       'Run `node scripts/dashboard.js --json` and confirm `.planning/` exists.',
       'Confirm generated project guidance paths point at the current project root.',

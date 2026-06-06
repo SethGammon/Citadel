@@ -230,7 +230,7 @@ QUICK COMMANDS
 
 ### Step 4: FRINGE CASE HANDLING
 
-**`.planning/` missing:** All zeros, "(none active)"; add "Run /do setup to initialize."
+**`.planning/` missing:** All zeros, "(none active)"; add "Run /do setup --express to initialize."
 **harness.json missing or malformed:** Show "not configured" for hooks count; do not crash.
 **Malformed campaign file:** Skip it; note `(N campaign file(s) skipped — malformed)`.
 **Large telemetry files:** Read last 50 lines only.
