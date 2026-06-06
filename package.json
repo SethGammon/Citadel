@@ -20,6 +20,7 @@
     "operator": "node scripts/operator-console.js",
     "operator:summary": "node scripts/operator-console.js --summary",
     "operating:proof": "node scripts/operating-proof.js",
+    "usefulness:trial": "node scripts/usefulness-trial.js",
     "route:preview": "node scripts/route-preview.js",
     "stack:plan": "node scripts/stack-plan.js",
     "stack:plan:json": "node scripts/stack-plan.js --json",

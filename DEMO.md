@@ -104,4 +104,5 @@ For a 90-second proof clip, record the core demo in a real terminal or agent win
 Keep the recording practical: real repo, real commands, real output.
 
 For the evidence checklist behind this recording, see
-[Operating Loop Proof](docs/OPERATING_LOOP_PROOF.md).
+[Operating Loop Proof](docs/OPERATING_LOOP_PROOF.md). For a stricter
+post-landing first-use assessment, run the [Usefulness Trial](docs/USEFULNESS_TRIAL.md).

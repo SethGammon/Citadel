@@ -16,6 +16,16 @@ node scripts/operating-proof.js --write
 Use `--run-verification` when you want the proof to execute the selected
 verification command instead of only reporting it.
 
+For a stricter first-use assessment, run:
+
+```bash
+node scripts/usefulness-trial.js --write --run-verification
+```
+
+That writes `.planning/usefulness-trial/latest.md` and returns a decision such
+as `ready-for-dogfood`, `setup-needed`, `incomplete-evidence`, or `blocked`.
+See [Usefulness Trial](USEFULNESS_TRIAL.md).
+
 ## The Loop
 
 | Step | Command or surface | Evidence to inspect | What it proves |
