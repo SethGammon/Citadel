@@ -310,5 +310,7 @@ The dashboard reports campaign truth problems with executable repairs:
 ## See Also
 
 - `examples/campaign-example.md` — A complete, realistic campaign
+- [REPORT_ARTIFACTS.md](REPORT_ARTIFACTS.md) — Guide to Citadel's research,
+  verification, review, approval, readiness, and handoff reports
 - `.planning/_templates/campaign.md` — Campaign template
 - `.planning/_templates/intake-item.md` — Intake item template
