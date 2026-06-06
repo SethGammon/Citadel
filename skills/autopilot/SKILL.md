@@ -25,6 +25,41 @@ Do NOT use Autopilot for:
 
 ## Protocol
 
+### Step 0: DELIVERY PREFLIGHT
+
+When the user names a specific intake file or asks for "intake to PR", prefer
+the deterministic delivery preflight before freeform build work:
+
+```bash
+node scripts/deliver.js --intake .planning/intake/{item}.md
+```
+
+If no specific intake file is named, use:
+
+```
+node scripts/deliver.js --next
+```
+
+This selects the highest-priority pending item in `.planning/intake/` and keeps
+the golden path deterministic.
+
+This creates an active campaign with claimed scope, acceptance criteria, map
+context, and exit evidence rows, then marks the intake item `in-progress`.
+Continue from the created campaign with `/do continue`.
+
+After build and verification, package the delivery before marking the campaign
+complete:
+
+```bash
+node scripts/package-delivery.js {campaign-slug}
+```
+
+If a PR exists, record the PR as the review target:
+
+```bash
+node scripts/package-delivery.js {campaign-slug} --pr https://github.com/{owner}/{repo}/pull/{number}
+```
+
 ### Step 1: SCAN
 
 Read all files in `.planning/intake/` and identify:

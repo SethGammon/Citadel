@@ -4,6 +4,12 @@ const fs = require('fs');
 const path = require('path');
 const { getCampaignPaths, readCampaignFile } = require('./load-campaign');
 
+const COMPLETE_PHASE_STATUSES = new Set(['complete', 'completed', 'done', 'skipped']);
+
+function isPhaseComplete(phase) {
+  return COMPLETE_PHASE_STATUSES.has(String(phase.status || '').trim().toLowerCase());
+}
+
 function updateCampaignStatus(filePath, status) {
   let content = fs.readFileSync(filePath, 'utf8');
 
@@ -17,6 +23,57 @@ function updateCampaignStatus(filePath, status) {
 
   fs.writeFileSync(filePath, content);
   return readCampaignFile(filePath);
+}
+
+function appendCompletionRecord(filePath, details = {}) {
+  let content = fs.readFileSync(filePath, 'utf8').replace(/\s*$/, '\n');
+  const lines = [
+    '',
+    '## Completion Record',
+    '',
+    `- Completed At: ${details.completedAt || new Date().toISOString()}`,
+  ];
+
+  if (details.pr) lines.push(`- PR: ${details.pr}`);
+  if (details.mergeSha) lines.push(`- Merge SHA: ${details.mergeSha}`);
+  if (details.verification) lines.push(`- Verification: ${details.verification}`);
+  if (details.note) lines.push(`- Note: ${details.note}`);
+
+  if (/^##\s+Completion Record\s*$/im.test(content)) {
+    content = content.replace(
+      /^##\s+Completion Record\s*\r?\n[\s\S]*?(?=^##\s+|\s*$)/im,
+      lines.join('\n') + '\n\n'
+    );
+  } else {
+    content += `${lines.join('\n')}\n`;
+  }
+
+  fs.writeFileSync(filePath, content);
+  return readCampaignFile(filePath);
+}
+
+function completeCampaign(filePath, projectRoot, options = {}) {
+  const campaign = readCampaignFile(filePath);
+  const incomplete = (campaign.phases || []).filter((phase) => !isPhaseComplete(phase));
+  if (incomplete.length > 0 && !options.force) {
+    const labels = incomplete.map((phase) => `phase:${phase.number}:${phase.status}`).join(', ');
+    throw new Error(`Campaign has incomplete phases: ${labels}. Use --force only after human review.`);
+  }
+
+  updateCampaignStatus(filePath, 'completed');
+  const recorded = appendCompletionRecord(filePath, {
+    completedAt: options.completedAt,
+    pr: options.pr,
+    mergeSha: options.mergeSha,
+    verification: options.verification,
+    note: options.note,
+  });
+
+  if (options.archive) {
+    return archiveCampaign(recorded.filePath, projectRoot);
+  }
+
+  return recorded;
 }
 
 /**
@@ -71,6 +128,8 @@ function archiveCampaign(filePath, projectRoot) {
 
 module.exports = {
   archiveCampaign,
+  completeCampaign,
+  isPhaseComplete,
   updateCampaignStatus,
   updatePhaseStatus,
 };

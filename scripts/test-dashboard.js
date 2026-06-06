@@ -7,7 +7,7 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 
-const { collectDashboard, renderDashboard, relativeTime } = require('./dashboard');
+const { classifyHookProblem, collectDashboard, renderDashboard, relativeTime } = require('./dashboard');
 
 function withTempProject(run) {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'citadel-dashboard-'));
@@ -31,18 +31,319 @@ assert.equal(relativeTime('2026-06-04T12:00:00.000Z', new Date('2026-06-04T12:00
 assert.equal(relativeTime('2026-06-04T11:30:00.000Z', new Date('2026-06-04T12:00:00.000Z')), '30 min ago');
 assert.equal(relativeTime('2026-06-03T12:00:00.000Z', new Date('2026-06-04T12:00:00.000Z')), '1 day ago');
 
+{
+  const classified = classifyHookProblem({
+    timestamp: '2026-06-04T11:59:00.000Z',
+    hook: 'protect-files',
+    action: 'blocked',
+    detail: 'Read .env (.env secrets)',
+  }, new Date('2026-06-04T12:00:00.000Z'));
+  assert.equal(classified.category, 'safety-block');
+  assert.equal(classified.actionable, false);
+  assert.equal(classified.severity, 'info');
+}
+
+{
+  const classified = classifyHookProblem({
+    timestamp: '2026-06-04T11:59:00.000Z',
+    hook: 'protect-files',
+    action: 'parse-fail',
+    detail: 'Could not parse stdin JSON',
+  }, new Date('2026-06-04T12:00:00.000Z'));
+  assert.equal(classified.category, 'hook-failure');
+  assert.equal(classified.actionable, true);
+  assert.equal(classified.severity, 'high');
+}
+
+{
+  const classified = classifyHookProblem({
+    timestamp: '2026-06-04T11:59:05.000Z',
+    hook: 'external-action-gate',
+    action: 'consent-block',
+    detail: 'git push: git push -u origin codex/branch',
+  }, new Date('2026-06-04T12:00:00.000Z'), {
+    auditEntries: [
+      { timestamp: '2026-06-04T11:59:00.000Z', event: 'tool-call', target: 'git push origin codex/branch' },
+    ],
+  });
+  assert.equal(classified.category, 'resolved-approval');
+  assert.equal(classified.actionable, false);
+  assert.equal(classified.severity, 'info');
+}
+
+{
+  const classified = classifyHookProblem({
+    timestamp: '2026-06-04T11:30:00.000Z',
+    hook: 'external-action-gate',
+    action: 'consent-block',
+    detail: 'git push: git push origin codex/branch',
+  }, new Date('2026-06-04T12:00:00.000Z'));
+  assert.equal(classified.category, 'stale-approval');
+  assert.equal(classified.actionable, false);
+  assert.equal(classified.severity, 'low');
+}
+
 withTempProject((projectRoot) => {
   const snapshot = collectDashboard({ projectRoot, now: '2026-06-04T12:00:00.000Z' });
   const output = renderDashboard(snapshot);
 
   assert(output.includes('Citadel Dashboard'));
   assert(output.includes('NEXT ACTION'));
-  assert(output.includes('/do setup'));
+  assert.equal(snapshot.nextAction.command, '/do setup');
+  assert.equal(snapshot.nextAction.repairAvailable, true);
+  assert(output.includes('Command: /do setup'));
+  assert(output.includes('REPAIR CONSOLE'));
   assert(output.includes('CAMPAIGNS'));
   assert(output.includes('FLEET SESSIONS'));
   assert(output.includes('HEALTH'));
   assert(!output.includes('undefined'));
   assert(!output.includes('ENOENT'));
+});
+
+withTempProject((projectRoot) => {
+  write(path.join(projectRoot, '.planning', 'intake', '_TEMPLATE.md'), 'status: pending\n');
+  const snapshot = collectDashboard({ projectRoot, now: '2026-06-04T12:00:00.000Z' });
+  assert.equal(snapshot.pending.intakeItems, 0);
+});
+
+withTempProject((projectRoot) => {
+  write(path.join(projectRoot, '.planning', 'campaigns', 'done-but-active.md'), [
+    '---',
+    'status: active',
+    '---',
+    '',
+    '# Campaign: Done But Active',
+    '',
+    'Direction: Prove completion repair appears.',
+    '',
+    'Status: active',
+    '',
+    '## Phases',
+    '',
+    '| # | Status | Type | Phase | Done When |',
+    '|---|--------|------|-------|-----------|',
+    '| 1 | complete | build | Build | done |',
+    '| 2 | completed | verify | Verify | tests pass |',
+  ].join('\n'));
+
+  const snapshot = collectDashboard({ projectRoot, now: '2026-06-04T12:00:00.000Z' });
+  const output = renderDashboard(snapshot);
+
+  assert.equal(snapshot.campaigns[0].status, 'needs-completion');
+  assert.equal(snapshot.nextAction.label, 'Complete done-but-active');
+  assert.equal(snapshot.nextAction.command, 'node scripts/campaign.js complete done-but-active --archive');
+  assert.equal(snapshot.nextAction.confidence, 'high');
+  assert(output.includes('repair | high | Complete done-but-active'));
+  assert(output.includes('done-but-active: Phase 2/2 - needs-completion'));
+});
+
+withTempProject((projectRoot) => {
+  write(path.join(projectRoot, '.planning', 'campaigns', 'done-in-active-dir.md'), [
+    '---',
+    'status: completed',
+    '---',
+    '',
+    '# Campaign: Done In Active Dir',
+    '',
+    'Direction: Prove archive repair appears.',
+    '',
+    'Status: completed',
+    '',
+    '## Phases',
+    '',
+    '| # | Status | Type | Phase | Done When |',
+    '|---|--------|------|-------|-----------|',
+    '| 1 | complete | build | Build | done |',
+  ].join('\n'));
+
+  const snapshot = collectDashboard({ projectRoot, now: '2026-06-04T12:00:00.000Z' });
+  const output = renderDashboard(snapshot);
+
+  assert.equal(snapshot.campaigns[0].status, 'needs-archive');
+  assert.equal(snapshot.nextAction.label, 'Archive completed campaign done-in-active-dir');
+  assert.equal(snapshot.nextAction.command, 'node scripts/campaign.js complete done-in-active-dir --archive');
+  assert(output.includes('repair | high | Archive completed campaign done-in-active-dir'));
+  assert(output.includes('done-in-active-dir: Phase 1/1 - needs-archive'));
+});
+
+withTempProject((projectRoot) => {
+  write(path.join(projectRoot, '.planning', 'campaigns', 'ready-for-package.md'), [
+    '---',
+    'status: active',
+    '---',
+    '',
+    '# Campaign: Ready For Package',
+    '',
+    'Direction: Prove review package repair appears.',
+    '',
+    'Status: active',
+    '',
+    '## Phases',
+    '',
+    '| # | Status | Type | Phase | Done When |',
+    '|---|--------|------|-------|-----------|',
+    '| 1 | complete | brief | Intake preflight | done |',
+    '| 2 | complete | build | Build | done |',
+    '| 3 | complete | verify | Verify | tests pass |',
+    '| 4 | pending | package | Package for review | review package exists |',
+    '',
+    '## Exit Evidence',
+    '',
+    '| Target | ID | Type | Required | Evidence | Status | Retries Remaining | Next Action |',
+    '|---|---|---|---|---|---|---|---|',
+    '| phase:2 | implementation-diff | file_diff | yes | git diff --stat | resolved | 2 | implement requested change |',
+    '| phase:3 | verification-command | test_result | yes | npm run test | pass | 2 | fix verification failures |',
+    '| phase:4 | review-package | review_package | yes | .planning/review-packages/ready-for-package.md | pending | 2 | package delivery for review |',
+  ].join('\n'));
+
+  const snapshot = collectDashboard({ projectRoot, now: '2026-06-04T12:00:00.000Z' });
+  const output = renderDashboard(snapshot);
+
+  assert.equal(snapshot.campaigns[0].status, 'needs-review-package');
+  assert.equal(snapshot.nextAction.label, 'Package ready-for-package for review');
+  assert.equal(snapshot.nextAction.command, 'node scripts/package-delivery.js ready-for-package');
+  assert.equal(snapshot.nextAction.confidence, 'high');
+  assert(output.includes('repair | high | Package ready-for-package for review'));
+  assert(output.includes('campaign review-package evidence is not ready'));
+});
+
+withTempProject((projectRoot) => {
+  write(path.join(projectRoot, '.planning', 'campaigns', 'not-ready-for-package.md'), [
+    '---',
+    'status: active',
+    '---',
+    '',
+    '# Campaign: Not Ready For Package',
+    '',
+    'Direction: Prove package repair waits for prior phases.',
+    '',
+    'Status: active',
+    '',
+    '## Phases',
+    '',
+    '| # | Status | Type | Phase | Done When |',
+    '|---|--------|------|-------|-----------|',
+    '| 1 | complete | brief | Intake preflight | done |',
+    '| 2 | pending | build | Build | done |',
+    '| 3 | pending | verify | Verify | tests pass |',
+    '| 4 | pending | package | Package for review | review package exists |',
+    '',
+    '## Exit Evidence',
+    '',
+    '| Target | ID | Type | Required | Evidence | Status | Retries Remaining | Next Action |',
+    '|---|---|---|---|---|---|---|---|',
+    '| phase:4 | review-package | review_package | yes | .planning/review-packages/not-ready-for-package.md | pending | 2 | package delivery for review |',
+  ].join('\n'));
+
+  const snapshot = collectDashboard({ projectRoot, now: '2026-06-04T12:00:00.000Z' });
+
+  assert.equal(snapshot.nextAction.label, 'Resume not-ready-for-package');
+  assert.equal(snapshot.nextAction.command, '/do continue');
+  assert(!snapshot.repairs.some((repair) => repair.command === 'node scripts/package-delivery.js not-ready-for-package'));
+});
+
+withTempProject((projectRoot) => {
+  write(path.join(projectRoot, '.planning', 'campaigns', 'complete-but-unpackaged.md'), [
+    '---',
+    'status: active',
+    '---',
+    '',
+    '# Campaign: Complete But Unpackaged',
+    '',
+    'Direction: Prove packaging outranks completion.',
+    '',
+    'Status: active',
+    '',
+    '## Phases',
+    '',
+    '| # | Status | Type | Phase | Done When |',
+    '|---|--------|------|-------|-----------|',
+    '| 1 | complete | build | Build | done |',
+    '| 2 | complete | verify | Verify | tests pass |',
+    '| 3 | complete | package | Package for review | review package exists |',
+    '',
+    '## Exit Evidence',
+    '',
+    '| Target | ID | Type | Required | Evidence | Status | Retries Remaining | Next Action |',
+    '|---|---|---|---|---|---|---|---|',
+    '| phase:3 | review-package | review_package | yes | .planning/review-packages/complete-but-unpackaged.md | pending | 2 | package delivery for review |',
+  ].join('\n'));
+
+  const snapshot = collectDashboard({ projectRoot, now: '2026-06-04T12:00:00.000Z' });
+
+  assert.equal(snapshot.campaigns[0].status, 'needs-review-package');
+  assert.equal(snapshot.nextAction.label, 'Package complete-but-unpackaged for review');
+  assert(!snapshot.repairs.some((repair) => repair.label === 'Complete complete-but-unpackaged'));
+});
+
+withTempProject((projectRoot) => {
+  write(path.join(projectRoot, '.planning', 'telemetry', 'doc-sync-queue.jsonl'), [
+    JSON.stringify({ event: 'session-end', status: 'pending' }),
+    JSON.stringify({ event: 'session-end', status: 'pending' }),
+    JSON.stringify({ event: 'session-end', status: 'surfaced' }),
+  ].join('\n') + '\n');
+
+  const snapshot = collectDashboard({ projectRoot, now: '2026-06-04T12:00:00.000Z' });
+  const output = renderDashboard(snapshot);
+
+  assert.equal(snapshot.pending.docSync, 2);
+  assert.equal(snapshot.nextAction.label, 'Drain doc-sync queue');
+  assert.equal(snapshot.nextAction.command, '/learn --doc-sync');
+  assert.equal(snapshot.repairs[0].runbook, 'skills/learn/SKILL.md');
+  assert(output.includes('repair | medium | Drain doc-sync queue'));
+  assert(output.includes('why: 2 doc-sync item(s) are queued'));
+});
+
+withTempProject((projectRoot) => {
+  appendJsonl(path.join(projectRoot, '.planning', 'telemetry', 'hook-errors.jsonl'), [
+    { timestamp: '2026-06-04T11:59:00.000Z', hook: 'protect-files', action: 'blocked', detail: 'Read .env (.env secrets)' },
+    { timestamp: '2026-06-04T11:58:00.000Z', hook: 'external-action-gate', action: 'blocked', detail: 'gh release create: gh release create v1.0.0' },
+    { timestamp: '2026-06-02T11:58:00.000Z', hook: 'quality-gate', action: 'blocked', detail: 'old quality gate block' },
+  ]);
+
+  const snapshot = collectDashboard({ projectRoot, now: '2026-06-04T12:00:00.000Z' });
+  const output = renderDashboard(snapshot);
+
+  assert.equal(snapshot.problemSummary.actionable, 0);
+  assert.equal(snapshot.problemSummary.safetyBlocks, 2);
+  assert.equal(snapshot.problemSummary.stale, 1);
+  assert.equal(snapshot.nextAction.label, 'No urgent Citadel action detected');
+  assert(output.includes('Actionable: 0 | Safety blocks: 2 | Resolved approvals: 0 | Stale: 1'));
+  assert(output.includes('info | safety-block | protect-files'));
+  assert(output.includes('low | stale | quality-gate'));
+});
+
+withTempProject((projectRoot) => {
+  appendJsonl(path.join(projectRoot, '.planning', 'telemetry', 'hook-errors.jsonl'), [
+    { timestamp: '2026-06-04T11:59:00.000Z', hook: 'external-action-gate', action: 'consent-block', detail: 'git push: git push origin codex/branch' },
+  ]);
+  appendJsonl(path.join(projectRoot, '.planning', 'telemetry', 'audit.jsonl'), [
+    { timestamp: '2026-06-04T11:59:30.000Z', event: 'tool-call', target: 'git push origin codex/branch' },
+  ]);
+
+  const snapshot = collectDashboard({ projectRoot, now: '2026-06-04T12:00:00.000Z' });
+  const output = renderDashboard(snapshot);
+
+  assert.equal(snapshot.problemSummary.actionable, 0);
+  assert.equal(snapshot.problemSummary.resolvedApprovals, 1);
+  assert.equal(snapshot.nextAction.label, 'No urgent Citadel action detected');
+  assert(output.includes('info | resolved-approval | external-action-gate'));
+});
+
+withTempProject((projectRoot) => {
+  appendJsonl(path.join(projectRoot, '.planning', 'telemetry', 'hook-errors.jsonl'), [
+    { timestamp: '2026-06-04T11:59:00.000Z', hook: 'external-action-gate', action: 'first-encounter', detail: 'git push: git push origin branch' },
+  ]);
+
+  const snapshot = collectDashboard({ projectRoot, now: '2026-06-04T12:00:00.000Z' });
+  const output = renderDashboard(snapshot);
+
+  assert.equal(snapshot.problemSummary.actionable, 1);
+  assert.equal(snapshot.problemSummary.approvalNeeded, 1);
+  assert.equal(snapshot.nextAction.label, 'Review recent hook problems');
+  assert.equal(snapshot.nextAction.command, '/telemetry');
+  assert(output.includes('medium | approval-needed | external-action-gate'));
+  assert(output.includes('1 actionable hook problem(s) are recorded'));
 });
 
 withTempProject((projectRoot) => {
@@ -117,6 +418,8 @@ withTempProject((projectRoot) => {
 
   assert.equal(snapshot.campaigns.length, 1);
   assert.equal(snapshot.campaigns[0].phase.label, 'Phase 2/3');
+  assert.equal(snapshot.nextAction.label, 'Resume test-campaign');
+  assert.equal(snapshot.nextAction.command, '/do continue');
   assert.equal(snapshot.fleetSessions.length, 1);
   assert.equal(snapshot.worktreeReadiness.length, 1);
   assert(output.includes('test-campaign: Phase 2/3 - active'));
@@ -129,6 +432,8 @@ withTempProject((projectRoot) => {
   assert(output.includes('missing verification evidence'));
   assert(output.includes('HOOK ACTIVITY'));
   assert(output.includes('quality-gate'));
+  assert(output.includes('REPAIR CONSOLE'));
+  assert(output.includes('repair | high | Resume test-campaign'));
   assert(output.includes('Trust level:                        familiar'));
   assert(!output.includes('{"hook"'));
   assert(!output.includes('undefined'));

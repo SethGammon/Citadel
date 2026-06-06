@@ -7,6 +7,8 @@ const path = require('path');
 const { execFileSync } = require('child_process');
 
 const { parseCampaignContent } = require('../core/campaigns/parse-campaign');
+const { isPhaseComplete } = require('../core/campaigns/update-campaign');
+const { validateExitEvidence } = require('../core/evidence/contracts');
 const { readJsonlDetailed } = require('../core/telemetry/io');
 const { getCoordinationStatus } = require('../core/coordination/instances');
 const { getClaimStatus } = require('../core/coordination/claims');
@@ -96,6 +98,13 @@ function countJsonlLines(filePath) {
   return raw.split(/\r?\n/).filter(Boolean).length;
 }
 
+function countActionableJsonl(filePath, actionableStatuses = ['needs-review', 'pending']) {
+  const detail = readJsonlDetailed(filePath);
+  if (!detail.exists) return 0;
+  const statuses = new Set(actionableStatuses);
+  return detail.entries.filter((entry) => statuses.has(entry.status)).length;
+}
+
 function truncate(value, max) {
   const text = String(value || '').replace(/\s+/g, ' ').trim();
   if (text.length <= max) return text;
@@ -140,12 +149,20 @@ function extractDirection(content) {
 }
 
 function normalizeStatus(campaign) {
-  return String(
+  const status = String(
     campaign.frontmatter.status ||
     campaign.frontmatter.Status ||
     campaign.bodyStatus ||
     'unknown'
   ).toLowerCase();
+
+  const phases = campaign.phases || [];
+  const allPhasesComplete = phases.length > 0 && phases.every(isPhaseComplete);
+  if ((status === 'active' || status === 'needs-continue') && allPhasesComplete) {
+    return 'needs-completion';
+  }
+
+  return status;
 }
 
 function phaseSummary(campaign) {
@@ -179,6 +196,40 @@ function lastDecision(content) {
   return decisions.length > 0 ? decisions[decisions.length - 1].replace(/^- /, '') : null;
 }
 
+function packagePhaseReadiness(parsed) {
+  const phases = parsed.phases || [];
+  const packagePhase = phases.find((phase) => {
+    return String(phase.type || '').toLowerCase() === 'package' ||
+      /package|review/i.test(String(phase.name || ''));
+  });
+  if (!packagePhase) return { hasPackagePhase: false, readyForPackage: false };
+
+  const prior = phases.filter((phase) => phase.number < packagePhase.number);
+  return {
+    hasPackagePhase: true,
+    phaseNumber: packagePhase.number,
+    status: packagePhase.status,
+    readyForPackage: !isPhaseComplete(packagePhase) && prior.every(isPhaseComplete),
+  };
+}
+
+function reviewPackageEvidenceStatus(content, projectRoot) {
+  const report = validateExitEvidence(content, {
+    projectRoot,
+    target: 'review-package',
+  });
+  if (report.missingDeclarations) return null;
+
+  const failure = report.failures[0] || null;
+  const item = report.items[0] || null;
+  return {
+    pass: report.pass && !report.missingDeclarations,
+    item,
+    failure,
+    issues: failure ? failure.issues : [],
+  };
+}
+
 function readCampaigns(projectRoot) {
   const campaignDir = path.join(projectRoot, '.planning', 'campaigns');
   const files = listFiles(campaignDir, (entry) => entry.endsWith('.md'));
@@ -192,12 +243,27 @@ function readCampaigns(projectRoot) {
       const slug = path.basename(filePath, '.md');
       const parsed = parseCampaignContent(content, { slug });
       const direction = extractDirection(content);
+      let status = normalizeStatus(parsed);
+      const packagePhase = packagePhaseReadiness(parsed);
+      const reviewPackageEvidence = reviewPackageEvidenceStatus(content, projectRoot);
+      if (
+        reviewPackageEvidence &&
+        !reviewPackageEvidence.pass &&
+        (packagePhase.readyForPackage || status === 'needs-completion')
+      ) {
+        status = 'needs-review-package';
+      }
+      if (status === 'completed' && path.dirname(filePath) === campaignDir) {
+        status = 'needs-archive';
+      }
       campaigns.push({
         slug,
         filePath,
-        status: normalizeStatus(parsed),
+        status,
         direction,
         phase: phaseSummary(parsed),
+        packagePhase,
+        reviewPackageEvidence,
         lastDecision: lastDecision(content),
         modifiedAt: fs.statSync(filePath).mtime.toISOString(),
       });
@@ -209,6 +275,9 @@ function readCampaigns(projectRoot) {
   campaigns.sort((left, right) => {
     const rank = (status) => {
       if (status === 'active') return 0;
+      if (status === 'needs-review-package') return 1;
+      if (status === 'needs-completion') return 1;
+      if (status === 'needs-archive') return 1;
       if (status.includes('approval') || status.includes('pending') || status === 'needs-continue') return 1;
       if (status === 'parked' || status === 'paused') return 2;
       return 3;
@@ -346,9 +415,9 @@ function readQueueCounts(projectRoot) {
   const intakeDir = path.join(planningDir, 'intake');
 
   return {
-    docSync: countJsonlLines(path.join(telemetryDir, 'doc-sync-queue.jsonl')),
+    docSync: countActionableJsonl(path.join(telemetryDir, 'doc-sync-queue.jsonl')),
     mergeReviews: countJsonlLines(path.join(telemetryDir, 'merge-check-queue.jsonl')),
-    intakeItems: listFiles(intakeDir, (entry) => entry !== '.gitkeep').length,
+    intakeItems: listFiles(intakeDir, (entry) => entry.endsWith('.md') && entry !== '_TEMPLATE.md').length,
   };
 }
 
@@ -413,22 +482,141 @@ function readHealth(projectRoot) {
   };
 }
 
-function readProblems(projectRoot) {
+function extractBlockedCommand(detail) {
+  const text = String(detail || '');
+  const match = text.match(/^[^:]+:\s+(.+)$/);
+  return (match ? match[1] : text).trim();
+}
+
+function normalizeCommandForMatch(command) {
+  return String(command || '')
+    .replace(/\s+/g, ' ')
+    .replace(/^git push -u /, 'git push ')
+    .trim();
+}
+
+function hasLaterMatchingToolCall(entry, auditEntries = []) {
+  const detail = entry.detail || entry.reason || entry.message || entry.error || '';
+  const command = normalizeCommandForMatch(extractBlockedCommand(detail));
+  if (!command) return false;
+
+  const blockedAt = new Date(eventTimestamp(entry) || 0).getTime();
+  return auditEntries.some((auditEntry) => {
+    if ((auditEntry.event || '') !== 'tool-call') return false;
+    const target = normalizeCommandForMatch(auditEntry.target || auditEntry.command || '');
+    if (!target || target !== command) return false;
+    const calledAt = new Date(eventTimestamp(auditEntry) || 0).getTime();
+    return calledAt + 5000 >= blockedAt;
+  });
+}
+
+function classifyHookProblem(entry, now = new Date(), context = {}) {
+  const hook = entry.hook || 'hook';
+  const actionName = entry.action || entry.outcome || entry.status || 'recorded';
+  const detail = entry.detail || entry.reason || entry.message || entry.error || entry.action || 'hook issue recorded';
+  const timestamp = eventTimestamp(entry);
+  const ageMs = timestamp ? now.getTime() - new Date(timestamp).getTime() : 0;
+  const stale = timestamp ? ageMs > 24 * 60 * 60 * 1000 : false;
+  const description = truncate(detail, 90);
+  const text = `${hook} ${actionName} ${detail}`.toLowerCase();
+
+  let category = 'attention';
+  let severity = 'medium';
+  let actionable = true;
+
+  if (stale) {
+    category = 'stale';
+    severity = 'low';
+    actionable = false;
+  } else if (actionName === 'error' || actionName === 'parse-fail' || text.includes('unknown error')) {
+    category = 'hook-failure';
+    severity = 'high';
+    actionable = true;
+  } else if (actionName === 'blocked-restricted') {
+    category = 'restricted-scope-block';
+    severity = 'high';
+    actionable = true;
+  } else if (
+    hook === 'external-action-gate' &&
+    (actionName === 'first-encounter' || actionName === 'consent-block') &&
+    hasLaterMatchingToolCall(entry, context.auditEntries || [])
+  ) {
+    category = 'resolved-approval';
+    severity = 'info';
+    actionable = false;
+  } else if (
+    hook === 'external-action-gate' &&
+    (actionName === 'first-encounter' || actionName === 'consent-block') &&
+    timestamp &&
+    ageMs > 15 * 60 * 1000
+  ) {
+    category = 'stale-approval';
+    severity = 'low';
+    actionable = false;
+  } else if (hook === 'external-action-gate' && (actionName === 'first-encounter' || actionName === 'consent-block')) {
+    category = 'approval-needed';
+    severity = 'medium';
+    actionable = true;
+  } else if (
+    hook === 'protect-files' ||
+    (hook === 'external-action-gate' && actionName === 'blocked')
+  ) {
+    category = 'safety-block';
+    severity = 'info';
+    actionable = false;
+  }
+
+  return {
+    hook,
+    action: actionName,
+    category,
+    severity,
+    actionable,
+    stale,
+    relative: relativeTime(timestamp, now),
+    description,
+  };
+}
+
+function summarizeProblemTaxonomy(problems) {
+  const summary = {
+    total: problems.length,
+    actionable: 0,
+    safetyBlocks: 0,
+    stale: 0,
+    hookFailures: 0,
+    approvalNeeded: 0,
+    resolvedApprovals: 0,
+  };
+
+  for (const problem of problems) {
+    if (problem.actionable) summary.actionable++;
+    if (problem.category === 'safety-block') summary.safetyBlocks++;
+    if (problem.category === 'stale' || problem.category === 'stale-approval') summary.stale++;
+    if (problem.category === 'hook-failure') summary.hookFailures++;
+    if (problem.category === 'approval-needed') summary.approvalNeeded++;
+    if (problem.category === 'resolved-approval') summary.resolvedApprovals++;
+  }
+
+  return summary;
+}
+
+function readProblems(projectRoot, now = new Date()) {
   const telemetryDir = path.join(projectRoot, '.planning', 'telemetry');
   const errors = tailJsonl(path.join(telemetryDir, 'hook-errors.jsonl'), 100);
-  return errors.slice(-5).reverse().map((entry) => ({
-    hook: entry.hook || 'hook',
-    relative: relativeTime(eventTimestamp(entry)),
-    description: truncate(
-      entry.detail ||
-      entry.reason ||
-      entry.message ||
-      entry.error ||
-      entry.action ||
-      'hook issue recorded',
-      90
-    ),
-  }));
+  const auditEntries = tailJsonl(path.join(telemetryDir, 'audit.jsonl'), 300);
+  const problems = errors
+    .map((entry) => classifyHookProblem(entry, now, { auditEntries }))
+    .sort((left, right) => {
+      const severityOrder = { high: 0, medium: 1, info: 2, low: 3 };
+      if (left.actionable !== right.actionable) return left.actionable ? -1 : 1;
+      return (severityOrder[left.severity] || 4) - (severityOrder[right.severity] || 4);
+    });
+
+  return {
+    items: problems.slice(0, 8),
+    summary: summarizeProblemTaxonomy(problems),
+  };
 }
 
 function readCoordination(projectRoot) {
@@ -461,6 +649,30 @@ function readWorktrees(projectRoot) {
     });
   } catch {
     return [];
+  }
+}
+
+function readGitStatus(projectRoot) {
+  try {
+    const output = execFileSync('git', ['status', '--short'], {
+      cwd: projectRoot,
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'ignore'],
+    });
+    const lines = output.split(/\r?\n/).map((line) => line.trimEnd()).filter(Boolean);
+    return {
+      available: true,
+      dirty: lines.length > 0,
+      changedFiles: lines.length,
+      sample: lines.slice(0, 8),
+    };
+  } catch {
+    return {
+      available: false,
+      dirty: false,
+      changedFiles: 0,
+      sample: [],
+    };
   }
 }
 
@@ -506,7 +718,10 @@ function collectDashboard(options = {}) {
   const cost = safeCostDashboard();
   const coordination = readCoordination(projectRoot);
   const worktrees = readWorktrees(projectRoot);
+  const gitStatus = readGitStatus(projectRoot);
   const worktreeReadiness = readWorktreeReadiness(projectRoot);
+  const pending = readQueueCounts(projectRoot);
+  const problems = readProblems(projectRoot, now);
 
   const mostRecentTimestamp = [
     ...recentActivity.map((entry) => entry.timestamp),
@@ -515,7 +730,7 @@ function collectDashboard(options = {}) {
     ...fleetSessions.map((session) => session.modifiedAt),
   ].filter(Boolean).sort((left, right) => new Date(right).getTime() - new Date(left).getTime())[0] || now.toISOString();
 
-  return {
+  const snapshot = {
     projectRoot,
     generatedAt: now.toISOString(),
     asOf: relativeTime(mostRecentTimestamp, now),
@@ -527,34 +742,182 @@ function collectDashboard(options = {}) {
     recentActivity,
     hookActivity,
     hookValue,
-    pending: readQueueCounts(projectRoot),
+    pending,
     health: {
       ...health,
       circuitBreakerTripsThisSession: hookValue.circuitBreakerTrips,
     },
     coordination,
     worktrees,
+    gitStatus,
     worktreeReadiness,
-    problems: readProblems(projectRoot),
-    nextAction: chooseNextAction({
-      planningExists,
-      campaigns: campaigns.campaigns,
-      fleetSessions,
-      problems: readProblems(projectRoot),
-      pending: readQueueCounts(projectRoot),
-    }),
+    problems: problems.items,
+    problemSummary: problems.summary,
   };
+
+  snapshot.repairs = buildRepairItems(snapshot);
+  snapshot.nextAction = chooseNextAction(snapshot);
+  return snapshot;
+}
+
+function action({ label, command, why, confidence = 'medium', repairAvailable = false, runbook = null }) {
+  return { label, command, why, confidence, repairAvailable, runbook };
+}
+
+function buildRepairItems(snapshot) {
+  const repairs = [];
+
+  if (!snapshot.planningExists) {
+    repairs.push(action({
+      label: 'Initialize Citadel state',
+      command: '/do setup',
+      why: '.planning/ is missing, so campaigns, intake, telemetry, and dashboard state cannot be trusted yet.',
+      confidence: 'high',
+      repairAvailable: true,
+      runbook: 'skills/setup/SKILL.md',
+    }));
+    return repairs;
+  }
+
+  const needsCompletion = snapshot.campaigns.find((campaign) => campaign.status === 'needs-completion');
+  const needsReviewPackage = snapshot.campaigns.find((campaign) => {
+    if (!campaign.reviewPackageEvidence || campaign.reviewPackageEvidence.pass) return false;
+    if (campaign.packagePhase && campaign.packagePhase.readyForPackage) return true;
+    return campaign.status === 'needs-review-package' || campaign.status === 'needs-completion';
+  });
+  if (needsReviewPackage) {
+    const issues = needsReviewPackage.reviewPackageEvidence.issues || [];
+    repairs.push(action({
+      label: `Package ${needsReviewPackage.slug} for review`,
+      command: `node scripts/package-delivery.js ${needsReviewPackage.slug}`,
+      why: issues.length > 0
+        ? `The campaign review-package evidence is not ready: ${issues.join('; ')}.`
+        : 'The campaign is ready for review packaging, but review-package evidence is still pending.',
+      confidence: 'high',
+      repairAvailable: true,
+      runbook: 'docs/CAMPAIGNS.md#intake-items',
+    }));
+  }
+
+  if (needsCompletion) {
+    repairs.push(action({
+      label: `Complete ${needsCompletion.slug}`,
+      command: `node scripts/campaign.js complete ${needsCompletion.slug} --archive`,
+      why: 'Every campaign phase is complete, but the campaign status still says active.',
+      confidence: 'high',
+      repairAvailable: true,
+      runbook: 'docs/CAMPAIGNS.md#repair-states',
+    }));
+  }
+
+  const needsArchive = snapshot.campaigns.find((campaign) => campaign.status === 'needs-archive');
+  if (needsArchive) {
+    repairs.push(action({
+      label: `Archive completed campaign ${needsArchive.slug}`,
+      command: `node scripts/campaign.js complete ${needsArchive.slug} --archive`,
+      why: 'The campaign is completed but still lives in the active campaign directory.',
+      confidence: 'high',
+      repairAvailable: true,
+      runbook: 'docs/CAMPAIGNS.md#repair-states',
+    }));
+  }
+
+  const active = snapshot.campaigns.find((campaign) => campaign.status === 'active' || campaign.status === 'needs-continue');
+  if (active) {
+    repairs.push(action({
+      label: `Resume ${active.slug}`,
+      command: '/do continue',
+      why: 'An active campaign is available and should be advanced or deliberately parked.',
+      confidence: 'high',
+      repairAvailable: true,
+      runbook: 'docs/CAMPAIGNS.md#continuation-across-sessions',
+    }));
+  }
+
+  const approval = snapshot.campaigns.find((campaign) => campaign.status.includes('approval') || campaign.status.includes('pending'));
+  if (approval) {
+    repairs.push(action({
+      label: `Review ${approval.slug}`,
+      command: '/do continue',
+      why: 'A campaign is waiting on approval, pending work, or a decision.',
+      confidence: 'medium',
+      repairAvailable: true,
+      runbook: 'docs/CAMPAIGNS.md',
+    }));
+  }
+
+  if (snapshot.pending.mergeReviews > 0) {
+    repairs.push(action({
+      label: 'Review pending Fleet merges',
+      command: '/merge-review',
+      why: `${snapshot.pending.mergeReviews} merge review item(s) are queued.`,
+      confidence: 'high',
+      repairAvailable: true,
+      runbook: 'skills/merge-review/SKILL.md',
+    }));
+  }
+
+  if (snapshot.pending.docSync > 0) {
+    repairs.push(action({
+      label: 'Drain doc-sync queue',
+      command: '/learn --doc-sync',
+      why: `${snapshot.pending.docSync} doc-sync item(s) are queued; project guidance may be stale.`,
+      confidence: snapshot.pending.docSync > 50 ? 'high' : 'medium',
+      repairAvailable: true,
+      runbook: 'skills/learn/SKILL.md',
+    }));
+  }
+
+  if (snapshot.pending.intakeItems > 0) {
+    repairs.push(action({
+      label: 'Process intake queue',
+      command: '/autopilot',
+      why: `${snapshot.pending.intakeItems} real intake item(s) are waiting in .planning/intake/.`,
+      confidence: 'medium',
+      repairAvailable: true,
+      runbook: 'skills/autopilot/SKILL.md',
+    }));
+  }
+
+  if (snapshot.gitStatus && snapshot.gitStatus.dirty) {
+    repairs.push(action({
+      label: 'Review uncommitted worktree changes',
+      command: 'git status --short',
+      why: `${snapshot.gitStatus.changedFiles} uncommitted file(s) are present; package or clear them before starting unrelated work.`,
+      confidence: 'high',
+      repairAvailable: false,
+      runbook: 'docs/CAMPAIGNS.md',
+    }));
+  }
+
+  const actionableProblems = snapshot.problemSummary?.actionable || 0;
+  if (actionableProblems > 0) {
+    repairs.push(action({
+      label: 'Review recent hook problems',
+      command: '/telemetry',
+      why: `${actionableProblems} actionable hook problem(s) are recorded. Safety blocks and stale entries are categorized separately.`,
+      confidence: 'medium',
+      repairAvailable: true,
+      runbook: 'skills/telemetry/SKILL.md',
+    }));
+  }
+
+  return repairs;
 }
 
 function chooseNextAction(snapshot) {
-  if (!snapshot.planningExists) return 'Run /do setup to initialize Citadel state for this project.';
-  const active = snapshot.campaigns.find((campaign) => campaign.status === 'active' || campaign.status === 'needs-continue');
-  if (active) return `Resume ${active.slug} with /do continue.`;
-  const approval = snapshot.campaigns.find((campaign) => campaign.status.includes('approval') || campaign.status.includes('pending'));
-  if (approval) return `Review ${approval.slug}; it is waiting on approval or a decision.`;
-  if (snapshot.problems.length > 0) return 'Review recent hook problems before starting new work.';
-  if (snapshot.pending.mergeReviews > 0) return 'Run /merge-review to inspect pending merge work.';
-  return 'No urgent Citadel action detected.';
+  if (!snapshot.repairs || snapshot.repairs.length === 0) {
+    return action({
+      label: 'No urgent Citadel action detected',
+      command: 'npm run dashboard',
+      why: 'Campaigns, queues, worktree status, and recent hook state do not show an immediate repair.',
+      confidence: 'medium',
+      repairAvailable: false,
+      runbook: 'skills/dashboard/SKILL.md',
+    });
+  }
+
+  return snapshot.repairs[0];
 }
 
 function money(value) {
@@ -569,9 +932,27 @@ function renderDashboard(snapshot) {
   lines.push(`Project: ${snapshot.projectRoot}`);
   lines.push('');
   lines.push('NEXT ACTION');
-  lines.push(`  ${snapshot.nextAction}`);
+  lines.push(`  Command: ${snapshot.nextAction.command}`);
+  lines.push(`  Why: ${snapshot.nextAction.why}`);
+  lines.push(`  Confidence: ${snapshot.nextAction.confidence}`);
+  lines.push(`  Repair available: ${snapshot.nextAction.repairAvailable ? 'yes' : 'no'}`);
+  if (snapshot.nextAction.runbook) lines.push(`  Runbook: ${snapshot.nextAction.runbook}`);
   if (!snapshot.planningExists) {
     lines.push('  Run /do setup to initialize.');
+  }
+
+  lines.push('');
+  lines.push('REPAIR CONSOLE');
+  if (!snapshot.repairs || snapshot.repairs.length === 0) {
+    lines.push('  (no repairs queued)');
+  } else {
+    for (const repair of snapshot.repairs.slice(0, 6)) {
+      const repairFlag = repair.repairAvailable ? 'repair' : 'review';
+      lines.push(`  ${repairFlag} | ${repair.confidence} | ${repair.label}`);
+      lines.push(`    command: ${repair.command}`);
+      lines.push(`    why: ${truncate(repair.why, 110)}`);
+      if (repair.runbook) lines.push(`    runbook: ${repair.runbook}`);
+    }
   }
 
   lines.push('');
@@ -598,6 +979,14 @@ function renderDashboard(snapshot) {
   }
   lines.push(`  Active instances: ${snapshot.coordination.instances.length}`);
   lines.push(`  Active claims:    ${snapshot.coordination.claims.length}`);
+  if (snapshot.gitStatus && snapshot.gitStatus.available) {
+    lines.push(`  Git changes:      ${snapshot.gitStatus.changedFiles}`);
+    for (const line of snapshot.gitStatus.sample.slice(0, 3)) {
+      lines.push(`    ${line}`);
+    }
+  } else {
+    lines.push('  Git changes:      unavailable');
+  }
 
   lines.push('');
   lines.push('WORKTREE READINESS');
@@ -654,11 +1043,14 @@ function renderDashboard(snapshot) {
 
   lines.push('');
   lines.push('PROBLEMS');
+  if (snapshot.problemSummary) {
+    lines.push(`  Actionable: ${snapshot.problemSummary.actionable} | Safety blocks: ${snapshot.problemSummary.safetyBlocks} | Resolved approvals: ${snapshot.problemSummary.resolvedApprovals} | Stale: ${snapshot.problemSummary.stale}`);
+  }
   if (snapshot.problems.length === 0) {
     lines.push('  (none recorded)');
   } else {
     for (const problem of snapshot.problems) {
-      lines.push(`  ${problem.relative} | ${problem.hook} | ${problem.description}`);
+      lines.push(`  ${problem.relative} | ${problem.severity} | ${problem.category} | ${problem.hook} | ${problem.description}`);
     }
   }
 
@@ -728,8 +1120,10 @@ if (require.main === module) {
 }
 
 module.exports = {
+  classifyHookProblem,
   collectDashboard,
   renderDashboard,
   relativeTime,
   parseArgs,
+  summarizeProblemTaxonomy,
 };

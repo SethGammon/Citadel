@@ -18,6 +18,16 @@ Intake → Brief → Plan → Build → Verify → Archive
 5. **Verify**: Typecheck, tests, quality checks
 6. **Archive**: Campaign moves to `campaigns/completed/`
 
+Complete and archive a finished campaign with:
+
+```bash
+node scripts/campaign.js complete <campaign-slug> --archive
+```
+
+The command refuses to complete campaigns with unfinished phases unless
+`--force` is used after human review. It also writes a `## Completion Record`
+for merge links, verification notes, and final evidence.
+
 ## Campaign File Format
 
 ```markdown
@@ -95,9 +105,10 @@ For high-stakes decisions (abort, rollback, scope change), Archon may spawn 3 Ph
 Campaigns can also declare an `## Exit Evidence` table. Run
 `node scripts/evidence-validate.js --file <campaign.md> --target phase:<n>`
 before advancing a phase. Required rows support file diffs, command results,
-test results, screenshots, browser route checks, doc updates, PR links, review
-thread resolution, and hook status. Missing required evidence reports a repair
-task while retries remain, then blocks advancement when retries are exhausted.
+test results, screenshots, browser route checks, doc updates, PR links, local
+review packages, review thread resolution, and hook status. Missing required
+evidence reports a repair task while retries remain, then blocks advancement
+when retries are exhausted.
 
 ## Policy Enforcement
 
@@ -120,6 +131,73 @@ Description of what needs to be done...
 
 The SessionStart hook reports pending items on every new session.
 Process them with `/autopilot` or manually with `/do`.
+
+To convert the highest-priority pending item into an evidence-backed delivery
+campaign:
+
+```bash
+node scripts/deliver.js --next
+```
+
+To convert a specific intake file:
+
+```bash
+node scripts/deliver.js --intake .planning/intake/<item>.md
+```
+
+The preflight creates `.planning/campaigns/<slug>.md`, marks the intake item
+`in-progress`, records claimed scope and acceptance criteria, and seeds the Exit
+Evidence table. Continue with `/do continue`.
+
+To inspect what `/do continue` will do without invoking a skill route:
+
+```bash
+node scripts/continue-action.js
+```
+
+To run any deterministic local continuation repair, such as review-package
+creation, use:
+
+```bash
+node scripts/continue-action.js --run
+```
+
+To produce the final PR approval-readiness handoff, run verification through
+the PR finalizer:
+
+```bash
+node scripts/pr-ready.js --pr https://github.com/<owner>/<repo>/pull/<number> --run-verification
+```
+
+The finalizer writes `.planning/pr-readiness/<branch>.md` and exits nonzero
+unless the PR URL is valid, the worktree is clean, dashboard repairs are clear,
+and the verification command exits successfully. Use `--verification "<command>"`
+to override the default `npm run test`.
+
+When the implementation and verification phases are ready for review, create a
+deterministic review package:
+
+```bash
+node scripts/package-delivery.js <campaign-slug>
+```
+
+This writes `.planning/review-packages/<campaign-slug>.md`, records that package
+in the campaign's `review-package` Exit Evidence row, and marks the packaging
+phase complete. If a pull request already exists, record it instead:
+
+```bash
+node scripts/package-delivery.js <campaign-slug> --pr https://github.com/<owner>/<repo>/pull/<number>
+```
+
+## Repair States
+
+The dashboard reports campaign truth problems with executable repairs:
+
+| Status | Meaning | Repair |
+|---|---|---|
+| `needs-review-package` | Build and verification phases are ready, but review package evidence is still pending or invalid | `node scripts/package-delivery.js <slug>` |
+| `needs-completion` | All phases are complete, but campaign status is still active | `node scripts/campaign.js complete <slug> --archive` |
+| `needs-archive` | Campaign status is completed, but the file is still in `.planning/campaigns/` | `node scripts/campaign.js complete <slug> --archive` |
 
 ## See Also
 
