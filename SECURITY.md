@@ -1,168 +1,125 @@
 # Security
 
-This document describes Citadel's security model and defensive measures against common attack vectors.
+Citadel is a local agent orchestration harness. Installing it gives Claude Code
+or OpenAI Codex project-specific instructions, hooks, scripts, skills, and
+state files that help an agent operate on a repository.
 
-## Threat Model
+That is useful, but it is also privileged local automation. Treat an installed
+Citadel project like any other developer tool that can read project files, run
+commands, create branches, and write local state.
 
-Citadel hooks run in the same security context as Claude Code itself. The primary threats are:
+For the detailed trust-boundary map, see [THREAT_MODEL.md](THREAT_MODEL.md).
 
-1. **Path Traversal** — Malicious or confused agents attempting to access files outside the project root
-2. **Shell Injection** — Command injection via unsanitized user/agent input in shell commands
-3. **Secret Leakage** — Agents inadvertently reading .env files or other credential stores
-4. **Untracked Dependencies** — Installing packages not declared in version control
+## Supported Security Model
 
-## Defenses
+Citadel is designed for local developer machines and trusted repositories.
 
-### 1. Path Traversal Protection (`protect-files.js`)
+Supported:
 
-All file operations (Read/Write/Edit) are validated before execution:
+- local use inside a repository you control
+- Claude Code and OpenAI Codex sessions with normal tool approval boundaries
+- project-local state under `.planning/`, `.citadel/`, `.codex/`, `.claude/`,
+  and generated runtime configuration files
+- reviewable pull-request workflows for publishing harness changes
 
-```javascript
-// Blocks: ../../../etc/passwd
-// Blocks: /etc/passwd (absolute path outside project)
-// Allows: src/components/Button.tsx (relative to project root)
-```
+Not supported:
 
-**Implementation:**
-- Regex-based detection of `../` and `..\` sequences
-- Absolute path validation against `PROJECT_ROOT`
-- Fail-closed design: unexpected errors block the action
+- exposing Citadel-generated local dashboards, MCP servers, or helper services
+  to the public internet without additional authentication and review
+- installing Citadel in an untrusted repository without inspecting its existing
+  scripts, hooks, package tasks, and agent instructions
+- treating `.planning/` state as public by default
+- bypassing runtime approval prompts for destructive, networked, credential, or
+  publish actions
 
-**Test coverage:** `scripts/test-security.js` validates traversal attacks are blocked
+## Main Risks
 
-### 2. Shell Injection Prevention
+| Risk | Why it matters | Primary defenses |
+|---|---|---|
+| File overreach | Agents can request reads and edits across the project | protected path checks, project-root validation, reviewable diffs |
+| Secret leakage | Project files may contain tokens, `.env` values, or private planning notes | protected file rules, do-not-publish guidance, local-first state |
+| Shell command abuse | Hooks and scripts can run local commands | command validation, approval gates, non-shell argument APIs where possible |
+| Prompt injection | Repo docs, issues, PRs, web pages, or generated artifacts can contain hostile instructions | instruction hierarchy, explicit trust boundaries, review before automation |
+| Unattended automation drift | Long-running agents can make broad changes if scope is unclear | campaign state, handoffs, approval capsules, PR readiness checks |
+| Public artifact leakage | `.planning/` can contain project decisions, costs, logs, screenshots, or research | `.gitignore` coverage, private-state guidance, review before sharing |
 
-All git operations use `execFileSync` with array arguments instead of shell strings:
+## Defensive Hooks and Checks
 
-```javascript
-// ✅ Safe (no shell interpretation):
-execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' })
+Citadel includes defensive hooks and test coverage for common local automation
+risks:
 
-// ❌ Vulnerable (shell injection risk):
-execSync(`git rev-parse ${branch}`)  // if branch = "; rm -rf /"
-```
+- path traversal and protected-file checks in `hooks_src/protect-files.js`
+- external action and consent checks in `hooks_src/external-action-gate.js`
+- governance and policy checks in `hooks_src/governance.js`
+- post-edit tracking and quality checks in `hooks_src/post-edit.js` and related
+  lifecycle hooks
+- telemetry and audit records under `.planning/telemetry/`
+- security regression tests in `scripts/test-security.js`
 
-**Files using execFileSync:**
-- `quality-gate.js` — git operations for lint checks
-- `harness-health-util.js` — git status queries
-- `post-edit.js` — file tracking
-
-**Test coverage:** `scripts/test-security.js` verifies safe APIs are used
-
-### 3. Secret Protection
-
-`.env` files and variants (`.env.local`, `.env.production`, etc.) are blocked from Read operations:
-
-```javascript
-// Blocks: .env, .env.local, .env.production
-// Allows: README.md, src/config.ts
-```
-
-**Rationale:** Prevents accidental credential leakage in agent conversations or logs.
-
-**Test coverage:** `scripts/test-security.js` validates .env reads are blocked
-
-### 4. Pip Gate (Untracked Dependencies)
-
-Before allowing `pip install`, checks if `requirements.txt` is tracked by git:
-
-```javascript
-// ✅ Allows: pip install when requirements.txt is committed
-// ⚠️  Warns:  pip install when requirements.txt exists but is untracked
-// ✅ Allows: pip install when no requirements.txt exists yet
-```
-
-**Rationale:** Prevents dependency drift and ensures reproducible builds.
-
-**Implementation:** `quality-gate.js` checks `git ls-files requirements.txt`
-
-## Test Suite
-
-### Run Security Tests
+Run security checks with:
 
 ```bash
-# Security tests only
 node scripts/test-security.js
-
-# Full suite (includes security)
-node scripts/test-all.js
 ```
 
-### What Gets Tested
+Run the full harness suite with:
 
-1. **Path Traversal**
-   - `../../../etc/passwd` → blocked
-   - `/etc/passwd` → blocked
-   - `src/file.ts` → allowed
+```bash
+npm run test
+```
 
-2. **Shell Injection**
-   - Verify `execFileSync` usage (safe)
-   - Reject `execSync` usage (unsafe)
-   - Validate git commands use array args
+## Private State Guidance
 
-3. **Secret Protection**
-   - `.env` reads → blocked
-   - Regular file reads → allowed
+Do not assume generated Citadel state is safe to publish.
 
-4. **Glob Pattern Security**
-   - `secrets/**` patterns work correctly
-   - Recursive `**` globs match expected files
+Review these paths before committing, sharing logs, recording demos, or opening
+support issues:
 
-### Exit Codes
+- `.planning/`
+- `.citadel/`
+- `.codex/`
+- `.claude/`
+- `.mcp.json`
+- screenshots, browser captures, telemetry logs, research notes, and handoff
+  files
 
-- `0` — All tests pass
-- `1` — One or more tests failed (DO NOT SHIP)
-
-## Fail-Closed Design
-
-All security hooks follow a **fail-closed** approach:
-
-- Unexpected errors → **block** the action (exit 2)
-- Parse failures → **block** the action
-- Missing validation → **block** the action
-
-This prevents security bypasses via error conditions.
+Generated state can include repository structure, work plans, local paths, tool
+outputs, review findings, cost telemetry, screenshots, or links to private work.
 
 ## Reporting Vulnerabilities
 
-If you discover a security issue:
+Do not open a public issue for a vulnerability.
 
-1. **Do not** open a public GitHub issue
-2. Email: security@citadel.dev (or create private security advisory)
-3. Include: steps to reproduce, impact assessment, suggested fix
+Preferred reporting path:
 
-We'll respond within 48 hours and coordinate disclosure timing.
+1. Use GitHub private vulnerability reporting or a private security advisory for
+   this repository if available.
+2. Include the affected file or command, reproduction steps, expected impact,
+   and any suggested fix.
+3. If private reporting is unavailable, contact the maintainer through a private
+   channel listed on their GitHub profile.
 
-## Audit Log
+Please avoid posting exploit details, secret values, private project paths, or
+unredacted `.planning/` artifacts in public threads.
 
-All security-relevant events are logged to `.planning/telemetry/audit.jsonl`:
+## Security Checklist for Harness Changes
 
-```json
-{
-  "schema": 1,
-  "event": "blocked",
-  "hook": "protect-files",
-  "reason": "path traversal sequence",
-  "file": "../../../etc/passwd",
-  "timestamp": "2026-03-30T12:05:00.000Z"
-}
-```
+Before shipping changes to hooks, runtime adapters, installers, MCP surfaces, or
+unattended automation:
 
-Use this log for forensic analysis and security monitoring.
+- [ ] Identify the trust boundary being changed.
+- [ ] Confirm protected files and project-root checks still apply.
+- [ ] Use argument-array process APIs instead of shell-interpreted strings where
+      possible.
+- [ ] Keep destructive, networked, publish, credential, and cross-repository
+      actions behind explicit approval.
+- [ ] Add or update focused tests for the changed boundary.
+- [ ] Run `npm run test`.
+- [ ] Update [THREAT_MODEL.md](THREAT_MODEL.md) when capabilities or boundaries
+      change.
 
-## Security Checklist for New Hooks
+## Disclosure Expectations
 
-When adding a new hook that handles user/agent input:
-
-- [ ] Use `health.validatePath()` for all file paths
-- [ ] Use `health.validateCommand()` for all shell commands
-- [ ] Use `execFileSync` with array args (not `execSync` or `exec`)
-- [ ] Fail closed: unexpected errors exit 2 (block), not 0 (allow)
-- [ ] Add test cases to `scripts/test-security.js`
-- [ ] Document security assumptions in hook header comment
-
-## Further Reading
-
-- [OWASP Path Traversal](https://owasp.org/www-community/attacks/Path_Traversal)
-- [Shell Injection Prevention](https://cheatsheetseries.owasp.org/cheatsheets/OS_Command_Injection_Defense_Cheat_Sheet.html)
-- [Principle of Least Privilege](https://en.wikipedia.org/wiki/Principle_of_least_privilege)
+Security fixes should be small, reviewable, and verified. If a fix changes hook
+behavior, generated config, installer output, approval gates, or command
+execution, include the exact verification commands in the PR body.
