@@ -58,6 +58,25 @@ withTempProject((projectRoot) => {
       test: 'node -e "process.exit(0)"',
     },
   }, null, 2));
+  fs.mkdirSync(path.join(projectRoot, '.planning', 'verification'), { recursive: true });
+
+  const proof = buildProof(projectRoot, {
+    routeRequest: 'review README.md for first-time developer friction',
+    runVerification: true,
+  });
+
+  assert.equal(proof.status, 'partial');
+  assert.equal(proof.summary.setup, 'partial');
+  assert(proof.checks.find((check) => check.id === 'setup').evidence.includes('.planning'));
+});
+
+withTempProject((projectRoot) => {
+  write(path.join(projectRoot, 'README.md'), '# Fixture\n');
+  write(path.join(projectRoot, 'package.json'), JSON.stringify({
+    scripts: {
+      test: 'node -e "process.exit(0)"',
+    },
+  }, null, 2));
   fs.mkdirSync(path.join(projectRoot, '.planning', 'campaigns'), { recursive: true });
   fs.mkdirSync(path.join(projectRoot, '.planning', 'telemetry'), { recursive: true });
   write(path.join(projectRoot, '.planning', 'operator-console', 'latest.md'), 'operator evidence\n');
