@@ -15,7 +15,8 @@ function unique(values) {
 function readPackageScripts(projectRoot) {
   try {
     const packagePath = path.join(projectRoot, 'package.json');
-    const parsed = JSON.parse(fs.readFileSync(packagePath, 'utf8'));
+    const raw = fs.readFileSync(packagePath, 'utf8').replace(/^\uFEFF/, '');
+    const parsed = JSON.parse(raw);
     return parsed.scripts || {};
   } catch {
     return {};

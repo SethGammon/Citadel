@@ -57,6 +57,11 @@ operator output, reporting, or public proof. It is stricter than a smoke test:
 it treats Citadel as an experience a builder has to understand, not only a set
 of scripts that pass.
 
+Installer output alone is not enough for `ready-for-dogfood`. A freshly
+prepared Codex project may have plugin files, hooks, and readiness artifacts but
+still need `/do setup --express` before Citadel has complete operating state.
+In that case the trial should return `setup-needed`, not `blocked`.
+
 The expected post-landing flow is:
 
 ```text

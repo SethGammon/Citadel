@@ -7,7 +7,7 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 
-const { changedFilesFromGit, profileForFiles, selectVerificationProfile } = require('../core/verification/profiles');
+const { changedFilesFromGit, profileForFiles, readPackageScripts, selectVerificationProfile } = require('../core/verification/profiles');
 const { render } = require('./verification-plan');
 
 function withTempProject(run) {
@@ -49,6 +49,14 @@ withTempProject((projectRoot) => {
   assert(output.includes('Citadel Verification Plan'));
   assert(output.includes('Profile: operator-loop'));
   assert(output.includes('---HANDOFF---'));
+});
+
+withTempProject((projectRoot) => {
+  fs.writeFileSync(path.join(projectRoot, 'package.json'), `\uFEFF${JSON.stringify({
+    scripts: { test: 'node test.js' },
+  })}`, 'utf8');
+
+  assert.equal(readPackageScripts(projectRoot).test, 'node test.js');
 });
 
 withTempProject((projectRoot) => {

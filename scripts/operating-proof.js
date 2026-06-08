@@ -48,6 +48,10 @@ function normalizePath(value) {
   return String(value || '').replace(/\\/g, '/');
 }
 
+function unique(values) {
+  return Array.from(new Set(values.filter(Boolean)));
+}
+
 function exists(filePath) {
   try {
     return fs.existsSync(filePath);
@@ -100,8 +104,10 @@ function checkSetup(projectRoot, dashboard) {
     '.planning/campaigns',
     '.planning/telemetry',
   ]);
+  const hasCompleteSetup = requiredState.includes('.planning/campaigns')
+    && requiredState.includes('.planning/telemetry');
 
-  if (dashboard.planningExists) {
+  if (hasCompleteSetup) {
     return {
       id: 'setup',
       status: 'pass',
@@ -111,13 +117,18 @@ function checkSetup(projectRoot, dashboard) {
   }
 
   const setupHint = dashboard.nextAction?.command === '/do setup --express';
+  const hasPartialSetup = requiredState.includes('.planning');
+  const partialEvidence = unique([
+    ...requiredState,
+    '/do setup --express',
+  ]);
   return {
     id: 'setup',
-    status: setupHint ? 'partial' : 'fail',
-    detail: setupHint
+    status: setupHint || hasPartialSetup ? 'partial' : 'fail',
+    detail: setupHint || hasPartialSetup
       ? 'project is not initialized yet; dashboard points to /do setup --express'
-      : 'project is not initialized and dashboard did not provide an express setup path',
-    evidence: setupHint ? ['/do setup --express'] : [],
+      : 'project is missing complete setup state and dashboard did not provide an express setup path',
+    evidence: setupHint || hasPartialSetup ? partialEvidence : requiredState,
   };
 }
 
