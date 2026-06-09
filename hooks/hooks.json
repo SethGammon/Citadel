@@ -2,44 +2,100 @@
   "hooks": {
     "PreToolUse": [
       {
-        "matcher": "Edit|Write",
         "hooks": [
           {
             "type": "command",
-            "command": "node ${CLAUDE_PLUGIN_ROOT}/hooks_src/protect-files.js",
-            "timeout": 5
+            "command": "node \"${PLUGIN_ROOT}/hooks_src/codex-adapter.js\" protect-files",
+            "statusMessage": "Citadel: protect-files",
+            "timeout": 5,
+            "commandWindows": "node \"%PLUGIN_ROOT%\\hooks_src\\codex-adapter.js\" protect-files"
           }
-        ]
+        ],
+        "matcher": "Edit"
       },
       {
-        "matcher": "Read",
         "hooks": [
           {
             "type": "command",
-            "command": "node ${CLAUDE_PLUGIN_ROOT}/hooks_src/protect-files.js",
-            "timeout": 5
+            "command": "node \"${PLUGIN_ROOT}/hooks_src/codex-adapter.js\" protect-files",
+            "statusMessage": "Citadel: protect-files",
+            "timeout": 5,
+            "commandWindows": "node \"%PLUGIN_ROOT%\\hooks_src\\codex-adapter.js\" protect-files"
           }
-        ]
+        ],
+        "matcher": "Write"
       },
       {
-        "matcher": "Bash",
         "hooks": [
           {
             "type": "command",
-            "command": "node ${CLAUDE_PLUGIN_ROOT}/hooks_src/external-action-gate.js",
-            "timeout": 5
+            "command": "node \"${PLUGIN_ROOT}/hooks_src/codex-adapter.js\" protect-files",
+            "statusMessage": "Citadel: protect-files",
+            "timeout": 5,
+            "commandWindows": "node \"%PLUGIN_ROOT%\\hooks_src\\codex-adapter.js\" protect-files"
           }
-        ]
+        ],
+        "matcher": "Read"
       },
       {
-        "matcher": "Edit|Write|Bash|Agent",
         "hooks": [
           {
             "type": "command",
-            "command": "node ${CLAUDE_PLUGIN_ROOT}/hooks_src/governance.js",
-            "timeout": 3
+            "command": "node \"${PLUGIN_ROOT}/hooks_src/codex-adapter.js\" external-action-gate",
+            "statusMessage": "Citadel: external-action-gate",
+            "timeout": 5,
+            "commandWindows": "node \"%PLUGIN_ROOT%\\hooks_src\\codex-adapter.js\" external-action-gate"
           }
-        ]
+        ],
+        "matcher": "Bash"
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${PLUGIN_ROOT}/hooks_src/codex-adapter.js\" governance",
+            "statusMessage": "Citadel: governance",
+            "timeout": 3,
+            "commandWindows": "node \"%PLUGIN_ROOT%\\hooks_src\\codex-adapter.js\" governance"
+          }
+        ],
+        "matcher": "Edit"
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${PLUGIN_ROOT}/hooks_src/codex-adapter.js\" governance",
+            "statusMessage": "Citadel: governance",
+            "timeout": 3,
+            "commandWindows": "node \"%PLUGIN_ROOT%\\hooks_src\\codex-adapter.js\" governance"
+          }
+        ],
+        "matcher": "Write"
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${PLUGIN_ROOT}/hooks_src/codex-adapter.js\" governance",
+            "statusMessage": "Citadel: governance",
+            "timeout": 3,
+            "commandWindows": "node \"%PLUGIN_ROOT%\\hooks_src\\codex-adapter.js\" governance"
+          }
+        ],
+        "matcher": "Bash"
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${PLUGIN_ROOT}/hooks_src/codex-adapter.js\" governance",
+            "statusMessage": "Citadel: governance",
+            "timeout": 3,
+            "commandWindows": "node \"%PLUGIN_ROOT%\\hooks_src\\codex-adapter.js\" governance"
+          }
+        ],
+        "matcher": "Agent"
       }
     ],
     "PostToolUse": [
@@ -47,38 +103,10 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node ${CLAUDE_PLUGIN_ROOT}/hooks_src/post-edit.js",
-            "timeout": 30
-          }
-        ]
-      },
-      {
-        "matcher": "Edit|Write",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "node ${CLAUDE_PLUGIN_ROOT}/hooks_src/organize-enforce.js",
-            "timeout": 5
-          }
-        ]
-      },
-      {
-        "matcher": "Edit|Write",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "node ${CLAUDE_PLUGIN_ROOT}/hooks_src/complexity-check.js",
-            "timeout": 5
-          }
-        ]
-      },
-      {
-        "matcher": "Bash",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "node ${CLAUDE_PLUGIN_ROOT}/hooks_src/circuit-breaker.js",
-            "timeout": 5
+            "command": "node \"${PLUGIN_ROOT}/hooks_src/codex-adapter.js\" post-edit",
+            "statusMessage": "Citadel: post-edit",
+            "timeout": 30,
+            "commandWindows": "node \"%PLUGIN_ROOT%\\hooks_src\\codex-adapter.js\" post-edit"
           }
         ]
       },
@@ -86,32 +114,70 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node ${CLAUDE_PLUGIN_ROOT}/hooks_src/cost-tracker.js",
-            "timeout": 5
+            "command": "node \"${PLUGIN_ROOT}/hooks_src/codex-adapter.js\" organize-enforce",
+            "statusMessage": "Citadel: organize-enforce",
+            "timeout": 5,
+            "commandWindows": "node \"%PLUGIN_ROOT%\\hooks_src\\codex-adapter.js\" organize-enforce"
           }
-        ]
-      }
-    ],
-    "PostToolBatch": [
+        ],
+        "matcher": "Edit"
+      },
       {
         "hooks": [
           {
             "type": "command",
-            "command": "node ${CLAUDE_PLUGIN_ROOT}/hooks_src/post-tool-batch.js",
-            "timeout": 10,
-            "async": true,
-            "asyncRewake": true
+            "command": "node \"${PLUGIN_ROOT}/hooks_src/codex-adapter.js\" organize-enforce",
+            "statusMessage": "Citadel: organize-enforce",
+            "timeout": 5,
+            "commandWindows": "node \"%PLUGIN_ROOT%\\hooks_src\\codex-adapter.js\" organize-enforce"
           }
-        ]
-      }
-    ],
-    "PostToolUseFailure": [
+        ],
+        "matcher": "Write"
+      },
       {
         "hooks": [
           {
             "type": "command",
-            "command": "node ${CLAUDE_PLUGIN_ROOT}/hooks_src/circuit-breaker.js",
-            "timeout": 5
+            "command": "node \"${PLUGIN_ROOT}/hooks_src/codex-adapter.js\" complexity-check",
+            "statusMessage": "Citadel: complexity-check",
+            "timeout": 5,
+            "commandWindows": "node \"%PLUGIN_ROOT%\\hooks_src\\codex-adapter.js\" complexity-check"
+          }
+        ],
+        "matcher": "Edit"
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${PLUGIN_ROOT}/hooks_src/codex-adapter.js\" complexity-check",
+            "statusMessage": "Citadel: complexity-check",
+            "timeout": 5,
+            "commandWindows": "node \"%PLUGIN_ROOT%\\hooks_src\\codex-adapter.js\" complexity-check"
+          }
+        ],
+        "matcher": "Write"
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${PLUGIN_ROOT}/hooks_src/codex-adapter.js\" circuit-breaker",
+            "statusMessage": "Citadel: circuit-breaker",
+            "timeout": 5,
+            "commandWindows": "node \"%PLUGIN_ROOT%\\hooks_src\\codex-adapter.js\" circuit-breaker"
+          }
+        ],
+        "matcher": "Bash"
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${PLUGIN_ROOT}/hooks_src/codex-adapter.js\" cost-tracker",
+            "statusMessage": "Citadel: cost-tracker",
+            "timeout": 5,
+            "commandWindows": "node \"%PLUGIN_ROOT%\\hooks_src\\codex-adapter.js\" cost-tracker"
           }
         ]
       }
@@ -121,8 +187,10 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node ${CLAUDE_PLUGIN_ROOT}/hooks_src/pre-compact.js",
-            "timeout": 15
+            "command": "node \"${PLUGIN_ROOT}/hooks_src/codex-adapter.js\" pre-compact",
+            "statusMessage": "Citadel: pre-compact",
+            "timeout": 15,
+            "commandWindows": "node \"%PLUGIN_ROOT%\\hooks_src\\codex-adapter.js\" pre-compact"
           }
         ]
       }
@@ -132,8 +200,10 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node ${CLAUDE_PLUGIN_ROOT}/hooks_src/post-compact.js",
-            "timeout": 10
+            "command": "node \"${PLUGIN_ROOT}/hooks_src/codex-adapter.js\" post-compact",
+            "statusMessage": "Citadel: post-compact",
+            "timeout": 10,
+            "commandWindows": "node \"%PLUGIN_ROOT%\\hooks_src\\codex-adapter.js\" post-compact"
           }
         ]
       }
@@ -143,52 +213,21 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node ${CLAUDE_PLUGIN_ROOT}/hooks_src/quality-gate.js",
-            "timeout": 10
+            "command": "node \"${PLUGIN_ROOT}/hooks_src/codex-adapter.js\" quality-gate",
+            "statusMessage": "Citadel: quality-gate",
+            "timeout": 10,
+            "commandWindows": "node \"%PLUGIN_ROOT%\\hooks_src\\codex-adapter.js\" quality-gate"
           }
         ]
-      }
-    ],
-    "StopFailure": [
+      },
       {
         "hooks": [
           {
             "type": "command",
-            "command": "node ${CLAUDE_PLUGIN_ROOT}/hooks_src/stop-failure.js",
-            "timeout": 5
-          }
-        ]
-      }
-    ],
-    "Setup": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "node ${CLAUDE_PLUGIN_ROOT}/hooks_src/init-project.js",
-            "timeout": 10
-          }
-        ]
-      }
-    ],
-    "UserPromptSubmit": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "node ${CLAUDE_PLUGIN_ROOT}/hooks_src/user-prompt-submit.js",
-            "timeout": 5
-          }
-        ]
-      }
-    ],
-    "UserPromptExpansion": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "node ${CLAUDE_PLUGIN_ROOT}/hooks_src/user-prompt-expansion.js",
-            "timeout": 5
+            "command": "node \"${PLUGIN_ROOT}/hooks_src/codex-adapter.js\" session-end",
+            "statusMessage": "Citadel: session-end",
+            "timeout": 10,
+            "commandWindows": "node \"%PLUGIN_ROOT%\\hooks_src\\codex-adapter.js\" session-end"
           }
         ]
       }
@@ -198,18 +237,10 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node ${CLAUDE_PLUGIN_ROOT}/hooks_src/init-project.js",
-            "timeout": 10
-          }
-        ]
-      },
-      {
-        "matcher": "compact",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "node ${CLAUDE_PLUGIN_ROOT}/hooks_src/restore-compact.js",
-            "timeout": 5
+            "command": "node \"${PLUGIN_ROOT}/hooks_src/codex-adapter.js\" init-project",
+            "statusMessage": "Citadel: init-project",
+            "timeout": 10,
+            "commandWindows": "node \"%PLUGIN_ROOT%\\hooks_src\\codex-adapter.js\" init-project"
           }
         ]
       },
@@ -217,19 +248,22 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node ${CLAUDE_PLUGIN_ROOT}/hooks_src/intake-scanner.js",
-            "timeout": 5
+            "command": "node \"${PLUGIN_ROOT}/hooks_src/codex-adapter.js\" restore-compact",
+            "statusMessage": "Citadel: restore-compact",
+            "timeout": 5,
+            "commandWindows": "node \"%PLUGIN_ROOT%\\hooks_src\\codex-adapter.js\" restore-compact"
           }
-        ]
-      }
-    ],
-    "SessionEnd": [
+        ],
+        "matcher": "compact"
+      },
       {
         "hooks": [
           {
             "type": "command",
-            "command": "node ${CLAUDE_PLUGIN_ROOT}/hooks_src/session-end.js",
-            "timeout": 10
+            "command": "node \"${PLUGIN_ROOT}/hooks_src/codex-adapter.js\" intake-scanner",
+            "statusMessage": "Citadel: intake-scanner",
+            "timeout": 5,
+            "commandWindows": "node \"%PLUGIN_ROOT%\\hooks_src\\codex-adapter.js\" intake-scanner"
           }
         ]
       }
@@ -239,8 +273,10 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node ${CLAUDE_PLUGIN_ROOT}/hooks_src/subagent-start.js",
-            "timeout": 5
+            "command": "node \"${PLUGIN_ROOT}/hooks_src/codex-adapter.js\" subagent-start",
+            "statusMessage": "Citadel: subagent-start",
+            "timeout": 5,
+            "commandWindows": "node \"%PLUGIN_ROOT%\\hooks_src\\codex-adapter.js\" subagent-start"
           }
         ]
       }
@@ -250,19 +286,10 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node ${CLAUDE_PLUGIN_ROOT}/hooks_src/subagent-stop.js",
-            "timeout": 5
-          }
-        ]
-      }
-    ],
-    "TeammateIdle": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "node ${CLAUDE_PLUGIN_ROOT}/hooks_src/teammate-idle.js",
-            "timeout": 5
+            "command": "node \"${PLUGIN_ROOT}/hooks_src/codex-adapter.js\" subagent-stop",
+            "statusMessage": "Citadel: subagent-stop",
+            "timeout": 5,
+            "commandWindows": "node \"%PLUGIN_ROOT%\\hooks_src\\codex-adapter.js\" subagent-stop"
           }
         ]
       }
@@ -272,140 +299,10 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node ${CLAUDE_PLUGIN_ROOT}/hooks_src/permission-request.js",
-            "timeout": 3
-          }
-        ]
-      }
-    ],
-    "PermissionDenied": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "node ${CLAUDE_PLUGIN_ROOT}/hooks_src/permission-request.js",
-            "timeout": 3
-          }
-        ]
-      }
-    ],
-    "InstructionsLoaded": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "node ${CLAUDE_PLUGIN_ROOT}/hooks_src/instructions-loaded.js",
-            "timeout": 5
-          }
-        ]
-      }
-    ],
-    "FileChanged": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "node ${CLAUDE_PLUGIN_ROOT}/hooks_src/file-changed.js",
-            "timeout": 5
-          }
-        ]
-      }
-    ],
-    "CwdChanged": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "node ${CLAUDE_PLUGIN_ROOT}/hooks_src/cwd-changed.js",
-            "timeout": 5
-          }
-        ]
-      }
-    ],
-    "ConfigChange": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "node ${CLAUDE_PLUGIN_ROOT}/hooks_src/config-change.js",
-            "timeout": 5
-          }
-        ]
-      }
-    ],
-    "Elicitation": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "node ${CLAUDE_PLUGIN_ROOT}/hooks_src/elicitation.js",
-            "timeout": 5
-          }
-        ]
-      }
-    ],
-    "ElicitationResult": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "node ${CLAUDE_PLUGIN_ROOT}/hooks_src/elicitation.js",
-            "timeout": 5
-          }
-        ]
-      }
-    ],
-    "Notification": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "node ${CLAUDE_PLUGIN_ROOT}/hooks_src/notification.js",
-            "timeout": 5
-          }
-        ]
-      }
-    ],
-    "TaskCreated": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "node ${CLAUDE_PLUGIN_ROOT}/hooks_src/task-events.js",
-            "timeout": 5
-          }
-        ]
-      }
-    ],
-    "TaskCompleted": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "node ${CLAUDE_PLUGIN_ROOT}/hooks_src/task-events.js",
-            "timeout": 5
-          }
-        ]
-      }
-    ],
-    "WorktreeCreate": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "node ${CLAUDE_PLUGIN_ROOT}/hooks_src/worktree-setup.js",
-            "timeout": 120
-          }
-        ]
-      }
-    ],
-    "WorktreeRemove": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "node ${CLAUDE_PLUGIN_ROOT}/hooks_src/worktree-remove.js",
-            "timeout": 10
+            "command": "node \"${PLUGIN_ROOT}/hooks_src/codex-adapter.js\" permission-request",
+            "statusMessage": "Citadel: permission-request",
+            "timeout": 3,
+            "commandWindows": "node \"%PLUGIN_ROOT%\\hooks_src\\codex-adapter.js\" permission-request"
           }
         ]
       }

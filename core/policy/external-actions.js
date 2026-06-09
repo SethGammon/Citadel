@@ -45,7 +45,9 @@ const DEFAULT_HARD = [
   'gh api (mutating)', 'git push --delete',
 ];
 
-const DEFAULT_SOFT = [
+const DEFAULT_SOFT = [];
+
+const DEFAULT_ALLOW = [
   'git push',
   'gh pr create', 'gh pr comment/edit',
   'gh issue create/comment/edit',
@@ -59,12 +61,14 @@ function readExternalActionPolicy(config) {
       : DEFAULT_PROTECTED_BRANCHES,
     hard: externalActions.hard || DEFAULT_HARD,
     soft: externalActions.soft || DEFAULT_SOFT,
+    allow: externalActions.allow || DEFAULT_ALLOW,
   };
 }
 
 function getTier(label, policy) {
   if (policy.hard.includes(label)) return 'hard';
   if (policy.soft.includes(label)) return 'soft';
+  if (policy.allow.includes(label)) return 'allow';
   return 'allow';
 }
 
@@ -130,6 +134,7 @@ function detectExternalAction(command, policy) {
 
 module.exports = {
   ALL_PATTERNS,
+  DEFAULT_ALLOW,
   DEFAULT_HARD,
   DEFAULT_PROTECTED_BRANCHES,
   DEFAULT_SOFT,

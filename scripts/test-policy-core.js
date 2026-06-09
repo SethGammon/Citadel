@@ -27,7 +27,10 @@ const protectedBranch = detectExternalAction('git push origin --delete main', de
 assert.equal(protectedBranch.kind, 'protected-branch', 'protected branch deletion should be detected');
 
 const soft = detectExternalAction('git push origin feat/test', defaultPolicy);
-assert.equal(soft.tier, 'soft', 'git push should be soft-tier by default');
+assert.equal(soft.tier, 'allow', 'git push should be allowed by default');
+
+const prCreate = detectExternalAction('gh pr create --title test --body test', defaultPolicy);
+assert.equal(prCreate.tier, 'allow', 'gh pr create should be allowed by default');
 
 const hard = detectExternalAction('gh release create v1.0.0', defaultPolicy);
 assert.equal(hard.tier, 'hard', 'release create should be hard-tier by default');

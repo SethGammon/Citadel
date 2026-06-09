@@ -209,7 +209,7 @@ check('Default policy fills missing config', () => {
   const policy = readExternalActionPolicy({});
   assert(policy.protectedBranches.includes('main'));
   assert(policy.hard.includes('gh pr merge'));
-  assert(policy.soft.includes('git push'));
+  assert(policy.allow.includes('git push'));
 });
 
 check('Policy with merge moved to soft tier works', () => {

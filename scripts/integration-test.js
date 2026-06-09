@@ -304,6 +304,12 @@ sequence('Edit .env.local: blocked by protect-files', (sb) => {
   if (!pre.blocked) return 'expected .env.local read to be blocked';
 }, sandbox);
 
+sequence('Read external non-env file: not blocked by protect-files', (sb) => {
+  const filePath = path.join(os.tmpdir(), `citadel-external-${process.pid}.md`);
+  const pre = preToolUse(sb, 'Read', { file_path: filePath });
+  if (pre.blocked) return `unexpected block: ${pre.blockMessage}`;
+}, sandbox);
+
 sequence('Edit normal file in .claude/: not blocked', (sb) => {
   // .claude/settings.json is not in protectedFiles — only harness.json
   const filePath = path.join(sb, '.claude', 'notes.md');
@@ -338,7 +344,7 @@ sequence('Edit out-of-scope file: warns but does not block', (sb) => {
   if (!r.stdout.includes('outside the claimed scope')) return `expected scope warning, got: ${r.stdout.slice(0, 200)}`;
 }, sandbox);
 
-sequence('Edit restricted file: hard-blocked by protect-files', (sb) => {
+sequence('Edit restricted file: warns by default in protect-files', (sb) => {
   const campaignDir = path.join(sb, '.planning', 'campaigns');
   const campaignFile = path.join(campaignDir, 'restricted-test.md');
   fs.writeFileSync(campaignFile, [
@@ -355,8 +361,7 @@ sequence('Edit restricted file: hard-blocked by protect-files', (sb) => {
   const filePath = path.join(sb, '.env.production');
   const pre = preToolUse(sb, 'Edit', { file_path: filePath });
   fs.rmSync(campaignFile);
-  if (!pre.blocked) return 'expected restricted file to be blocked';
-  if (!pre.blockMessage.includes('RESTRICTED')) return `expected RESTRICTED in message, got: ${pre.blockMessage}`;
+  if (pre.blocked) return `expected advisory warning, got block: ${pre.blockMessage}`;
 }, sandbox);
 
 console.log('\n── Bash flow ──');

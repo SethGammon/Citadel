@@ -14,8 +14,10 @@
  *
  * Known-safe patterns (auto-approve):
  *   - Bash: node .citadel/scripts/*.js (telemetry delegates)
+ *   - Bash: repo-local verification commands
  *   - Write/Edit: .planning/**  (campaign and fleet state)
  *   - Write/Edit: .citadel/**   (harness scaffolding)
+ *   - Write/Edit: .codex/**, .agents/**, hooks/** (generated harness artifacts)
  *
  * Exit codes:
  *   0 = always (decision communicated via JSON stdout, not exit code)
@@ -32,11 +34,19 @@ const PROJECT_ROOT = health.PROJECT_ROOT;
 const SAFE_BASH_PATTERNS = [
   /^node\s+\.citadel\/scripts\//,
   /^node\s+"[^"]*\.citadel[/\\]scripts[/\\]/,
+  /^npm\s+run\s+(test|lint|typecheck|docs:check|design:gate|codex:verify|verify:visual)(?:\s|$)/,
+  /^node\s+scripts\/(?:test[-\w]*|verify-hooks|integration-test|skill-lint)\.js(?:\s|$)/,
+  /^node\s+hooks_src\/smoke-test\.js(?:\s|$)/,
+  /^git\s+(status|diff)(?:\s|$)/,
 ];
 
 const SAFE_FILE_PREFIXES = [
   path.join(PROJECT_ROOT, '.planning').replace(/\\/g, '/'),
   path.join(PROJECT_ROOT, '.citadel').replace(/\\/g, '/'),
+  path.join(PROJECT_ROOT, '.codex').replace(/\\/g, '/'),
+  path.join(PROJECT_ROOT, '.Codex').replace(/\\/g, '/'),
+  path.join(PROJECT_ROOT, '.agents').replace(/\\/g, '/'),
+  path.join(PROJECT_ROOT, 'hooks').replace(/\\/g, '/'),
 ];
 
 function isSafeBashCommand(command) {
@@ -48,7 +58,7 @@ function isSafeBashCommand(command) {
 function isSafeFilePath(filePath) {
   if (!filePath) return false;
   const normalized = String(filePath).replace(/\\/g, '/');
-  return SAFE_FILE_PREFIXES.some(prefix => normalized.startsWith(prefix));
+  return SAFE_FILE_PREFIXES.some(prefix => normalized === prefix || normalized.startsWith(prefix + '/'));
 }
 
 function main() {

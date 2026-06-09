@@ -179,7 +179,7 @@ test('root-dir: warns when file is outside target (unlocked)', (dir) => {
 });
 
 test('root-dir: blocks when file is outside target (locked)', (dir) => {
-  writeConfig(dir, { organization: { locked: true, placement: [{ glob: '*.ts', rule: 'root-dir', target: 'src' }] } });
+  writeConfig(dir, { organization: { locked: true, enforcePaths: ['lib/'], placement: [{ glob: '*.ts', rule: 'root-dir', target: 'src' }] } });
   writeFile(dir, 'lib/helper.ts');
   const r = fireHook(editEvent(dir, 'lib/helper.ts'), dir);
   if (r.exitCode !== 2) return `expected exit 2 (block), got ${r.exitCode}`;
@@ -353,7 +353,7 @@ test('unlocked: violations produce exit 0 (advisory)', (dir) => {
   if (!r.stdout.includes('advisory')) return `expected "advisory" hint, got: ${r.stdout.slice(0, 200)}`;
 });
 
-test('locked: violations produce exit 2 (block)', (dir) => {
+test('locked without enforcePaths remains advisory', (dir) => {
   writeConfig(dir, {
     organization: {
       locked: true,
@@ -362,8 +362,35 @@ test('locked: violations produce exit 2 (block)', (dir) => {
   });
   writeFile(dir, 'wrong/place.ts');
   const r = fireHook(editEvent(dir, 'wrong/place.ts'), dir);
+  if (r.exitCode !== 0) return `expected exit 0, got ${r.exitCode}`;
+  if (!r.stdout.includes('enforcePaths')) return `expected enforcePaths hint, got: ${r.stdout.slice(0, 200)}`;
+});
+
+test('locked with enforcePaths violations produce exit 2 (block)', (dir) => {
+  writeConfig(dir, {
+    organization: {
+      locked: true,
+      enforcePaths: ['wrong/'],
+      placement: [{ glob: '*.ts', rule: 'root-dir', target: 'src' }],
+    },
+  });
+  writeFile(dir, 'wrong/place.ts');
+  const r = fireHook(editEvent(dir, 'wrong/place.ts'), dir);
   if (r.exitCode !== 2) return `expected exit 2, got ${r.exitCode}`;
   if (!r.stdout.includes('Move the file')) return `expected move instruction, got: ${r.stdout.slice(0, 200)}`;
+});
+
+test('locked with enforcePaths keeps test paths advisory', (dir) => {
+  writeConfig(dir, {
+    organization: {
+      locked: true,
+      enforcePaths: ['tests/**'],
+      placement: [{ glob: '*.ts', rule: 'root-dir', target: 'src' }],
+    },
+  });
+  writeFile(dir, 'tests/place.ts');
+  const r = fireHook(editEvent(dir, 'tests/place.ts'), dir);
+  if (r.exitCode !== 0) return `expected exit 0, got ${r.exitCode}`;
 });
 
 // -- general root enforcement --

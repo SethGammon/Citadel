@@ -9,8 +9,10 @@
  *   SECRETS - Always blocked. Reading .env files via Bash.
  *   HARD    - Always blocked per-action. Irreversible by default (merge, close,
  *             delete, release, fork). Configurable via policy.externalActions.hard.
- *   SOFT    - Governed by consent preference. Reversible by default (push, PR
- *             create, comment). Configurable via policy.externalActions.soft.
+ *   SOFT    - Governed by consent preference. Empty by default; teams can opt
+ *             reversible actions into consent via policy.externalActions.soft.
+ *   ALLOW   - Reversible delivery actions by default (push, PR create/comment,
+ *             issue create/comment/edit). Configurable via policy.externalActions.allow.
  *
  * Policy overrides (harness.json):
  *   policy.externalActions.protectedBranches - branches that can never be deleted
