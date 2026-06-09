@@ -5,6 +5,7 @@
 const fs = require('fs');
 const path = require('path');
 const { createIntegrityRecord } = require('../telemetry/integrity');
+const { createLoopContract } = require('../loops/contract');
 
 function ensureDir(dir) {
   fs.mkdirSync(dir, { recursive: true });
@@ -85,6 +86,30 @@ function createAutomationPlan(options = {}) {
     createdAt: nowIso(options),
     runs: [],
   };
+
+  const loop = createLoopContract({
+    id: `loop-${id}`,
+    type: `codex-${type}`,
+    title: `Codex automation: ${type}`,
+    goal: command,
+    command,
+    cadence,
+    triggerKind: 'codex-automation',
+    verifierProfile: type,
+    maxAttempts: type === 'pr-watch' ? 3 : 1,
+    statePath: path.join('.planning', 'codex-automations', `${id}.json`).replace(/\\/g, '/'),
+    stopConditions: type === 'daemon'
+      ? ['done', 'budget-exhausted', 'no-active-work', 'needs-human-review']
+      : ['done', 'blocked', 'needs-human-review', 'attempt-limit'],
+    now: options.now,
+  });
+  plan.loopId = loop.id;
+  plan.loopType = loop.type;
+  plan.loopTitle = loop.title;
+  plan.loopStatus = loop.status;
+  plan.loopBudget = loop.budget;
+  plan.loopVerifier = loop.verifier;
+  plan.loopStopConditions = loop.stopConditions;
 
   if (options.write) {
     writeJson(path.join(planningDir(projectRoot, 'codex-automations'), `${id}.json`), plan);

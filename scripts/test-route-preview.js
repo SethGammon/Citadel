@@ -76,6 +76,19 @@ assert.deepEqual(parseArgs(['--json', '--project-root', '.', '--', 'review', 'au
 }
 
 {
+  const route = selectRoute('loop until lint passes with max attempts 3');
+  assert.equal(route.selected, '/loop');
+  assert.equal(route.tier, 2);
+  assert(route.verification.includes('loop contract'));
+}
+
+{
+  const route = selectRoute('retry until tests pass with max attempts 3');
+  assert.equal(route.selected, '/loop');
+  assert.equal(route.tier, 2);
+}
+
+{
   const rendered = render(buildPreview('review auth module', {
     projectRoot: path.resolve(__dirname, '..'),
     gitDirty: false,
