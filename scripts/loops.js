@@ -107,19 +107,24 @@ function renderInspect(loop) {
 
 function contractFromArgs() {
   const template = arg('--template');
-  const options = {
-    id: arg('--id'),
-    type: arg('--type', template ? undefined : 'loop'),
-    title: arg('--title') || arg('--goal') || arg('--command'),
-    goal: arg('--goal') || arg('--title') || arg('--command'),
-    command: arg('--command'),
-    verifierCommand: arg('--verify'),
-    cadence: arg('--cadence'),
-    triggerKind: arg('--trigger', arg('--cadence') ? 'scheduled' : 'manual'),
-    scope: arg('--scope'),
-    maxAttempts: Number(arg('--max-attempts', 1)),
-    reviewArtifact: arg('--artifact'),
+  const options = {};
+  const set = (key, value) => {
+    if (value !== null && value !== undefined && value !== '') options[key] = value;
   };
+
+  set('id', arg('--id'));
+  set('type', arg('--type', template ? null : 'loop'));
+  set('title', arg('--title') || arg('--goal') || arg('--command'));
+  set('goal', arg('--goal') || arg('--title') || arg('--command'));
+  set('command', arg('--command'));
+  set('verifierCommand', arg('--verify'));
+  set('cadence', arg('--cadence'));
+  set('triggerKind', arg('--trigger', arg('--cadence') ? 'scheduled' : 'manual'));
+  set('scope', arg('--scope'));
+  set('reviewArtifact', arg('--artifact'));
+  const maxAttempts = arg('--max-attempts');
+  if (maxAttempts !== null) options.maxAttempts = Number(maxAttempts);
+
   if (template) return instantiateLoopTemplate(template, options);
   return createLoopContract(options);
 }

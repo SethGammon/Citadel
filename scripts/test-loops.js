@@ -128,7 +128,22 @@ function tmpRoot() {
     ], { encoding: 'utf8' });
     const parsed = JSON.parse(output);
     assert.equal(parsed.template, 'demo-proof-refresh');
+    assert.equal(parsed.verifier.command, 'node scripts/operating-proof.js --write');
+    assert.equal(parsed.budget.maxAttempts, 1);
     assert(fs.existsSync(path.join(root, '.planning', 'loops', `${parsed.id}.json`)));
+
+    const prOutput = childProcess.execFileSync(process.execPath, [
+      path.join(CITADEL_ROOT, 'scripts', 'loops.js'),
+      'plan',
+      '--template',
+      'pr-review-repair',
+      '--json',
+      '--project-root',
+      root,
+    ], { encoding: 'utf8' });
+    const prParsed = JSON.parse(prOutput);
+    assert.equal(prParsed.budget.maxAttempts, 3);
+    assert.equal(prParsed.verifier.profile, 'pr-checks');
 
     const list = childProcess.execFileSync(process.execPath, [
       path.join(CITADEL_ROOT, 'scripts', 'loops.js'),
