@@ -52,8 +52,13 @@ If another route is clearly better, say so and route there.
 
 ### Step 2: Require a verifier
 
-A `/loop run` must have an explicit verifier. If the user did not provide one,
-ask for the verifier before executing. Accept examples like:
+A `/loop run` must have an explicit verifier. Explicit means the user supplied
+`--verify "<command>"` or an equally concrete verifier command in plain language.
+Do not infer a verifier from words like "lint", "test", "until it works", or
+"fix until passing." If the verifier is missing, ask for it before executing and
+do not run `loop-runner.js`, shell commands, or manual repair steps.
+
+Accept examples like:
 
 ```text
 --verify "npm run lint"
@@ -61,27 +66,37 @@ ask for the verifier before executing. Accept examples like:
 --verify "node scripts/operating-proof.js --write"
 ```
 
-Do not run an open-ended loop without a verifier.
+If missing, respond in this shape:
+
+```text
+/loop needs an explicit verifier before it can run. Please provide one, for example:
+--verify "npm run lint"
+
+I will not run the loop until the verifier is explicit.
+```
 
 ### Step 3: Create the contract
 
 For status, inspect, templates, and stop commands, run:
 
 ```bash
-node scripts/loops.js <command>
+node .citadel/scripts/loops.js <command>
 ```
 
 For template planning:
 
 ```bash
-node scripts/loops.js plan --template <name> --write
+node .citadel/scripts/loops.js plan --template <name> --write
 ```
 
 For foreground execution:
 
 ```bash
-node scripts/loop-runner.js --action "<action>" --verify "<verifier>" --max-attempts <N> --write
+node .citadel/scripts/loop-runner.js --action "<action>" --verify "<verifier>" --max-attempts <N> --write
 ```
+
+If `.citadel/scripts/` is not present and this is the Citadel harness repo
+itself, use `node scripts/loops.js` or `node scripts/loop-runner.js` instead.
 
 The runner writes a contract under `.planning/loops/{id}.json`, appends each
 attempt, and stops with a shared stop status.
@@ -106,6 +121,7 @@ Summarize:
 - status
 - attempts used
 - verifier
+- runner command, including `--verify` and `--max-attempts`
 - state path
 - next action if stopped before success
 
@@ -157,6 +173,7 @@ modify files; inspect the diff or loop-owned artifacts to revert.
 - Status: {status}
 - Attempts: {used}/{max}
 - Verifier: {command}
+- Runner: node .citadel/scripts/loop-runner.js --action "{action}" --verify "{command}" --max-attempts {max} --write
 - State: .planning/loops/{id}.json
 - Next: {next action or "none"}
 ---

@@ -277,8 +277,10 @@ function createPluginMarketplace(options = {}) {
   const projectRoot = path.resolve(options.projectRoot || process.cwd());
   const pluginName = options.pluginName || 'citadel';
   const marketplacePath = path.join(projectRoot, '.agents', 'plugins', 'marketplace.json');
-  const pluginPath = options.pluginPath || './';
+  const pluginPath = options.pluginPath || './.agents';
   const displayName = options.displayName || 'Citadel Harness';
+  const pluginRoot = path.join(projectRoot, pluginPath.replace(/^\.\//, ''));
+  const pluginManifestPath = path.join(pluginRoot, '.codex-plugin', 'plugin.json');
   const marketplace = {
     name: options.marketplaceName || 'citadel-local',
     interface: {
@@ -306,8 +308,8 @@ function createPluginMarketplace(options = {}) {
   const checks = [
     {
       id: 'plugin-manifest',
-      pass: fs.existsSync(path.join(projectRoot, '.codex-plugin', 'plugin.json')),
-      detail: path.join(projectRoot, '.codex-plugin', 'plugin.json'),
+      pass: fs.existsSync(pluginManifestPath),
+      detail: pluginManifestPath,
     },
     {
       id: 'source-path-relative',

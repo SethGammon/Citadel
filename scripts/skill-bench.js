@@ -15,8 +15,10 @@
  *   node scripts/skill-bench.js                            # static validate all
  *   node scripts/skill-bench.js --execute                  # run against claude
  *   node scripts/skill-bench.js --execute --runtime codex-exec
+ *   node scripts/skill-bench.js --execute --runtime codex-exec --codex-bin C:\path\to\codex.exe --codex-model gpt-5.5 --codex-service-tier fast
  *   node scripts/skill-bench.js --execute --verify-hooks   # also assert hooks fired
  *   node scripts/skill-bench.js --skill dashboard          # filter by skill name
+ *   node scripts/skill-bench.js --scenario missing-state   # filter by scenario name
  *   node scripts/skill-bench.js --tag fringe               # filter by tag
  *   node scripts/skill-bench.js --invariant-only           # only invariant-behavior scenarios
  *   node scripts/skill-bench.js --list                     # list scenarios, no run
@@ -61,9 +63,13 @@ function getArgValue(flag) {
 }
 
 const skillFilter = getArgValue('--skill');
+const scenarioFilter = getArgValue('--scenario');
 const tagFilter   = getArgValue('--tag');
 const runtimeFilter = getArgValue('--runtime') || 'claude';
 const CODEX_SANDBOX = getArgValue('--codex-sandbox') || 'read-only';
+const CODEX_BIN = getArgValue('--codex-bin') || process.env.CODEX_CLI_PATH || process.env.CITADEL_CODEX_BIN || null;
+const CODEX_MODEL = getArgValue('--codex-model') || process.env.CITADEL_CODEX_MODEL || null;
+const CODEX_SERVICE_TIER = getArgValue('--codex-service-tier') || process.env.CITADEL_CODEX_SERVICE_TIER || null;
 
 // ── Scenario parsing ──────────────────────────────────────────────────────────
 
@@ -215,6 +221,17 @@ const STATES = {
   'clean': (tmpDir) => {
     // Empty project — no .planning/, no .claude/
     // Nothing to write
+  },
+
+  'with-loop-project': (tmpDir) => {
+    const scriptsDir = path.join(tmpDir, 'scripts');
+    fs.mkdirSync(scriptsDir, { recursive: true });
+    fs.writeFileSync(path.join(tmpDir, 'package.json'), JSON.stringify({
+      scripts: {
+        lint: 'node scripts/lint.js',
+      },
+    }, null, 2) + '\n');
+    fs.writeFileSync(path.join(scriptsDir, 'lint.js'), "console.log('lint ok');\n");
   },
 
   'with-campaign': (tmpDir) => {
@@ -548,6 +565,15 @@ function setupProjectState(state) {
   return tmpDir;
 }
 
+function setupCodexProjectRuntime(tmpDir) {
+  execFileSync(process.execPath, [path.join(PLUGIN_ROOT, 'scripts', 'codex-compat.js'), tmpDir], {
+    cwd: PLUGIN_ROOT,
+    encoding: 'utf8',
+    stdio: 'pipe',
+    timeout: 60000,
+  });
+}
+
 /**
  * Snapshot telemetry line counts before execution (used with --verify-hooks).
  */
@@ -600,7 +626,7 @@ function findClaudeCLI() {
 function findCodexCLI() {
   if (_codexCmd !== undefined) return _codexCmd;
 
-  const candidates = ['codex', 'codex.exe'];
+  const candidates = [CODEX_BIN, 'codex', 'codex.exe'].filter(Boolean);
   for (const cmd of candidates) {
     try {
       execFileSync(cmd, ['--version'], { stdio: 'pipe', timeout: 5000 });
@@ -655,10 +681,14 @@ function executeCodexScenario(scenario, codexCmd, tmpDir) {
   const codexArgs = buildCodexExecArgs({
     projectRoot: tmpDir,
     sandbox: CODEX_SANDBOX,
+    model: CODEX_MODEL,
     outputLastMessagePath: outputPath,
     prompt: scenario.input,
     json: true,
   });
+  if (CODEX_SERVICE_TIER) {
+    codexArgs.splice(1, 0, '-c', `service_tier="${CODEX_SERVICE_TIER}"`);
+  }
   try {
     const output = execFileSync(
       codexCmd,
@@ -795,6 +825,13 @@ function main() {
       process.exit(1);
     }
   }
+  if (scenarioFilter) {
+    scenarios = scenarios.filter(s => s.name === scenarioFilter || s.name.includes(scenarioFilter));
+    if (scenarios.length === 0) {
+      console.error(`No scenarios found for scenario "${scenarioFilter}".`);
+      process.exit(1);
+    }
+  }
   if (tagFilter) {
     scenarios = scenarios.filter(s => s.tags.includes(tagFilter));
     if (scenarios.length === 0) {
@@ -875,6 +912,7 @@ function main() {
       // Execute mode: set up state, run, assert
       try {
         tmpDir = setupProjectState(scenario.state);
+        if (isCodexRuntime) setupCodexProjectRuntime(tmpDir);
         const telemetryBefore = VERIFY_HOOKS ? snapshotTelemetry(tmpDir) : null;
         const execResult = isCodexRuntime
           ? executeCodexScenario(scenario, runtimeCmd, tmpDir)

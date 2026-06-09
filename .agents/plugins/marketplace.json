@@ -8,7 +8,7 @@
       "name": "citadel",
       "source": {
         "source": "local",
-        "path": "./"
+        "path": "./.agents"
       },
       "policy": {
         "installation": "AVAILABLE",
