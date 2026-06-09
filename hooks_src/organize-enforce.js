@@ -4,12 +4,12 @@
  * organize-enforce.js -- PostToolUse hook (runs on Edit/Write)
  *
  * Checks if newly written or edited files comply with the project's
- * organization manifest (harness.json -> organization). Warns or blocks
- * based on the manifest's `locked` flag.
+ * organization manifest (harness.json -> organization). Warns by default.
+ * A locked manifest blocks only when the file also matches organization.enforcePaths.
  *
  * Enforcement levels:
  *   - locked: false -> advisory warning (exit 0)
- *   - locked: true  -> hard block (exit 2)
+ *   - locked: true + enforcePaths match -> hard block (exit 2)
  *
  * Skips gracefully when:
  *   - No organization config exists
@@ -116,6 +116,19 @@ const COLLECTOR_DIRS = [
   'styles',
 ];
 
+const ADVISORY_ONLY_PREFIXES = [
+  'test/',
+  'tests/',
+  '__test__/',
+  '__tests__/',
+  'fixtures/',
+  '__fixtures__/',
+  'migrations/',
+  'generated/',
+  'tmp/',
+  'temp/',
+];
+
 /**
  * Strip companion suffixes from a filename to get the base source name.
  * e.g., "Button.test.tsx" -> "Button", "auth.spec.js" -> "auth"
@@ -145,6 +158,26 @@ function sourceExistsInDir(dir, baseName) {
     if (fs.existsSync(path.join(absDir, baseName + ext))) return true;
   }
   return false;
+}
+
+function matchesPathPattern(filePath, pattern) {
+  if (!pattern) return false;
+  const normalized = String(pattern).replace(/\\/g, '/');
+  if (normalized.endsWith('/')) return filePath.startsWith(normalized);
+  if (normalized.includes('*') || normalized.includes('?') || normalized.includes('{')) {
+    return globToRegex(normalized).test(filePath);
+  }
+  return filePath === normalized || filePath.startsWith(normalized.replace(/\/$/, '') + '/');
+}
+
+function shouldBlockViolation(org, relativePath) {
+  if (org.locked !== true) return false;
+  if (ADVISORY_ONLY_PREFIXES.some(prefix => relativePath.startsWith(prefix))) return false;
+
+  const enforcePaths = Array.isArray(org.enforcePaths) ? org.enforcePaths : [];
+  if (enforcePaths.length === 0) return false;
+
+  return enforcePaths.some(pattern => matchesPathPattern(relativePath, pattern));
 }
 
 function main() {
@@ -350,7 +383,7 @@ function main() {
     }
 
     // Report violations
-    const locked = org.locked === true;
+    const locked = shouldBlockViolation(org, relativePath);
     const severity = locked ? 'BLOCK' : 'WARN';
     const action = locked ? 'blocked' : 'warned';
 
@@ -368,7 +401,11 @@ function main() {
     }
 
     if (!locked) {
-      lines.push('  (advisory -- run /organize --lock to enforce)');
+      if (org.locked === true) {
+        lines.push('  (advisory -- locked enforcement only blocks paths in organization.enforcePaths)');
+      } else {
+        lines.push('  (advisory -- run /organize --lock with enforcePaths to enforce)');
+      }
     } else {
       lines.push('  Move the file to the correct location before continuing.');
     }

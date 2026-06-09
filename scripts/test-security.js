@@ -92,6 +92,21 @@ function main() {
     assert(result.status === 2, `Expected exit code 2 (block), got ${result.status}`);
   });
 
+  test('protect-files allows absolute read outside project for non-env files', () => {
+    const input = JSON.stringify({
+      tool_name: 'Read',
+      tool_input: { file_path: path.join(os.tmpdir(), `citadel-reference-${process.pid}.md`) }
+    });
+
+    const result = spawnSync(process.execPath, [PROTECT_FILES_HOOK], {
+      input,
+      encoding: 'utf8',
+      cwd: PLUGIN_ROOT,
+    });
+
+    assert(result.status === 0, `Expected exit code 0 (allow), got ${result.status}: ${result.stdout}`);
+  });
+
   test('protect-files allows legitimate project-relative path', () => {
     const input = JSON.stringify({
       tool_name: 'Edit',
@@ -221,7 +236,7 @@ function main() {
     assert(result.stderr.includes('protected branch'), 'Expected protected branch message');
   });
 
-  test('external-action-gate triggers first-encounter for soft actions', () => {
+  test('external-action-gate allows reversible delivery actions by default', () => {
     const input = JSON.stringify({
       tool_name: 'Bash',
       tool_input: { command: 'git push origin feat/test' }
@@ -234,12 +249,7 @@ function main() {
       env: { ...process.env, CLAUDE_PROJECT_DIR: os.tmpdir() },
     });
 
-    // With no harness.json in tmpdir, this should be a first-encounter block
-    assert(result.status === 2, `Expected exit code 2 (block), got ${result.status}`);
-    assert(
-      result.stderr.includes('First external action') || result.stderr.includes('first-encounter'),
-      'Expected first-encounter message'
-    );
+    assert(result.status === 0, `Expected exit code 0 (allow), got ${result.status}: ${result.stderr}`);
   });
 
   test('external-action-gate allows non-external commands', () => {

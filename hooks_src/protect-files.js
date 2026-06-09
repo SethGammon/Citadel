@@ -4,7 +4,8 @@
  * protect-files.js — PreToolUse hook (Edit/Write/Read)
  *
  * Blocks edits to files that should not be modified during agent sessions.
- * Blocks reads on .env files to prevent agents from reading secrets.
+ * Blocks reads on .env files to prevent agents from reading secrets, including
+ * .env files outside the project root.
  * Protected paths are configurable via harness.json protectedFiles array.
  *
  * Default protected: .claude/harness.json
@@ -101,10 +102,13 @@ function run(input) {
     process.exit(2);
   }
 
-  // Security: block absolute paths outside project root
+  // Security: block writes to absolute paths outside project root. Reads may
+  // inspect neighboring docs, vaults, and reference repos; .env reads are still
+  // blocked by basename below.
   const normalizedPath = path.normalize(path.resolve(filePath));
   const normalizedRoot = path.normalize(PROJECT_ROOT);
-  if (!normalizedPath.startsWith(normalizedRoot + path.sep) && normalizedPath !== normalizedRoot) {
+  const insideProject = normalizedPath.startsWith(normalizedRoot + path.sep) || normalizedPath === normalizedRoot;
+  if (toolName !== 'Read' && !insideProject) {
     health.logBlock('protect-files', 'blocked', `${toolName} ${filePath} (outside project root)`);
     hookOutput('protect-files', 'blocked',
       `[protect-files] Blocked: ${filePath} is outside project root (${PROJECT_ROOT})`,
@@ -113,7 +117,9 @@ function run(input) {
     process.exit(2);
   }
 
-  const relativePath = path.relative(PROJECT_ROOT, filePath).split(path.sep).join('/');
+  const relativePath = insideProject
+    ? path.relative(PROJECT_ROOT, filePath).split(path.sep).join('/')
+    : normalizedPath;
 
   // Read events: only block .env files (secrets protection)
   if (toolName === 'Read') {
@@ -179,16 +185,19 @@ function checkCampaignScope(relativePath, toolName, _filePath) {
 
     const rawName = campaign.slug || 'campaign';
     const campaignName = rawName.replace(/[^a-zA-Z0-9_\-]/g, '_');
+    const config = health.readConfig();
+    const blockRestricted = config.policy?.campaignRestrictions?.blockRestrictedFiles === true;
 
     for (const entry of campaign.restrictedFiles || []) {
       if (entry && matchPattern(relativePath, entry)) {
-        health.logBlock('protect-files', 'blocked-restricted', `${toolName} ${relativePath} (campaign: ${campaignName}, restricted: ${entry})`);
+        health.logBlock('protect-files', blockRestricted ? 'blocked-restricted' : 'warned-restricted', `${toolName} ${relativePath} (campaign: ${campaignName}, restricted: ${entry})`);
         hookOutput('protect-files', 'blocked',
-          `[protect-files] Blocked: ${relativePath} is declared RESTRICTED by campaign "${campaignName}". ` +
-          `Remove it from the campaign's "Restricted Files" section to allow edits.`,
+          `[protect-files] ${blockRestricted ? 'Blocked' : 'Warning'}: ${relativePath} is declared RESTRICTED by campaign "${campaignName}". ` +
+          `${blockRestricted ? 'Remove it from Restricted Files or set policy.campaignRestrictions.blockRestrictedFiles=false to allow edits.' : 'This is advisory; set policy.campaignRestrictions.blockRestrictedFiles=true to enforce.'}`,
           { file: relativePath, campaign: campaignName, restrictedEntry: entry, tool: toolName }
         );
-        process.exit(2);
+        if (blockRestricted) process.exit(2);
+        return;
       }
     }
 

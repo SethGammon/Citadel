@@ -18,7 +18,8 @@
  *
  * Exit codes:
  *   0 = success (or non-checkable file, or non-Edit/Write tool)
- *   2 = type errors found in edited file
+ *   0 = success, including advisory type errors by default
+ *   2 = type errors found when verification.hotBlockOnErrors is true
  */
 
 const { execFileSync } = require('child_process');
@@ -103,7 +104,9 @@ function main() {
       agent_type: agentType,
     });
 
-    process.exit(exitCode);
+    const config = health.readConfig();
+    const hotBlockOnErrors = config.verification?.hotBlockOnErrors === true;
+    process.exit(hotBlockOnErrors ? exitCode : 0);
   });
 }
 

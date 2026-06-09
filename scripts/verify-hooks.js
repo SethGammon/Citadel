@@ -296,6 +296,15 @@ test('protect-files: allows Read on non-env file (exit 0)', () => {
   if (r.exitCode !== 0) return `expected exit 0, got ${r.exitCode}`;
 });
 
+test('protect-files: allows Read outside project root for non-env files (exit 0)', () => {
+  const payload = {
+    tool_name: 'Read',
+    tool_input: { file_path: path.join(os.tmpdir(), `citadel-external-${process.pid}.md`) },
+  };
+  const r = fireHook('protect-files.js', payload, rDir);
+  if (r.exitCode !== 0) return `expected exit 0, got ${r.exitCode}: ${r.stdout}`;
+});
+
 // ── governance.js ──
 
 test('governance: writes audit.jsonl entry on Edit', () => {
@@ -543,6 +552,28 @@ test('permission-request: auto-approves citadel script (stdout has allow decisio
   const payload = {
     tool_name: 'Bash',
     tool_input: { command: 'node .citadel/scripts/telemetry-log.cjs --event test' },
+  };
+  const r = fireHook('permission-request.js', payload, rDir);
+  if (r.exitCode !== 0) return `exit ${r.exitCode}`;
+  if (!r.stdout.includes('"behavior":"allow"') && !r.stdout.includes('"behavior": "allow"'))
+    return 'expected auto-approve decision in stdout';
+});
+
+test('permission-request: auto-approves known verification commands', () => {
+  const payload = {
+    tool_name: 'Bash',
+    tool_input: { command: 'npm run test' },
+  };
+  const r = fireHook('permission-request.js', payload, rDir);
+  if (r.exitCode !== 0) return `exit ${r.exitCode}`;
+  if (!r.stdout.includes('"behavior":"allow"') && !r.stdout.includes('"behavior": "allow"'))
+    return 'expected auto-approve decision in stdout';
+});
+
+test('permission-request: auto-approves generated codex artifact writes', () => {
+  const payload = {
+    tool_name: 'Write',
+    tool_input: { file_path: path.join(rDir, '.codex', 'config.toml') },
   };
   const r = fireHook('permission-request.js', payload, rDir);
   if (r.exitCode !== 0) return `exit ${r.exitCode}`;
@@ -807,7 +838,7 @@ test('protect-files: warns (not blocks) on out-of-scope edit', () => {
   fs.rmSync(path.join(campaignsDir, 'test-scope.md'));
 });
 
-test('protect-files: hard-blocks on Restricted Files edit', () => {
+test('protect-files: warns on Restricted Files edit by default', () => {
   const campaignsDir = path.join(rDir, '.planning', 'campaigns');
   fs.writeFileSync(path.join(campaignsDir, 'test-restricted.md'), [
     '# Campaign: Test Restricted',
@@ -825,8 +856,37 @@ test('protect-files: hard-blocks on Restricted Files edit', () => {
     tool_input: { file_path: path.join(rDir, '.env.production') },
   };
   const r = fireHook('protect-files.js', payload, rDir);
-  if (r.exitCode !== 2) return `expected exit 2 (block), got ${r.exitCode}`;
+  if (r.exitCode !== 0) return `expected exit 0 (advisory), got ${r.exitCode}`;
+  if (!r.stdout.includes('RESTRICTED')) return 'expected restricted warning in stdout';
   fs.rmSync(path.join(campaignsDir, 'test-restricted.md'));
+});
+
+test('protect-files: hard-blocks on Restricted Files edit when strict policy is enabled', () => {
+  const campaignsDir = path.join(rDir, '.planning', 'campaigns');
+  const harnessPath = path.join(rDir, '.claude', 'harness.json');
+  fs.mkdirSync(path.dirname(harnessPath), { recursive: true });
+  const hadHarness = fs.existsSync(harnessPath);
+  const originalHarness = hadHarness ? fs.readFileSync(harnessPath, 'utf8') : null;
+  fs.writeFileSync(harnessPath, JSON.stringify({
+    policy: { campaignRestrictions: { blockRestrictedFiles: true } },
+  }, null, 2));
+  fs.writeFileSync(path.join(campaignsDir, 'test-restricted.md'), [
+    '# Campaign: Test Restricted',
+    'Status: active',
+    '',
+    '## Restricted Files',
+    '- .env.production',
+  ].join('\n'));
+
+  const payload = {
+    tool_name: 'Edit',
+    tool_input: { file_path: path.join(rDir, '.env.production') },
+  };
+  const r = fireHook('protect-files.js', payload, rDir);
+  if (hadHarness) fs.writeFileSync(harnessPath, originalHarness);
+  else fs.rmSync(harnessPath, { force: true });
+  fs.rmSync(path.join(campaignsDir, 'test-restricted.md'));
+  if (r.exitCode !== 2) return `expected exit 2 (block), got ${r.exitCode}`;
 });
 
 // ── Audit integrity (harness-health-util) ──
