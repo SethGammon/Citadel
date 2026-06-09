@@ -3,10 +3,12 @@ skill: loop
 name: foreground-verify
 description: /loop run requires a verifier and writes bounded loop state
 input: /loop run "npm run lint -- --fix" --verify "npm run lint" --max 3
+state: with-loop-project
 assert-contains:
-  - loop-runner.js
-  - --verify
-  - --max-attempts
+  - Verifier:
+  - Runner:
+  - --max-attempts 3
+  - 1/3
   - .planning/loops
   - verifier-passed
 assert-not-contains:

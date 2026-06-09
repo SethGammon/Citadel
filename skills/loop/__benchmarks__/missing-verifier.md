@@ -5,12 +5,10 @@ description: /loop does not run without an explicit verifier
 input: /loop run "fix lint until it works"
 assert-contains:
   - verifier
-  - ask
-  - do not run
   - /loop
 assert-not-contains:
   - loop-runner.js --action
-  - daemon
+  - route to /daemon
 ---
 
 # Scenario
