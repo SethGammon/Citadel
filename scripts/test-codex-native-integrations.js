@@ -113,6 +113,8 @@ function testBridgeUtilities() {
     });
     assert(fs.existsSync(path.join(tmp, '.planning', 'codex-automations', `${automation.id}.json`)));
     assert(automation.prompt.includes('.planning/daemon.json'));
+    assert(automation.loopId.startsWith('loop-codex-daemon-'));
+    assert(automation.loopStopConditions.includes('budget-exhausted'));
 
     const prPlan = createPrReviewPlan({
       projectRoot: tmp,

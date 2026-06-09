@@ -7,6 +7,10 @@ is that a later session can inspect what happened and continue from evidence.
 Use this checklist when recording a demo, reviewing a PR, or deciding whether a
 new workflow belongs in Citadel.
 
+For repeated or autonomous workflows, use the shared
+[Loop Contract](LOOP_CONTRACT.md). A strong loop declares its trigger, budget,
+verifier, stop conditions, state path, and review artifact before it runs.
+
 Run the local proof preflight with:
 
 ```bash
@@ -35,6 +39,9 @@ See [Usefulness Trial](USEFULNESS_TRIAL.md).
 | Route | `/do <plain-English task>` | selected skill or orchestrator, handoff, changed files if any | Users do not need to memorize every skill before getting useful behavior. |
 | Verify | project-specific check selected by the agent | command output, verification plan, pass/fail summary | Work is tied to the repository's real quality gate, not a generic claim. |
 | Report | final answer, PR body, or `.planning/` report | summary, decisions, unresolved items, follow-up command | Another session can resume from a concrete record. |
+
+Loop-like workflows should also leave a `.planning/loops/` record or an
+inspectable legacy state file such as `.planning/daemon.json`.
 
 ## Good Evidence
 

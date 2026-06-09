@@ -22,6 +22,8 @@
     "operating:proof": "node scripts/operating-proof.js",
     "usefulness:trial": "node scripts/usefulness-trial.js",
     "route:preview": "node scripts/route-preview.js",
+    "loops": "node scripts/loops.js",
+    "loop:run": "node scripts/loop-runner.js",
     "stack:plan": "node scripts/stack-plan.js",
     "stack:plan:json": "node scripts/stack-plan.js --json",
     "verify:plan": "node scripts/verification-plan.js",

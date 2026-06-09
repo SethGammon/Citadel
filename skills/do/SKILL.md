@@ -65,6 +65,7 @@ Regex/keyword on raw input. Catches trivial commands:
 | "typecheck" or "type check" | Run the project's typecheck command |
 | "build" | Run the project's build command |
 | "test" or "tests" | Run the project's test command |
+| "loop", "repeat until", "retry until", "until tests pass", "max attempts" | Run `/loop` for bounded foreground repetition |
 | "status", "dashboard", "what's happening", "what's going on", "show activity" | Show full harness dashboard (/dashboard) |
 | "next", "what should I do next", "fix harness state", "repair harness" | Run `node scripts/operator-console.js --run`; if it stops on a skill route or human-review action, report the boundary, risk, next command, and verification profile |
 | "operator", "operator console", "what's up", "what should happen next", "approval capsule" | Run `node scripts/operator-console.js`; report the decision, boundary, artifact freshness, and verification profile |
@@ -161,6 +162,7 @@ and any project-level custom skills in `.claude/skills/`.
 | "telemetry", "what did this cost", "session cost", "how much did that cost", "how much have I spent", "what hooks fired", "trust level", "show me telemetry", "spending", "session stats", "what telemetry", "verify audit", "audit integrity", "check audit", "tampered records" | `/telemetry` |
 | "learn", "extract patterns", "learn from that", "save what worked", "patterns from campaign" | `/learn` |
 | "schedule", "recurring", "every N minutes", "cron", "set a reminder", "run periodically" | `/schedule` |
+| "loop", "repeat until", "until tests pass", "until lint passes", "max attempts", "retry until" | `/loop` |
 | "merge review", "check merges", "any conflicts", "fleet conflicts", "pending branches", "safe to merge" | `/merge-review` |
 | "ascii diagram", "ascii art", "box diagram", "architecture diagram", "flow diagram", "draw a diagram", "text diagram", "sequence diagram" | `/ascii-diagram` |
 | "improve", "improvement loop", "quality loop", "rubric", "score against", "run improvement", "improve citadel" | `/improve` |

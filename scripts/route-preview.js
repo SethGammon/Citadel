@@ -123,6 +123,7 @@ const SKILLS = [
   skill('/pr-watch', ['watch pr', 'watch ci', 'fix ci', 'checks failing'], 'GitHub'),
   skill('/telemetry', ['telemetry', 'session cost', 'spending', 'what hooks fired'], 'Observability'),
   skill('/merge-review', ['merge review', 'safe to merge', 'pending branches'], 'Git'),
+  skill('/loop', ['loop', 'repeat until', 'until tests pass', 'until lint passes', 'max attempts', 'retry until'], 'Automation'),
   skill('/improve', ['improve', 'quality loop', 'rubric', 'score against'], 'Improvement'),
   skill('/evolve', ['evolve', 'improve until', 'hypothesis', 'sustained improve'], 'Improvement'),
   skill('/organize', ['organize', 'folder structure', 'project structure'], 'Maintenance'),
@@ -216,6 +217,7 @@ function classifyComplexity(input, matches) {
 function selectTier0(input) {
   return TIER0.find((entry) => {
     if (!entry.pattern.test(input)) return false;
+    if (['test', 'build', 'typecheck'].includes(entry.id) && /\b(loop|repeat until|retry until|until .* pass|until .* passes|max attempts)\b/i.test(input)) return false;
     if (entry.id === 'status' && hasSingleFileSignal(input)) return false;
     if (entry.id === 'setup' && /^(document|docs|write docs|update docs)\b/i.test(input.trim())) return false;
     return true;
@@ -368,6 +370,7 @@ function alternativesFor(_input, matches) {
 }
 
 function verificationFor(route) {
+  if (route === '/loop') return 'Confirm the loop contract has an explicit verifier, attempt limit, stop status, and .planning/loops state path.';
   if (route === '/marshal') return 'Confirm the selected skill sequence, changed files, and final verification command.';
   if (route === '/archon') return 'Confirm campaign phases, claimed scope, exit evidence, and verification profile.';
   if (route.startsWith('/fleet')) return 'Confirm independent scopes, merge order, and per-branch verification reports.';
