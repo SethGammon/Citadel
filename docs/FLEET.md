@@ -1,6 +1,6 @@
 # Fleet — Parallel Campaign Orchestration
 
-> last-updated: 2026-05-07
+> last-updated: 2026-06-11
 
 Fleet runs multiple campaigns simultaneously through coordinated waves,
 sharing discoveries between them.
@@ -143,6 +143,54 @@ If multiple Archon or Fleet instances run simultaneously:
 - `.citadel/scripts/coordination.js` manages instance registration and scope claims
 - Claims are file-based (no database needed)
 - Dead instances cleaned up by `npm run coord:sweep`
+
+## Teams Mode (experimental pilot)
+
+Gated behind the `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` environment variable on a
+Claude Code runtime. When the flag is absent or the runtime is not Claude Code,
+`/fleet --teams` prints an explicit notice and runs classic worktree mode unchanged.
+
+In teams mode the lead keeps the classic wave plan but swaps the coordination
+spine: native tasks carry the DAG, `SendMessage` carries discoveries, and the
+TeammateIdle hook drives rebalancing. The `.planning/fleet/` mirror remains the
+durable record; recovery always reconciles from the mirror.
+
+### Classic vs Teams
+
+| Dimension | Classic (file relay) | Teams (native spine) |
+|---|---|---|
+| Isolation model | One git worktree per agent via `isolation: "worktree"` | Teammate sessions; file isolation still via worktrees, coordination via the team runtime |
+| Comms channel | Files: HANDOFF blocks, briefs in `.planning/fleet/briefs/` | `SendMessage` teammate-to-lead, mirrored by the lead to `.planning/fleet/<session>/discoveries/` |
+| Durability | Inherent: every relay artifact is a file | Messages are ephemeral; durability comes only from the lead's `.planning` mirror |
+| Rebalancing | None: wave membership is fixed at spawn | TeammateIdle hook appends to `.planning/fleet/rebalance.jsonl`; lead reassigns the next unblocked scope via `SendMessage` |
+| Failure modes | Stale session file, orphaned worktrees, merge conflicts | All of classic, plus lost messages, flag instability, idle events with nothing reassignable |
+
+### Rollout plan
+
+Pilot on ONE campaign type first: multi-stream refactors with 3+ non-overlapping
+scopes, the shape with the most rebalancing opportunity. Do not enable teams mode
+for speculative or quick mode during the pilot.
+
+Success criteria, measured per pilot session:
+
+1. Zero lost discoveries: every discovery received via `SendMessage` appears in
+   the `.planning/fleet/<session>/discoveries/` mirror, and nothing the merge
+   review needed existed only in a message.
+2. Reassignment latency on idle: time from a `rebalance.jsonl` idle line to the
+   lead's `SendMessage` reassignment. Target: within one lead turn.
+3. Merge conflicts not worse than classic: conflict count per wave at or below
+   the classic baseline for the same campaign type.
+
+If any criterion fails for two consecutive pilot sessions, revert to classic and
+record findings in the session file.
+
+### Risks
+
+| Risk | Mitigation |
+|---|---|
+| Experimental flag instability: behavior changes or removal between Claude Code releases | Precondition check falls back to classic automatically; no protocol step depends on the flag staying stable |
+| Message loss: a `SendMessage` discovery never reaches the lead or is dropped | Lead mirrors every discovery to `.planning` on receipt; recovery reconciles from the mirror, never from message history |
+| Idle storm: repeated idle events with no unblocked scopes | `rebalance.jsonl` is append-only and cheap; the lead ignores idle lines when nothing is reassignable |
 
 ## Budget
 
