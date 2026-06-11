@@ -848,12 +848,12 @@ test('protect-files: warns on Restricted Files edit by default', () => {
     '- src/',
     '',
     '## Restricted Files',
-    '- .env.production',
+    '- production.config',
   ].join('\n'));
 
   const payload = {
     tool_name: 'Edit',
-    tool_input: { file_path: path.join(rDir, '.env.production') },
+    tool_input: { file_path: path.join(rDir, 'production.config') },
   };
   const r = fireHook('protect-files.js', payload, rDir);
   if (r.exitCode !== 0) return `expected exit 0 (advisory), got ${r.exitCode}`;
@@ -875,12 +875,12 @@ test('protect-files: hard-blocks on Restricted Files edit when strict policy is 
     'Status: active',
     '',
     '## Restricted Files',
-    '- .env.production',
+    '- production.config',
   ].join('\n'));
 
   const payload = {
     tool_name: 'Edit',
-    tool_input: { file_path: path.join(rDir, '.env.production') },
+    tool_input: { file_path: path.join(rDir, 'production.config') },
   };
   const r = fireHook('protect-files.js', payload, rDir);
   if (hadHarness) fs.writeFileSync(harnessPath, originalHarness);

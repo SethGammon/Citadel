@@ -312,6 +312,151 @@ function main() {
     fs.unlinkSync(tmpConfig);
   });
 
+  // ── 6. Symmetric .env Protection (Edit/Write) ──
+
+  console.log('\n▶ Symmetric .env Protection (Edit/Write)');
+
+  // Isolated temp project root keeps these tests independent of the repo's
+  // own harness.json, campaigns, and consent state.
+  const envProj = fs.mkdtempSync(path.join(os.tmpdir(), 'citadel-envproj-'));
+
+  function runProtectFiles(toolName, filePath, extraEnv = {}) {
+    const input = JSON.stringify({
+      tool_name: toolName,
+      tool_input: { file_path: filePath },
+    });
+    return spawnSync(process.execPath, [PROTECT_FILES_HOOK], {
+      input,
+      encoding: 'utf8',
+      cwd: PLUGIN_ROOT,
+      env: { ...process.env, CLAUDE_PROJECT_DIR: envProj, ...extraEnv },
+    });
+  }
+
+  test('protect-files blocks Write to .env with reason on stderr', () => {
+    const result = runProtectFiles('Write', path.join(envProj, '.env'));
+    assert(result.status === 2, `Expected exit code 2 (block), got ${result.status}`);
+    assert(
+      result.stderr.includes('.env') && result.stderr.includes('secrets'),
+      `Expected .env block reason on stderr, got: ${result.stderr}`
+    );
+  });
+
+  test('protect-files blocks Edit to .env.local', () => {
+    const result = runProtectFiles('Edit', path.join(envProj, '.env.local'));
+    assert(result.status === 2, `Expected exit code 2 (block), got ${result.status}`);
+  });
+
+  test('protect-files allows Write to .env.example', () => {
+    const result = runProtectFiles('Write', path.join(envProj, '.env.example'));
+    assert(
+      result.status === 0,
+      `Expected exit code 0 (allow), got ${result.status}: ${result.stdout} ${result.stderr}`
+    );
+  });
+
+  test('protect-files honors allowEnvWrites escape hatch', () => {
+    const optInProj = fs.mkdtempSync(path.join(os.tmpdir(), 'citadel-envallow-'));
+    fs.mkdirSync(path.join(optInProj, '.claude'), { recursive: true });
+    fs.writeFileSync(
+      path.join(optInProj, '.claude', 'harness.json'),
+      JSON.stringify({ allowEnvWrites: true })
+    );
+    const input = JSON.stringify({
+      tool_name: 'Write',
+      tool_input: { file_path: path.join(optInProj, '.env') },
+    });
+    const result = spawnSync(process.execPath, [PROTECT_FILES_HOOK], {
+      input,
+      encoding: 'utf8',
+      cwd: PLUGIN_ROOT,
+      env: { ...process.env, CLAUDE_PROJECT_DIR: optInProj },
+    });
+    fs.rmSync(optInProj, { recursive: true, force: true });
+    assert(
+      result.status === 0,
+      `Expected exit code 0 (allow), got ${result.status}: ${result.stdout} ${result.stderr}`
+    );
+  });
+
+  // ── 7. Native Memory Directory Allowlist ──
+
+  console.log('\n▶ Native Memory Directory Allowlist');
+
+  test('protect-files allows writes under home .claude/projects/<slug>/memory/', () => {
+    const tmpHome = fs.mkdtempSync(path.join(os.tmpdir(), 'citadel-home-'));
+    const memFile = path.join(tmpHome, '.claude', 'projects', 'some-slug', 'memory', 'notes.md');
+    const result = runProtectFiles('Write', memFile, {
+      CITADEL_TEST: '1',
+      CITADEL_HOME_OVERRIDE: tmpHome,
+    });
+    fs.rmSync(tmpHome, { recursive: true, force: true });
+    assert(
+      result.status === 0,
+      `Expected exit code 0 (allow), got ${result.status}: ${result.stdout} ${result.stderr}`
+    );
+  });
+
+  test('protect-files still blocks other writes outside project root with stderr reason', () => {
+    const tmpHome = fs.mkdtempSync(path.join(os.tmpdir(), 'citadel-home-'));
+    const outsideFile = path.join(tmpHome, 'elsewhere', 'x.txt');
+    const result = runProtectFiles('Write', outsideFile, {
+      CITADEL_TEST: '1',
+      CITADEL_HOME_OVERRIDE: tmpHome,
+    });
+    fs.rmSync(tmpHome, { recursive: true, force: true });
+    assert(result.status === 2, `Expected exit code 2 (block), got ${result.status}`);
+    assert(
+      result.stderr.includes('outside project root'),
+      `Expected outside-project-root reason on stderr, got: ${result.stderr}`
+    );
+  });
+
+  // ── 8. Bash .env Write Gate ──
+
+  console.log('\n▶ Bash .env Write Gate');
+
+  function runBashGate(command) {
+    const input = JSON.stringify({
+      tool_name: 'Bash',
+      tool_input: { command },
+    });
+    return spawnSync(process.execPath, [EAG_HOOK], {
+      input,
+      encoding: 'utf8',
+      cwd: PLUGIN_ROOT,
+      env: { ...process.env, CLAUDE_PROJECT_DIR: envProj },
+    });
+  }
+
+  test('external-action-gate blocks redirect append to .env', () => {
+    const result = runBashGate('echo X >> .env');
+    assert(result.status === 2, `Expected exit code 2 (block), got ${result.status}`);
+    assert(result.stderr.includes('secrets'), 'Expected secrets block message on stderr');
+  });
+
+  test('external-action-gate blocks tee onto .env', () => {
+    const result = runBashGate('printf x | tee .env');
+    assert(result.status === 2, `Expected exit code 2 (block), got ${result.status}`);
+  });
+
+  test('external-action-gate blocks cp with .env destination', () => {
+    const result = runBashGate('cp config.txt .env');
+    assert(result.status === 2, `Expected exit code 2 (block), got ${result.status}`);
+  });
+
+  test('external-action-gate allows redirect to non-env file', () => {
+    const result = runBashGate('echo done > build.log');
+    assert(result.status === 0, `Expected exit code 0 (allow), got ${result.status}: ${result.stderr}`);
+  });
+
+  test('external-action-gate allows redirect to .env.example', () => {
+    const result = runBashGate('echo PLACEHOLDER=1 > .env.example');
+    assert(result.status === 0, `Expected exit code 0 (allow), got ${result.status}: ${result.stderr}`);
+  });
+
+  try { fs.rmSync(envProj, { recursive: true, force: true }); } catch { /* best effort */ }
+
   // ── Summary ──
 
   console.log('\n' + '='.repeat(40));

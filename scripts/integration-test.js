@@ -355,10 +355,10 @@ sequence('Edit restricted file: warns by default in protect-files', (sb) => {
     '- src/',
     '',
     '## Restricted Files',
-    '- .env.production',
+    '- production.config',
   ].join('\n'));
 
-  const filePath = path.join(sb, '.env.production');
+  const filePath = path.join(sb, 'production.config');
   const pre = preToolUse(sb, 'Edit', { file_path: filePath });
   fs.rmSync(campaignFile);
   if (pre.blocked) return `expected advisory warning, got block: ${pre.blockMessage}`;
