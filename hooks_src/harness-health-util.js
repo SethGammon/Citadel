@@ -543,7 +543,12 @@ function hasSessionAllow(category) {
     const marker = JSON.parse(fs.readFileSync(markerPath, 'utf8'));
     const age = Date.now() - new Date(marker.timestamp).getTime();
     const SIX_HOURS = 6 * 60 * 60 * 1000;
-    return age < SIX_HOURS;
+    if (age < SIX_HOURS) return true;
+    // Expired marker: delete it opportunistically. We already paid for the
+    // read above, so the only extra syscall is the unlink that removes the
+    // dead file. scripts/state-hygiene.js handles markers never read again.
+    try { fs.unlinkSync(markerPath); } catch { /* best effort */ }
+    return false;
   } catch { return false; }
 }
 
