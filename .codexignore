@@ -1,0 +1,11 @@
+# Local working state and analysis artifacts, never part of the plugin surface
+.planning/
+_cc_source/
+.git/
+.github/
+node_modules/
+.claude/
+.codex/
+docs/*.png
+Analysis-of-source.md
+CITADEL-STATE.md

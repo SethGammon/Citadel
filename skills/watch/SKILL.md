@@ -19,7 +19,7 @@ trigger_keywords:
   - watch stop
   - watch scan
   - marker comments
-  - @citadel
+  - "@citadel"
 last-updated: 2026-03-29
 ---
 

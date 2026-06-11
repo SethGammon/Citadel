@@ -285,12 +285,12 @@ function lensAdversarial(file, content) {
       });
     }
 
-    // Check for eval()
+    // Check for dynamic code evaluation
     if (/\beval\s*\(/.test(content)) {
       violations.push({
         file,
         lens: 'adversarial',
-        message: 'Uses eval() — potential code injection vector',
+        message: 'Uses dynamic code evaluation — potential code injection vector',
       });
     }
 
@@ -314,12 +314,12 @@ function lensAdversarial(file, content) {
   }
 
   if (/\.py$/.test(file)) {
-    // Check for exec/eval in Python
+    // Check for dynamic execution in Python
     if (/\bexec\s*\(/.test(content) || /\beval\s*\(/.test(content)) {
       violations.push({
         file,
         lens: 'adversarial',
-        message: 'Uses exec()/eval() — potential code injection',
+        message: 'Uses dynamic execution or evaluation — potential code injection',
       });
     }
   }

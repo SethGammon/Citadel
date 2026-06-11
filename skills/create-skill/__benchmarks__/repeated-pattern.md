@@ -15,6 +15,13 @@ assert-not-contains:
   - undefined
 ---
 
+# Benchmark: repeated pattern extraction
+
+This scenario exercises the create-skill flow on a plain-language request, the
+most common shape a real user produces. The markdown body below describes the
+expected behavior in prose so reviewers can evaluate transcript output against
+it directly.
+
 ## What This Tests
 
 A user describes a repeated manual workflow rather than using the `/create-skill` command
