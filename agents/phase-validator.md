@@ -129,6 +129,25 @@ For FAIL:
 }
 ```
 
+### Schema
+
+Every response must parse against this contract:
+
+```json
+{
+  "verdict": "string, enum: pass | fail (required)",
+  "phase": "integer (required)",
+  "campaign": "string, campaign slug (required)",
+  "conditions_checked": "integer (required)",
+  "conditions_met": "array of strings, condition plus evidence note (required)",
+  "conditions_failed": "array of strings, condition plus what is missing (required)",
+  "warnings": "array of strings (required)",
+  "suggestions": "array of strings (required)"
+}
+```
+
+Any response that fails to parse against this contract must be treated by the caller as FAIL closed (`verdict: "fail"`), not retried silently. When this judge runs under an orchestrator that supports schema-enforced agent output (such as workflow runners with structured output), pass this same schema natively.
+
 ## Rules
 
 - Never fabricate evidence. If the HANDOFF is silent on a condition, that is a FAIL

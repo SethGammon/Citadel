@@ -109,6 +109,9 @@ Run only when `.planning/rubrics/{target}.md` does not exist.
    - Weight (0.0–1.0), Category, three anchors (0/5/10), verification specs (programmatic/structural/perceptual), research inputs
 4. Present draft rubric to the user with rationale for each axis
 5. **STOP. Do not proceed until the user approves the rubric.**
+   - If the AskUserQuestion tool is available, present the gate with it. Options: "Approve as drafted", "Adjust axes", "Adjust weights". On adjust: revise, re-present.
+   - If unavailable: ask as a plain text question and wait.
+   - Record the answer in the campaign file as `rubric_approved: {answer}`.
 6. Write approved rubric to `.planning/rubrics/{target}.md`
 
 ---
