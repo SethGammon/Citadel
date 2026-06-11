@@ -23,7 +23,7 @@ async function run() {
         github: {
           command: 'npx',
           args: ['-y', '@modelcontextprotocol/server-github'],
-          env: { GITHUB_TOKEN: '${GITHUB_TOKEN}' },
+          env: { MCP_EXAMPLE_VAR: '${MCP_EXAMPLE_VAR}' },
         },
         filesystem: {
           command: 'npx',
@@ -70,8 +70,8 @@ async function run() {
         errors.push('Missing: server-github in args');
       }
       // Token env var should be mapped
-      if (!content.includes('GITHUB_TOKEN')) {
-        errors.push('Missing: GITHUB_TOKEN reference');
+      if (!content.includes('MCP_EXAMPLE_VAR')) {
+        errors.push('Missing: MCP_EXAMPLE_VAR reference');
       }
     }
 

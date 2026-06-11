@@ -26,6 +26,9 @@
   "interface": {
     "displayName": "Citadel Harness",
     "composerIcon": "./assets/icon.svg",
+    "logo": "./assets/icon.svg",
+    "websiteURL": "https://sethgammon.github.io/Citadel/",
+    "screenshots": ["./assets/citadel-overview.png"],
     "shortDescription": "Codex-native orchestration: 46 skills, campaigns, fleet coordination, quality gates",
     "longDescription": "Citadel adds durable planning state, reusable skills, lifecycle hooks, telemetry, PR triage, and coordinated multi-agent workflows to Codex.",
     "developerName": "Citadel",

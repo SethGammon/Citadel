@@ -236,7 +236,7 @@ HEALTH
   Circuit breaker trips this session: {N}
   Audit entries today:                {N}
   Hooks installed:                    {N}
-  Trust level:                        {novice | familiar | trusted} ({N} sessions, {N} campaigns)
+  Operator tier:                      {novice | familiar | trusted} ({N} sessions, {N} campaigns)
 
 QUICK COMMANDS
   /do continue    — resume active campaign

@@ -39,10 +39,11 @@ last-updated: 2026-06-11
 
 **Parallel (`/research --parallel`):** scout agents investigate independent
 angles of the same question using Fleet wave mechanics. See Parallel Mode
-below. Without the flag, escalate to parallel mode automatically when the
-question naturally decomposes into 3+ independent angles: evaluating multiple
-competing technologies or approaches, distinct sub-questions that don't depend
-on each other, or time-sensitive research where parallel execution matters.
+below. Without the flag, prefer parallel mode (and say so in the plan) when
+the question naturally decomposes into 3+ independent angles: evaluating
+multiple competing technologies or approaches, distinct sub-questions that
+don't depend on each other, or time-sensitive research where parallel
+execution matters.
 
 If the question is narrow and focused, stay single-agent. Don't parallelize
 what a single agent can answer in 5 minutes.
