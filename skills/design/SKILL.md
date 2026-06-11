@@ -7,6 +7,11 @@ description: >-
   hook reads the manifest and flags deviations.
 user-invocable: true
 auto-trigger: false
+trigger_keywords:
+  - design
+  - style guide
+  - design manifest
+  - visual consistency
 effort: medium
 ---
 

@@ -17,6 +17,7 @@ trigger_keywords:
   - my own skill
   - skill for
   - automate this pattern
+  - repeated pattern
 ---
 
 # /create-skill — Skill Creator

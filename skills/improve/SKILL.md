@@ -6,6 +6,14 @@ description: >-
   pre-planning between iterations — each loop re-scores from scratch.
 user-invocable: true
 auto-trigger: false
+trigger_keywords:
+  - improve
+  - improvement loop
+  - quality loop
+  - rubric
+  - score against
+  - run improvement
+  - improve citadel
 last-updated: 2026-03-28
 ---
 

@@ -8,6 +8,18 @@ description: >-
   model and pattern library across sessions.
 user-invocable: true
 auto-trigger: false
+trigger_keywords:
+  - evolve
+  - sustained improve
+  - improvement director
+  - research-driven improve
+  - multi-cycle improve
+  - run until done
+  - improve until ceiling
+  - keep improving
+  - hypothesis
+  - belief model
+  - scout agents
 last-updated: 2026-05-03
 ---
 

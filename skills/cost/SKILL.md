@@ -6,6 +6,14 @@ description: >-
   session data for exact numbers. Complements /dashboard with focused cost views.
 user-invocable: true
 auto-trigger: false
+trigger_keywords:
+  - cost
+  - costs
+  - cost breakdown
+  - campaign cost
+  - token usage
+  - burn rate
+  - model breakdown
 last-updated: 2026-03-30
 ---
 

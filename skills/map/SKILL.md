@@ -6,6 +6,14 @@ description: >-
   into fleet agents as context slices to reduce token usage on code navigation.
 user-invocable: true
 auto-trigger: false
+trigger_keywords:
+  - map
+  - index codebase
+  - codebase map
+  - structural index
+  - scan codebase
+  - map stats
+  - map query
 last-updated: 2026-03-29
 ---
 

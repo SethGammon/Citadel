@@ -6,6 +6,15 @@ description: >-
   not a file. Coordinates campaigns across repositories with shared context.
 user-invocable: true
 auto-trigger: false
+trigger_keywords:
+  - workspace
+  - multi-repo
+  - cross-repo
+  - across repos
+  - multiple repos
+  - coordinate repos
+  - add redis and snowflake
+  - split into repos
 last-updated: 2026-03-29
 effort: high
 ---

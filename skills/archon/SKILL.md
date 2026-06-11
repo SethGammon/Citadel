@@ -7,6 +7,10 @@ description: >-
   state, quality judgment, and strategic decomposition.
 user-invocable: true
 auto-trigger: false
+trigger_keywords:
+  - campaign
+  - multi-session
+  - phases
 last-updated: 2026-03-21
 ---
 

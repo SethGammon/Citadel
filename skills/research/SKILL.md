@@ -6,6 +6,11 @@ description: >-
   information that informs the next step.
 user-invocable: true
 auto-trigger: false
+trigger_keywords:
+  - research
+  - investigate
+  - look into
+  - find out
 last-updated: 2026-03-21
 ---
 

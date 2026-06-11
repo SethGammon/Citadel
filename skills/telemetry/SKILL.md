@@ -8,6 +8,22 @@ description: >-
   "what telemetry does Citadel have".
 user-invocable: true
 auto-trigger: false
+trigger_keywords:
+  - telemetry
+  - what did this cost
+  - session cost
+  - how much did that cost
+  - how much have I spent
+  - what hooks fired
+  - trust level
+  - show me telemetry
+  - spending
+  - session stats
+  - what telemetry
+  - verify audit
+  - audit integrity
+  - check audit
+  - tampered records
 last-updated: 2026-04-09
 ---
 

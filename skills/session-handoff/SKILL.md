@@ -6,6 +6,9 @@ description: >-
   unresolved items.
 user-invocable: true
 auto-trigger: false
+trigger_keywords:
+  - handoff
+  - session summary
 last-updated: 2026-03-20
 ---
 

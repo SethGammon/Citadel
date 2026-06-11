@@ -6,6 +6,16 @@ description: >-
   Routes through PRD, architecture, and Archon campaign with verification at every step.
 user-invocable: true
 auto-trigger: false
+trigger_keywords:
+  - create app
+  - build app
+  - build me
+  - make an app
+  - new app
+  - generate app
+  - add auth
+  - add payments
+  - integrate
 effort: max
 ---
 

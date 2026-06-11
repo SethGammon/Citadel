@@ -6,6 +6,13 @@ description: >-
   safe merge order, and surfaces reconciliation plans for overlapping changes.
 user-invocable: true
 auto-trigger: false
+trigger_keywords:
+  - merge review
+  - check merges
+  - any conflicts
+  - fleet conflicts
+  - pending branches
+  - safe to merge
 last-updated: 2026-03-26
 ---
 

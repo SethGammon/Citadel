@@ -7,6 +7,13 @@ description: >-
   and "show activity".
 user-invocable: true
 auto-trigger: false
+trigger_keywords:
+  - dashboard
+  - what's happening
+  - what's going on
+  - show activity
+  - harness state
+  - show me status
 last-updated: 2026-03-26
 ---
 

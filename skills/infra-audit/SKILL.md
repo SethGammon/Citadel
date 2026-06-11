@@ -6,6 +6,15 @@ description: >-
   on observed access patterns. Outputs a structured infrastructure manifest.
 user-invocable: true
 auto-trigger: false
+trigger_keywords:
+  - infra
+  - infrastructure
+  - what databases
+  - what systems
+  - docker-compose
+  - infra audit
+  - map infrastructure
+  - what does this connect to
 last-updated: 2026-03-29
 ---
 

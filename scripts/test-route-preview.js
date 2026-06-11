@@ -49,7 +49,9 @@ assert.deepEqual(parseArgs(['--json', '--project-root', '.', '--', 'review', 'au
 }
 
 {
-  const route = selectRoute('use multiple agents at the same time on scripts/dashboard.js');
+  // The file name must not collide with any skill keyword (e.g. "dashboard"),
+  // so the only keyword match is fleet and the single-file downgrade applies.
+  const route = selectRoute('use multiple agents at the same time on src/auth-helper.ts');
   assert.equal(route.selected, '/marshal');
   assert(route.reason.includes('single file') || route.reason.includes('single-file'));
 }
@@ -73,6 +75,18 @@ assert.deepEqual(parseArgs(['--json', '--project-root', '.', '--', 'review', 'au
 {
   const matches = keywordMatches('fix ci and watch pr checks');
   assert(matches.some((item) => item.route === '/pr-watch'));
+}
+
+{
+  // Multi-word keywords are word-boundary anchored: setup's "install citadel"
+  // must not match inside "uninstall citadel".
+  const matches = keywordMatches('uninstall citadel from this project');
+  assert(matches.some((item) => item.route === '/unharness'));
+  assert(!matches.some((item) => item.route === '/setup'));
+
+  const route = selectRoute('uninstall citadel from this project');
+  assert.equal(route.selected, '/unharness');
+  assert.equal(route.tier, 2);
 }
 
 {

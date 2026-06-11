@@ -6,6 +6,13 @@ description: >-
   to survive machine sleep or network drops.
 user-invocable: true
 auto-trigger: false
+trigger_keywords:
+  - schedule
+  - recurring
+  - every N minutes
+  - cron
+  - set a reminder
+  - run periodically
 last-updated: 2026-03-26
 ---
 
