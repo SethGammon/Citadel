@@ -155,14 +155,13 @@ and any project-level custom skills in `.claude/skills/`.
 | "map", "index codebase", "codebase map", "structural index", "scan codebase", "map stats", "map query" | `/map` |
 | "orchestrate", "chain skills", "multi-step" | `/marshal` |
 | "merge review", "check merges", "any conflicts", "fleet conflicts", "pending branches", "safe to merge" | `/merge-review` |
-| "organize", "directory structure", "folder structure", "project structure", "file organization", "organize directories", "organize files", "cleanup directories", "directory convention", "where should this go", "messy project", "project health", "bloat" | `/organize` |
+| "organize", "directory structure", "folder structure", "project structure", "file organization", "organize directories", "organize files", "cleanup directories", "directory convention", "where should this go", "messy project" | `/organize` |
 | "postmortem", "retro", "what broke", "what happened", "debrief" | `/postmortem` |
 | "watch pr", "watch ci", "monitor pr", "fix ci", "ci failing", "pr failing", "auto-fix", "auto fix pr", "pr is red", "checks failing" | `/pr-watch` |
 | "prd", "requirements", "spec", "plan an app", "design an app" | `/prd` |
 | "qa", "test the app", "click through", "does it work", "browser test" | `/qa` |
 | "refactor", "rename", "extract", "inline", "move file", "split file", "merge files" | `/refactor` |
-| "research", "investigate", "look into", "find out" | `/research` |
-| "research fleet", "parallel research", "multi-angle research", "compare options" | `/research-fleet` |
+| "research", "investigate", "look into", "find out", "research fleet", "parallel research", "multi-angle research", "compare options" | `/research` |
 | "/review", "code review", "review this", "review PR", "review" | `/review` |
 | "scaffold", "generate component", "generate module", "generate service", "new component", "new module", "new route", "new service", "create component", "stub out", "bootstrap" | `/scaffold` |
 | "schedule", "recurring", "every N minutes", "cron", "set a reminder", "run periodically" | `/schedule` |

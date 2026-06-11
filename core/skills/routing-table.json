@@ -303,11 +303,9 @@
         "cleanup directories",
         "directory convention",
         "where should this go",
-        "messy project",
-        "project health",
-        "bloat"
+        "messy project"
       ],
-      "description": "Three-pass project health scan: architectural compliance (are source files in the right layers?), filesystem hygiene (loose files, misplaced assets, stale artifacts), and bloat detection (oversized files, binaries in git, compressible assets). Reports composite score. Also manages enforceable directory manifests and dynamic directory lifecycle."
+      "description": "Repository structure only: directory layout, file placement, naming conventions, and where-does-this-belong decisions. Detects the project's convention, audits files against it, and executes move plans with import-path updates. Never changes code inside files beyond the import updates a move forces; in-file restructuring is /refactor."
     },
     {
       "name": "postmortem",
@@ -377,19 +375,13 @@
         "research",
         "investigate",
         "look into",
-        "find out"
-      ],
-      "description": "Focused research investigations. Converts questions into structured findings with confidence levels and source citations. Does not make decisions — produces information that informs the next step."
-    },
-    {
-      "name": "research-fleet",
-      "keywords": [
+        "find out",
         "research fleet",
         "parallel research",
         "multi-angle research",
         "compare options"
       ],
-      "description": "Parallel research using Fleet wave mechanics. Spawns multiple scout agents, each investigating a different angle of the same question. Findings are compressed between waves. Produces a unified research brief from multiple independent perspectives."
+      "description": "Focused research investigations. Converts questions into structured findings with confidence levels and source citations. Single agent by default; with --parallel (or when the question decomposes into 3+ independent angles) it spawns scout agents whose findings are compressed into a unified brief. Does not make decisions; produces information that informs the next step."
     },
     {
       "name": "review",

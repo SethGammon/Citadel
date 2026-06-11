@@ -1839,8 +1839,7 @@
       </div>
       <div class="panel-section-label">Research &amp; Debugging</div>
       <div class="skill-list">
-        <div class="skill-row"><span class="skill-name">/research</span><span class="skill-desc">Structured investigation with confidence levels and cited sources.</span></div>
-        <div class="skill-row"><span class="skill-name">/research-fleet</span><span class="skill-desc">Parallel multi-scout research. 3–5 independent angles simultaneously, then compressed.</span></div>
+        <div class="skill-row"><span class="skill-name">/research</span><span class="skill-desc">Structured investigation with confidence levels and cited sources. --parallel runs 3-5 independent scout angles, then compresses.</span></div>
         <div class="skill-row"><span class="skill-name">/wiki</span><span class="skill-desc">LLM-native markdown knowledge base. Ingests sources, compiles interlinked topic files, and answers from cited wiki pages.</span></div>
         <div class="skill-row"><span class="skill-name">/experiment</span><span class="skill-desc">Metric-driven optimization loops in isolated worktrees. Stops when metric plateaus.</span></div>
         <div class="skill-row"><span class="skill-name">/systematic-debugging</span><span class="skill-desc">4-phase root cause: observe → hypothesize → verify → fix. Emergency stop after 2 failures.</span></div>
@@ -1999,8 +1998,8 @@
         desc: "Structural codebase index generator. Builds a compact JSON map of files, exports, imports, dependency graph, and roles. Queryable by keyword. Injected into fleet agents as context slices to reduce token usage on code navigation.", icon: '◇' },
       { re: /\b(merge review|check merges|any conflicts|fleet conflicts|pending branches|safe to merge)\b/i, skill: '/merge-review',
         desc: "Reviews pending fleet worktree merges before they're accepted. Reads the merge-check queue, detects file-level conflicts between branches, proposes a safe merge order, and surfaces reconciliation plans for overlapping changes.", icon: '◇' },
-      { re: /\b(organize|directory structure|folder structure|project structure|file organization|organize directories|organize files|cleanup directories|directory convention|where should this go|messy project|project health|bloat)\b/i, skill: '/organize',
-        desc: "Three-pass project health scan: architectural compliance (are source files in the right layers?), filesystem hygiene (loose files, misplaced assets, stale artifacts), and bloat detection (oversized files, binaries in git, compressible assets). Reports composite score. Also manages enforceable directory manifests and dynamic directory lifecycle.", icon: '◇' },
+      { re: /\b(organize|directory structure|folder structure|project structure|file organization|organize directories|organize files|cleanup directories|directory convention|where should this go|messy project)\b/i, skill: '/organize',
+        desc: "Repository structure only: directory layout, file placement, naming conventions, and where-does-this-belong decisions. Detects the project's convention, audits files against it, and executes move plans with import-path updates. Never changes code inside files beyond the import updates a move forces; in-file restructuring is /refactor.", icon: '◇' },
       { re: /\b(postmortem|retro|what broke|what happened|debrief)\b/i, skill: '/postmortem',
         desc: "Auto-generates a structured postmortem from a completed campaign. Reads the campaign file, telemetry logs, and feature ledger. Produces a documented analysis of what broke, what the safety systems caught, and what patterns emerged. Can also be invoked manually for any incident.", icon: '📊' },
       { re: /\b(watch pr|watch ci|monitor pr|fix ci|ci failing|pr failing|auto-fix|auto fix pr|pr is red|checks failing)\b/i, skill: '/pr-watch',
@@ -2011,10 +2010,8 @@
         desc: "Browser-based QA verification. Launches a real browser, navigates the app, clicks buttons, fills forms, and tests user flows. Works as a standalone skill or as a phase end condition in campaigns. Requires Playwright (optional dependency, graceful skip if not installed).", icon: '◇' },
       { re: /\b(refactor|rename|extract|inline|move file|split file|merge files)\b/i, skill: '/refactor',
         desc: "Safe multi-file refactoring with automatic rollback. Establishes a type/test baseline, plans all changes, executes file-by-file, and verifies zero regressions. Reverts if verification fails after two fix attempts. Handles renames, extracts, moves, splits, merges, and inlines.", icon: '↻' },
-      { re: /\b(research|investigate|look into|find out)\b/i, skill: '/research',
-        desc: "Focused research investigations. Converts questions into structured findings with confidence levels and source citations. Does not make decisions — produces information that informs the next step.", icon: '⌕' },
-      { re: /\b(research fleet|parallel research|multi-angle research|compare options)\b/i, skill: '/research-fleet',
-        desc: "Parallel research using Fleet wave mechanics. Spawns multiple scout agents, each investigating a different angle of the same question. Findings are compressed between waves. Produces a unified research brief from multiple independent perspectives.", icon: '◇' },
+      { re: /\b(research|investigate|look into|find out|research fleet|parallel research|multi-angle research|compare options)\b/i, skill: '/research',
+        desc: "Focused research investigations. Converts questions into structured findings with confidence levels and source citations. Single agent by default; with --parallel (or when the question decomposes into 3+ independent angles) it spawns scout agents whose findings are compressed into a unified brief. Does not make decisions; produces information that informs the next step.", icon: '⌕' },
       { re: /\b(\/review|code review|review this|review PR|review)\b/i, skill: '/review',
         desc: "5-pass structured code review — correctness, security, performance, readability, consistency", icon: '◆' },
       { re: /\b(scaffold|generate component|generate module|generate service|new component|new module|new route|new service|create component|stub out|bootstrap)\b/i, skill: '/scaffold',

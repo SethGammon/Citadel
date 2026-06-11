@@ -105,7 +105,7 @@ Turn the telemetry that already exists into something operators and teams can se
 **Exit criteria:** one command exports to a local OTEL collector demo; dashboard shows hook
 p50/p95; no unbounded state files remain.
 
-## M5: Skill Platform Hygiene
+## M5: Skill Platform Hygiene (shipped 2026-06-11)
 
 Make the skill collection sustainable as it grows.
 
