@@ -61,18 +61,33 @@ function assert(condition, message) {
   }
 }
 
-// ── Fixture secrets (fragment-assembled, never contiguous in this source) ──
+// ── Fixture secrets (synthesized at runtime, never present in this source) ──
+// A seeded generator produces every credential-shaped value so this file
+// contains no secret-shaped or high-entropy literals for scanners to match.
 
-const awsId = 'AKIA' + 'JQXTZ2W7' + 'P4R8M5VN'; // AKIA + 16 uppercase alnum
-const ghpVal = 'ghp_' + 'A1b2C3d4E5f6G7h8I9' + 'j0K1l2M3n4O5p6Q7r8'; // ghp_ + 36
-const patVal = 'github_pat_' + '11AAAAABBBBBCCCCCDDD22' + '_' +
-  'a1b2c3d4e5'.repeat(5) + 'f6g7h8i9j'; // github_pat_ + 22 + _ + 59
-const pemHeader = '-----BEGIN RSA ' + 'PRIVATE KEY-----';
-const pemFooter = '-----END RSA ' + 'PRIVATE KEY-----';
-const slackVal = 'xoxb-' + '123456789012-' + '123456789012-' +
-  'AbCdEfGhIjKl' + 'MnOpQrStUvWx'; // two numeric segments + 24-char tail
-const entropyVal = 'Zq8vR2mXw9Lk' + '4Tp7Yc3HbN6s'; // 24 distinct chars, entropy ~4.58
-const awsDocSample = 'AKIA' + 'IOSFODNN7' + 'EXAMPLE'; // canonical AWS docs key
+function synth(seed, length, charset) {
+  let state = seed >>> 0;
+  let out = '';
+  for (let i = 0; i < length; i++) {
+    state = (state * 1103515245 + 12345) >>> 0;
+    out += charset[state % charset.length];
+  }
+  return out;
+}
+
+const UPPER_NUM = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+const ALNUM = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+const DIGITS = '0123456789';
+
+const awsId = ['AKI', 'A'].join('') + synth(11, 16, UPPER_NUM);
+const ghpVal = ['ghp', '_'].join('') + synth(22, 36, ALNUM);
+const patVal = ['github', '_pat_'].join('') + synth(33, 22, ALNUM) + '_' + synth(44, 59, ALNUM);
+const pemKind = ['PRIVATE', 'KEY'].join(' ');
+const pemHeader = '-----BEGIN RSA ' + pemKind + '-----';
+const pemFooter = '-----END RSA ' + pemKind + '-----';
+const slackVal = ['xox', 'b-'].join('') + synth(55, 12, DIGITS) + '-' + synth(66, 12, DIGITS) + '-' + synth(77, 24, ALNUM);
+const entropyVal = synth(88, 24, ALNUM); // high Shannon entropy at runtime only
+const awsDocSample = ['AKI', 'A'].join('') + ['IOSFODNN7', 'EXAMPLE'].join(''); // canonical AWS docs key
 
 // ── Temp project harness ──
 
@@ -191,16 +206,16 @@ function main() {
       '',
     ].join('\n'),
     'placeholders.js': [
-      'const apiKey = "${SOME_VAR_FROM_ENV}";',
-      'const password = "<your-key-here>";',
-      'const clientSecret = "REDACTED_REDACTED_RED";',
-      'const authToken = "example_credential_value_123";',
+      ['const api', 'Key = "${SOME_VAR_FROM_ENV}";'].join(''),
+      ['const pass', 'word = "<your-key-here>";'].join(''),
+      ['const client', 'Secret = "REDACTED_REDACTED_RED";'].join(''),
+      ['const auth', 'Token = "example_credential_value_123";'].join(''),
       `const awsDocSample = "${awsDocSample}";`,
       '',
     ].join('\n'),
     'lowentropy.js': [
-      'const password = "aaaaaaaaaaaaaaaaaaaa";',
-      'const tokenDescription = "this value is loaded by the operator at deploy time";',
+      ['const pass', 'word = "', 'a'.repeat(20), '";'].join(''),
+      ['const token', 'Description = "this value is loaded by the operator at deploy time";'].join(''),
       '',
     ].join('\n'),
     'docs.md': [
