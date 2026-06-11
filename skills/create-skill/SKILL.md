@@ -1,5 +1,6 @@
 ---
 name: create-skill
+license: MIT
 description: >-
   Creates new skills from the user's repeating patterns. Interview-driven:
   discovers the task, analyzes failure modes, generates a production SKILL.md,

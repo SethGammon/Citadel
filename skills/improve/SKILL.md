@@ -1,5 +1,6 @@
 ---
 name: improve
+license: MIT
 description: >-
   Autonomous quality improvement loop. Scores a target against a rubric, selects
   the highest-leverage axis, attacks it, verifies, documents, and loops. No

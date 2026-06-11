@@ -1,5 +1,6 @@
 ---
 name: dashboard
+license: MIT
 description: >-
   Real-time harness observability dashboard. Reads campaigns, fleet sessions,
   telemetry, and pending queues to present a snapshot of harness state at a
@@ -107,6 +108,18 @@ exist, treat it as empty. Never crash on missing state.
 - Sort rows by p95 descending
 - If the file is missing or contains no timed entries, render the one-line note instead
 
+**Routine Quota (account-wide 15 runs / 24h cap):**
+- Read `.planning/telemetry/routine-runs.jsonl` (if it exists)
+- Expected JSONL shape, one record per quota-consuming run:
+  `{"ts": "<ISO timestamp>", "kind": "RemoteTrigger" | "CronCreate" | "ScheduleWakeup"}`
+- Count records with `ts` inside the last 24 hours; compare against the cap of 15
+- Warn when the count exceeds 12 (hitting the cap pauses every routine on the
+  account; see `docs/ROUTINE-QUOTA.md`)
+- The harness does not write this file automatically yet — remote-run logging
+  populates it when a routine mechanism is actually used. Local runners
+  (`local-watch.js`, `local-daemon.js`, `local-schedule.js`) never consume quota
+  and must not be counted.
+
 **Pending Queues:**
 - Count actionable entries in `.planning/telemetry/doc-sync-queue.jsonl` where `status` is `pending` or `needs-review` (or 0 if missing)
 - Count lines in `.planning/telemetry/merge-check-queue.jsonl` (or 0 if missing)
@@ -197,6 +210,11 @@ COSTS
     _unattached: ${total_cost} across {sessions} sessions
   (no cost data recorded yet)
 
+ROUTINE QUOTA
+  Runs (last 24h): {N}/15
+  WARNING: {N} of 15 routine runs used in the last 24h. Hitting the cap pauses every routine on the account. See docs/ROUTINE-QUOTA.md.
+  (remote-run logging populates .planning/telemetry/routine-runs.jsonl - local runners do not consume quota)
+
 HOOKS VALUE
   Circuit breaker: {N} trips (prevented token spirals)
   Quality gate:    {N} violations caught pre-commit
@@ -258,6 +276,7 @@ QUICK COMMANDS
 **Completed campaign still active:** Show the exact `node scripts/campaign.js complete <slug> --archive` repair command; suggesting `/do continue` here is wrong because the campaign is already finished.
 **Campaign ready for review package:** Show the exact `node scripts/package-delivery.js <slug>` repair command before showing campaign completion.
 **All fleet sessions idle:** Note "No active fleet sessions" under FLEET SESSIONS.
+**routine-runs.jsonl missing or no runs in window:** Show `Runs (last 24h): 0/15` plus the one-line population hint; only show the WARNING line when more than 12 runs are counted.
 **Mixed state:** Proceed with whatever state exists; note each missing directory inline.
 **Doc-sync backlog:** Surface `/learn --doc-sync` as a repair action with `skills/learn/SKILL.md` as runbook.
 **Dirty worktree:** Surface `git status --short` as a review action; do not suggest destructive cleanup.

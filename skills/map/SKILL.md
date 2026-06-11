@@ -1,5 +1,6 @@
 ---
 name: map
+license: MIT
 description: >-
   Structural codebase index generator. Builds a compact JSON map of files,
   exports, imports, dependency graph, and roles. Queryable by keyword. Injected

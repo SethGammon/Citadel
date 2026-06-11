@@ -77,6 +77,8 @@ const TEAMMATE_REBALANCE_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-teammate
 const DOC_SURFACES_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-doc-surfaces.js');
 const TELEMETRY_OTLP_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-telemetry-otlp.js');
 const STATE_HYGIENE_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-state-hygiene.js');
+const PERMISSION_AUDIT_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-permission-audit.js');
+const SECRETS_LENS_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-secrets-lens.js');
 
 const STRICT = process.argv.includes('--strict');
 
@@ -157,6 +159,8 @@ const teammateRebalancePassed = run('Teammate Rebalance Tests', TEAMMATE_REBALAN
 const docSurfacesPassed = run('Doc Surfaces Check', DOC_SURFACES_TEST);
 const telemetryOtlpPassed = run('Telemetry OTLP Export Tests', TELEMETRY_OTLP_TEST);
 const stateHygienePassed = run('State Hygiene Tests', STATE_HYGIENE_TEST);
+const permissionAuditPassed = run('Permission Audit Tests', PERMISSION_AUDIT_TEST);
+const secretsLensPassed = run('Secrets Lens Tests', SECRETS_LENS_TEST);
 
 console.log('\n' + '='.repeat(40));
 console.log('SUMMARY');
@@ -217,9 +221,11 @@ console.log(`  Teammate rebalance: ${teammateRebalancePassed ? 'PASS' : 'FAIL'}`
 console.log(`  Doc surfaces:       ${docSurfacesPassed ? 'PASS' : 'FAIL'}`);
 console.log(`  Telemetry OTLP:     ${telemetryOtlpPassed ? 'PASS' : 'FAIL'}`);
 console.log(`  State hygiene:      ${stateHygienePassed ? 'PASS' : 'FAIL'}`);
+console.log(`  Permission audit:   ${permissionAuditPassed ? 'PASS' : 'FAIL'}`);
+console.log(`  Secrets lens:       ${secretsLensPassed ? 'PASS' : 'FAIL'}`);
 console.log('');
 
-if (hooksPassed && securityPassed && contractsPassed && runtimeRegistryPassed && runtimeMatrixPassed && hookEventsPassed && skillsPassed && demoPassed && telemetryPassed && telemetryIntegrityPassed && memoryBlockPassed && evidenceContractPassed && sandboxProviderPassed && skillPackagingPassed && mapSubstratePassed && deliveryPassed && deliveryPackagePassed && continueActionPassed && nextActionPassed && routePreviewPassed && loopsPassed && operatingProofPassed && usefulnessTrialPassed && operatorConsolePassed && operatorJourneyPassed && firstUseOperatorPassed && verificationPlanPassed && prReadyPassed && stackPlanPassed && coordinationPassed && hookInstallerPassed && campaignPassed && discoveryPassed && discoveryWriterPassed && momentumPassed && momentumWatcherPassed && policyPassed && claudeRuntimePassed && codexRuntimePassed && codexNativeIntegrationPassed && codexOperationalImprovementPassed && installerPassed && projectBootstrapPassed && compatFixturePassed && backwardCompatPassed && costTrackerPassed && dashboardPassed && docSyncPassed && fleetSessionPassed && worktreeReadinessPassed && postEditTypecheckPassed && routingSyncPassed && watchDedupPassed && teammateRebalancePassed && docSurfacesPassed && telemetryOtlpPassed && stateHygienePassed) {
+if (hooksPassed && securityPassed && contractsPassed && runtimeRegistryPassed && runtimeMatrixPassed && hookEventsPassed && skillsPassed && demoPassed && telemetryPassed && telemetryIntegrityPassed && memoryBlockPassed && evidenceContractPassed && sandboxProviderPassed && skillPackagingPassed && mapSubstratePassed && deliveryPassed && deliveryPackagePassed && continueActionPassed && nextActionPassed && routePreviewPassed && loopsPassed && operatingProofPassed && usefulnessTrialPassed && operatorConsolePassed && operatorJourneyPassed && firstUseOperatorPassed && verificationPlanPassed && prReadyPassed && stackPlanPassed && coordinationPassed && hookInstallerPassed && campaignPassed && discoveryPassed && discoveryWriterPassed && momentumPassed && momentumWatcherPassed && policyPassed && claudeRuntimePassed && codexRuntimePassed && codexNativeIntegrationPassed && codexOperationalImprovementPassed && installerPassed && projectBootstrapPassed && compatFixturePassed && backwardCompatPassed && costTrackerPassed && dashboardPassed && docSyncPassed && fleetSessionPassed && worktreeReadinessPassed && postEditTypecheckPassed && routingSyncPassed && watchDedupPassed && teammateRebalancePassed && docSurfacesPassed && telemetryOtlpPassed && stateHygienePassed && permissionAuditPassed && secretsLensPassed) {
   console.log('All tests pass.\n');
   console.log('Next steps:');
   console.log('  node scripts/skill-bench.js --list      see benchmark scenarios');
@@ -286,7 +292,9 @@ const teammateRebalanceFail = !teammateRebalancePassed ? 67108864 : 0;
 const docSurfacesFail = !docSurfacesPassed ? 64 : 0;
 const telemetryOtlpFail = !telemetryOtlpPassed ? 128 : 0;
 const stateHygieneFail = !stateHygienePassed ? 512 : 0;
-const code =hookFail | securityFail | contractFail | runtimeRegistryFail | runtimeMatrixFail | hookEventFail | skillFail | demoFail | telemetryFail | telemetryIntegrityFail | memoryBlockFail | evidenceContractFail | sandboxProviderFail | skillPackagingFail | mapSubstrateFail | deliveryFail | deliveryPackageFail | continueActionFail | nextActionFail | routePreviewFail | loopsFail | operatingProofFail | usefulnessTrialFail | operatorConsoleFail | operatorJourneyFail | firstUseOperatorFail | verificationPlanFail | prReadyFail | stackPlanFail | coordinationFail | hookInstallerFail | campaignFail | discoveryFail | discoveryWriterFail | momentumFail | momentumWatcherFail | policyFail | claudeRuntimeFail | codexRuntimeFail | codexNativeIntegrationFail | codexOperationalImprovementFail | installerFail | projectBootstrapFail | compatFixtureFail | backwardCompatFail | costTrackerFail | dashboardFail | docSyncFail | fleetSessionFail | worktreeReadinessFail | postEditTypecheckFail | routingSyncFail | watchDedupFail | teammateRebalanceFail | docSurfacesFail | telemetryOtlpFail | stateHygieneFail;
+const permissionAuditFail = !permissionAuditPassed ? 2 : 0;
+const secretsLensFail = !secretsLensPassed ? 2 : 0;
+const code =hookFail | securityFail | contractFail | runtimeRegistryFail | runtimeMatrixFail | hookEventFail | skillFail | demoFail | telemetryFail | telemetryIntegrityFail | memoryBlockFail | evidenceContractFail | sandboxProviderFail | skillPackagingFail | mapSubstrateFail | deliveryFail | deliveryPackageFail | continueActionFail | nextActionFail | routePreviewFail | loopsFail | operatingProofFail | usefulnessTrialFail | operatorConsoleFail | operatorJourneyFail | firstUseOperatorFail | verificationPlanFail | prReadyFail | stackPlanFail | coordinationFail | hookInstallerFail | campaignFail | discoveryFail | discoveryWriterFail | momentumFail | momentumWatcherFail | policyFail | claudeRuntimeFail | codexRuntimeFail | codexNativeIntegrationFail | codexOperationalImprovementFail | installerFail | projectBootstrapFail | compatFixtureFail | backwardCompatFail | costTrackerFail | dashboardFail | docSyncFail | fleetSessionFail | worktreeReadinessFail | postEditTypecheckFail | routingSyncFail | watchDedupFail | teammateRebalanceFail | docSurfacesFail | telemetryOtlpFail | stateHygieneFail | permissionAuditFail | secretsLensFail;
 
 if (!hooksPassed) console.log('Hook smoke test failed. Fix hook issues before proceeding.');
 if (!securityPassed) console.log('Security tests failed. DO NOT SHIP - critical vulnerabilities present.');
@@ -345,5 +353,7 @@ if (!teammateRebalancePassed) console.log('Teammate rebalance tests failed. Fix 
 if (!docSurfacesPassed) console.log('Doc surfaces check failed. Run: node scripts/generate-doc-surfaces.js, then commit the regenerated docs.');
 if (!telemetryOtlpPassed) console.log('Telemetry OTLP export tests failed. Fix mapping or state handling in telemetry-otlp-export.js before shipping.');
 if (!stateHygienePassed) console.log('State hygiene tests failed. Fix expired-state sweeping in state-hygiene.js before shipping.');
+if (!permissionAuditPassed) console.log('Permission audit tests failed. Fix permission-events logging or report rendering before shipping.');
+if (!secretsLensPassed) console.log('Secrets lens tests failed. Fix the quality-gate secrets sweep before shipping.');
 console.log('');
 process.exit(code);

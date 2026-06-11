@@ -1,5 +1,6 @@
 ---
 name: learn
+license: MIT
 description: >-
   Knowledge compiler. Extracts patterns, decisions, and anti-patterns from
   completed campaigns and evolve cycles, then compiles them into structured wiki

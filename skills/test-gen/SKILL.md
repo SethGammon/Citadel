@@ -1,5 +1,6 @@
 ---
 name: test-gen
+license: MIT
 description: Generate and verify tests — happy path, edge cases, error paths — using the project's own framework and patterns
 user-invocable: true
 trigger_keywords:

@@ -1,5 +1,6 @@
 ---
 name: research
+license: MIT
 description: >-
   Focused research investigations. Converts questions into structured findings
   with confidence levels and source citations. Single agent by default; with

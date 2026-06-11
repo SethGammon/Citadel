@@ -1,5 +1,10 @@
 # Threat Model
 
+Version 2.0 (2026-06-11). Version 1 covered the core hook, campaign, and fleet
+surfaces. Version 2 adds Teams Mode coordination, routine and daemon
+automation, generated routing surfaces, the native memory write allowlist, and
+the accepted residuals from the June 2026 audit.
+
 Citadel is an agent orchestration harness for local coding runtimes. It adds
 skills, hooks, scripts, generated configuration, and repo-local state so an AI
 coding agent can route work, preserve context, coordinate campaigns, verify
@@ -92,6 +97,93 @@ that conflict with user, system, runtime, or repository policy.
 | Automation overreach | A campaign continues after scope has changed | campaign files, approval capsules, operator console, and PR readiness gates |
 | Stale evidence | A readiness report refers to an old branch head | stack readiness checks and rerun requirements |
 | Unreviewed merge | Fleet worktrees are accepted blindly | merge-review queues and explicit human approval boundaries |
+
+## Expanded Surfaces (v2)
+
+Each surface below lists the attack, the existing mitigation, and the residual
+risk that remains after the mitigation.
+
+### Teams Mode coordination
+
+Teams Mode (docs/FLEET.md) swaps the fleet coordination spine to native
+messaging: `SendMessage` carries discoveries, and the TeammateIdle hook
+(`hooks_src/teammate-idle.js`) appends idle signals to
+`.planning/fleet/rebalance.jsonl`.
+
+| Attack | Mitigation | Residual |
+|---|---|---|
+| `SendMessage` spoofing: a teammate, or injected content inside one, sends a forged discovery or status claim to the lead | Messages are ephemeral and never authoritative. The lead mirrors every discovery to `.planning/fleet/<session>/discoveries/`, and recovery reconciles only from the mirror, never from message history. Merges still pass human review. | No cryptographic teammate identity exists. A convincing forged message can waste lead turns and steer attention before review catches it. |
+| `rebalance.jsonl` tampering: anything with project write access can append fake idle lines | The hook is observer-only; reassignment is always the lead's decision. Lines without teammate identity are skipped, and idle lines are ignored when nothing is reassignable. | Forged idle lines can cause reassignment churn. The file is telemetry, not an authorization channel, and must never become one without authentication. |
+| Discovery-mirror poisoning: fake discovery files written directly into the mirror | Mirror content is untrusted input under the External Inputs boundary. Work merges only through reviewable branches and worktrees. | Poisoned discoveries are a prompt-injection vector into the lead before any human reviews the merge. |
+
+### Routines, RemoteTrigger, and the daemon
+
+`/daemon` (skills/daemon/SKILL.md) chains unattended sessions, by default
+through a local runner (`scripts/local-daemon.js`) and optionally through
+Anthropic's RemoteTrigger routine system (docs/ROUTINE-QUOTA.md).
+
+| Attack | Mitigation | Residual |
+|---|---|---|
+| Unattended session chains: poisoned campaign state keeps a chain alive doing attacker-directed work overnight | Every tick passes status, lock, budget, and campaign gates. The SessionStart bridge in `hooks_src/init-project.js` independently re-checks lock, budget, and campaign liveness in code before prompting `/do continue`. Trust gating blocks the daemon for new operators. | Most tick gates are protocol the model follows, not code. Only the init-project bridge is enforced in code. |
+| Quota exhaustion: RemoteTrigger runs count against the account-wide cap of 15 routine runs per 24 hours; a runaway chain pauses every routine on the account | The local runner is the default path. `--remote` requires an explicit warning and user confirmation. | An approved `--remote` daemon can still exhaust the cap in one overnight run. Accepted as a documented trade-off. |
+| Budget tampering: `.planning/daemon.json` holds `budget` and `estimatedSpend`; any project write can raise the cap or reset spend | The file is plain, reviewable repo-local state. The daemon discloses its budget at start, and real session costs are recorded separately in `.planning/telemetry/session-costs.jsonl`. | The budget is an honest-operator control, not a security boundary against an agent that already has project write access. Accepted. |
+
+### Generated routing surfaces
+
+`scripts/generate-routing.js` compiles `trigger_keywords` frontmatter from
+every skill into `core/skills/routing-table.json`, the `/do` table in
+`skills/do/SKILL.md`, and demo data in `docs/index.html`.
+`scripts/generate-doc-surfaces.js` rewrites doc-count markers the same way.
+
+- Attack: poisoned skill frontmatter (for example a malicious skill PR) flows
+  into routing keywords and descriptions that the router reads as trusted
+  instructions, or into doc-count markers.
+- Mitigation: generation is deterministic, and drift checks (`--check` mode,
+  `scripts/test-routing-sync.js`, `scripts/test-doc-surfaces.js`, enforced by
+  `scripts/test-all.js`) guarantee generated surfaces match the reviewable
+  frontmatter exactly. Nothing diverges silently between review and runtime.
+- Residual: drift checks prove provenance, not safety. A malicious description
+  that survives PR review reaches the routing surfaces verbatim. Review of
+  skill frontmatter remains the real boundary.
+
+### Native memory write allowlist
+
+`hooks_src/protect-files.js` blocks Edit/Write outside the project root, with
+one carve-out: `isNativeMemoryPath` permits writes into the Claude Code native
+auto-memory directory, `<home>/.claude/projects/<slug>/memory/`.
+
+- Why it is bounded: the path is normalized and traversal-checked first, the
+  slug must be a single path segment, and `memory` must be the segment
+  immediately after it. `.env` reads remain blocked everywhere by basename.
+- Residual: the allowlist matches any project slug, not only the current
+  project, and allowlisted writes skip the protected-pattern check. Memory
+  files are prompt context, so a poisoned memory write is an injection vector
+  into future sessions. Accepted as low risk: memory is plain markdown,
+  reviewable, and never executed.
+
+## Accepted Residuals (June 2026 audit)
+
+These were found, analyzed, and explicitly accepted. They are not open bugs.
+
+- Quoted-target Bash bypass: `echo X > ".env"` passes the external action gate
+  because `stripQuotedContent` in `core/policy/external-actions.js` erases
+  quoted strings before pattern matching, which erases the quoted redirect
+  target. Accepted: quote stripping is what prevents false positives on commit
+  messages and documentation strings, the Edit/Write path still blocks `.env`,
+  and this vector writes secrets rather than reading them.
+- Copy-from and uncommon-tool read vectors: `cp .env /tmp/x`, `dd if=.env`,
+  and `sed`-style reads are not in `SECRETS_PATTERNS`. The list covers the
+  read commands agents actually emit (cat, source, head, tail, grep, less,
+  more) and the write vectors (redirect, tee, cp/mv with `.env` as target).
+  Accepted: enumerating every exfiltration tool with regex is not achievable;
+  covering arbitrary shell belongs to the runtime sandbox, which remains part
+  of the security boundary.
+- Per-tool-call hook process spawn: every gated tool call spawns fresh Node
+  processes for its hooks. This is the dominant harness overhead. Accepted for
+  now: fail-closed correctness outweighs latency. The overhead is tracked as
+  the "Hook overhead p95" North Star metric in docs/ROADMAP.md (target under
+  200 ms per tool call). No dispatcher consolidation has shipped, and none is
+  committed beyond meeting that metric.
 
 ## Approval-Bound Actions
 

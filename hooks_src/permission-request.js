@@ -25,10 +25,33 @@
 
 'use strict';
 
+const fs = require('fs');
 const path = require('path');
 const health = require('./harness-health-util');
 
 const PROJECT_ROOT = health.PROJECT_ROOT;
+const PERMISSION_EVENTS_FILE = path.join(health.TELEMETRY_DIR, 'permission-events.jsonl');
+
+/**
+ * Append a compact permission event to the dedicated audit JSONL.
+ * Observer-only: failures are swallowed, never affects the hook outcome.
+ * One appendFileSync on the hot path (directory already ensured by increment()).
+ */
+function logPermissionEvent(eventName, tool, target, decision) {
+  try {
+    if (!fs.existsSync(health.TELEMETRY_DIR)) {
+      fs.mkdirSync(health.TELEMETRY_DIR, { recursive: true });
+    }
+    const line = JSON.stringify({
+      ts: new Date().toISOString(),
+      event: eventName,
+      tool: tool || 'unknown',
+      target: String(target || '').slice(0, 120),
+      decision,
+    });
+    fs.appendFileSync(PERMISSION_EVENTS_FILE, line + '\n', 'utf8');
+  } catch { /* telemetry must never break the hook */ }
+}
 
 // Patterns that are always safe to auto-approve
 const SAFE_BASH_PATTERNS = [
@@ -69,6 +92,8 @@ function main() {
     let event = {};
     try { event = JSON.parse(input); } catch { /* partial input ok */ }
 
+    const eventName = event.hook_event_name || 'PermissionRequest';
+    const isDenied = eventName === 'PermissionDenied';
     const toolName = event.tool_name || event.tool || '';
     const toolInput = event.tool_input || {};
     const agentId = event.agent_id || null;
@@ -91,18 +116,26 @@ function main() {
       }
     }
 
+    // PermissionDenied events (template wires this same script) carry a final
+    // 'deny' decision; never emit an allow for them.
+    const recordedDecision = isDenied ? 'deny' : (decision || 'deferred');
+    const target = toolInput.command || toolInput.file_path || toolInput.path || '';
+
     // Log every permission request for governance visibility
     health.increment('permission-request', 'count');
     health.writeAuditLog('permission-request', {
       tool: toolName,
-      target: (toolInput.command || toolInput.file_path || '').slice(0, 200),
+      target: String(target).slice(0, 200),
       agent_id: agentId,
-      decision: decision || 'deferred',
+      decision: recordedDecision,
       reason,
       severity: 'low',
     });
 
-    if (decision === 'allow') {
+    // Dedicated permission audit trail (consumed by scripts/permission-audit.js)
+    logPermissionEvent(eventName, toolName, target, recordedDecision);
+
+    if (decision === 'allow' && !isDenied) {
       // Auto-approve: output the structured decision
       process.stdout.write(JSON.stringify({
         hookSpecificOutput: {

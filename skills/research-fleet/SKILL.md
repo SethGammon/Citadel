@@ -1,5 +1,6 @@
 ---
 name: research-fleet
+license: MIT
 description: >-
   DEPRECATED: merged into /research. Parallel multi-scout research now runs
   as /research --parallel. This stub only redirects direct invocations.

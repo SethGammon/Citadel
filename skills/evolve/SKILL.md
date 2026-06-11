@@ -1,5 +1,6 @@
 ---
 name: evolve
+license: MIT
 description: >-
   Research-driven multi-cycle improvement director. Forms causal hypotheses
   about why scores are low, validates them with scout agents before attacking,

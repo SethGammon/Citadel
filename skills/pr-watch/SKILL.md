@@ -1,5 +1,6 @@
 ---
 name: pr-watch
+license: MIT
 description: >-
   Local PR watcher. Monitors CI status, automatically fixes failing checks by reading
   failure logs and applying targeted fixes, then optionally merges when all checks pass.

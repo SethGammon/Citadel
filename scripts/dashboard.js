@@ -17,6 +17,8 @@ const { readCostDashboard } = require('./telemetry-stats');
 const { listReadinessReports } = require('../core/worktree/readiness');
 
 const DEFAULT_RECENT_LIMIT = 10;
+const ROUTINE_QUOTA_CAP = 15;
+const ROUTINE_QUOTA_WARN_ABOVE = 12;
 
 function parseArgs(argv) {
   const options = {
@@ -596,6 +598,31 @@ function readHookOverhead(projectRoot) {
     .sort((left, right) => right.p95Ms - left.p95Ms);
 }
 
+// Account-wide routine quota (CronCreate / RemoteTrigger / ScheduleWakeup runs).
+// Reads .planning/telemetry/routine-runs.jsonl, one record per quota-consuming
+// run: {ts, kind}. Nothing in the harness writes this file yet; remote-run
+// logging populates it when a routine mechanism is actually used.
+function readRoutineQuota(projectRoot, now = new Date()) {
+  const filePath = path.join(projectRoot, '.planning', 'telemetry', 'routine-runs.jsonl');
+  const detail = readJsonlDetailed(filePath);
+  const windowStart = now.getTime() - 24 * 60 * 60 * 1000;
+
+  let runsLast24h = 0;
+  if (detail.exists) {
+    for (const entry of detail.entries) {
+      const ts = new Date(entry.ts || entry.timestamp || 0).getTime();
+      if (Number.isFinite(ts) && ts >= windowStart) runsLast24h++;
+    }
+  }
+
+  return {
+    sourceExists: detail.exists,
+    cap: ROUTINE_QUOTA_CAP,
+    runsLast24h,
+    warning: runsLast24h > ROUTINE_QUOTA_WARN_ABOVE,
+  };
+}
+
 function readQueueCounts(projectRoot) {
   const planningDir = path.join(projectRoot, '.planning');
   const telemetryDir = path.join(planningDir, 'telemetry');
@@ -922,6 +949,7 @@ function collectDashboard(options = {}) {
   const operatorArtifacts = readOperatorArtifacts(projectRoot);
   const pending = readQueueCounts(projectRoot);
   const problems = readProblems(projectRoot, now);
+  const routineQuota = readRoutineQuota(projectRoot, now);
 
   const mostRecentTimestamp = [
     ...recentActivity.map((entry) => entry.timestamp),
@@ -956,6 +984,7 @@ function collectDashboard(options = {}) {
     operatorArtifacts,
     problems: problems.items,
     problemSummary: problems.summary,
+    routineQuota,
   };
 
   snapshot.repairs = buildRepairItems(snapshot);
@@ -1264,6 +1293,17 @@ function renderDashboard(snapshot) {
   }
 
   lines.push('');
+  lines.push('ROUTINE QUOTA');
+  const routineQuota = snapshot.routineQuota || { sourceExists: false, cap: ROUTINE_QUOTA_CAP, runsLast24h: 0, warning: false };
+  lines.push(`  Runs (last 24h): ${routineQuota.runsLast24h}/${routineQuota.cap}`);
+  if (routineQuota.warning) {
+    lines.push(`  WARNING: ${routineQuota.runsLast24h} of ${routineQuota.cap} routine runs used in the last 24h. Hitting the cap pauses every routine on the account. See docs/ROUTINE-QUOTA.md.`);
+  }
+  if (!routineQuota.sourceExists || routineQuota.runsLast24h === 0) {
+    lines.push('  (remote-run logging populates .planning/telemetry/routine-runs.jsonl - local runners do not consume quota)');
+  }
+
+  lines.push('');
   lines.push('HOOKS VALUE');
   lines.push(`  Circuit breaker: ${snapshot.hookValue.circuitBreakerTrips} trips`);
   lines.push(`  Quality gate:    ${snapshot.hookValue.qualityGateViolations} violations`);
@@ -1379,6 +1419,7 @@ module.exports = {
   renderDashboard,
   readHookOverhead,
   readOperatorArtifacts,
+  readRoutineQuota,
   relativeTime,
   parseArgs,
   percentile,

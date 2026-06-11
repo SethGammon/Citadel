@@ -644,4 +644,57 @@ withTempProject((projectRoot) => {
   assert(output.includes('(no hook timing data recorded yet)'));
 });
 
+// Routine quota: 3 runs inside the 24h window shows 3/15 with no warning;
+// entries older than 24h are excluded from the count
+withTempProject((projectRoot) => {
+  appendJsonl(path.join(projectRoot, '.planning', 'telemetry', 'routine-runs.jsonl'), [
+    { ts: '2026-06-02T12:00:00.000Z', kind: 'RemoteTrigger' }, // outside 24h window
+    { ts: '2026-06-04T01:00:00.000Z', kind: 'RemoteTrigger' },
+    { ts: '2026-06-04T08:00:00.000Z', kind: 'CronCreate' },
+    { ts: '2026-06-04T11:30:00.000Z', kind: 'ScheduleWakeup' },
+  ]);
+
+  const snapshot = collectDashboard({ projectRoot, now: '2026-06-04T12:00:00.000Z' });
+  const output = renderDashboard(snapshot);
+
+  assert.equal(snapshot.routineQuota.runsLast24h, 3);
+  assert.equal(snapshot.routineQuota.cap, 15);
+  assert.equal(snapshot.routineQuota.warning, false);
+  assert(output.includes('ROUTINE QUOTA'));
+  assert(output.includes('Runs (last 24h): 3/15'));
+  assert(!output.includes('WARNING: 3 of 15'));
+  assert(!output.includes('remote-run logging populates'));
+});
+
+// Routine quota: 13 runs in the window crosses the warn-above-12 threshold
+withTempProject((projectRoot) => {
+  const runs = Array.from({ length: 13 }, (_, index) => ({
+    ts: `2026-06-04T${String(index).padStart(2, '0')}:30:00.000Z`,
+    kind: index % 2 === 0 ? 'RemoteTrigger' : 'CronCreate',
+  }));
+  appendJsonl(path.join(projectRoot, '.planning', 'telemetry', 'routine-runs.jsonl'), runs);
+
+  const snapshot = collectDashboard({ projectRoot, now: '2026-06-04T23:00:00.000Z' });
+  const output = renderDashboard(snapshot);
+
+  assert.equal(snapshot.routineQuota.runsLast24h, 13);
+  assert.equal(snapshot.routineQuota.warning, true);
+  assert(output.includes('Runs (last 24h): 13/15'));
+  assert(output.includes('WARNING: 13 of 15 routine runs used in the last 24h'));
+  assert(output.includes('docs/ROUTINE-QUOTA.md'));
+});
+
+// Routine quota: no routine-runs.jsonl renders 0/15 plus the population hint
+withTempProject((projectRoot) => {
+  const snapshot = collectDashboard({ projectRoot, now: '2026-06-04T12:00:00.000Z' });
+  const output = renderDashboard(snapshot);
+
+  assert.equal(snapshot.routineQuota.sourceExists, false);
+  assert.equal(snapshot.routineQuota.runsLast24h, 0);
+  assert.equal(snapshot.routineQuota.warning, false);
+  assert(output.includes('ROUTINE QUOTA'));
+  assert(output.includes('Runs (last 24h): 0/15'));
+  assert(output.includes('(remote-run logging populates .planning/telemetry/routine-runs.jsonl - local runners do not consume quota)'));
+});
+
 console.log('dashboard tests passed');

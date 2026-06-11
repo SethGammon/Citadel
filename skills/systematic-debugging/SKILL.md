@@ -1,5 +1,6 @@
 ---
 name: systematic-debugging
+license: MIT
 description: >-
   4-phase root cause analysis: observe, hypothesize, verify, fix. Enforces
   investigation before any code changes. Emergency stop after 2 failed fixes.

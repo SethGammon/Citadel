@@ -1,5 +1,6 @@
 ---
 name: setup
+license: MIT
 description: >-
   First-run experience for the harness. Three modes: Recommended (guided,
   ~3 min), Full Tour (guided + skill walkthrough, ~8 min), and Express

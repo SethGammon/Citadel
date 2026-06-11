@@ -1,5 +1,6 @@
 ---
 name: prd
+license: MIT
 description: >-
   Generates a Product Requirements Document from a natural language app description.
   Asks clarifying questions, researches similar apps, defines scope, stack, architecture,

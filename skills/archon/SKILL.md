@@ -1,5 +1,6 @@
 ---
 name: archon
+license: MIT
 description: >-
   Autonomous multi-session campaign agent. Decomposes large work into phases,
   delegates to sub-agents, reviews output, and maintains campaign state across

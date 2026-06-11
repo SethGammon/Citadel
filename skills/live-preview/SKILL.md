@@ -1,5 +1,6 @@
 ---
 name: live-preview
+license: MIT
 description: >-
   Mid-build visual verification loop. Takes screenshots of components during
   construction, not just after. Catches visual regressions and invisible features

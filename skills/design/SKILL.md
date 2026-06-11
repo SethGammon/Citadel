@@ -1,5 +1,6 @@
 ---
 name: design
+license: MIT
 description: >-
   Generates and maintains a design manifest for visual consistency. In existing
   projects, reads current styles and documents the design language. In new

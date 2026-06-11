@@ -1,5 +1,6 @@
 ---
 name: session-handoff
+license: MIT
 description: >-
   Synthesizes the current session into a structured HANDOFF block for context
   transfer between sessions. Captures what was built, decisions made, and

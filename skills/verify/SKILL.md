@@ -1,5 +1,6 @@
 ---
 name: verify
+license: MIT
 description: >-
   Self-test the Citadel hook pipeline from within a live session. Exercises
   real tool calls (Write, Edit, Bash, Read) and checks that hooks fired,

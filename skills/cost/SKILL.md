@@ -1,5 +1,6 @@
 ---
 name: cost
+license: MIT
 description: >-
   Deep cost exploration and transparency. Shows real token usage, session costs,
   campaign spend, burn rates, and model breakdown. Reads Claude Code's native

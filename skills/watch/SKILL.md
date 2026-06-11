@@ -1,5 +1,6 @@
 ---
 name: watch
+license: MIT
 description: >-
   File sentinel that monitors the working directory for changes and marker
   comments, then auto-triggers appropriate skills. Poll-based via git diff

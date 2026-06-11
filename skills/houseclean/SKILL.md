@@ -1,5 +1,6 @@
 ---
 name: houseclean
+license: MIT
 description: >-
   Cross-drive storage audit and cleanup. Surveys all drives, finds orphaned git
   worktrees, large AI tool caches (.ollama, .gemini, .cursor, npm, pip), and

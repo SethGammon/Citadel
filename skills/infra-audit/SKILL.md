@@ -1,5 +1,6 @@
 ---
 name: infra-audit
+license: MIT
 description: >-
   Reads docker-compose, env files, ORM configs, and connection strings to map
   current infrastructure. Flags missing layers (cache, queue, analytics) based
