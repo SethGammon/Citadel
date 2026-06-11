@@ -6,6 +6,10 @@ description: >-
   Drop a file in .planning/intake/ and invoke this skill.
 user-invocable: true
 auto-trigger: false
+trigger_keywords:
+  - intake
+  - process pending
+  - pipeline
 last-updated: 2026-03-20
 ---
 

@@ -10,8 +10,10 @@
  *
  * Key behaviors:
  *   - Log which teammate went idle for diagnostic purposes
- *   - If the idle teammate has an associated fleet task, log for review
- *   - Observer only: Citadel does not auto-reassign fleet work on idle
+ *   - Append a rebalance signal to .planning/fleet/rebalance.jsonl so the
+ *     fleet lead can reassign the next unblocked scope (teams mode pilot)
+ *   - Observer only: the hook records the idle event; reassignment is the
+ *     lead's decision, never the hook's
  *
  * Design:
  *   - Observer only: always exit 0
@@ -23,29 +25,58 @@
 
 'use strict';
 
+const fs = require('fs');
+const path = require('path');
+
 const health = require('./harness-health-util');
+
+const REBALANCE_FILE = path.join(
+  health.PROJECT_ROOT, '.planning', 'fleet', 'rebalance.jsonl'
+);
+
+/**
+ * Append an idle signal for the fleet lead. Append-only JSONL, one line per
+ * idle event. Lines without teammate identity are diagnostic only; the lead
+ * skips them when rebalancing.
+ */
+function appendRebalanceSignal(teammateId, reason, sessionId) {
+  try {
+    fs.mkdirSync(path.dirname(REBALANCE_FILE), { recursive: true });
+    const line = JSON.stringify({
+      ts: new Date().toISOString(),
+      teammate_id: teammateId,
+      reason,
+      session_id: sessionId,
+      event: 'idle',
+    });
+    fs.appendFileSync(REBALANCE_FILE, line + '\n', 'utf8');
+  } catch { /* observer: never fail the hook on a telemetry write */ }
+}
 
 function main() {
   let input = '';
   process.stdin.setEncoding('utf8');
   process.stdin.on('data', (chunk) => { input += chunk; });
   process.stdin.on('end', () => {
-    let event = {};
-    try { event = JSON.parse(input); } catch { /* partial input ok */ }
+    try {
+      let event = {};
+      try { event = JSON.parse(input); } catch { /* partial input ok */ }
 
-    const teammateId = event.teammate_id || event.agent_id || null;
-    const reason = event.reason || event.idle_reason || 'unspecified';
-    const sessionId = event.session_id || null;
+      const teammateId = event.teammate_id || event.agent_id || null;
+      const reason = event.reason || event.idle_reason || 'unspecified';
+      const sessionId = event.session_id || null;
 
-    health.increment('teammate-idle', 'count');
+      health.increment('teammate-idle', 'count');
 
-    health.logTiming('teammate-idle', 0, {
-      event: 'teammate-idle',
-      teammate_id: teammateId,
-      reason,
-      session_id: sessionId,
-    });
+      health.logTiming('teammate-idle', 0, {
+        event: 'teammate-idle',
+        teammate_id: teammateId,
+        reason,
+        session_id: sessionId,
+      });
 
+      appendRebalanceSignal(teammateId, reason, sessionId);
+    } catch { /* observer: never block */ }
     process.exit(0);
   });
 }

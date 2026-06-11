@@ -7,6 +7,11 @@ description: >-
   into 3+ independent streams that can run simultaneously.
 user-invocable: true
 auto-trigger: false
+trigger_keywords:
+  - parallel
+  - simultaneous
+  - multiple agents
+  - at the same time
 last-updated: 2026-03-21
 ---
 
@@ -30,6 +35,7 @@ Use for 3+ independent work streams that can run simultaneously in isolated work
 | `/fleet` (no args) | Health diagnostic → work queue → execute |
 | `/fleet --quick [task1]; [task2]` | Lightweight parallel mode for solo devs — 2+ tasks, single wave, auto-merge, no session file |
 | `/fleet --speculative N [direction]` | Try N different approaches to the same task in parallel — see Speculative Mode below |
+| `/fleet --teams [direction]` | Pilot: native task spine when `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` is set, see Teams Mode (experimental) below |
 
 ## Protocol
 
@@ -485,6 +491,45 @@ Add `## Speculative Comparison` to session file: direction, N strategies, compar
 - User chose "1" (yes once) or "2" (always) on the Fleet confirmation prompt
 
 Entry from `/do` confirmation prompt: user chose yes (1) or always (2). Preferences stored under `consent.fleetSpawn` in harness.json via `readConsent`/`writeConsent`.
+
+## Teams Mode (experimental)
+
+`/fleet --teams [direction]`
+
+Pilot: swap the coordination spine to native Agent Teams primitives. Everything not
+listed below is unchanged from the classic protocol above. Depth (comparison table,
+rollout plan, risks): see `docs/FLEET.md`, Teams Mode section.
+
+### Precondition
+
+Both must hold: `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` present in the environment,
+AND the runtime is Claude Code. Otherwise print:
+
+```
+Teams mode unavailable: CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS not set or runtime is not Claude Code. Falling back to classic worktree mode.
+```
+
+and run the classic protocol unchanged.
+
+### Protocol deltas
+
+| Concern | Delta from classic |
+|---|---|
+| Task spine | Lead creates one native task per scope (`TaskCreate`); dependency links mirror wave order; status via `TaskUpdate` |
+| Discoveries | Teammates send discoveries to the lead via `SendMessage` |
+| Durability | Lead mirrors every discovery to `.planning/fleet/<session>/discoveries/` on receipt; the mirror is the source of truth for recovery |
+| Merge review | Unchanged (steward gates merges exactly as classic) |
+| Rebalancing | On teammate idle, the TeammateIdle hook appends to `.planning/fleet/rebalance.jsonl`; the lead reassigns the next unblocked scope via `SendMessage` |
+
+On any disagreement between messages and the mirror, reconcile from the mirror.
+Skip rebalance lines that lack a teammate identity, and skip rebalancing entirely
+when no scope is unblocked.
+
+### Classic mode progressive enhancement
+
+In classic mode, when native Task tools are available, the lead also mirrors each
+scope as a native task and updates its status at wave boundaries. `.planning` files
+stay canonical; native tasks are a visibility layer only.
 
 ## Contextual Gates
 

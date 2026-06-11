@@ -7,6 +7,7 @@ trigger_keywords:
   - code review
   - review this
   - review PR
+  - review
 ---
 
 ## Orientation

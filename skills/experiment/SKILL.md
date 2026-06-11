@@ -6,6 +6,12 @@ description: >-
   failures. Supports convergence detection and diminishing returns.
 user-invocable: true
 auto-trigger: false
+trigger_keywords:
+  - experiment
+  - optimize
+  - try
+  - A/B
+  - measure
 last-updated: 2026-03-21
 ---
 

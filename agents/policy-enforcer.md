@@ -97,6 +97,25 @@ For block:
 }
 ```
 
+### Schema
+
+Every response must parse against this contract:
+
+```json
+{
+  "verdict": "string, enum: allow | block (required)",
+  "action": "string, the action evaluated (required)",
+  "rules_checked": "array of strings, rule IDs (required)",
+  "rules_violated": "array of strings, rule IDs; empty when verdict is allow (required)",
+  "warnings": "array of strings (required)",
+  "tier_max_violated": "integer, enum: 1 | 2 | 3, or null when no violation (required)",
+  "reason": "string (required)",
+  "suggestion": "string (optional; include when verdict is block)"
+}
+```
+
+Any response that fails to parse against this contract must be treated by the caller as FAIL closed (`verdict: "block"`), not retried silently. When this judge runs under an orchestrator that supports schema-enforced agent output (such as workflow runners with structured output), pass this same schema natively.
+
 ## Rules
 
 - Tier 1 violations always produce `verdict: "block"`. No exceptions.

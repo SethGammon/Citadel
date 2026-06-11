@@ -7,6 +7,11 @@ description: >-
   independent perspectives.
 user-invocable: true
 auto-trigger: false
+trigger_keywords:
+  - research fleet
+  - parallel research
+  - multi-angle research
+  - compare options
 last-updated: 2026-03-21
 ---
 

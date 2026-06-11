@@ -103,6 +103,9 @@ function main() {
     // Clean up expired dynamic directories per organization manifest
     cleanupDynamicDirectories();
 
+    // Sweep expired consent markers, one-time tokens, and stale lockdirs
+    runStateHygiene();
+
     // Update daemon state if this was a daemon-driven session
     updateDaemonState();
 
@@ -577,6 +580,30 @@ function cleanupDynamicDirectories() {
       entries: org.dynamic.filter(e => e.scope === 'session').length,
     });
   } catch { /* non-critical -- never block session end */ }
+}
+
+/**
+ * Best-effort state hygiene sweep at session end.
+ * Removes expired session-allow consent markers, expired one-time approval
+ * tokens, and stale *.lock directories under .planning/. Delegates to
+ * scripts/state-hygiene.js. Fully wrapped so a missing script or any fs
+ * failure can never affect the exit code or other session-end work.
+ */
+function runStateHygiene() {
+  try {
+    const pluginRoot = path.resolve(__dirname, '..');
+    const hygiene = require(path.join(pluginRoot, 'scripts', 'state-hygiene.js'));
+    const result = hygiene.cleanState({ dryRun: false });
+    if (result && (result.sessionMarkers || result.onetimeTokens || result.lockdirs)) {
+      health.logTiming('session-end', 0, {
+        event: 'state-hygiene',
+        session_markers: result.sessionMarkers,
+        onetime_tokens: result.onetimeTokens,
+        lockdirs: result.lockdirs,
+        errors: result.errors,
+      });
+    }
+  } catch { /* best effort, never block session end */ }
 }
 
 function queueDocSync() {

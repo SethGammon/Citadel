@@ -49,7 +49,7 @@ to re-invoke than to waste tokens on over-routing.
 
 ## Hooks
 
-Automatic Node.js scripts that fire on 29 lifecycle events. 32 hooks total. Full reference: [docs/HOOKS.md](HOOKS.md).
+Automatic Node.js scripts: <!-- GENERATED: hook-script-count -->35<!-- /GENERATED --> hook scripts covering <!-- GENERATED: hook-event-count -->29<!-- /GENERATED --> lifecycle events. Full reference: [docs/HOOKS.md](HOOKS.md).
 
 | Category | Key Hooks | Purpose |
 |----------|-----------|---------|
@@ -166,7 +166,7 @@ Skills cost zero tokens when not loaded. They're on-demand expertise.
   "language": "typescript",
   "framework": "react",
   "packageManager": "npm",
-  "typecheck": { "command": "npx tsc --noEmit", "perFile": true },
+  "typecheck": { "command": "npx tsc --noEmit", "timeoutMs": 25000 },
   "test": { "command": "npm test", "framework": "vitest" },
   "qualityRules": { "builtIn": ["no-confirm-alert"], "custom": [] },
   "protectedFiles": [".claude/harness.json"],

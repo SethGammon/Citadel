@@ -22,7 +22,7 @@
  *   2 = type errors found when verification.hotBlockOnErrors is true
  */
 
-const { execFileSync } = require('child_process');
+const { execFileSync, spawnSync } = require('child_process');
 const path = require('path');
 const fs = require('fs');
 const health = require('./harness-health-util');
@@ -98,7 +98,7 @@ function main() {
     health.logTiming('post-edit', Date.now() - startTime, {
       file: relativePath,
       lenses: lenses.join(','),
-      typecheck: exitCode === 0 ? 'pass' : 'fail',
+      typecheck: _typecheckOutcome || (exitCode === 0 ? 'pass' : 'fail'),
       tool_duration_ms: durationMs,
       agent_id: agentId,
       agent_type: agentType,
@@ -273,7 +273,7 @@ function typeCheck(filePath, relativePath) {
 
   try {
     if (language === 'typescript') {
-      return typecheckTypeScript(filePath, relativePath);
+      return typecheckTypeScript(filePath, relativePath, typecheckConfig);
     } else if (language === 'python') {
       return typecheckPython(filePath, relativePath, typecheckConfig.command);
     } else if (language === 'go') {
@@ -291,39 +291,258 @@ function typeCheck(filePath, relativePath) {
   return 0;
 }
 
-function typecheckTypeScript(filePath, relativePath) {
+// ── TypeScript typecheck ─────────────────────────────────────────────────────
+//
+// Outcomes: 'pass' | 'errors' | 'unavailable' | 'timeout'.
+// unavailable and timeout always emit a visible did-not-run advisory and exit 0,
+// even when verification.hotBlockOnErrors is true. Infrastructure failures must
+// never block an edit, but they must never masquerade as a clean typecheck.
+
+const DEFAULT_TSC_ARGS = ['--noEmit', '--pretty', 'false'];
+const DEFAULT_TYPECHECK_TIMEOUT_MS = 25000;
+
+// Last TS typecheck outcome for this hook invocation, surfaced in timing telemetry
+let _typecheckOutcome = null;
+
+/**
+ * Resolve a bare command name to an executable path without using a shell.
+ * On win32 also checks the .cmd/.exe/.bat forms that PATH lookup via a shell
+ * would normally find. Returns null when nothing resolves.
+ */
+function resolveBin(name) {
+  if (name === 'node') return process.execPath;
+
+  if (path.isAbsolute(name) || name.includes('/') || name.includes('\\')) {
+    const abs = path.isAbsolute(name) ? name : path.join(PROJECT_ROOT, name);
+    return fs.existsSync(abs) ? abs : null;
+  }
+
+  const dirs = (process.env.PATH || '').split(path.delimiter).filter(Boolean);
+  const candidates = process.platform === 'win32'
+    ? [name + '.cmd', name + '.exe', name + '.bat', name]
+    : [name];
+  for (const dir of dirs) {
+    for (const candidate of candidates) {
+      const full = path.join(dir, candidate);
+      try {
+        if (fs.statSync(full).isFile()) return full;
+      } catch { /* keep looking */ }
+    }
+  }
+  return null;
+}
+
+/**
+ * Classify the configured typecheck command.
+ * "npx tsc ..." and "tsc ..." use the tsc resolution chain (never bare npx).
+ * Anything else is treated as a custom command resolved via resolveBin.
+ */
+function parseTypecheckCommand(command) {
+  const tokens = (command || '').trim().split(/\s+/).filter(Boolean);
+  let t = tokens;
+  if (t[0] === 'npx') t = t.slice(1);
+  if (t.length === 0 || t[0] === 'tsc') {
+    const args = t.length > 1 ? t.slice(1) : [...DEFAULT_TSC_ARGS];
+    if (!args.includes('--pretty')) args.push('--pretty', 'false');
+    return { kind: 'tsc', args };
+  }
+  return { kind: 'custom', tokens: t };
+}
+
+/**
+ * Resolve the tsc invocation. Order:
+ *   (a) typecheckConfig.tscPath or CITADEL_TSC_PATH (test hook)
+ *   (b) the project's typescript package, run via the current node binary
+ *   (c) PROJECT_ROOT/node_modules/.bin/tsc shim
+ *   (d) tsc on PATH
+ * Returns { cmd, baseArgs } or { error } when nothing resolves.
+ */
+function resolveTscInvocation(typecheckConfig) {
+  const explicit = typecheckConfig.tscPath || process.env.CITADEL_TSC_PATH;
+  if (explicit) {
+    if (!fs.existsSync(explicit)) {
+      return { error: `configured tsc path not found: ${explicit}` };
+    }
+    if (/\.(exe|cmd|bat|com)$/i.test(explicit)) return { cmd: explicit, baseArgs: [] };
+    return { cmd: process.execPath, baseArgs: [explicit] };
+  }
+
+  try {
+    const tscJs = require.resolve('typescript/bin/tsc', { paths: [PROJECT_ROOT] });
+    return { cmd: process.execPath, baseArgs: [tscJs] };
+  } catch {
+    // Older/newer typescript packages may not export bin/tsc; derive it from the main entry
+    try {
+      const tsMain = require.resolve('typescript', { paths: [PROJECT_ROOT] });
+      const tscJs = path.join(path.dirname(tsMain), '..', 'bin', 'tsc');
+      if (fs.existsSync(tscJs)) return { cmd: process.execPath, baseArgs: [tscJs] };
+    } catch { /* typescript not installed in the project */ }
+  }
+
+  const shimName = process.platform === 'win32' ? 'tsc.cmd' : 'tsc';
+  const shim = path.join(PROJECT_ROOT, 'node_modules', '.bin', shimName);
+  if (fs.existsSync(shim)) return { cmd: shim, baseArgs: [] };
+
+  const onPath = resolveBin('tsc');
+  if (onPath) return { cmd: onPath, baseArgs: [] };
+
+  return { error: 'tsc not found (no typescript package in the project, no node_modules/.bin/tsc, not on PATH)' };
+}
+
+/**
+ * Incremental flags when the project has a tsconfig.json. The build info cache
+ * lives under .planning/cache/ so repeat checks stay fast.
+ */
+function buildIncrementalArgs() {
+  if (!fs.existsSync(path.join(PROJECT_ROOT, 'tsconfig.json'))) return null;
+  const cacheDir = path.join(PROJECT_ROOT, '.planning', 'cache');
+  try {
+    fs.mkdirSync(cacheDir, { recursive: true });
+  } catch {
+    return null;
+  }
+  return ['--incremental', '--tsBuildInfoFile', path.join(cacheDir, 'tsbuildinfo.json')];
+}
+
+/**
+ * Run the typecheck process and classify the result.
+ * Never throws; never uses a shell.
+ */
+function runTypecheckProcess(cmd, args, timeoutMs) {
+  const started = Date.now();
+  let result;
+  try {
+    result = spawnSync(cmd, args, {
+      cwd: PROJECT_ROOT,
+      timeout: timeoutMs,
+      encoding: 'utf8',
+      stdio: ['pipe', 'pipe', 'pipe'],
+      windowsHide: true,
+    });
+  } catch (err) {
+    return { outcome: 'unavailable', reason: `spawn failed (${err.code || err.message})`, output: '' };
+  }
+
+  const output = (result.stdout || '') + (result.stderr || '');
+  const elapsed = Date.now() - started;
+  const err = result.error;
+  const timedOut =
+    (err && (err.code === 'ETIMEDOUT' || err.killed === true)) ||
+    (result.status === null && result.signal !== null && elapsed >= timeoutMs);
+
+  if (timedOut) {
+    return { outcome: 'timeout', reason: `exceeded ${timeoutMs}ms timeout`, output };
+  }
+  if (err) {
+    return { outcome: 'unavailable', reason: `spawn failed (${err.code || err.message})`, output };
+  }
+  if (result.status === null) {
+    return { outcome: 'unavailable', reason: `process terminated by signal ${result.signal || 'unknown'}`, output };
+  }
+  if (result.status === 0) {
+    return { outcome: 'pass', output };
+  }
+  return { outcome: 'errors', output };
+}
+
+/**
+ * Visible did-not-run advisory for unavailable/timeout outcomes.
+ * Always returns 0: infrastructure failures never block, but never pass silently.
+ */
+function reportTypecheckNotRun(outcome, reason, relativePath) {
+  _typecheckOutcome = outcome;
+  const label = outcome === 'timeout' ? 'timed out' : 'unavailable';
+  hookOutput('post-edit', 'warned',
+    `[typecheck] DID NOT RUN (${label}) for ${relativePath}: ${reason}. This edit was NOT type-checked.\n`,
+    { file: relativePath, outcome, reason });
+  health.logBlock('post-edit', `typecheck-${outcome}`, reason);
+  health.increment('post-edit', `typecheck-${outcome}`);
+  return 0;
+}
+
+function typecheckTypeScript(filePath, relativePath, typecheckConfig) {
   // Only check .ts and .tsx files
   if (!/\.(ts|tsx)$/.test(filePath)) return 0;
   // Skip declaration files
   if (/\.d\.ts$/.test(filePath)) return 0;
 
-  try {
-    execFileSync('npx', ['tsc', '--noEmit', '--pretty', 'false'], {
-      cwd: PROJECT_ROOT,
-      timeout: 25000,
-      encoding: 'utf8',
-      stdio: ['pipe', 'pipe', 'pipe'],
-    });
-    return 0;
-  } catch (err) {
-    const output = (err.stdout || '') + (err.stderr || '');
-    // Filter to only errors in the edited file
-    const lines = output.split('\n').filter(line => {
-      const normalized = line.replace(/\\/g, '/');
-      return normalized.includes(relativePath) && line.includes('error TS');
-    });
+  const timeoutMs = Number(typecheckConfig.timeoutMs) > 0
+    ? Number(typecheckConfig.timeoutMs)
+    : DEFAULT_TYPECHECK_TIMEOUT_MS;
 
-    if (lines.length > 0) {
-      const msg = [
-        `[typecheck] ${lines.length} error(s) in ${relativePath}:`,
-        ...lines.slice(0, 10),
-        lines.length > 10 ? `  ... and ${lines.length - 10} more` : null,
-      ].filter(Boolean).join('\n');
-      hookOutput('post-edit', 'error', msg, { file: relativePath, errors: lines.slice(0, 10), exit_code: 2 });
-      return 2;
+  if (typecheckConfig.perFile) {
+    hookOutput('post-edit', 'info',
+      '[typecheck] perFile mode is not supported for TypeScript; running a project-scope incremental check instead.\n');
+  }
+
+  const parsed = parseTypecheckCommand(typecheckConfig.command);
+  let invocation;
+  let extraArgs;
+  if (parsed.kind === 'tsc') {
+    invocation = resolveTscInvocation(typecheckConfig);
+    extraArgs = parsed.args;
+  } else {
+    const cmdCheck = health.validateCommand(typecheckConfig.command);
+    if (!cmdCheck.safe) {
+      health.securityWarning('post-edit', `Possible injection in typecheck command: ${cmdCheck.violation}. Skipping typecheck.`);
+      _typecheckOutcome = 'unavailable';
+      return 0;
     }
+    const resolved = resolveBin(parsed.tokens[0]);
+    invocation = resolved
+      ? { cmd: resolved, baseArgs: parsed.tokens.slice(1) }
+      : { error: `typecheck command not found: ${parsed.tokens[0]}` };
+    extraArgs = [];
+  }
+
+  if (invocation.error) {
+    return reportTypecheckNotRun('unavailable', invocation.error, relativePath);
+  }
+
+  const incrementalArgs = buildIncrementalArgs();
+  let run = runTypecheckProcess(
+    invocation.cmd,
+    [...invocation.baseArgs, ...extraArgs, ...(incrementalArgs || [])],
+    timeoutMs
+  );
+
+  // Checkers that predate --incremental/--tsBuildInfoFile reject the flags; retry bare once
+  if (incrementalArgs && run.outcome === 'errors' && /TS5023|TS5074|Unknown compiler option/.test(run.output)) {
+    run = runTypecheckProcess(invocation.cmd, [...invocation.baseArgs, ...extraArgs], timeoutMs);
+  }
+
+  if (run.outcome === 'unavailable' || run.outcome === 'timeout') {
+    return reportTypecheckNotRun(run.outcome, run.reason, relativePath);
+  }
+
+  if (run.outcome === 'pass') {
+    _typecheckOutcome = 'pass';
     return 0;
   }
+
+  // errors: advisory/block semantics, filtered to the edited file
+  const allErrors = run.output.split('\n').filter(l => l.includes('error TS'));
+  const fileErrors = allErrors.filter(line => line.replace(/\\/g, '/').includes(relativePath));
+
+  if (fileErrors.length === 0) {
+    // Pre-existing errors elsewhere in the project; this edit stays advisory-clean
+    _typecheckOutcome = 'pass';
+    return 0;
+  }
+
+  _typecheckOutcome = 'errors';
+  const msg = [
+    `[typecheck] ${fileErrors.length} error(s) in ${relativePath} (${allErrors.length} total in project):`,
+    ...fileErrors.slice(0, 10),
+    fileErrors.length > 10 ? `  ... and ${fileErrors.length - 10} more` : null,
+  ].filter(Boolean).join('\n');
+  hookOutput('post-edit', 'error', msg, {
+    file: relativePath,
+    errors: fileErrors.slice(0, 10),
+    projectErrorCount: allErrors.length,
+    exit_code: 2,
+  });
+  return 2;
 }
 
 function typecheckPython(filePath, relativePath, command) {

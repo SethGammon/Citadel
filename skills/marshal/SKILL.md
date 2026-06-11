@@ -7,6 +7,10 @@ description: >-
   proceed. Single-session orchestrator.
 user-invocable: true
 auto-trigger: false
+trigger_keywords:
+  - orchestrate
+  - chain skills
+  - multi-step
 last-updated: 2026-03-20
 ---
 

@@ -6,6 +6,12 @@ description: >-
   Archon can execute directly. Multi-candidate evaluation for key decisions.
 user-invocable: true
 auto-trigger: false
+trigger_keywords:
+  - architect
+  - architecture
+  - design the system
+  - file structure
+  - plan the build
 effort: high
 ---
 

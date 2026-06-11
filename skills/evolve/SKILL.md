@@ -8,6 +8,18 @@ description: >-
   model and pattern library across sessions.
 user-invocable: true
 auto-trigger: false
+trigger_keywords:
+  - evolve
+  - sustained improve
+  - improvement director
+  - research-driven improve
+  - multi-cycle improve
+  - run until done
+  - improve until ceiling
+  - keep improving
+  - hypothesis
+  - belief model
+  - scout agents
 last-updated: 2026-05-03
 ---
 
@@ -181,6 +193,8 @@ Each agent returns a structured result:
 - `mechanism_confirmed: false` (score improved but not via predicted mechanism): record as `incidental_improvement`, mark hypothesis as `needs-revision`
 
 Commit each merged worktree with a message citing the hypothesis ID.
+
+After committing changes to any `SKILL.md` (here or in Phase 7), run `/reload-skills` if the running Claude Code version supports it so the change is live this session; otherwise note that a fresh session is required before the updated skill takes effect.
 
 ### Phase 6: Synthesize
 

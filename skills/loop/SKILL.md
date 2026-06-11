@@ -7,6 +7,13 @@ description: >-
   work that is too small for daemon and not time-based scheduling.
 user-invocable: true
 auto-trigger: false
+trigger_keywords:
+  - loop
+  - repeat until
+  - until tests pass
+  - until lint passes
+  - max attempts
+  - retry until
 last-updated: 2026-06-09
 ---
 

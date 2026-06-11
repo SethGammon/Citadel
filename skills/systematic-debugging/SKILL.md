@@ -6,6 +6,12 @@ description: >-
   Prevents shotgun debugging and fix cascades.
 user-invocable: true
 auto-trigger: false
+trigger_keywords:
+  - debug
+  - root cause
+  - diagnose
+  - why is
+  - investigate bug
 last-updated: 2026-03-21
 ---
 

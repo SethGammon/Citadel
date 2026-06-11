@@ -314,7 +314,9 @@ function detectStack() {
 function getTypecheckConfig(language) {
   switch (language) {
     case 'typescript':
-      return { command: 'npx tsc --noEmit', perFile: true };
+      // perFile is a Python-checker concept; the TS branch always runs a
+      // project-scope incremental check and warns if perFile is set.
+      return { command: 'npx tsc --noEmit', perFile: false };
     case 'python':
       // Try mypy first, fall back to pyright
       try {
@@ -541,7 +543,12 @@ function hasSessionAllow(category) {
     const marker = JSON.parse(fs.readFileSync(markerPath, 'utf8'));
     const age = Date.now() - new Date(marker.timestamp).getTime();
     const SIX_HOURS = 6 * 60 * 60 * 1000;
-    return age < SIX_HOURS;
+    if (age < SIX_HOURS) return true;
+    // Expired marker: delete it opportunistically. We already paid for the
+    // read above, so the only extra syscall is the unlink that removes the
+    // dead file. scripts/state-hygiene.js handles markers never read again.
+    try { fs.unlinkSync(markerPath); } catch { /* best effort */ }
+    return false;
   } catch { return false; }
 }
 

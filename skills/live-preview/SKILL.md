@@ -6,6 +6,11 @@ description: >-
   before they compound. Requires Playwright or similar screenshot tool.
 user-invocable: true
 auto-trigger: false
+trigger_keywords:
+  - preview
+  - screenshot
+  - visual check
+  - does it render
 last-updated: 2026-03-21
 ---
 

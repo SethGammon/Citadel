@@ -7,6 +7,10 @@ description: >-
   state, quality judgment, and strategic decomposition.
 user-invocable: true
 auto-trigger: false
+trigger_keywords:
+  - campaign
+  - multi-session
+  - phases
 last-updated: 2026-03-21
 ---
 
@@ -318,6 +322,8 @@ Park the campaign when:
 3. Run typecheck to confirm clean state
 4. Log rollback to Decision Log with what was restored and why
 
+Within a live session, prefer native rollback first: Claude Code checkpoints plus `/rewind` restore both conversation and files to the pre-phase state. The git stash path above remains the cross-session recovery mechanism; native checkpoints do not survive a session restart.
+
 ## Fringe Cases
 
 - **No active campaign + no direction**: Run Health Diagnostic. Never error.
@@ -326,8 +332,8 @@ Park the campaign when:
 - **`.planning/campaigns/` missing**: Treat as no active campaigns. Proceed to directed/undirected mode.
 - **Sub-agent returns no HANDOFF**: Treat phase as partial. Log observations, proceed to next phase.
 - **Sub-agent hangs and never returns**: After 30 minutes without a response, abort the phase, log `phase-timeout` in the campaign Decision Log, and proceed to Recovery. Never let a hung phase block the entire campaign.
-- **Phase validator returns no JSON or malformed JSON**: Treat as `verdict: "pass" with warnings: ["validator output unparseable"]`. Log and advance. Never block on validator failure.
-- **Policy enforcer returns no JSON or malformed JSON**: Treat as `verdict: "allow" with warnings: ["policy-enforcer output unparseable"]`. Log. Do NOT block the operation on enforcer failure — the hook layer still provides baseline protection.
+- **Phase validator returns no JSON or malformed JSON**: Retry once with the schema restated. If still malformed, mark the phase `partial` with `warnings: ["validator output unparseable"]`, log, and advance. Malformed output is never a pass; only a timeout (below) advances as pass with warning.
+- **Policy enforcer returns no JSON or malformed JSON**: Retry once with the schema restated. If still malformed, fail closed for irreversible operations (treat as `deny`, queue for operator review) and allow reversible operations with `warnings: ["policy-enforcer output unparseable"]`. The hook layer still provides baseline protection either way.
 - **Policy enforcer times out (> 2 min)**: Treat as allow with warning. Log. Never let the policy gate block a campaign indefinitely.
 - **Phase validator times out (> 3 min)**: Treat as pass with warning. Log timeout. Advance.
 - **All 3 validator retries exhausted**: Mark phase `partial`, log `validator_halt` with the failed conditions, advance to next phase. Never park the campaign solely due to validator failure.
@@ -343,6 +349,10 @@ One sentence before executing:
 - **Green:** Single-phase, < 5 file changes
 - **Amber:** Multi-phase campaigns — revert requires rolling back multiple commits
 - **Red:** Campaigns modifying CI/CD config, publishing content, or pushing to remote — require explicit confirmation regardless of trust level
+
+### Approval Gates
+
+When a phase boundary or risk gate needs user confirmation (Step 2.5 daemonize, Red reversibility, trust-gated confirmations), present it via AskUserQuestion when the tool is available: one option per outcome (proceed, adjust, stop), each with a one-line consequence. Fall back to the plain text prompt when unavailable.
 
 ### Policy Gate (Red operations only)
 

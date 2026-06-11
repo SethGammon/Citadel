@@ -7,6 +7,13 @@ description: >-
   and "show activity".
 user-invocable: true
 auto-trigger: false
+trigger_keywords:
+  - dashboard
+  - what's happening
+  - what's going on
+  - show activity
+  - harness state
+  - show me status
 last-updated: 2026-03-26
 ---
 
@@ -92,6 +99,13 @@ exist, treat it as empty. Never crash on missing state.
 - Read last 20 lines of `.planning/telemetry/hook-timing.jsonl`
 - For `event: "timing"` entries: extract `hook`, `duration_ms`, `timestamp` (relative), and `outcome` (pass if no matching error in hook-errors.jsonl within 1s; block if a block entry exists)
 - For `event: "counter"` entries: extract metric name as the "event" column with count context
+
+**Hook Overhead (timing percentiles):**
+- Read all of `.planning/telemetry/hook-timing.jsonl` (if it exists)
+- Keep only entries with a numeric `duration_ms`; group by `hook`
+- Per hook compute: count, p50, p95, max (nearest-rank percentile over the sorted durations)
+- Sort rows by p95 descending
+- If the file is missing or contains no timed entries, render the one-line note instead
 
 **Pending Queues:**
 - Count actionable entries in `.planning/telemetry/doc-sync-queue.jsonl` where `status` is `pending` or `needs-review` (or 0 if missing)
@@ -202,6 +216,11 @@ RECENT ACTIVITY (last 10 events)
 HOOK ACTIVITY (last 10 hook fires)
   {relative time} | {hook name} | {duration_ms}ms | {outcome: pass/block/warn}
   (no hook timing recorded yet — set CITADEL_DEBUG=true in settings.json for verbose output)
+
+HOOK OVERHEAD (sorted by p95 descending)
+  hook                        count      p50      p95      max
+  {hook name}                   {N}   {N}ms    {N}ms    {N}ms
+  (no hook timing data recorded yet)
 
 PROBLEMS
   Actionable: {N} | Safety blocks: {N} | Resolved approvals: {N} | Stale: {N}

@@ -559,6 +559,43 @@ function readHookActivity(projectRoot, limit, now) {
     .slice(0, limit);
 }
 
+/**
+ * Nearest-rank percentile on a pre-sorted ascending array.
+ * Returns null for empty input.
+ */
+function percentile(sortedValues, p) {
+  if (!Array.isArray(sortedValues) || sortedValues.length === 0) return null;
+  const index = Math.ceil((p / 100) * sortedValues.length) - 1;
+  return sortedValues[Math.min(sortedValues.length - 1, Math.max(0, index))];
+}
+
+function readHookOverhead(projectRoot) {
+  const timingPath = path.join(projectRoot, '.planning', 'telemetry', 'hook-timing.jsonl');
+  const detail = readJsonlDetailed(timingPath);
+  if (!detail.exists || detail.entries.length === 0) return [];
+
+  const durationsByHook = new Map();
+  for (const entry of detail.entries) {
+    if (typeof entry.duration_ms !== 'number' || !Number.isFinite(entry.duration_ms)) continue;
+    const hook = entry.hook || 'unknown';
+    if (!durationsByHook.has(hook)) durationsByHook.set(hook, []);
+    durationsByHook.get(hook).push(entry.duration_ms);
+  }
+
+  return Array.from(durationsByHook.entries())
+    .map(([hook, durations]) => {
+      const sorted = durations.slice().sort((left, right) => left - right);
+      return {
+        hook,
+        count: sorted.length,
+        p50Ms: percentile(sorted, 50),
+        p95Ms: percentile(sorted, 95),
+        maxMs: sorted[sorted.length - 1],
+      };
+    })
+    .sort((left, right) => right.p95Ms - left.p95Ms);
+}
+
 function readQueueCounts(projectRoot) {
   const planningDir = path.join(projectRoot, '.planning');
   const telemetryDir = path.join(planningDir, 'telemetry');
@@ -874,6 +911,7 @@ function collectDashboard(options = {}) {
   const fleetSessions = readFleetSessions(projectRoot);
   const recentActivity = readRecentActivity(projectRoot, recentLimit, now);
   const hookActivity = readHookActivity(projectRoot, recentLimit, now);
+  const hookOverhead = readHookOverhead(projectRoot);
   const hookValue = readHookValue(projectRoot);
   const health = readHealth(projectRoot);
   const cost = safeCostDashboard();
@@ -904,6 +942,7 @@ function collectDashboard(options = {}) {
     cost,
     recentActivity,
     hookActivity,
+    hookOverhead,
     hookValue,
     pending,
     health: {
@@ -1278,6 +1317,19 @@ function renderDashboard(snapshot) {
   }
 
   lines.push('');
+  lines.push('HOOK OVERHEAD');
+  const overhead = snapshot.hookOverhead || [];
+  if (overhead.length === 0) {
+    lines.push('  (no hook timing data recorded yet)');
+  } else {
+    const ms = (value) => `${value}ms`;
+    lines.push(`  ${'hook'.padEnd(26)} ${'count'.padStart(6)} ${'p50'.padStart(8)} ${'p95'.padStart(8)} ${'max'.padStart(8)}`);
+    for (const row of overhead.slice(0, 15)) {
+      lines.push(`  ${truncate(row.hook, 26).padEnd(26)} ${String(row.count).padStart(6)} ${ms(row.p50Ms).padStart(8)} ${ms(row.p95Ms).padStart(8)} ${ms(row.maxMs).padStart(8)}`);
+    }
+  }
+
+  lines.push('');
   lines.push('PENDING');
   lines.push(`  Doc sync:      ${snapshot.pending.docSync} items queued`);
   lines.push(`  Merge reviews: ${snapshot.pending.mergeReviews} items queued`);
@@ -1325,8 +1377,10 @@ module.exports = {
   classifyHookProblem,
   collectDashboard,
   renderDashboard,
+  readHookOverhead,
   readOperatorArtifacts,
   relativeTime,
   parseArgs,
+  percentile,
   summarizeProblemTaxonomy,
 };

@@ -7,6 +7,11 @@ description: >-
   archon, or fleet. Single entry point for all work.
 user-invocable: true
 auto-trigger: false
+trigger_keywords:
+  - route this
+  - which tool
+  - auto-route
+  - unified router
 last-updated: 2026-03-20
 ---
 
@@ -48,13 +53,13 @@ Before routing, check if new skills have been added since last registration.
    d. Extract `name` and `description` from frontmatter
    e. Add the skill to the Tier 2 keyword table for this session using its
       `name` and `description` words as match targets
-   f. Log to the user: `"Discovered {N} new skill(s): {names}. Run /do setup to permanently register routing keywords."`
+   f. Log to the user: `"Discovered {N} new skill(s): {names}. Run /do setup to rebuild the registry and regenerate the routing table from skill frontmatter."`
    g. Update `registeredSkillCount` and `registeredSkills` array in harness.json
 
 **This means:**
 - 99% of invocations: one number comparison, zero file reads
 - New skill dropped in: reads only the new frontmatter, routes immediately
-- `/do setup` does a full registry rebuild with permanent keyword assignment
+- `/do setup` rebuilds the registry and runs `node scripts/generate-routing.js`, which regenerates the Tier 2 table below from each skill's `trigger_keywords` frontmatter
 
 ### Tier 0: Pattern Match (Cost: ~0 tokens | Latency: <1ms)
 
@@ -122,58 +127,68 @@ If matched → resume the active work. Done.
 Match input against installed skill keywords from Citadel's built-in skills
 and any project-level custom skills in `.claude/skills/`.
 
-**Built-in skill triggers:**
+**Built-in skill triggers** (generated from each skill's `trigger_keywords` frontmatter; edit the frontmatter, then run `node scripts/generate-routing.js` to refresh this table):
+
+<!-- BEGIN GENERATED: routing-table -->
+| Input Contains | Route To |
+|---|---|
+| "architect", "architecture", "design the system", "file structure", "plan the build" | `/architect` |
+| "campaign", "multi-session", "phases" | `/archon` |
+| "ascii diagram", "ascii art", "box diagram", "architecture diagram", "flow diagram", "sequence diagram", "draw a diagram", "text diagram" | `/ascii-diagram` |
+| "intake", "process pending", "pipeline" | `/autopilot` |
+| "cost", "costs", "cost breakdown", "campaign cost", "token usage", "burn rate", "model breakdown" | `/cost` |
+| "create app", "build app", "build me", "make an app", "new app", "generate app", "add auth", "add payments", "integrate" | `/create-app` |
+| "create skill", "new skill", "make a skill", "teach the harness", "custom skill", "my own skill", "skill for", "automate this pattern", "repeated pattern" | `/create-skill` |
+| "daemon", "continuous", "run overnight", "keep running", "24/7", "unattended", "run autonomously", "daemon start", "daemon stop", "daemon status" | `/daemon` |
+| "dashboard", "what's happening", "what's going on", "show activity", "harness state", "show me status" | `/dashboard` |
+| "design", "style guide", "design manifest", "visual consistency" | `/design` |
+| "document", "docs", "docstring", "jsdoc", "readme", "api docs" | `/doc-gen` |
+| "evolve", "sustained improve", "improvement director", "research-driven improve", "multi-cycle improve", "run until done", "improve until ceiling", "keep improving", "hypothesis", "belief model", "scout agents" | `/evolve` |
+| "experiment", "optimize", "try", "A/B", "measure" | `/experiment` |
+| "parallel", "simultaneous", "multiple agents", "at the same time" | `/fleet --quick` |
+| "houseclean", "house clean", "disk space", "free space", "c drive full", "drive full", "running out of space", "clean up disk", "orphaned worktrees", "clean worktrees", "disk audit", "storage audit", "move to another drive", "free up space" | `/houseclean` |
+| "improve", "improvement loop", "quality loop", "rubric", "score against", "run improvement", "improve citadel" | `/improve` |
+| "infra", "infrastructure", "what databases", "what systems", "docker-compose", "infra audit", "map infrastructure", "what does this connect to" | `/infra-audit` |
+| "learn", "extract patterns", "learn from that", "save what worked", "patterns from campaign" | `/learn` |
+| "preview", "screenshot", "visual check", "does it render" | `/live-preview` |
+| "loop", "repeat until", "until tests pass", "until lint passes", "max attempts", "retry until" | `/loop` |
+| "map", "index codebase", "codebase map", "structural index", "scan codebase", "map stats", "map query" | `/map` |
+| "orchestrate", "chain skills", "multi-step" | `/marshal` |
+| "merge review", "check merges", "any conflicts", "fleet conflicts", "pending branches", "safe to merge" | `/merge-review` |
+| "organize", "directory structure", "folder structure", "project structure", "file organization", "organize directories", "organize files", "cleanup directories", "directory convention", "where should this go", "messy project", "project health", "bloat" | `/organize` |
+| "postmortem", "retro", "what broke", "what happened", "debrief" | `/postmortem` |
+| "watch pr", "watch ci", "monitor pr", "fix ci", "ci failing", "pr failing", "auto-fix", "auto fix pr", "pr is red", "checks failing" | `/pr-watch` |
+| "prd", "requirements", "spec", "plan an app", "design an app" | `/prd` |
+| "qa", "test the app", "click through", "does it work", "browser test" | `/qa` |
+| "refactor", "rename", "extract", "inline", "move file", "split file", "merge files" | `/refactor` |
+| "research", "investigate", "look into", "find out" | `/research` |
+| "research fleet", "parallel research", "multi-angle research", "compare options" | `/research-fleet` |
+| "/review", "code review", "review this", "review PR", "review" | `/review` |
+| "scaffold", "generate component", "generate module", "generate service", "new component", "new module", "new route", "new service", "create component", "stub out", "bootstrap" | `/scaffold` |
+| "schedule", "recurring", "every N minutes", "cron", "set a reminder", "run periodically" | `/schedule` |
+| "handoff", "session summary" | `/session-handoff` |
+| "setup", "first run", "configure harness", "install citadel", "getting started" | `/setup` |
+| "debug", "root cause", "diagnose", "why is", "investigate bug" | `/systematic-debugging` |
+| "telemetry", "what did this cost", "session cost", "how much did that cost", "how much have I spent", "what hooks fired", "trust level", "show me telemetry", "spending", "session stats", "what telemetry", "verify audit", "audit integrity", "check audit", "tampered records" | `/telemetry` |
+| "/test-gen", "generate tests", "write tests", "add tests", "test" | `/test-gen` |
+| "triage", "open issues", "unlabeled issues", "review pr", "review prs", "investigate issue" | `/triage` |
+| "unharness", "remove citadel", "uninstall citadel", "clean up citadel", "remove harness", "uninstall harness" | `/unharness` |
+| "verify", "verify hooks", "hook health", "self-test", "check hooks", "harness health" | `/verify` |
+| "watch", "watch files", "watch changes", "file sentinel", "monitor files", "watch start", "watch stop", "watch scan", "marker comments", "@citadel" | `/watch` |
+| "wiki", "knowledge base", "llm wiki", "project wiki", "build a wiki", "maintain knowledge", "knowledge management", "llm-wiki", "karpathy wiki" | `/wiki` |
+| "workspace", "multi-repo", "cross-repo", "across repos", "multiple repos", "coordinate repos", "add redis and snowflake", "split into repos" | `/workspace` |
+<!-- END GENERATED: routing-table -->
+
+**Script routes** (hand-maintained; these dispatch to local scripts, not skills):
 
 | Input Contains | Route To |
 |---|---|
-| "prd", "requirements", "spec", "plan an app", "design an app" | `/prd` |
-| "architect", "architecture", "design the system", "file structure", "plan the build" | `/architect` |
-| "create app", "build app", "build me", "make an app", "new app", "generate app" | `/create-app` |
-| "add [feature]", "implement [feature]", "add auth", "add payments", "integrate [x]" | `/create-app` (Tier 5 — feature mode) |
-| "review", "code review" | `/review` |
-| "test", "generate tests", "write tests" | `/test-gen` |
-| "document", "docs", "docstring", "readme" | `/doc-gen` |
-| "refactor", "rename", "extract", "split file" | `/refactor` |
-| "scaffold", "new module", "new component", "bootstrap" | `/scaffold` |
-| "create skill", "new skill", "repeated pattern" | `/create-skill` |
-| "handoff", "session summary" | `/session-handoff` |
-| "orchestrate", "chain skills", "multi-step" | `/marshal` |
-| "campaign", "multi-session", "phases" | `/archon` |
-| "parallel", "simultaneous", "multiple agents", "at the same time", "both ... and" | `/fleet --quick` |
-| "intake", "process pending", "pipeline" | `/autopilot` |
 | "deliver", "deliver intake", "intake to pr", "intake to PR" | `node scripts/deliver.js --next` when no file is named, or `node scripts/deliver.js --intake <file>` when a file is named, then `/do continue` |
 | "package delivery", "review package", "local handoff" | `node scripts/package-delivery.js <campaign-slug>` after build and verification, or include `--pr <url>` when a PR exists |
 | "pr ready", "ready for review", "finalize pr", "approval ready" | `node scripts/pr-ready.js --pr <pull-request-url> --run-verification` after the branch is pushed |
 | "next", "what should I do next", "repair harness", "fix harness state" | `node scripts/operator-console.js --run`; auto-runs deterministic local repairs and stops at skill/human routes with a console report |
 | "operator", "operator console", "what's up", "what should happen next", "approval capsule" | `node scripts/operator-console.js`; inspect-only decision cockpit |
 | "preview route", "route preview", "dry run route", "what would /do do" | `node scripts/route-preview.js -- "<request>"`; route preflight without execution |
-| "setup", "first run", "configure harness" | `/setup` |
-| "research", "investigate", "look into", "find out" | `/research` |
-| "experiment", "optimize", "try", "A/B", "measure" | `/experiment` |
-| "debug", "root cause", "diagnose", "why is", "investigate bug" | `/systematic-debugging` |
-| "research fleet", "parallel research", "multi-angle research", "compare options" | `/research-fleet` |
-| "preview", "screenshot", "visual check", "does it render" | `/live-preview` |
-| "postmortem", "retro", "what broke", "what happened", "debrief" | `/postmortem` |
-| "design", "style guide", "design manifest", "visual consistency" | `/design` |
-| "qa", "test the app", "click through", "does it work", "browser test" | `/qa` |
-| "triage", "open issues", "unlabeled issues", "review pr", "review prs", "investigate issue" | `/triage` |
-| "watch pr", "watch ci", "monitor pr", "fix ci", "ci failing", "pr failing", "auto-fix", "auto fix pr", "pr is red", "checks failing" | `/pr-watch` |
-| "dashboard", "what's happening", "what's going on", "show activity", "harness state", "show me status" | `/dashboard` |
-| "telemetry", "what did this cost", "session cost", "how much did that cost", "how much have I spent", "what hooks fired", "trust level", "show me telemetry", "spending", "session stats", "what telemetry", "verify audit", "audit integrity", "check audit", "tampered records" | `/telemetry` |
-| "learn", "extract patterns", "learn from that", "save what worked", "patterns from campaign" | `/learn` |
-| "schedule", "recurring", "every N minutes", "cron", "set a reminder", "run periodically" | `/schedule` |
-| "loop", "repeat until", "until tests pass", "until lint passes", "max attempts", "retry until" | `/loop` |
-| "merge review", "check merges", "any conflicts", "fleet conflicts", "pending branches", "safe to merge" | `/merge-review` |
-| "ascii diagram", "ascii art", "box diagram", "architecture diagram", "flow diagram", "draw a diagram", "text diagram", "sequence diagram" | `/ascii-diagram` |
-| "improve", "improvement loop", "quality loop", "rubric", "score against", "run improvement", "improve citadel" | `/improve` |
-| "evolve", "sustained improve", "improvement director", "research-driven improve", "multi-cycle improve", "run until done", "improve until ceiling", "keep improving", "hypothesis", "belief model", "scout agents" | `/evolve` |
-| "organize", "directory structure", "folder structure", "project structure", "file organization", "where should this go", "cleanup directories" | `/organize` |
-| "houseclean", "house clean", "disk space", "free space", "drive full", "running out of space", "clean up disk", "clean worktrees", "disk audit", "storage audit", "move to another drive", "free up space", "c drive full", "orphaned worktrees" | `/houseclean` |
-| "daemon", "continuous", "run overnight", "keep running", "24/7", "unattended", "run autonomously", "daemon start", "daemon stop", "daemon status" | `/daemon` |
-| "map", "index codebase", "codebase map", "structural index", "scan codebase", "map stats", "map query" | `/map` |
-| "watch", "watch files", "watch changes", "file sentinel", "monitor files", "watch start", "watch stop", "watch scan", "marker comments", "@citadel" | `/watch` |
-| "infra", "infrastructure", "what databases", "what systems", "docker-compose", "infra audit", "map infrastructure", "what does this connect to" | `/infra-audit` |
-| "workspace", "multi-repo", "cross-repo", "across repos", "multiple repos", "coordinate repos", "add redis and snowflake", "split into repos" | `/workspace` |
 
 If ONE skill matches with high confidence → invoke it directly. Done.
 High confidence = evaluator assigns ≥ 0.85 probability to exactly one skill. Below 0.85, or multiple skills above 0.70, fall through to Tier 3.
@@ -210,6 +225,8 @@ REQUIRES_TASTE: true | false (quality judgment beyond tests?)
 | Complexity 4-5, requires parallel | `/fleet` |
 | Complexity 5, platform-wide | `/fleet` |
 | Confidence < 0.7 | `/marshal` (safe default) |
+
+**Ambiguity gate:** When multiple Tier 2 candidates survive or classifier confidence is below 0.7, and the AskUserQuestion tool is available: present the top 2-3 candidate routes as options, each with a label and a one-line tradeoff, and route to the user's pick. When unavailable, apply the rules above unchanged (tie-break, then `/marshal` default).
 
 **Important:** A repeated pattern complaint ("I keep doing X manually", "the agent
 always makes this mistake") should route to `/create-skill`. A repeated pattern

@@ -6,6 +6,12 @@ description: >-
   and produces a structured PRD that Archon can decompose into a campaign.
 user-invocable: true
 auto-trigger: false
+trigger_keywords:
+  - prd
+  - requirements
+  - spec
+  - plan an app
+  - design an app
 effort: high
 ---
 

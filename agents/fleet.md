@@ -153,6 +153,32 @@ as the only safe merge set, and `SCOPE CONFLICTS` as a required sequencing fix.
 - `(read-only)` scopes never overlap with anything
 - If overlap detected: requeue the work item for a later wave
 
+## Teams Mode (experimental)
+
+Active only when invoked with `--teams` AND `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS`
+is present in the environment on a Claude Code runtime. If either check fails,
+print a fallback notice naming the missing precondition and run classic worktree
+mode unchanged.
+
+When active, the deltas from classic are:
+
+1. Create one native task per work-queue scope with `TaskCreate`, linking
+   dependencies to mirror wave order. Update status with `TaskUpdate` as scopes
+   progress; use `TaskList`/`TaskGet` to inspect the spine.
+2. Teammates report discoveries to you via `SendMessage`. Mirror every discovery
+   to `.planning/fleet/<session>/discoveries/` the moment you receive it. The
+   mirror is the source of truth for recovery; on any disagreement between
+   messages and the mirror, reconcile from the mirror.
+3. Watch `.planning/fleet/rebalance.jsonl`. When the TeammateIdle hook appends an
+   idle record, reassign the next unblocked scope to that teammate via
+   `SendMessage`. Skip records without a teammate identity; do nothing when no
+   scope is unblocked.
+4. Merge review is unchanged: steward output gates merges exactly as in classic.
+
+In classic mode, when native Task tools are available, mirror each scope as a
+native task with status updates at wave boundaries. `.planning` files stay
+canonical; native tasks are visibility only.
+
 ## After All Waves Complete
 
 1. Run typecheck on the full project

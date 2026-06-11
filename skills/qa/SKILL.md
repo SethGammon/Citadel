@@ -7,6 +7,12 @@ description: >-
   (optional dependency, graceful skip if not installed).
 user-invocable: true
 auto-trigger: false
+trigger_keywords:
+  - qa
+  - test the app
+  - click through
+  - does it work
+  - browser test
 effort: high
 ---
 

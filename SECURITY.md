@@ -68,6 +68,30 @@ Run the full harness suite with:
 npm run test
 ```
 
+## .env Protection and Write Boundaries
+
+`.env` protection is symmetric across read and write paths:
+
+- Read, Edit, and Write tool calls on any file whose name starts with `.env`
+  are blocked by `hooks_src/protect-files.js`. Template files ending in
+  `.example`, `.sample`, or `.template` are always allowed.
+- Bash write attempts targeting `.env` files are blocked by
+  `hooks_src/external-action-gate.js`: output redirection (`>` or `>>`),
+  `tee`, and `cp` or `mv` with a `.env` destination. The same template
+  suffixes are exempt.
+- Escape hatch: set `"allowEnvWrites": true` in `.claude/harness.json` to
+  disable only the Edit/Write check. Reads and the Bash write patterns stay
+  blocked. The default is blocking.
+
+Write boundaries:
+
+- Writes outside the project root are blocked, with one allowlisted location:
+  the Claude Code native auto-memory directory under
+  `~/.claude/projects/<project-slug>/memory/`.
+- Every block reason is mirrored to stderr in addition to the existing stdout
+  output, so runtimes that only surface stderr still show why an action was
+  stopped.
+
 ## Private State Guidance
 
 Do not assume generated Citadel state is safe to publish.

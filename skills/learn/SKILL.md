@@ -8,6 +8,12 @@ description: >-
   and /evolve Phase 6.
 user-invocable: true
 auto-trigger: false
+trigger_keywords:
+  - learn
+  - extract patterns
+  - learn from that
+  - save what worked
+  - patterns from campaign
 last-updated: 2026-05-07
 ---
 

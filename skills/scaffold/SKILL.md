@@ -17,6 +17,7 @@ trigger_keywords:
   - new service
   - create component
   - stub out
+  - bootstrap
 ---
 
 # /scaffold — Project-Aware File Generator

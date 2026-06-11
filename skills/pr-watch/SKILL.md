@@ -6,6 +6,17 @@ description: >-
   Local CLI analog to Claude Code's cloud auto-fix feature.
 user-invocable: true
 auto-trigger: false
+trigger_keywords:
+  - watch pr
+  - watch ci
+  - monitor pr
+  - fix ci
+  - ci failing
+  - pr failing
+  - auto-fix
+  - auto fix pr
+  - pr is red
+  - checks failing
 effort: high
 last-updated: 2026-03-26
 ---

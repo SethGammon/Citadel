@@ -106,7 +106,7 @@ Then start a fresh Codex or Claude Code session in the same project and run:
 
 That is the important command. Express setup auto-detects the project, installs or refreshes hooks, scaffolds Citadel state, and gets you to a working `/do` command without a tour.
 
-For a copyable first-run walkthrough, see [DEMO.md](DEMO.md). For runtime-specific details, dry runs, and troubleshooting, see [INSTALL.md](INSTALL.md) and [QUICKSTART.md](QUICKSTART.md).
+For a copyable first-run walkthrough, see [DEMO.md](DEMO.md). For runtime-specific details, dry runs, first-run steps, and troubleshooting, see [INSTALL.md](INSTALL.md).
 
 ## Demo Workflow
 
@@ -217,6 +217,8 @@ Four tiers let Citadel scale from a small edit to a multi-session campaign:
 
 ## Roadmap
 
+The full milestone plan with exit criteria lives in [docs/ROADMAP.md](docs/ROADMAP.md).
+
 Citadel is being developed around practical builder needs:
 
 - **Campaign recovery:** better rollback, resume, and repair tools for interrupted long-running work.
@@ -229,10 +231,9 @@ The priority is reliability over novelty: make the harness easier to install, ea
 
 ## Learn More
 
-- [Install](INSTALL.md) - manual setup for Codex and Claude Code
+- [Install and first run](INSTALL.md) - setup, first-run paths, and troubleshooting for both runtimes
 - [Demo workflow](DEMO.md) - copyable operating-loop demo for a real repo
 - [Operating loop proof](docs/OPERATING_LOOP_PROOF.md) - evidence checklist for demos and PRs
-- [Quickstart](QUICKSTART.md) - first-run paths for both runtimes
 - [Interactive routing demo](https://sethgammon.github.io/Citadel/) - watch the tier cascade animate
 - [Routing preview guide](docs/ROUTING_PREVIEW.md) - compare Skill, Marshal, Archon, and Fleet before heavier work
 - [Public positioning](docs/PUBLIC_POSITIONING.md) - how to describe Citadel without overclaiming
@@ -250,7 +251,7 @@ The priority is reliability over novelty: make the harness easier to install, ea
 
 **How is this different from `CLAUDE.md` or `AGENTS.md`?** Those files describe your project. Citadel adds the operating layer around the agent: routing, memory, hooks, telemetry, and parallel coordination.
 
-**Do I need to learn all 45 skills?** No. Use `/do` and describe what you want. Direct skill commands are available when you want explicit control.
+**Do I need to learn all <!-- GENERATED: skill-count -->46<!-- /GENERATED --> skills?** No. Use `/do` and describe what you want. Direct skill commands are available when you want explicit control.
 
 **How much token overhead does it add?** Skills cost zero when not loaded. Router tiers 1-3 are local checks; tier 4 uses a small LLM classification only when needed. Use `/cost` to inspect real usage.
 

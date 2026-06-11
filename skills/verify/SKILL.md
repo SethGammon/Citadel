@@ -7,6 +7,13 @@ description: >-
   or HOOK HEALTH: FAIL with a per-hook breakdown.
 user-invocable: true
 auto-trigger: false
+trigger_keywords:
+  - verify
+  - verify hooks
+  - hook health
+  - self-test
+  - check hooks
+  - harness health
 last-updated: 2026-03-27
 ---
 

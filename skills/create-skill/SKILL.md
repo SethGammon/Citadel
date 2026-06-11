@@ -17,6 +17,7 @@ trigger_keywords:
   - my own skill
   - skill for
   - automate this pattern
+  - repeated pattern
 ---
 
 # /create-skill — Skill Creator
@@ -134,6 +135,7 @@ trigger_keywords:
    b. Add skill name to `registeredSkills` array
    c. Update `registeredSkillCount` to match array length
 5. Only add to CLAUDE.md if it has an explicit skills section listing available skills.
+6. Run `/reload-skills` if the running Claude Code version supports it; the skill is live without a session restart. If unsupported, tell the user a fresh session is required before `/{name}` resolves.
 
 ### Step 5: VERIFY — Test on a Real Target
 

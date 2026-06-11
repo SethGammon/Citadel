@@ -37,7 +37,22 @@ function parseFrontmatter(content) {
       else if (value.startsWith('[') && value.endsWith(']')) {
         fm[key] = value.slice(1, -1).split(',').map((item) => item.trim()).filter(Boolean);
       } else if (value) fm[key] = value;
-      else fm[key] = null;
+      else {
+        const items = [];
+        let next = index + 1;
+        while (next < lines.length) {
+          const item = lines[next].match(/^\s+-\s+(.*)$/);
+          if (!item) break;
+          items.push(item[1].trim().replace(/^(['"])(.*)\1$/, '$2'));
+          next++;
+        }
+        if (items.length > 0) {
+          fm[key] = items;
+          index = next;
+          continue;
+        }
+        fm[key] = null;
+      }
     }
     index++;
   }
@@ -84,6 +99,7 @@ function readSkill(skillsDir, name) {
   return {
     name,
     description: frontmatter.description || '',
+    triggerKeywords: Array.isArray(frontmatter.trigger_keywords) ? frontmatter.trigger_keywords : [],
     taskClass: inferTaskClass(name, frontmatter, body),
     riskLevel: inferRiskLevel(frontmatter, body),
     expectedArtifacts: frontmatter['expected-artifacts'] || [],

@@ -7,6 +7,12 @@ description: >-
   emerged. Can also be invoked manually for any incident.
 user-invocable: true
 auto-trigger: false
+trigger_keywords:
+  - postmortem
+  - retro
+  - what broke
+  - what happened
+  - debrief
 effort: medium
 ---
 

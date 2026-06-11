@@ -6,6 +6,14 @@ description: >-
   pre-planning between iterations — each loop re-scores from scratch.
 user-invocable: true
 auto-trigger: false
+trigger_keywords:
+  - improve
+  - improvement loop
+  - quality loop
+  - rubric
+  - score against
+  - run improvement
+  - improve citadel
 last-updated: 2026-03-28
 ---
 
@@ -101,6 +109,9 @@ Run only when `.planning/rubrics/{target}.md` does not exist.
    - Weight (0.0–1.0), Category, three anchors (0/5/10), verification specs (programmatic/structural/perceptual), research inputs
 4. Present draft rubric to the user with rationale for each axis
 5. **STOP. Do not proceed until the user approves the rubric.**
+   - If the AskUserQuestion tool is available, present the gate with it. Options: "Approve as drafted", "Adjust axes", "Adjust weights". On adjust: revise, re-present.
+   - If unavailable: ask as a plain text question and wait.
+   - Record the answer in the campaign file as `rubric_approved: {answer}`.
 6. Write approved rubric to `.planning/rubrics/{target}.md`
 
 ---
@@ -222,7 +233,7 @@ Run the four verification tiers from the rubric for the targeted axis:
 1. **Programmatic**: execute the specific checks, confirm they now pass
 2. **Structural**: verify the structural requirements are met
 3. **Perceptual**: spawn a single evaluator agent (Evaluator B — Newcomer) and score just the targeted axis
-4. **Behavioral simulation**: clone the repo into a temp directory and follow QUICKSTART.md exactly as written — no prior knowledge, no shortcuts. Measure whether each step completes without error and record wall time to first successful `/do` command.
+4. **Behavioral simulation**: clone the repo into a temp directory and follow INSTALL.md exactly as written — no prior knowledge, no shortcuts. Measure whether each step completes without error and record wall time to first successful `/do` command.
    - Required when targeted axis is: `onboarding_friction`, `error_recovery`, `documentation_accuracy`, `command_discoverability`
    - Optional for all other axes
    - Result: `PASS {wall_time}` or `FAIL at step {n}: {what broke}`

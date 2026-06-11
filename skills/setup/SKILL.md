@@ -181,7 +181,9 @@ const config = {
   language: '{detected}',
   framework: '{detected or null}',
   packageManager: '{detected}',
-  typecheck: { command: '{command}', perFile: {bool} },
+  typecheck: { command: '{command}', perFile: {bool}, timeoutMs: 25000 },
+  // perFile applies to Python checkers only; TypeScript always runs a
+  // project-scope incremental check and ignores perFile with an advisory.
   test: { command: '{testCommand}', framework: '{testFramework}' },
   qualityRules: { builtIn: ['no-confirm-alert', 'no-transition-all'], custom: [] },
   protectedFiles: ['.claude/harness.json', '.claude/settings.json'],
@@ -201,6 +203,8 @@ fs.writeFileSync('.claude/harness.json', JSON.stringify(config, null, 2));
 ```
 
 **Skill registry rebuild:** populate `registeredSkills` from every directory under `{citadelRoot}/skills/` plus `.claude/skills/`. Set `registeredSkillCount` to match.
+
+**Routing table regeneration:** run `node {citadelRoot}/scripts/generate-routing.js`. This regenerates the routing keyword surfaces inside the Citadel install from each skill's `trigger_keywords` frontmatter: `core/skills/routing-table.json` (consumed by `scripts/route-preview.js`), the Tier 2 table in `skills/do/SKILL.md`, and the demo routing data in `docs/index.html`. Then verify with `node {citadelRoot}/scripts/generate-routing.js --check` -- exit 0 means all three surfaces are in sync. If the script is missing (older Citadel install), skip this step silently.
 
 **Dependency pattern suggestions (Recommended + Full Tour only):**
 Read `package.json` and check for known libraries:
@@ -401,7 +405,7 @@ Print the reference card with actual counts from detected config.
 │  3. /create-skill capture a repeated pattern             │
 │  4. /improve [target]   autonomous quality loop          │
 │                                                          │
-│  docs/SKILLS.md · QUICKSTART.md · /do --list            │
+│  docs/SKILLS.md · INSTALL.md · /do --list               │
 │                                                          │
 └──────────────────────────────────────────────────────────┘
 ```

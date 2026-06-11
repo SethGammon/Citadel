@@ -7,6 +7,7 @@ trigger_keywords:
   - generate tests
   - write tests
   - add tests
+  - test
 ---
 
 # Identity

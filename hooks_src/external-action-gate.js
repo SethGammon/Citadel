@@ -6,7 +6,7 @@
  * Uses the First-Encounter Consent pattern to handle external actions.
  *
  * Three tiers:
- *   SECRETS - Always blocked. Reading .env files via Bash.
+ *   SECRETS - Always blocked. Reading or writing .env files via Bash.
  *   HARD    - Always blocked per-action. Irreversible by default (merge, close,
  *             delete, release, fork). Configurable via policy.externalActions.hard.
  *   SOFT    - Governed by consent preference. Empty by default; teams can opt
@@ -90,7 +90,9 @@ function run(input) {
       'external-action-gate',
       'blocked',
       `[Citadel] Blocked — secrets access: "${action.label}"\n` +
-      `Reading .env files and credentials is always blocked.\n`,
+      (action.label.includes('secrets write')
+        ? `Writing .env files via Bash is always blocked. Template files ending in .example, .sample, or .template are allowed.\n`
+        : `Reading .env files and credentials is always blocked.\n`),
       { label: action.label, tier: action.tier }
     );
     process.exit(2);

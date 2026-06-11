@@ -9,6 +9,17 @@ description: >-
   run overnight.
 user-invocable: true
 auto-trigger: false
+trigger_keywords:
+  - daemon
+  - continuous
+  - run overnight
+  - keep running
+  - 24/7
+  - unattended
+  - run autonomously
+  - daemon start
+  - daemon stop
+  - daemon status
 last-updated: 2026-03-28
 ---
 

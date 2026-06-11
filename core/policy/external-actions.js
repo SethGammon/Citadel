@@ -2,6 +2,12 @@
 
 const DEFAULT_PROTECTED_BRANCHES = ['main', 'master'];
 
+// A .env-style target that is not a template file. The first lookahead stops
+// partial-name matches like ".envx"; the second exempts names ending in
+// .example, .sample, or .template.
+const ENV_WRITE_TARGET =
+  '\\.env(?![\\w-])(?![\\w.-]*\\.(?:example|sample|template)(?!\\S))';
+
 const SECRETS_PATTERNS = [
   { regex: /\bcat\s+.*\.env(\b|\.)/, label: 'cat .env (secrets)' },
   { regex: /\bsource\s+.*\.env(\b|\.)/, label: 'source .env (secrets)' },
@@ -10,6 +16,9 @@ const SECRETS_PATTERNS = [
   { regex: /\bgrep\b.*\.env(\b|\.)/, label: 'grep .env (secrets)' },
   { regex: /\bless\s+.*\.env(\b|\.)/, label: 'less .env (secrets)' },
   { regex: /\bmore\s+.*\.env(\b|\.)/, label: 'more .env (secrets)' },
+  { regex: new RegExp('>{1,2}\\s*\\S*' + ENV_WRITE_TARGET), label: 'redirect to .env (secrets write)' },
+  { regex: new RegExp('\\btee\\s+.*' + ENV_WRITE_TARGET), label: 'tee to .env (secrets write)' },
+  { regex: new RegExp('\\b(?:cp|mv)\\b[^;&|>]*\\s\\S*' + ENV_WRITE_TARGET + '[\\w.-]*\\s*(?:$|[;&|])'), label: 'cp/mv to .env (secrets write)' },
 ];
 
 const ALL_PATTERNS = [

@@ -6,6 +6,13 @@
  * Blocks edits to files that should not be modified during agent sessions.
  * Blocks reads on .env files to prevent agents from reading secrets, including
  * .env files outside the project root.
+ * Blocks Edit/Write on .env files (template suffixes .example, .sample, and
+ * .template are allowed; harness.json allowEnvWrites=true disables this one
+ * check).
+ * Allows writes to the Claude Code native auto-memory directory under the
+ * user home even though it sits outside the project root.
+ * Every block reason is mirrored to stderr so runtimes that only surface
+ * stderr still show why an action was stopped.
  * Protected paths are configurable via harness.json protectedFiles array.
  *
  * Default protected: .claude/harness.json
@@ -22,6 +29,7 @@
  */
 
 const fs = require('fs');
+const os = require('os');
 const path = require('path');
 const health = require('./harness-health-util');
 const { findActiveCampaign } = require('../core/campaigns/load-campaign');
@@ -35,6 +43,9 @@ const CITADEL_UI = process.env.CITADEL_UI === 'true';
 // but keeps .env secrets protection and path-traversal security checks active.
 // Safe to leave set during harness development sessions; remove when done.
 const CITADEL_DEV = process.env.CITADEL_DEV === 'true';
+
+// .env file names ending in these suffixes are templates, not secrets.
+const ENV_TEMPLATE_SUFFIXES = ['.example', '.sample', '.template'];
 
 function hookOutput(hookName, action, message, data = {}) {
   if (CITADEL_UI) {
@@ -50,6 +61,14 @@ function hookOutput(hookName, action, message, data = {}) {
   }
 }
 
+// For blocks and errors: keep the stdout payload byte-identical for the
+// CITADEL_UI JSON consumers, and mirror the human-readable reason to stderr
+// because some runtimes only surface stderr for blocking hooks.
+function blockOutput(hookName, action, message, data = {}) {
+  hookOutput(hookName, action, message, data);
+  process.stderr.write(message.endsWith('\n') ? message : message + '\n');
+}
+
 function main() {
   let input = '';
   process.stdin.setEncoding('utf8');
@@ -60,7 +79,7 @@ function main() {
     } catch (err) {
       // Fail closed: unexpected errors block the action
       health.logBlock('protect-files', 'error', err.message || 'unknown error');
-      hookOutput('protect-files', 'error',
+      blockOutput('protect-files', 'error',
         '[protect-files] Hook error — blocking action as a safety measure. ' +
         'Check .planning/telemetry/hook-errors.log for details.',
         { error: err.message || 'unknown error' }
@@ -77,7 +96,7 @@ function run(input) {
   } catch {
     health.logBlock('protect-files', 'parse-fail', 'Could not parse stdin JSON');
     // Fail closed on parse failure — cannot determine if action is safe
-    hookOutput('protect-files', 'error', '[protect-files] Could not parse hook input — blocking as safety measure.');
+    blockOutput('protect-files', 'error', '[protect-files] Could not parse hook input — blocking as safety measure.');
     process.exit(2);
   }
 
@@ -95,7 +114,7 @@ function run(input) {
   const validation = health.validatePath(filePath);
   if (!validation.safe) {
     health.logBlock('protect-files', 'blocked', `${toolName} ${filePath} (${validation.violation})`);
-    hookOutput('protect-files', 'blocked',
+    blockOutput('protect-files', 'blocked',
       `[protect-files] Blocked: ${validation.violation}`,
       { file: filePath, tool: toolName, violation: validation.violation }
     );
@@ -108,9 +127,16 @@ function run(input) {
   const normalizedPath = path.normalize(path.resolve(filePath));
   const normalizedRoot = path.normalize(PROJECT_ROOT);
   const insideProject = normalizedPath.startsWith(normalizedRoot + path.sep) || normalizedPath === normalizedRoot;
+
+  // Claude Code native auto-memory lives outside the project root by design.
+  // Allow those writes before the outside-project-root block below.
+  if (toolName !== 'Read' && !insideProject && isNativeMemoryPath(normalizedPath)) {
+    process.exit(0);
+  }
+
   if (toolName !== 'Read' && !insideProject) {
     health.logBlock('protect-files', 'blocked', `${toolName} ${filePath} (outside project root)`);
-    hookOutput('protect-files', 'blocked',
+    blockOutput('protect-files', 'blocked',
       `[protect-files] Blocked: ${filePath} is outside project root (${PROJECT_ROOT})`,
       { file: filePath, tool: toolName, projectRoot: PROJECT_ROOT }
     );
@@ -126,7 +152,7 @@ function run(input) {
     const basename = path.basename(filePath);
     if (basename.startsWith('.env')) {
       health.logBlock('protect-files', 'blocked', `Read ${relativePath} (.env secrets)`);
-      hookOutput('protect-files', 'blocked',
+      blockOutput('protect-files', 'blocked',
         `[protect-files] Blocked: cannot read ${relativePath} — .env files contain secrets.`,
         { file: relativePath, reason: '.env secrets' }
       );
@@ -135,10 +161,28 @@ function run(input) {
     process.exit(0);
   }
 
+  const config = health.readConfig();
+
+  // Edit/Write events: symmetric .env protection (Read is blocked above).
+  // Template files (.example/.sample/.template) stay writable. Escape hatch:
+  // allowEnvWrites=true in harness.json. CITADEL_DEV does not bypass this.
+  const basename = path.basename(filePath);
+  const isEnvSecret = basename.startsWith('.env') &&
+    !ENV_TEMPLATE_SUFFIXES.some((suffix) => basename.endsWith(suffix));
+  if (isEnvSecret && config.allowEnvWrites !== true) {
+    health.logBlock('protect-files', 'blocked', `${toolName} ${relativePath} (.env secrets)`);
+    blockOutput('protect-files', 'blocked',
+      `[protect-files] Blocked: cannot ${toolName} ${relativePath} because .env files contain secrets. ` +
+      `Template files ending in .example, .sample, or .template are allowed. ` +
+      `Set "allowEnvWrites": true in .claude/harness.json to permit .env writes.`,
+      { file: relativePath, tool: toolName, reason: '.env secrets' }
+    );
+    process.exit(2);
+  }
+
   // Edit/Write events: check against protected patterns
   // CITADEL_DEV=true bypasses custom patterns — for harness development only.
   // Secrets (.env) and path-traversal checks above still apply.
-  const config = health.readConfig();
   const protectedPatterns = config.protectedFiles || [
     '.claude/harness.json',
   ];
@@ -152,7 +196,7 @@ function run(input) {
     for (const pattern of protectedPatterns) {
       if (matchPattern(relativePath, pattern)) {
         health.logBlock('protect-files', 'blocked', `${toolName} ${relativePath} (pattern: ${pattern})`);
-        hookOutput('protect-files', 'blocked',
+        blockOutput('protect-files', 'blocked',
           `[protect-files] Blocked: ${relativePath} is protected by pattern "${pattern}". ` +
           `Set CITADEL_DEV=true in .claude/settings.json env for harness development, ` +
           `or remove the pattern from harness.json protectedFiles to allow edits.`,
@@ -191,7 +235,8 @@ function checkCampaignScope(relativePath, toolName, _filePath) {
     for (const entry of campaign.restrictedFiles || []) {
       if (entry && matchPattern(relativePath, entry)) {
         health.logBlock('protect-files', blockRestricted ? 'blocked-restricted' : 'warned-restricted', `${toolName} ${relativePath} (campaign: ${campaignName}, restricted: ${entry})`);
-        hookOutput('protect-files', 'blocked',
+        const emitRestricted = blockRestricted ? blockOutput : hookOutput;
+        emitRestricted('protect-files', 'blocked',
           `[protect-files] ${blockRestricted ? 'Blocked' : 'Warning'}: ${relativePath} is declared RESTRICTED by campaign "${campaignName}". ` +
           `${blockRestricted ? 'Remove it from Restricted Files or set policy.campaignRestrictions.blockRestrictedFiles=false to allow edits.' : 'This is advisory; set policy.campaignRestrictions.blockRestrictedFiles=true to enforce.'}`,
           { file: relativePath, campaign: campaignName, restrictedEntry: entry, tool: toolName }
@@ -222,6 +267,30 @@ function checkCampaignScope(relativePath, toolName, _filePath) {
   } catch {
     // Any unexpected error — skip scope check silently (never block on check failure)
   }
+}
+
+/**
+ * True when an absolute, normalized path points into the Claude Code native
+ * auto-memory directory: <home>/.claude/projects/<slug>/memory/ where <slug>
+ * is a single path segment. The memory directory itself also matches.
+ * Comparison is case-insensitive on win32.
+ * CITADEL_HOME_OVERRIDE replaces the home directory only when CITADEL_TEST=1
+ * so tests can exercise this path without touching the real home.
+ *
+ * @param {string} normalizedPath - Result of path.normalize(path.resolve(...))
+ * @returns {boolean}
+ */
+function isNativeMemoryPath(normalizedPath) {
+  const home = (process.env.CITADEL_TEST === '1' && process.env.CITADEL_HOME_OVERRIDE)
+    ? process.env.CITADEL_HOME_OVERRIDE
+    : os.homedir();
+  const projectsRoot = path.normalize(path.resolve(home, '.claude', 'projects'));
+  const fold = (p) => (process.platform === 'win32' ? p.toLowerCase() : p);
+  const target = fold(normalizedPath);
+  const root = fold(projectsRoot);
+  if (!target.startsWith(root + path.sep)) return false;
+  const segments = target.slice(root.length + 1).split(path.sep).filter(Boolean);
+  return segments.length >= 2 && segments[1] === 'memory';
 }
 
 /**

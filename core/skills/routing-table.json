@@ -1,0 +1,578 @@
+{
+  "schemaVersion": 1,
+  "generated": "Derived from trigger_keywords frontmatter in skills/*/SKILL.md. Do not edit by hand; run node scripts/generate-routing.js.",
+  "skills": [
+    {
+      "name": "architect",
+      "keywords": [
+        "architect",
+        "architecture",
+        "design the system",
+        "file structure",
+        "plan the build"
+      ],
+      "description": "Given a PRD, produces an implementation architecture: file tree, component breakdown, data model, and a phased build plan with end conditions that Archon can execute directly. Multi-candidate evaluation for key decisions."
+    },
+    {
+      "name": "archon",
+      "keywords": [
+        "campaign",
+        "multi-session",
+        "phases"
+      ],
+      "description": "Autonomous multi-session campaign agent. Decomposes large work into phases, delegates to sub-agents, reviews output, and maintains campaign state across context windows. Use for work that spans multiple sessions and needs persistent state, quality judgment, and strategic decomposition."
+    },
+    {
+      "name": "ascii-diagram",
+      "keywords": [
+        "ascii diagram",
+        "ascii art",
+        "box diagram",
+        "architecture diagram",
+        "flow diagram",
+        "sequence diagram",
+        "draw a diagram",
+        "text diagram"
+      ],
+      "description": "Generate perfectly aligned ASCII diagrams — architecture, flow, sequence, box-and-arrow. Uses a programmatic character-grid approach so alignment is guaranteed by math, not token prediction. Includes post-render verification."
+    },
+    {
+      "name": "autopilot",
+      "keywords": [
+        "intake",
+        "process pending",
+        "pipeline"
+      ],
+      "description": "Intake-to-delivery pipeline. Processes pending items from .planning/intake/: briefs new ideas, executes approved work through research → plan → build → verify. Drop a file in .planning/intake/ and invoke this skill."
+    },
+    {
+      "name": "cost",
+      "keywords": [
+        "cost",
+        "costs",
+        "cost breakdown",
+        "campaign cost",
+        "token usage",
+        "burn rate",
+        "model breakdown"
+      ],
+      "description": "Deep cost exploration and transparency. Shows real token usage, session costs, campaign spend, burn rates, and model breakdown. Reads Claude Code's native session data for exact numbers. Complements /dashboard with focused cost views."
+    },
+    {
+      "name": "create-app",
+      "keywords": [
+        "create app",
+        "build app",
+        "build me",
+        "make an app",
+        "new app",
+        "generate app",
+        "add auth",
+        "add payments",
+        "integrate"
+      ],
+      "description": "End-to-end app creation from a single description. Five tiers: blank project, guided, templated, fully generated, or feature addition to existing codebase. Routes through PRD, architecture, and Archon campaign with verification at every step."
+    },
+    {
+      "name": "create-skill",
+      "keywords": [
+        "create skill",
+        "new skill",
+        "make a skill",
+        "teach the harness",
+        "custom skill",
+        "my own skill",
+        "skill for",
+        "automate this pattern",
+        "repeated pattern"
+      ],
+      "description": "Creates new skills from the user's repeating patterns. Interview-driven: discovers the task, analyzes failure modes, generates a production SKILL.md, installs it, tests it on a real target, and teaches the user how to use it. Use when a user wants to encode a repeating workflow; do NOT use for one-off tasks or modifying existing skills."
+    },
+    {
+      "name": "daemon",
+      "keywords": [
+        "daemon",
+        "continuous",
+        "run overnight",
+        "keep running",
+        "24/7",
+        "unattended",
+        "run autonomously",
+        "daemon start",
+        "daemon stop",
+        "daemon status"
+      ],
+      "description": "Continuous autonomous operation mode. Keeps campaigns running 24/7 by chaining Claude Code sessions via RemoteTrigger. Each session picks up from the campaign's continuation state, works until context runs low or the phase completes, then schedules the next session. Auto-stops on campaign completion or budget exhaustion. The thing that makes Citadel run overnight."
+    },
+    {
+      "name": "dashboard",
+      "keywords": [
+        "dashboard",
+        "what's happening",
+        "what's going on",
+        "show activity",
+        "harness state",
+        "show me status"
+      ],
+      "description": "Real-time harness observability dashboard. Reads campaigns, fleet sessions, telemetry, and pending queues to present a snapshot of harness state at a glance. Invoked by /dashboard, /do status, or phrases like \"what's happening\" and \"show activity\"."
+    },
+    {
+      "name": "design",
+      "keywords": [
+        "design",
+        "style guide",
+        "design manifest",
+        "visual consistency"
+      ],
+      "description": "Generates and maintains a design manifest for visual consistency. In existing projects, reads current styles and documents the design language. In new projects, asks a few questions and generates a starter manifest. The post-edit hook reads the manifest and flags deviations."
+    },
+    {
+      "name": "doc-gen",
+      "keywords": [
+        "document",
+        "docs",
+        "docstring",
+        "jsdoc",
+        "readme",
+        "api docs"
+      ],
+      "description": "Documentation generator with three modes: function-level (JSDoc/docstrings), module-level (directory READMEs), and API reference (endpoints/exports). Reads existing project doc style and matches it. Never generates docs that just restate what the signature already says."
+    },
+    {
+      "name": "evolve",
+      "keywords": [
+        "evolve",
+        "sustained improve",
+        "improvement director",
+        "research-driven improve",
+        "multi-cycle improve",
+        "run until done",
+        "improve until ceiling",
+        "keep improving",
+        "hypothesis",
+        "belief model",
+        "scout agents"
+      ],
+      "description": "Research-driven multi-cycle improvement director. Forms causal hypotheses about why scores are low, validates them with scout agents before attacking, dispatches axis-parallel fleet attacks, extracts transferable patterns, and runs indefinitely within a budget envelope. Accumulates a persistent belief model and pattern library across sessions."
+    },
+    {
+      "name": "experiment",
+      "keywords": [
+        "experiment",
+        "optimize",
+        "try",
+        "A/B",
+        "measure"
+      ],
+      "description": "Automated optimization loop with scalar fitness function. Proposes changes in isolated worktrees, measures with a metric command, keeps improvements, discards failures. Supports convergence detection and diminishing returns."
+    },
+    {
+      "name": "fleet",
+      "keywords": [
+        "parallel",
+        "simultaneous",
+        "multiple agents",
+        "at the same time"
+      ],
+      "description": "Parallel campaign orchestrator. Runs multiple campaigns in coordinated waves within a single session. Spawns 2-3 agents per wave in isolated worktrees, collects discoveries, shares context between waves. Use when work decomposes into 3+ independent streams that can run simultaneously."
+    },
+    {
+      "name": "houseclean",
+      "keywords": [
+        "houseclean",
+        "house clean",
+        "disk space",
+        "free space",
+        "c drive full",
+        "drive full",
+        "running out of space",
+        "clean up disk",
+        "orphaned worktrees",
+        "clean worktrees",
+        "disk audit",
+        "storage audit",
+        "move to another drive",
+        "free up space"
+      ],
+      "description": "Cross-drive storage audit and cleanup. Surveys all drives, finds orphaned git worktrees, large AI tool caches (.ollama, .gemini, .cursor, npm, pip), and buildable artifacts (node_modules, .venv). Produces a prioritized action plan with specific migration commands. Use when disk space is low or worktrees need cleanup; do NOT use for project structure issues (use /organize instead)."
+    },
+    {
+      "name": "improve",
+      "keywords": [
+        "improve",
+        "improvement loop",
+        "quality loop",
+        "rubric",
+        "score against",
+        "run improvement",
+        "improve citadel"
+      ],
+      "description": "Autonomous quality improvement loop. Scores a target against a rubric, selects the highest-leverage axis, attacks it, verifies, documents, and loops. No pre-planning between iterations — each loop re-scores from scratch."
+    },
+    {
+      "name": "infra-audit",
+      "keywords": [
+        "infra",
+        "infrastructure",
+        "what databases",
+        "what systems",
+        "docker-compose",
+        "infra audit",
+        "map infrastructure",
+        "what does this connect to"
+      ],
+      "description": "Reads docker-compose, env files, ORM configs, and connection strings to map current infrastructure. Flags missing layers (cache, queue, analytics) based on observed access patterns. Outputs a structured infrastructure manifest."
+    },
+    {
+      "name": "learn",
+      "keywords": [
+        "learn",
+        "extract patterns",
+        "learn from that",
+        "save what worked",
+        "patterns from campaign"
+      ],
+      "description": "Knowledge compiler. Extracts patterns, decisions, and anti-patterns from completed campaigns and evolve cycles, then compiles them into structured wiki pages that integrate with existing knowledge rather than appending isolated files. Implements flush→compile→lint pipeline. Auto-triggered by /postmortem and /evolve Phase 6."
+    },
+    {
+      "name": "live-preview",
+      "keywords": [
+        "preview",
+        "screenshot",
+        "visual check",
+        "does it render"
+      ],
+      "description": "Mid-build visual verification loop. Takes screenshots of components during construction, not just after. Catches visual regressions and invisible features before they compound. Requires Playwright or similar screenshot tool."
+    },
+    {
+      "name": "loop",
+      "keywords": [
+        "loop",
+        "repeat until",
+        "until tests pass",
+        "until lint passes",
+        "max attempts",
+        "retry until"
+      ],
+      "description": "Bounded foreground repetition for the current session. Creates a loop contract, runs or coordinates an action plus verifier up to a declared attempt limit, and records evidence under .planning/loops/. Use for repeat-until-pass work that is too small for daemon and not time-based scheduling."
+    },
+    {
+      "name": "map",
+      "keywords": [
+        "map",
+        "index codebase",
+        "codebase map",
+        "structural index",
+        "scan codebase",
+        "map stats",
+        "map query"
+      ],
+      "description": "Structural codebase index generator. Builds a compact JSON map of files, exports, imports, dependency graph, and roles. Queryable by keyword. Injected into fleet agents as context slices to reduce token usage on code navigation."
+    },
+    {
+      "name": "marshal",
+      "keywords": [
+        "orchestrate",
+        "chain skills",
+        "multi-step"
+      ],
+      "description": "Meta-orchestrator that takes any direction — broad, specific, or vague — and autonomously chains skills and context into actionable work. Gathers context from codebase, docs, and memory. Only asks the user when it genuinely cannot proceed. Single-session orchestrator."
+    },
+    {
+      "name": "merge-review",
+      "keywords": [
+        "merge review",
+        "check merges",
+        "any conflicts",
+        "fleet conflicts",
+        "pending branches",
+        "safe to merge"
+      ],
+      "description": "Reviews pending fleet worktree merges before they're accepted. Reads the merge-check queue, detects file-level conflicts between branches, proposes a safe merge order, and surfaces reconciliation plans for overlapping changes."
+    },
+    {
+      "name": "organize",
+      "keywords": [
+        "organize",
+        "directory structure",
+        "folder structure",
+        "project structure",
+        "file organization",
+        "organize directories",
+        "organize files",
+        "cleanup directories",
+        "directory convention",
+        "where should this go",
+        "messy project",
+        "project health",
+        "bloat"
+      ],
+      "description": "Three-pass project health scan: architectural compliance (are source files in the right layers?), filesystem hygiene (loose files, misplaced assets, stale artifacts), and bloat detection (oversized files, binaries in git, compressible assets). Reports composite score. Also manages enforceable directory manifests and dynamic directory lifecycle."
+    },
+    {
+      "name": "postmortem",
+      "keywords": [
+        "postmortem",
+        "retro",
+        "what broke",
+        "what happened",
+        "debrief"
+      ],
+      "description": "Auto-generates a structured postmortem from a completed campaign. Reads the campaign file, telemetry logs, and feature ledger. Produces a documented analysis of what broke, what the safety systems caught, and what patterns emerged. Can also be invoked manually for any incident."
+    },
+    {
+      "name": "pr-watch",
+      "keywords": [
+        "watch pr",
+        "watch ci",
+        "monitor pr",
+        "fix ci",
+        "ci failing",
+        "pr failing",
+        "auto-fix",
+        "auto fix pr",
+        "pr is red",
+        "checks failing"
+      ],
+      "description": "Local PR watcher. Monitors CI status, automatically fixes failing checks by reading failure logs and applying targeted fixes, then optionally merges when all checks pass. Local CLI analog to Claude Code's cloud auto-fix feature."
+    },
+    {
+      "name": "prd",
+      "keywords": [
+        "prd",
+        "requirements",
+        "spec",
+        "plan an app",
+        "design an app"
+      ],
+      "description": "Generates a Product Requirements Document from a natural language app description. Asks clarifying questions, researches similar apps, defines scope, stack, architecture, and produces a structured PRD that Archon can decompose into a campaign."
+    },
+    {
+      "name": "qa",
+      "keywords": [
+        "qa",
+        "test the app",
+        "click through",
+        "does it work",
+        "browser test"
+      ],
+      "description": "Browser-based QA verification. Launches a real browser, navigates the app, clicks buttons, fills forms, and tests user flows. Works as a standalone skill or as a phase end condition in campaigns. Requires Playwright (optional dependency, graceful skip if not installed)."
+    },
+    {
+      "name": "refactor",
+      "keywords": [
+        "refactor",
+        "rename",
+        "extract",
+        "inline",
+        "move file",
+        "split file",
+        "merge files"
+      ],
+      "description": "Safe multi-file refactoring with automatic rollback. Establishes a type/test baseline, plans all changes, executes file-by-file, and verifies zero regressions. Reverts if verification fails after two fix attempts. Handles renames, extracts, moves, splits, merges, and inlines."
+    },
+    {
+      "name": "research",
+      "keywords": [
+        "research",
+        "investigate",
+        "look into",
+        "find out"
+      ],
+      "description": "Focused research investigations. Converts questions into structured findings with confidence levels and source citations. Does not make decisions — produces information that informs the next step."
+    },
+    {
+      "name": "research-fleet",
+      "keywords": [
+        "research fleet",
+        "parallel research",
+        "multi-angle research",
+        "compare options"
+      ],
+      "description": "Parallel research using Fleet wave mechanics. Spawns multiple scout agents, each investigating a different angle of the same question. Findings are compressed between waves. Produces a unified research brief from multiple independent perspectives."
+    },
+    {
+      "name": "review",
+      "keywords": [
+        "/review",
+        "code review",
+        "review this",
+        "review PR",
+        "review"
+      ],
+      "description": "5-pass structured code review — correctness, security, performance, readability, consistency"
+    },
+    {
+      "name": "scaffold",
+      "keywords": [
+        "scaffold",
+        "generate component",
+        "generate module",
+        "generate service",
+        "new component",
+        "new module",
+        "new route",
+        "new service",
+        "create component",
+        "stub out",
+        "bootstrap"
+      ],
+      "description": "Project-aware file generation. Reads existing codebase conventions (naming, structure, imports, exports, test patterns) then generates new files that match exactly. Wires generated files into the project's registration points."
+    },
+    {
+      "name": "schedule",
+      "keywords": [
+        "schedule",
+        "recurring",
+        "every N minutes",
+        "cron",
+        "set a reminder",
+        "run periodically"
+      ],
+      "description": "Manages recurring and one-off scheduled tasks. Session-scoped scheduling via CronCreate/CronDelete/CronList. Documents the cloud path for tasks that need to survive machine sleep or network drops."
+    },
+    {
+      "name": "session-handoff",
+      "keywords": [
+        "handoff",
+        "session summary"
+      ],
+      "description": "Synthesizes the current session into a structured HANDOFF block for context transfer between sessions. Captures what was built, decisions made, and unresolved items."
+    },
+    {
+      "name": "setup",
+      "keywords": [
+        "setup",
+        "first run",
+        "configure harness",
+        "install citadel",
+        "getting started"
+      ],
+      "description": "First-run experience for the harness. Three modes: Recommended (guided, ~3 min), Full Tour (guided + skill walkthrough, ~8 min), and Express (zero questions, ~30 sec). Installs hooks first, detects stack, configures harness.json, runs a live demo on real code, and prints a reference card."
+    },
+    {
+      "name": "systematic-debugging",
+      "keywords": [
+        "debug",
+        "root cause",
+        "diagnose",
+        "why is",
+        "investigate bug"
+      ],
+      "description": "4-phase root cause analysis: observe, hypothesize, verify, fix. Enforces investigation before any code changes. Emergency stop after 2 failed fixes. Prevents shotgun debugging and fix cascades."
+    },
+    {
+      "name": "telemetry",
+      "keywords": [
+        "telemetry",
+        "what did this cost",
+        "session cost",
+        "how much did that cost",
+        "how much have I spent",
+        "what hooks fired",
+        "trust level",
+        "show me telemetry",
+        "spending",
+        "session stats",
+        "what telemetry",
+        "verify audit",
+        "audit integrity",
+        "check audit",
+        "tampered records"
+      ],
+      "description": "Unified telemetry hub. Shows current session cost, today's spend, all-time totals, hook activity, trust level, and a directory of every telemetry command available. Also the control surface to toggle telemetry on/off and tune thresholds. Single entry point for anyone asking \"what does this cost\" or \"what telemetry does Citadel have\"."
+    },
+    {
+      "name": "test-gen",
+      "keywords": [
+        "/test-gen",
+        "generate tests",
+        "write tests",
+        "add tests",
+        "test"
+      ],
+      "description": "Generate and verify tests — happy path, edge cases, error paths — using the project's own framework and patterns"
+    },
+    {
+      "name": "triage",
+      "keywords": [
+        "triage",
+        "open issues",
+        "unlabeled issues",
+        "review pr",
+        "review prs",
+        "investigate issue"
+      ],
+      "description": "GitHub issue and PR investigator. Pulls open issues/PRs, classifies them, searches the codebase for root cause or reviews contributed code, proposes fixes with file:line references, and optionally implements fixes. Use for investigating GitHub issues and reviewing PRs; do NOT use for general code review unrelated to GitHub issues."
+    },
+    {
+      "name": "unharness",
+      "keywords": [
+        "unharness",
+        "remove citadel",
+        "uninstall citadel",
+        "clean up citadel",
+        "remove harness",
+        "uninstall harness"
+      ],
+      "description": "Remove Citadel from a project. Exports valuable state (campaigns, postmortems, research, backlog, discoveries) to docs/citadel/ as human-readable markdown, then removes all harness files and hooks. The archive is detected by /do setup on re-install and offered for restore."
+    },
+    {
+      "name": "verify",
+      "keywords": [
+        "verify",
+        "verify hooks",
+        "hook health",
+        "self-test",
+        "check hooks",
+        "harness health"
+      ],
+      "description": "Self-test the Citadel hook pipeline from within a live session. Exercises real tool calls (Write, Edit, Bash, Read) and checks that hooks fired, telemetry accumulated, and no errors occurred. Reports HOOK HEALTH: PASS or HOOK HEALTH: FAIL with a per-hook breakdown."
+    },
+    {
+      "name": "watch",
+      "keywords": [
+        "watch",
+        "watch files",
+        "watch changes",
+        "file sentinel",
+        "monitor files",
+        "watch start",
+        "watch stop",
+        "watch scan",
+        "marker comments",
+        "@citadel"
+      ],
+      "description": "File sentinel that monitors the working directory for changes and marker comments, then auto-triggers appropriate skills. Poll-based via git diff against the last scan commit. Writes intake items for batch processing and routes marker actions through /do. Use for automatic reactions to file changes; do NOT use for one-off inspection or tasks needing human judgment per file."
+    },
+    {
+      "name": "wiki",
+      "keywords": [
+        "wiki",
+        "knowledge base",
+        "llm wiki",
+        "project wiki",
+        "build a wiki",
+        "maintain knowledge",
+        "knowledge management",
+        "llm-wiki",
+        "karpathy wiki"
+      ],
+      "description": "Markdown-first knowledge base where the LLM acts as librarian. Ingests raw sources, compiles and interlinks topic files, self-maintains an index. No vector DB or embeddings required -- uses LLM-native navigation over structured markdown up to ~400K words."
+    },
+    {
+      "name": "workspace",
+      "keywords": [
+        "workspace",
+        "multi-repo",
+        "cross-repo",
+        "across repos",
+        "multiple repos",
+        "coordinate repos",
+        "add redis and snowflake",
+        "split into repos"
+      ],
+      "description": "Multi-repo campaign coordinator. Same lifecycle as fleet -- scope claims, discovery relay, wave-based execution -- but the unit of work is a repo, not a file. Coordinates campaigns across repositories with shared context."
+    }
+  ]
+}

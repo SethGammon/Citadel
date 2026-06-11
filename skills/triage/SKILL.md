@@ -7,6 +7,13 @@ description: >-
   reviewing PRs; do NOT use for general code review unrelated to GitHub issues.
 user-invocable: true
 auto-trigger: false
+trigger_keywords:
+  - triage
+  - open issues
+  - unlabeled issues
+  - review pr
+  - review prs
+  - investigate issue
 effort: high
 last-updated: 2026-03-24
 ---
