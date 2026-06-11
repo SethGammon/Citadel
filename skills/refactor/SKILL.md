@@ -33,6 +33,8 @@ Use `/refactor` when you need to:
 
 **Don't use when:** debugging a specific bug (use /systematic-debugging); adding new features (use /marshal or /scaffold); deleting dead code (use /marshal for a targeted cleanup).
 
+**Boundary with /organize:** /refactor changes code structure within files (extract, inline, split, merge, rename) and moves files as part of those operations. Repository-wide file/directory placement, naming sweeps, and where-does-this-belong decisions are /organize.
+
 **Behavior does not change.** Tests pass before and after, no new type errors — the refactoring is correct.
 
 ## Commands

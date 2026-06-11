@@ -123,29 +123,12 @@ $GH pr list --repo <owner/repo> --state open --json number,title,author,createdA
 
 #### PR Resolution
 
-```markdown
-## PR #<N>: <title>
-
-**Author:** <username>
-**Type:** bugfix | feature | refactor | docs | infra
-**Files changed:** <count>
-**Mergeable:** yes | no
-
-### What it does
-<1-3 sentences>
-
-### Review findings
-- <finding with file:line reference>
-
-### Issues found
-- **Critical:** <blocks merge>
-- **Non-critical:** <nice to fix but not blocking>
-
-### Recommendation
-- [ ] Approve
-- [ ] Request changes: <specific changes needed>
-- [ ] Close: <reason>
-```
+Write a per-PR resolution block (full template: docs/TRIAGE.md#pr-resolution-template) with:
+- Author, type, files changed count, mergeable status
+- What it does (1-3 sentences)
+- Review findings, each with a file:line reference
+- Issues found, split into **Critical** (blocks merge) and **Non-critical** (nice to fix, not blocking)
+- Recommendation checkbox: Approve / Request changes (with the specific changes needed) / Close (with reason)
 
 #### PR Actions
 
@@ -213,34 +196,13 @@ Set up conditions, run the failing command, confirm error matches, verify propos
 
 ### Phase 4 — Resolution Plan
 
-```markdown
-## Issue #<N>: <title>
-
-**Type:** bug | feature | question | docs | infra
-**Severity:** critical | high | medium | low
-**Component:** <affected directory/file>
-**Reproducible:** yes | no | not-attempted
-
-### Root Cause
-<1-3 sentences explaining WHY>
-
-### Affected Code
-- `<file>:<line>` — <what's wrong here>
-
-### Proposed Fix
-<Specific code changes with file:line references>
-
-### Impact
-- Who is affected: <scope>
-- Workaround exists: yes/no
-- Breaking change: yes/no
-
-### Recommended Action
-- [ ] Fix in next release
-- [ ] Needs more info from reporter
-- [ ] Won't fix — <reason>
-- [ ] Duplicate of #<N>
-```
+Write a per-issue resolution plan (full template: docs/TRIAGE.md#issue-resolution-plan-template) with:
+- Type, severity, component, reproducible (yes / no / not-attempted)
+- Root cause: 1-3 sentences explaining WHY
+- Affected code: `<file>:<line>` entries with what is wrong at each
+- Proposed fix: specific code changes with file:line references
+- Impact: who is affected, whether a workaround exists, whether it is a breaking change
+- Recommended action checkbox: Fix in next release / Needs more info from reporter / Won't fix (with reason) / Duplicate of #N
 
 ### Phase 5 — Action
 
@@ -260,13 +222,7 @@ Steps:
 
 ### Phase 6 — Report
 
-```
-## Triage Summary
-
-| # | Title | Type | Severity | Action | Status |
-|---|-------|------|----------|--------|--------|
-| 10 | Cannot find module | bug | high | Auto-fixed → PR #11 | Done |
-```
+Output a Triage Summary table with columns `# | Title | Type | Severity | Action | Status`, one row per triaged item (example: docs/TRIAGE.md#triage-summary-example).
 
 ## Label Taxonomy
 

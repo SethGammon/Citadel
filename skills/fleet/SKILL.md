@@ -45,163 +45,54 @@ Use for 3+ independent work streams that can run simultaneously in isolated work
 2. Check `.planning/campaigns/` for active campaigns
 3. Check `.planning/coordination/claims/` for external claims
 4. Determine input mode: directed, spec-driven, continuing, or undirected
-5. **Load prior session context**: If `.planning/momentum.json` exists, run
-   ```bash
-   node .citadel/scripts/momentum-read.cjs
-   ```
-   and read the output. Use the active scopes and recurring decisions to inform
-   work queue prioritization. Skip silently if the file is absent or output is empty.
+5. **Load prior session context**: if `.planning/momentum.json` exists, run `node .citadel/scripts/momentum-read.cjs` and use the active scopes and recurring decisions to inform work queue prioritization. Skip silently if the file is absent or output is empty.
 
-> **Wave context restoration:** Use the Claude Code Compaction API to restore fleet
-> session context at the start of each session. Do NOT read `.claude/compact-state.json`
-> — that pattern is deprecated in favour of server-side compaction (available on Opus 4.6+).
-> Fleet session files (`.planning/fleet/session-{slug}.md`) remain the source of truth
-> for inter-wave discovery relay; compaction handles agent memory, not campaign state.
-> If the Compaction API is unavailable, fall back to reading the fleet session file's
-> Continuation State directly.
+> **Wave context restoration:** Use the Claude Code Compaction API to restore fleet session context. Do NOT read `.claude/compact-state.json` — deprecated in favour of server-side compaction (available on Opus 4.6+). Fleet session files (`.planning/fleet/session-{slug}.md`) remain the source of truth for inter-wave discovery relay; compaction handles agent memory, not campaign state. If the Compaction API is unavailable, read the fleet session file's Continuation State directly.
 
 ### Step 1b: LOG SESSION START + START WATCHER
 
-```bash
-node .citadel/scripts/telemetry-log.cjs --event campaign-start --agent fleet --session {session-slug}
-node .citadel/scripts/momentum-watch-start.cjs
-```
-
-The watcher runs in the background and re-synthesizes `momentum.json` within 500ms of any new discovery write. Safe to call if already running — only one watcher runs per project.
+Run `node .citadel/scripts/telemetry-log.cjs --event campaign-start --agent fleet --session {session-slug}`, then `node .citadel/scripts/momentum-watch-start.cjs`. The watcher runs in the background and re-synthesizes `momentum.json` within 500ms of any new discovery write. Safe to call if already running — one watcher per project.
 
 ### Step 2: WORK QUEUE
 
-Produce a ranked list of campaigns with:
-
-| Column | Purpose |
-|---|---|
-| Campaign name | What this stream does |
-| Scope | Which directories it touches |
-| Dependencies | What must complete before this can start |
-| Wave | Which wave to assign it to |
-| Agent type | What kind of agent to spawn |
-
-**Rules for work queue:**
-- Independent items go in Wave 1
-- Items that depend on Wave 1 results go in Wave 2
+Produce a ranked list of campaigns with columns: Campaign name, Scope (directories touched), Dependencies, Wave, Agent type. Rules:
+- Independent items go in Wave 1; items that depend on Wave 1 results go in Wave 2
 - Maximum 3 agents per wave (conservative default)
 - Scope must NOT overlap between agents in the same wave
-- After writing or changing a session queue, run
-  `node scripts/fleet-steward.js --session .planning/fleet/session-{slug}.md`
-  and use its `READY TO RUN`, `BLOCKED`, `MERGE NEXT`, `MERGE BLOCKED`, and
-  `SCOPE CONFLICTS` sections as the operational DAG.
-- If the steward reports `READINESS BLOCKED`, do not spawn that task in a
-  high-autonomy wave unless a human verified the worktree and you pass
-  `--override-readiness` intentionally.
+- After writing or changing a session queue, run `node scripts/fleet-steward.js --session .planning/fleet/session-{slug}.md` and use its `READY TO RUN`, `BLOCKED`, `MERGE NEXT`, `MERGE BLOCKED`, and `SCOPE CONFLICTS` sections as the operational DAG.
+- If the steward reports `READINESS BLOCKED`, do not spawn that task in a high-autonomy wave unless a human verified the worktree and you pass `--override-readiness` intentionally.
 
 ### Step 3: WAVE EXECUTION
 
 For each wave:
 
 1. **Prepare context** for each agent:
-   - CLAUDE.md content
-   - `.claude/agent-context/rules-summary.md`
-   - **Map slice** (if `.planning/map/index.json` exists): run
-     `node scripts/map-index.js --slice "<agent's scope keywords>" --max-files 15`
-     and inject the generated `=== MAP SLICE ===` block. If the index does
-     not exist, skip silently.
-   - **Prior session context** (all waves): re-read `momentum.json` fresh at each
-     wave boundary via `node .citadel/scripts/momentum-read.cjs` and inject as a
-     `=== PRIOR SESSION CONTEXT ===` block. Re-reading (rather than reusing the
-     Step 1 snapshot) picks up discoveries written by parallel Fleet sessions in
-     other terminals. If the output is empty, skip silently.
-   - Campaign-specific direction and scope
-   - Discovery briefs from previous waves (if any)
-   - Sandbox provider status when an agent has a known worktree:
-     `node scripts/sandbox-provider.js status --provider worktree --worktree {path}`
-
-2. **Log wave start**:
-   ```bash
-   node .citadel/scripts/telemetry-log.cjs --event wave-start --agent fleet --session {session-slug} --meta '{"wave":N,"agents":["name1","name2"]}'
-   ```
-
-3. **Spawn agents** with `isolation: "worktree"`:
-   ```
-   Agent(
-     prompt: "{full context + direction}",
-     isolation: "worktree",
-     mode: "bypassPermissions"
-   )
-   ```
-
+   - CLAUDE.md content and `.claude/agent-context/rules-summary.md`
+   - **Map slice** (if `.planning/map/index.json` exists): run `node scripts/map-index.js --slice "<agent's scope keywords>" --max-files 15` and inject the `=== MAP SLICE ===` block; skip silently if no index
+   - **Prior session context** (all waves): re-read momentum fresh at each wave boundary via `node .citadel/scripts/momentum-read.cjs` and inject as a `=== PRIOR SESSION CONTEXT ===` block — a fresh read picks up discoveries from parallel Fleet sessions in other terminals; skip silently if empty
+   - Campaign-specific direction and scope, plus discovery briefs from previous waves
+   - Sandbox provider status when an agent has a known worktree: `node scripts/sandbox-provider.js status --provider worktree --worktree {path}`
+   - Which `.planning/` paths the agent may write and the merge strategy for each (see Shared State Merge Strategies)
+2. **Log wave start**: `node .citadel/scripts/telemetry-log.cjs --event wave-start --agent fleet --session {session-slug} --meta '{"wave":N,"agents":["name1","name2"]}'`
+3. **Spawn agents** with `isolation: "worktree"`, `mode: "bypassPermissions"`, prompt = full context + direction
 4. **Collect results** from all agents in the wave
-
-4.5. **Validate wave results** — spawn one Phase Validator per agent in parallel
-   (validators are Haiku, read-only, effort: low):
-   ```
-   Agent(
-     subagent_type: "citadel:phase-validator",
-     prompt: "Campaign: {session-slug}. Wave {N} agent: {agent-name}.
-              Exit conditions: {agent's scope goal and any stated conditions}.
-              HANDOFF: {agent's full handoff text}",
-     effort: "low"
-   )
-   ```
-   Collect all validator verdicts. For each agent:
-   - **`verdict: "pass"`**: mark agent `validated` in session file. Proceed.
-   - **`verdict: "fail"`**: check retry counter for this agent (max 2 retries in fleet;
-     single-session so lower budget than Archon's 3):
-     - **Retries remain**: re-spawn the failed agent in a new worktree with the
-       validator's `conditions_failed` and `suggestions` appended to its prompt.
-       Collect its result and re-validate. Decrement counter.
-     - **Retries exhausted**: mark agent `partial` in session file. Log
-       `validator_halt: {agent-name} wave {N} — {conditions_failed}`. Continue.
+4.5. **Validate wave results** — spawn one Phase Validator per agent (subagent_type `citadel:phase-validator`, Haiku, read-only, effort: low), all in a single parallel batch — never sequentially. Validator prompt: campaign slug, wave, agent name, exit conditions (the agent's scope goal and any stated conditions), and the agent's full HANDOFF text. For each verdict:
+   - **`pass`**: mark agent `validated` in session file. Proceed.
+   - **`fail`**: check the retry counter for this agent (max 2 retries in fleet; single-session so lower budget than Archon's 3):
+     - **Retries remain**: re-spawn the failed agent in a new worktree with the validator's `conditions_failed` and `suggestions` appended to its prompt. Collect, re-validate, decrement counter.
+     - **Retries exhausted**: mark agent `partial` in session file. Log `validator_halt: {agent-name} wave {N} — {conditions_failed}`. Continue.
    - **Validator timeout or unparseable output**: treat as pass with warning. Log. Advance.
-
-   Run all validators for the wave in a single parallel batch — do not validate
-   sequentially. The cost is proportional to the wave size, not multiplicative.
-
-4.75. **Validate task exit evidence** if the Fleet session file has an
-   `## Exit Evidence` table:
-   ```bash
-   node scripts/evidence-validate.js --file .planning/fleet/session-{slug}.md --target task:{id}
-   ```
-   Failed required evidence creates a repair task or blocks advancement based on
-   its retries remaining.
-
-5. **Log per-agent results**:
-   ```bash
-   node .citadel/scripts/telemetry-log.cjs --event agent-complete --agent {agent-name} --session {session-slug} --status {success|partial|failed}
-   ```
-
-6. **Compress discoveries** for each agent:
-   - Extract HANDOFF blocks
-   - Run `node .citadel/scripts/compress-discovery.cjs` on each output
-   - Write compressed briefs to `.planning/fleet/briefs/`
-
-6b. **Write persistent discovery records** for each agent (cross-session memory):
-   ```bash
-   node .citadel/scripts/discovery-write.cjs \
-     --session {session-slug} \
-     --agent {agent-name} \
-     --wave {wave-number} \
-     --status {success|partial|failed} \
-     --scope "{comma-separated-scope-dirs}" \
-     --handoff "{json-array-of-handoff-items}" \
-     --decisions "{json-array-of-decisions}" \
-     --files "{json-array-of-files-touched}" \
-     --failures "{json-array-of-failures}"
-   ```
-
-7. **Log wave complete**:
-   ```bash
-   node .citadel/scripts/telemetry-log.cjs --event wave-complete --agent fleet --session {session-slug} --meta '{"wave":N,"status":"complete"}'
-   ```
-
+4.75. **Validate task exit evidence** if the Fleet session file has an `## Exit Evidence` table: `node scripts/evidence-validate.js --file .planning/fleet/session-{slug}.md --target task:{id}`. Failed required evidence creates a repair task or blocks advancement based on its retries remaining.
+5. **Log per-agent results**: `node .citadel/scripts/telemetry-log.cjs --event agent-complete --agent {agent-name} --session {session-slug} --status {success|partial|failed}`
+6. **Compress discoveries**: extract HANDOFF blocks, run `node .citadel/scripts/compress-discovery.cjs` on each output, write compressed briefs to `.planning/fleet/briefs/`
+6b. **Write persistent discovery records** per agent (cross-session memory): `node .citadel/scripts/discovery-write.cjs --session {session-slug} --agent {agent-name} --wave {N} --status {success|partial|failed} --scope "{comma-separated-scope-dirs}" --handoff "{json-array}" --decisions "{json-array}" --files "{json-array}" --failures "{json-array}"`
+7. **Log wave complete**: `node .citadel/scripts/telemetry-log.cjs --event wave-complete --agent fleet --session {session-slug} --meta '{"wave":N,"status":"complete"}'`
 8. **Merge branches** from worktrees:
-   - Run `node scripts/fleet-steward.js --session .planning/fleet/session-{slug}.md`
-   - Merge only tasks listed under `MERGE NEXT`
-   - Review changes from each agent
-   - If clean merge: merge the branch
+   - Run the fleet steward (command above); merge only tasks listed under `MERGE NEXT`
+   - Review changes from each agent; if clean, merge the branch
    - If conflicts: record in session file, then decide:
      - **Resolve if:** the conflict is < 20 lines and affects only formatting or naming
      - **Skip if:** the conflict involves competing logic changes; keep the higher-delta worktree result and log the discarded changes in session file
-
 9. **Update session file** with wave results and accumulated discoveries
 
 ### Step 5: COMPLETION
@@ -209,23 +100,11 @@ For each wave:
 After all waves:
 
 1. Run typecheck on the full project via `node scripts/run-with-timeout.js 300 <typecheck-cmd>`
-2. Run tests if configured (also use the timeout wrapper). If tests fail after wave completion: apply the same error ladder as the main protocol — 1-2 failures: fix before merging; 3-4 failures: attempt fixes, continue if resolved; 5+ failures: halt the wave merge for that worktree and log `wave_test_fail: true` in the session file.
+2. Run tests if configured (also use the timeout wrapper). If tests fail after wave completion, apply the error ladder: 1-2 failures — fix before merging; 3-4 — attempt fixes, continue if resolved; 5+ — halt the wave merge for that worktree and log `wave_test_fail: true` in the session file.
 3. Update session file status to `completed`
-4. Log session completion:
-   ```bash
-   node .citadel/scripts/telemetry-log.cjs --event campaign-complete --agent fleet --session {session-slug}
-   ```
-5. **Update momentum** (cross-session synthesis):
-   ```bash
-   node .citadel/scripts/momentum-synthesize.cjs
-   ```
-5.5. **Propagate knowledge** — for each campaign that completed this session, run:
-   ```bash
-   npm run propagate -- --campaign {slug}
-   ```
-   Run once per completed campaign slug (not per wave). If multiple campaigns
-   completed, run for each slug. If `npm run propagate` is unavailable, note each
-   slug in the fleet session file under `## Pending Propagation`.
+4. Log: `node .citadel/scripts/telemetry-log.cjs --event campaign-complete --agent fleet --session {session-slug}`
+5. **Update momentum** (cross-session synthesis): `node .citadel/scripts/momentum-synthesize.cjs`
+5.5. **Propagate knowledge**: run `npm run propagate -- --campaign {slug}` once per campaign that completed this session (not per wave). If `npm run propagate` is unavailable, note each slug in the fleet session file under `## Pending Propagation`.
 6. Output final HANDOFF
 
 ## Fleet Session File Format
@@ -258,29 +137,16 @@ Next wave: N  Blocked items: ...  Auto-continue: true
 
 ## Scope Overlap Prevention
 
-Before assigning agents to a wave:
+Before assigning agents to a wave, compare all agent scopes pairwise (a directory scope covers every file inside it):
 
-1. List all scope directories for each agent
-2. Check for parent/child overlaps:
-   - `src/api/` and `src/api/auth/` OVERLAP (parent/child)
-   - `src/api/` and `src/ui/` do NOT overlap (siblings)
-3. `(read-only)` scopes never conflict
-4. If overlap: move one agent to a later wave
-
-Also check `.planning/coordination/claims/` for external claims.
+- `src/api/` and `src/api/auth/` OVERLAP (parent/child); `src/api/` and `src/ui/` do NOT (siblings)
+- `(read-only)` scopes never conflict
+- On overlap: merge tasks, narrow scopes, or move one agent to a later wave. **NEVER proceed with overlapping scopes.**
+- Also check `.planning/coordination/claims/` for external claims
 
 ## Budget Management
 
-**Effort hints for wave agents** (use the `effort` parameter, not `budget_tokens`):
-
-| Agent Type | Effort | ~Tokens |
-|---|---|---|
-| Fleet scouts (research, mapping, audit) | `medium` | ~100K each |
-| Execution agents (build, refactor, implement) | `high` | ~250K each |
-| Verify agents (typecheck, visual-verify, QA) | `low` | ~60K each |
-
-The `effort` parameter is GA as of April 2026 and produces ~20–40% token reduction
-compared to manually tuned `budget_tokens` values. Always prefer `effort` for new wave definitions.
+Use the `effort` parameter for wave agents, not `budget_tokens` (rationale: docs/FLEET.md#budget): scouts (research, mapping, audit) `medium` ~100K; execution agents (build, refactor, implement) `high` ~250K; verify agents (typecheck, visual-verify, QA) `low` ~60K.
 
 ## Quality Gates
 
@@ -293,104 +159,34 @@ compared to manually tuned `budget_tokens` values. Always prefer `effort` for ne
 
 ## Agent Timeouts
 
-Sub-agents can hang indefinitely on tool calls. Fleet must enforce execution time limits
-at the orchestrator level.
-
-### Default Timeouts
-
-| Agent Type | Default Timeout | Override Key |
-|---|---|---|
-| Skill-level agents | 10 minutes | `agentTimeouts.skill` |
-| Research scouts | 15 minutes | `agentTimeouts.research` |
-| Build agents | 30 minutes | `agentTimeouts.build` |
-
-Timeouts are configurable in `harness.json`:
-```json
-{
-  "agentTimeouts": {
-    "skill": 600000,
-    "research": 900000,
-    "build": 1800000
-  }
-}
-```
-
-### Timeout Protocol
+Sub-agents can hang indefinitely; Fleet enforces time limits at the orchestrator level. Read values from `harness.json` → `agentTimeouts.{skill|research|build}` (defaults: skill 10 min / research 15 min / build 30 min = 600000/900000/1800000 ms; config reference: docs/FLEET.md#agent-timeouts).
 
 On timeout: log `agent-timeout` event, extract partial HANDOFF if present, retry once with simplified prompt (Wave 1 critical scope only), skip otherwise. Never block the wave. Record `Status: timed out` in session file.
 
-Read timeout values from `harness.json` → `agentTimeouts.{skill|research|build}` (defaults: 600000/900000/1800000ms).
-
 ## Shared State Merge Strategies
 
-Parallel agents writing to the same `.planning/` directory can silently overwrite
-each other. Each shared resource has a declared merge strategy:
+Parallel agents writing to the same `.planning/` directory can silently overwrite each other. Strategies (full rules table: docs/FLEET.md#shared-state-merge-strategies):
 
-| Resource | Strategy | Rule |
-|---|---|---|
-| `.planning/discoveries/*.md` | append-only | Never overwrite an existing discovery file. Each agent writes its own uniquely-named file: `{agent-id}-{timestamp}.md`. |
-| `.planning/fleet/briefs/*.md` | append-only | Each agent writes its own brief. Fleet coordinator reads all of them. |
-| `.planning/fleet/session-{slug}.md` | lock-on-write | Only the Fleet coordinator updates the session file. Agents never write to it directly — they emit HANDOFFs that the coordinator reads and transcribes. |
-| `.planning/campaigns/{slug}.md` | lock-on-write | Only the owning Archon instance updates this file. Fleet agents that produce campaign-adjacent work report it in their HANDOFF and let Archon update. |
-| `.planning/telemetry/*.jsonl` | append-only | Append-only log. Multiple agents may append simultaneously — JSONL format guarantees each line is an atomic write. |
-| `.planning/wiki/_staging/*.jsonl` | append-only | Each agent writes a uniquely-named staging file. Compile step resolves all of them in order. No concurrent write conflicts possible. |
-| `.planning/coordination/claims/*.json` | lock-on-write | Each agent owns its own claim file (named by instance ID). No sharing; no conflicts. |
+- **append-only** — `.planning/discoveries/*.md`, `.planning/fleet/briefs/*.md`, `.planning/telemetry/*.jsonl`, `.planning/wiki/_staging/*.jsonl`: each agent writes its own uniquely-named file or appends atomic JSONL lines; never overwrite an existing file.
+- **lock-on-write** — `.planning/fleet/session-{slug}.md` (only the Fleet coordinator writes; agents emit HANDOFFs that the coordinator transcribes), `.planning/campaigns/{slug}.md` (only the owning Archon writes; fleet agents report campaign-adjacent work in their HANDOFF), `.planning/coordination/claims/*.json` (each agent owns its own claim file, named by instance ID).
 
-**Enforcement:** Before Step 3 (spawn agents), remind each agent in its context
-injection which paths it may write to and what the strategy is for each. Agents
-that attempt to modify lock-on-write resources they don't own must be blocked via
-scope claim verification.
+**Enforcement:** before Step 3 spawn, remind each agent in its context injection which paths it may write to and the strategy for each. Agents that attempt to modify lock-on-write resources they don't own must be blocked via scope claim verification.
 
 ## Consistency Voting (High-Stakes Decisions)
 
-For decisions that cannot easily be undone — campaign completion approval, campaign
-merge to main, fleet abort — spawn 3 judgment agents in parallel and require 2/3
-agreement before proceeding.
+For decisions that cannot easily be undone, spawn 3 Phase Validators in parallel with an identical vote prompt and require 2/3 agreement before proceeding.
 
-**When to vote:**
-- Proposing to mark a multi-wave fleet `completed` when any wave is `partial`
-- Merging an agent's branch when its phase validator returned a `fail` (even after retries)
-- Deciding to abort and discard work from a wave with mixed results
+**When to vote:** proposing to mark a multi-wave fleet `completed` while any wave is `partial`; merging an agent's branch after its phase validator returned `fail` (even after retries); deciding to abort and discard work from a wave with mixed results. Skip voting when the decision is clearly safe (all waves complete, all validators pass).
 
-**How to vote:**
-```
-Vote prompt: "Fleet session {slug}, Wave {N}. The proposed decision is: {decision}.
-             Evidence: {handoff summaries, validator results}. 
-             Should we proceed? Respond with JSON: {verdict: 'proceed'|'block', reason: '...'}"
-```
+**Vote prompt:** state the session slug, wave, proposed decision, and evidence (handoff summaries, validator results); ask for JSON `{verdict: 'proceed'|'block', reason}` (template: docs/FLEET.md#consistency-voting).
 
-Spawn 3 Phase Validators with the vote prompt. Collect results. Tally:
-- 3/3 proceed → proceed
-- 2/3 proceed → proceed, log the dissenting reason
-- 2/3 block → block, escalate to user with the reasons
-- 3/3 block → block
-
-If voting agents time out: count the timeout as a `proceed` vote (conservative — don't let validator failure park the fleet).
-
-Skip voting when the decision is clearly safe (all waves complete, all validators pass).
+**Tally:** 3/3 proceed → proceed; 2/3 proceed → proceed, log the dissenting reason; 2/3 block → block, escalate to user with the reasons; 3/3 block → block. A timed-out voter counts as `proceed` (conservative — don't let validator failure park the fleet).
 
 ## Coordination Safety
 
-### Instance ID Generation
+**Instance IDs:** every spawned agent gets a unique ID, format `fleet-{session-slug}-{wave}-{agent-index}` (e.g. `fleet-auth-refactor-w1-a3`). Write it to the agent's worktree as `.fleet-instance-id`, include it in all telemetry entries, and use it in coordination claims and dead instance recovery (details: docs/FLEET.md#instance-ids).
 
-Every agent spawned by Fleet must have a unique instance ID.
-
-Format: `fleet-{session-slug}-{wave}-{agent-index}`
-Example: `fleet-auth-refactor-w1-a3` (wave 1, agent 3)
-
-The instance ID is:
-- Written to the agent's worktree as `.fleet-instance-id`
-- Included in all telemetry log entries for this agent
-- Used in coordination claims to identify which agent owns which scope
-- Used in dead instance recovery to identify orphaned claims
-
-### Scope Overlap Detection
-
-Before spawning: compare all agent scopes pairwise (directory scopes overlap any file inside them). On overlap: merge tasks, narrow scopes, or sequence. **NEVER proceed with overlapping scopes.**
-
-### Dead Instance Recovery
-
-After each wave: read `.planning/coordination/claims/`, verify each instance is still alive (worktree exists + HANDOFF present). Release orphaned claims, return uncompleted scope to next wave's queue.
+**Dead instance recovery:** after each wave, read `.planning/coordination/claims/`, verify each instance is still alive (worktree exists + HANDOFF present). Release orphaned claims; return uncompleted scope to the next wave's queue.
 
 ## Fringe Cases
 
@@ -401,79 +197,22 @@ After each wave: read `.planning/coordination/claims/`, verify each instance is 
 - **Discovery compression script missing**: Write raw HANDOFF excerpts to the briefs directory instead.
 - **Phase validator times out or returns malformed output**: Treat as pass with warning. Log and advance. Never block a wave on validator failure.
 - **All agents in a wave fail validation and exhaust retries**: Mark the entire wave `partial`. Log `wave_validator_halt`. Escalate to the user before proceeding to the next wave — partial wave results may invalidate downstream wave assumptions.
-- **An agent fails validation or post-wave tests**: Run
-  `node scripts/fleet-steward.js --session .planning/fleet/session-{slug}.md --mark-failed {id} --reason "{reason}" --write`
-  to mark the row failed and add a repair task with inherited dependencies.
+- **An agent fails validation or post-wave tests**: Run `node scripts/fleet-steward.js --session .planning/fleet/session-{slug}.md --mark-failed {id} --reason "{reason}" --write` to mark the row failed and add a repair task with inherited dependencies.
 
 ## Speculative Mode
 
-`/fleet --speculative N [direction]`
+`/fleet --speculative N [direction]` — try N approaches to the same task simultaneously, each in its own worktree on branch `speculative/{session-slug}/{strategy-label}`. The user picks the winner; losers are archived, never deleted. (Depth and examples: docs/FLEET.md#speculative-mode.)
 
-Try N different approaches to the same task simultaneously. Each approach gets its own
-worktree and branch. When all finish, the user picks the winner; losers are archived (not deleted).
-
-### Step 1: Decompose into N strategies
-
-Before spawning, enumerate N distinct approaches. Each approach must:
-- Target the exact same files and end goal
-- Use a meaningfully different strategy (not just style variations)
-- Be feasible to complete in a single agent session
-
-### Step 2: Spawn N agents in parallel
-
-Each agent gets:
-- The common direction (same for all)
-- Its strategy description (different per agent)
-- Its own branch name: `speculative/{session-slug}/{strategy-label}`
-- Instruction to set `branch` and `worktree_status: active` in its campaign frontmatter
-
-Spawn with `isolation: "worktree"`. Scope overlap rules do NOT apply between speculative
-agents — they will all touch the same files intentionally.
-
-### Step 3: Collect and compare
-
-After all agents complete, for each:
-1. Read the HANDOFF
-2. Run typecheck on that worktree's branch via `node scripts/run-with-timeout.js 300 <typecheck-cmd>`
-3. Record in the session file: what was built, typecheck result, key decisions
-
-Present a comparison table to the user:
-
-| Strategy | Branch | Typecheck | Key Decision | Notable Tradeoffs |
-|----------|--------|-----------|--------------|-------------------|
-
-If ALL N approaches fail typecheck: present the comparison table with all entries marked `FAIL typecheck`. Ask the user to pick the least-broken approach or abort. Do not proceed to Step 4 without a user decision.
-
-### Step 4: Archive losers, merge winner
-
-When the user picks a winner:
-1. **Winner**: Update campaign frontmatter `worktree_status: merged`, proceed with normal merge
-2. **Losers**: Update campaign frontmatter `worktree_status: archived`. Do NOT delete branches.
-
-```bash
-# Optional: tag losers for clarity
-git tag archive/{loser-branch} {loser-branch}
-```
-
-Add `## Speculative Comparison` to session file: direction, N strategies, comparison table (strategy/branch/status/typecheck/notes), winner, merge timestamp.
+1. **Decompose into N strategies.** Each must target the exact same files and end goal, use a meaningfully different strategy (not style variations), and be feasible in a single agent session.
+2. **Spawn N agents in parallel** with `isolation: "worktree"`. Each gets the common direction, its own strategy description, its branch name, and the instruction to set `branch` and `worktree_status: active` in its campaign frontmatter. Scope overlap rules do NOT apply between speculative agents — they intentionally touch the same files.
+3. **Collect and compare.** For each agent: read the HANDOFF, run typecheck on its branch via `node scripts/run-with-timeout.js 300 <typecheck-cmd>`, record built/typecheck/decisions in the session file. Present a comparison table (Strategy | Branch | Typecheck | Key Decision | Notable Tradeoffs). If ALL N fail typecheck: present the table with all entries marked `FAIL typecheck` and ask the user to pick the least-broken approach or abort. Do not proceed to step 4 without a user decision.
+4. **Archive losers, merge winner.** Winner: set campaign frontmatter `worktree_status: merged`, proceed with normal merge. Losers: set `worktree_status: archived`; do NOT delete branches (optional tag: `git tag archive/{loser-branch} {loser-branch}`). Add `## Speculative Comparison` to the session file: direction, N strategies, comparison table, winner, merge timestamp.
 
 ## Quick Mode
 
 `/fleet --quick [task1]; [task2]; [task3]`
 
-### Differences from standard fleet
-
-| Property | Standard Fleet | Quick Mode |
-|---|---|---|
-| Min streams | 3 | 2 |
-| Min complexity | 4 | 3 |
-| Waves | Multi-wave with discovery relay | Single wave only |
-| Session file | Written to `.planning/fleet/` | Skipped — results reported inline |
-| Discovery briefs | Compressed to `.planning/fleet/briefs/` | Skipped |
-| Merge | Per-wave confirmation | Auto-merge if no conflicts |
-| Scope claim | Written to coordination/ | Skipped |
-
-### Protocol
+Differences from standard fleet: minimum 2 streams (not 3), minimum complexity 3 (not 4), single wave only, no session file (results reported inline), no discovery briefs, auto-merge if no conflicts, no scope claim. (Full comparison table and `/do` routing conditions: docs/FLEET.md#quick-mode.)
 
 1. Parse tasks from the `--quick` argument (semicolon-separated)
 2. Validate scope overlap — if any two tasks touch the same files, merge them or sequence them
@@ -482,28 +221,17 @@ Add `## Speculative Comparison` to session file: direction, N strategies, compar
 5. If merge conflict: surface to user, offer manual resolution
 6. Report results inline — no session file written unless the user asks
 
-### When /do routes here
-
-`/do` routes to `--quick` mode (not standard fleet) when:
-- Input contains "at the same time", "simultaneously", "in parallel", "both ... and"
-- Two or more clearly independent tasks are detected
-- Complexity is 3 (moderate), not 4+ (complex)
-- User chose "1" (yes once) or "2" (always) on the Fleet confirmation prompt
-
 Entry from `/do` confirmation prompt: user chose yes (1) or always (2). Preferences stored under `consent.fleetSpawn` in harness.json via `readConsent`/`writeConsent`.
 
 ## Teams Mode (experimental)
 
 `/fleet --teams [direction]`
 
-Pilot: swap the coordination spine to native Agent Teams primitives. Everything not
-listed below is unchanged from the classic protocol above. Depth (comparison table,
-rollout plan, risks): see `docs/FLEET.md`, Teams Mode section.
+Pilot: swap the coordination spine to native Agent Teams primitives. Everything not listed below is unchanged from the classic protocol above. Depth (comparison table, rollout plan, risks): see `docs/FLEET.md`, Teams Mode section.
 
 ### Precondition
 
-Both must hold: `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` present in the environment,
-AND the runtime is Claude Code. Otherwise print:
+Both must hold: `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` present in the environment, AND the runtime is Claude Code. Otherwise print:
 
 ```
 Teams mode unavailable: CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS not set or runtime is not Claude Code. Falling back to classic worktree mode.
@@ -521,15 +249,11 @@ and run the classic protocol unchanged.
 | Merge review | Unchanged (steward gates merges exactly as classic) |
 | Rebalancing | On teammate idle, the TeammateIdle hook appends to `.planning/fleet/rebalance.jsonl`; the lead reassigns the next unblocked scope via `SendMessage` |
 
-On any disagreement between messages and the mirror, reconcile from the mirror.
-Skip rebalance lines that lack a teammate identity, and skip rebalancing entirely
-when no scope is unblocked.
+On any disagreement between messages and the mirror, reconcile from the mirror. Skip rebalance lines that lack a teammate identity, and skip rebalancing entirely when no scope is unblocked.
 
 ### Classic mode progressive enhancement
 
-In classic mode, when native Task tools are available, the lead also mirrors each
-scope as a native task and updates its status at wave boundaries. `.planning` files
-stay canonical; native tasks are a visibility layer only.
+In classic mode, when native Task tools are available, the lead also mirrors each scope as a native task and updates its status at wave boundaries. `.planning` files stay canonical; native tasks are a visibility layer only.
 
 ## Contextual Gates
 

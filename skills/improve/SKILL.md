@@ -39,50 +39,13 @@ last-updated: 2026-03-28
 `target` is a slug that maps to `.planning/rubrics/{target}.md`.
 If no rubric exists, run Phase 0 first.
 
----
-
 ## Campaign Mode
 
-When invoked with `--n` or `--continue`, improve operates in **campaign mode** and
-maintains a campaign file that daemon can attach to.
+When invoked with `--n` or `--continue`, improve operates in **campaign mode** and maintains a campaign file that daemon can attach to.
 
-### Campaign file: `.planning/campaigns/improve-{target}.md`
-
-Created automatically on the first invocation with `--n`. Format:
-
-```markdown
----
-version: 1
-id: "improve-{target}-{ISO-date-slug}"
-status: active
-type: improve
-target: {target}
-total_loops: {n or "unlimited"}
-completed_loops: 0
-current_level: {rubric level from frontmatter}
-estimated_cost_per_loop: 12
-started: "{ISO timestamp}"
----
-
-# Campaign: Improve {target}
-
-Status: active
-Direction: Improve {target} for {n} loops at Level {level}
-
-## Loop History
-
-| Loop | Axis Attacked | Outcome | Score Movement |
-|------|---------------|---------|----------------|
-(populated after each loop)
-
-## Continuation State
-
-next_loop: 1
-last_scorecard_log: (none)
-last_outcome: (none)
-phase_within_loop: not-started
-level_up_triggered: false
-```
+**Campaign file:** `.planning/campaigns/improve-{target}.md`, created automatically on the first invocation with `--n` (full template: docs/QUALITY_LOOPS.md#campaign-file-template).
+Frontmatter: `version`, `id` (`improve-{target}-{ISO-date-slug}`), `status: active`, `type: improve`, `target`, `total_loops` ({n} or `unlimited`), `completed_loops: 0`, `current_level` (from rubric frontmatter), `estimated_cost_per_loop: 12`, `started`.
+Body: status and direction lines, a Loop History table (`Loop | Axis Attacked | Outcome | Score Movement`), and a Continuation State block (`next_loop`, `last_scorecard_log`, `last_outcome`, `phase_within_loop`, `level_up_triggered`).
 
 ### Campaign lifecycle
 
@@ -104,7 +67,7 @@ On loop complete: increment `completed_loops`, update `next_loop`/`last_scorecar
 Run only when `.planning/rubrics/{target}.md` does not exist.
 
 1. Read competitive research from `.planning/research/` if available
-2. Spawn `/research-fleet` to survey comparable products if no research exists
+2. Spawn `/research --parallel` to survey comparable products if no research exists
 3. Draft 8-14 axes organized into 3-5 categories, each with:
    - Weight (0.0–1.0), Category, three anchors (0/5/10), verification specs (programmatic/structural/perceptual), research inputs
 4. Present draft rubric to the user with rationale for each axis
@@ -113,8 +76,6 @@ Run only when `.planning/rubrics/{target}.md` does not exist.
    - If unavailable: ask as a plain text question and wait.
    - Record the answer in the campaign file as `rubric_approved: {answer}`.
 6. Write approved rubric to `.planning/rubrics/{target}.md`
-
----
 
 ### Phase 1: Score
 
@@ -126,20 +87,11 @@ Execute the programmatic verification steps from the rubric. A programmatic fail
 
 #### 1b. Structural analysis
 
-Execute structural checks from each axis's verification spec:
-- File path verification (do referenced files exist?)
-- Schema consistency (do all skills have identical frontmatter fields?)
-- Coverage ratios (what percentage of skills have benchmark scenarios?)
-- Link rot (do all internal doc links resolve?)
-- Cross-reference accuracy (do docs match current source?)
+Execute the structural checks from each axis's verification spec: file path existence, frontmatter schema consistency, benchmark coverage ratios, link rot, and cross-reference accuracy (check descriptions: docs/QUALITY_LOOPS.md#structural-check-types).
 
 #### 1c. Perceptual scoring panel (three independent evaluators)
 
-Spawn three evaluator agents in parallel. Each receives:
-- The rubric with all axis definitions and anchors
-- Read access to the target (repo files, demo page screenshots if applicable)
-- Their persona (A/B/C as defined in the rubric's Scoring Protocol)
-- Instruction: score every axis 0-10 with a one-sentence justification per axis
+Spawn three evaluator agents in parallel. Each receives the rubric with all axis definitions and anchors, read access to the target, its persona (A/B/C as defined in the rubric's Scoring Protocol), and the instruction to score every axis 0-10 with a one-sentence justification per axis (input list: docs/QUALITY_LOOPS.md#evaluator-panel).
 
 Each evaluator scores independently. For each axis:
 - Final score = minimum of the three evaluators (plus programmatic cap if applicable)
@@ -149,15 +101,8 @@ Each evaluator scores independently. For each axis:
 
 #### 1d. Compile scorecard
 
-```
-Axis        | A   | B   | C   | Prog      | Final | Delta  | Flag
-------------|-----|-----|-----|-----------|-------|--------|-----
-{axis_name} | {n} | {n} | {n} | PASS/FAIL | {n.n} | +{n.n} | cap
-```
-
+Compile a table with columns `Axis | A | B | C | Prog | Final | Delta | Flag` (layout: docs/QUALITY_LOOPS.md#scorecard-format).
 Final = min(A, B, C), then apply programmatic cap (sets Flag=cap). Delta = current − prior loop score (empty on loop 1).
-
----
 
 ### Phase 2: Select
 
@@ -180,50 +125,22 @@ Selected: {axis_name} (score: {n}/10, weight: {w}, effort: {e}, selection score:
 Rationale: {one sentence on why this axis now, not another}
 ```
 
----
-
 ### Phase 3: Attack
 
-Execute the improvement. Dispatch strategy depends on the axis category.
+Execute the improvement. Dispatch strategy depends on the axis category (expanded per-category playbooks: docs/QUALITY_LOOPS.md#attack-dispatch-strategies).
 
-**ISOLATION MANDATE:** When dispatching to `/experiment`, `/fleet`, or `/research-fleet`, always use the Agent tool with `isolation: "worktree"`. Sub-agents in worktrees get their own context windows; the orchestrator only receives their HANDOFF results.
+**ISOLATION MANDATE:** When dispatching to `/experiment`, `/fleet`, or `/research --parallel`, always use the Agent tool with `isolation: "worktree"`. Sub-agents in worktrees get their own context windows; the orchestrator only receives their HANDOFF results.
 
-**technical axes** (test_coverage, hook_reliability, api_surface_consistency):
-- Spawn `/experiment` for measurable improvements with before/after comparison
-- Use speculative worktrees for approaches that might conflict (Agent + isolation: "worktree")
-- Run `node scripts/run-with-timeout.js 300 node scripts/test-all.js` as the verification oracle
+| Category | Dispatch | Verification |
+|---|---|---|
+| technical | `/experiment` with before/after comparison; speculative worktrees (Agent + isolation: "worktree") for approaches that might conflict | `node scripts/run-with-timeout.js 300 node scripts/test-all.js` as the oracle |
+| documentation | direct: read current docs, fix specific gaps; cross-reference every claim against source | structural verification before committing |
+| experience | structural fixes + doc updates; run the actual install flow in a clean temp dir; inject synthetic failures per the programmatic spec | `/qa` |
+| positioning | `/research` to verify the competitive landscape is accurate, then update README/FAQ/demo copy | `/qa` confirms the updated page renders |
+| presentation | targeted changes per rubric anchors (no rewrites unless score is below 3) | `/live-preview` or `/qa` confirms visual changes render |
+| security | read the specific hooks/scripts involved, make targeted code changes | run the rubric's programmatic verification steps directly |
 
-**documentation axes** (documentation_coverage, documentation_accuracy):
-- Direct: read current docs, identify specific gaps or inaccuracies, rewrite them
-- For coverage gaps: draft new sections, get structural verification before committing
-- For accuracy gaps: cross-reference every claim against source, fix discrepancies
-
-**experience axes** (onboarding_friction, error_recovery, command_discoverability):
-- Combination: structural fixes (code, config) + documentation updates + /qa verification
-- For onboarding: run the actual install flow in a clean temp dir, fix what breaks
-- For error paths: inject synthetic failures per the programmatic spec, improve messages
-
-**positioning axes** (differentiation_clarity, competitive_feature_coverage):
-- Start with `/research` to verify current competitive landscape is accurate
-- Then update README, FAQ, or demo page copy; /qa to verify the updated page renders
-
-**presentation axes** (demo_page_effectiveness, readme_quality, visual_coherence):
-- Read current state, identify specific structural gaps per the rubric anchors
-- Make targeted changes (not rewrites unless the score is below 3)
-- `/live-preview` or `/qa` to verify visual changes render correctly
-
-**security axes** (security_posture):
-- Read the specific hooks/scripts involved
-- Make targeted code changes
-- Run the programmatic verification steps from the rubric directly to confirm fix
-
-#### Artifact archiving
-
-When the attack involves trying multiple approaches:
-- Write a decision record to the loop log: why the winner won
-- Format: `APPROACH COMPARISON: [approach A] vs [approach B] — winner: [A] because [reason]`
-
----
+**Artifact archiving:** when the attack tried multiple approaches, write a decision record to the loop log: `APPROACH COMPARISON: [approach A] vs [approach B] — winner: [A] because [reason]`.
 
 ### Phase 4: Verify
 
@@ -249,42 +166,21 @@ On abort: revert the changes, log the failure, treat as "no improvement this loo
 
 On pass: commit the changes with a descriptive message.
 
----
-
 ### Phase 5: Document
 
 Write the loop log. Always. Even on abort.
 
 **Log path:** `.planning/improvement-logs/{target}/loop-{n}.md`
 
-```markdown
-# Improvement Loop {n}: {target}
-
-> Date: {ISO date} | Loop: {n} | Selected axis: {axis_name} | Outcome: improved | no-change | aborted
-
-## Scorecard
-| Axis | Loop {n-1} | Loop {n} | Delta |
-
-## Attack summary
-**What was changed:** ...  **Approach:** experiment / direct / research+update  **Files:** ...
-**APPROACH COMPARISON:** (if multiple tried) {A} vs {B} — winner: {A} because {reason}
-
-## Verification results
-**Programmatic:** PASS/FAIL  **Structural:** PASS/FAIL
-**Perceptual:** {score}/10 — {one-line rationale}
-**Behavioral:** PASS {wall_time} | FAIL at step {n}: {reason} | SKIPPED
-
-## Proposed axis additions
-PROPOSED AXIS: {name} | Rationale | Category | Weight | Anchors: 0=... 5=... 10=...
-(or: None proposed this loop.)
-
-## What was learned
-{2-3 sentences}
-```
+Required sections (full template: docs/QUALITY_LOOPS.md#loop-log-template):
+- Header: date, loop number, selected axis, outcome (improved | no-change | aborted)
+- Scorecard: per-axis prior score, current score, delta
+- Attack summary: what was changed, approach (experiment / direct / research+update), files touched, plus the `APPROACH COMPARISON` record if multiple approaches were tried
+- Verification results: programmatic PASS/FAIL, structural PASS/FAIL, perceptual {score}/10 with one-line rationale, behavioral `PASS {wall_time}` | `FAIL at step {n}: {reason}` | `SKIPPED`
+- Proposed axis additions: `PROPOSED AXIS: {name} | Rationale | Category | Weight | Anchors: 0=... 5=... 10=...` (or: None proposed this loop.)
+- What was learned: 2-3 sentences
 
 All proposals go to `.planning/rubrics/{target}-proposals.md`. Never to the live rubric.
-
----
 
 ### Phase 6: Loop or Exit
 
@@ -311,8 +207,6 @@ All proposals go to `.planning/rubrics/{target}-proposals.md`. Never to the live
 - **plateau** (no improvement, not yet level-up): set `status: parked` with reason
 - **user-stopped**: set `status: paused`
 
----
-
 ### Level-Up Protocol
 
 Triggers when no axis improved > 0.5 in the last 2 consecutive loops, no programmatic cap is active, and at least 3 loops have completed.
@@ -333,15 +227,9 @@ Write to `.planning/rubrics/{target}-proposals.md`: re-anchored axes (current 10
 
 Do not self-approve. Do not continue looping.
 
-**In campaign mode:**
-- Set `status: level-up-pending`
-- Set `level_up_triggered: true`
-- Write to Continuation State: `awaiting: human approval of level-up proposals`
+In campaign mode: set `status: level-up-pending`, set `level_up_triggered: true`, and write `awaiting: human approval of level-up proposals` to Continuation State.
 
-Report:
-- What was achieved at this level (scorecard summary)
-- The proposals file location
-- What the expected new gains look like at the next level
+Report: what was achieved at this level (scorecard summary), the proposals file location, and what the expected new gains look like at the next level.
 
 The loop resumes only when the human edits the live rubric with approved proposals
 and sets the campaign status back to `active`. Level {n+1} loops continue incrementing
@@ -349,11 +237,7 @@ the loop number (they do not reset to 1).
 
 **Step 4: Historical context for future evaluators**
 
-When the loop resumes after a level-up, every evaluator in Phase 1c receives:
-- The level-{n}-final.md snapshot as a reference baseline
-- The instruction: "Scores from the previous level are the floor. A score of 5 at Level 2 means you have reached what was the ceiling at Level 1."
-
----
+When the loop resumes after a level-up, every evaluator in Phase 1c receives the level-{n}-final.md snapshot as a reference baseline, plus the instruction: "Scores from the previous level are the floor. A score of 5 at Level 2 means you have reached what was the ceiling at Level 1."
 
 ## Fringe Cases
 
@@ -368,8 +252,6 @@ When the loop resumes after a level-up, every evaluator in Phase 1c receives:
 - **`--continue` + `completed`**: do not resume, report final scorecard.
 - **`--n` + existing active campaign**: treat as `--continue`. If completed/parked: new campaign, incremented slug.
 
----
-
 ## Quality Gates
 
 - Phase 0 requires human approval. No exceptions.
@@ -383,8 +265,6 @@ When the loop resumes after a level-up, every evaluator in Phase 1c receives:
 - Level-Up Protocol requires human approval before resuming
 - **Campaign mode:** campaign file must be updated after every phase transition and every loop completion.
 - **Campaign mode:** level-up must set `status: level-up-pending`, not `parked` or `active`.
-
----
 
 ## Contextual Gates
 
