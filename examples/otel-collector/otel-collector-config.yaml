@@ -1,0 +1,19 @@
+# Minimal OpenTelemetry Collector config for the Citadel OTLP export demo.
+# Receives OTLP over HTTP on 4318 and prints every metric to the collector's
+# stdout via the debug exporter. Nothing is stored or forwarded.
+
+receivers:
+  otlp:
+    protocols:
+      http:
+        endpoint: 0.0.0.0:4318
+
+exporters:
+  debug:
+    verbosity: detailed
+
+service:
+  pipelines:
+    metrics:
+      receivers: [otlp]
+      exporters: [debug]

@@ -1,5 +1,6 @@
 ---
 name: telemetry
+license: MIT
 description: >-
   Unified telemetry hub. Shows current session cost, today's spend, all-time
   totals, hook activity, trust level, and a directory of every telemetry command
@@ -236,6 +237,12 @@ node scripts/telemetry-otlp-export.js --endpoint http://localhost:4318
 error the exporter exits 1 without advancing state, so the next run retries the same
 records. Data point timestamps come from the JSONL records, never the current clock.
 Test with `node scripts/test-telemetry-otlp.js`.
+
+**Local collector demo:** `examples/otel-collector/` contains a ready-made collector
+config (OTLP HTTP receiver on 4318, debug exporter to stdout) and a README with the
+two-command flow: `docker run` with the config mounted, then
+`node scripts/telemetry-otlp-export.js --endpoint http://localhost:4318`. Without
+Docker, `--dry-run` prints the exact OTLP payload instead.
 
 ## Quality Gates
 
