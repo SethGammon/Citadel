@@ -6,9 +6,9 @@
  * The secrets lens (hooks_src/quality-gate.js, lens id "secrets") sweeps
  * session-changed source files at Stop for credential shapes:
  *   - AWS access key ids (AKIA + 16 uppercase alphanumerics)
- *   - GitHub tokens (ghp_ classic, github_pat_ fine-grained)
+ *   - GitHub tokens (classic gh-p and fine-grained github-pat shapes)
  *   - Private key blocks (BEGIN ... PRIVATE KEY)
- *   - Slack tokens (xoxb- / xoxp- with realistic tails)
+ *   - Slack tokens (xoxb / xoxp prefixes with realistic tails)
  *   - Generic secret-named keys assigned high-entropy literals (Shannon >= 3.5)
  *
  * False-positive lessons encoded as tests:
@@ -61,18 +61,33 @@ function assert(condition, message) {
   }
 }
 
-// ── Fixture secrets (fragment-assembled, never contiguous in this source) ──
+// ── Fixture secrets (synthesized at runtime, never present in this source) ──
+// A seeded generator produces every credential-shaped value so this file
+// contains no secret-shaped or high-entropy literals for scanners to match.
 
-const awsId = 'AKIA' + 'JQXTZ2W7' + 'P4R8M5VN'; // AKIA + 16 uppercase alnum
-const ghpVal = 'ghp_' + 'A1b2C3d4E5f6G7h8I9' + 'j0K1l2M3n4O5p6Q7r8'; // ghp_ + 36
-const patVal = 'github_pat_' + '11AAAAABBBBBCCCCCDDD22' + '_' +
-  'a1b2c3d4e5'.repeat(5) + 'f6g7h8i9j'; // github_pat_ + 22 + _ + 59
-const pemHeader = '-----BEGIN RSA ' + 'PRIVATE KEY-----';
-const pemFooter = '-----END RSA ' + 'PRIVATE KEY-----';
-const slackVal = 'xoxb-' + '123456789012-' + '123456789012-' +
-  'AbCdEfGhIjKl' + 'MnOpQrStUvWx'; // two numeric segments + 24-char tail
-const entropyVal = 'Zq8vR2mXw9Lk' + '4Tp7Yc3HbN6s'; // 24 distinct chars, entropy ~4.58
-const awsDocSample = 'AKIA' + 'IOSFODNN7' + 'EXAMPLE'; // canonical AWS docs key
+function synth(seed, length, charset) {
+  let state = seed >>> 0;
+  let out = '';
+  for (let i = 0; i < length; i++) {
+    state = (state * 1103515245 + 12345) >>> 0;
+    out += charset[state % charset.length];
+  }
+  return out;
+}
+
+const UPPER_NUM = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+const ALNUM = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+const DIGITS = '0123456789';
+
+const awsId = ['AKI', 'A'].join('') + synth(11, 16, UPPER_NUM);
+const ghpVal = ['ghp', '_'].join('') + synth(22, 36, ALNUM);
+const patVal = ['github', '_pat_'].join('') + synth(33, 22, ALNUM) + '_' + synth(44, 59, ALNUM);
+const pemKind = ['PRIVATE', 'KEY'].join(' ');
+const pemHeader = '-----BEGIN RSA ' + pemKind + '-----';
+const pemFooter = '-----END RSA ' + pemKind + '-----';
+const slackVal = ['xox', 'b-'].join('') + synth(55, 12, DIGITS) + '-' + synth(66, 12, DIGITS) + '-' + synth(77, 24, ALNUM);
+const entropyVal = synth(88, 24, ALNUM); // high Shannon entropy at runtime only
+const awsDocSample = ['AKI', 'A'].join('') + ['IOSFODNN7', 'EXAMPLE'].join(''); // canonical AWS docs key
 
 // ── Temp project harness ──
 
@@ -114,6 +129,13 @@ function cleanup(proj) {
   try { fs.rmSync(proj, { recursive: true, force: true }); } catch { /* best effort */ }
 }
 
+// Render a declaration line for fixture content. The identifier arrives in
+// parts and the value via JSON.stringify, so the name-equals-quoted-value
+// shape that secret scanners match never appears in this file's source.
+function kv(nameParts, value, decl = 'const') {
+  return decl + ' ' + nameParts.join('') + ' = ' + JSON.stringify(value) + ';';
+}
+
 function main() {
   console.log('\nCitadel Secrets Lens Test Suite\n' + '='.repeat(40));
 
@@ -125,7 +147,7 @@ function main() {
     'gh-fine.js': `const ghFine = "${patVal}";\nmodule.exports = { ghFine };\n`,
     'pem-material.py': `KEY_MATERIAL = """${pemHeader}\nMIIEowIBAAKCAQEA\n${pemFooter}"""\n`,
     'slack-notify.js': `const hookAuth = "${slackVal}";\nmodule.exports = { hookAuth };\n`,
-    'entropy-config.ts': `export const apiToken = "${entropyVal}";\n`,
+    'entropy-config.ts': kv(['apiTo', 'ken'], entropyVal, 'export const') + '\n',
   });
 
   const posResult = runGate(positiveProj);
@@ -147,12 +169,12 @@ function main() {
     assert(posOut.includes('aws-config.js'), 'Expected aws-config.js named in output');
   });
 
-  test('detects classic GitHub token (ghp_)', () => {
+  test('detects classic GitHub token', () => {
     assert(posOut.includes('gh-classic.js') && posOut.includes('github-token'),
       'Expected github-token class for gh-classic.js');
   });
 
-  test('detects fine-grained GitHub token (github_pat_)', () => {
+  test('detects fine-grained GitHub token', () => {
     assert(posOut.includes('gh-fine.js'), 'Expected gh-fine.js named in output');
     assert(posOut.includes('fine-grained'), 'Expected fine-grained label in output');
   });
@@ -187,20 +209,20 @@ function main() {
       "EVENTS.emit('task_completed', payload);",
       "const risk_assessment = 'pending_manual_review_queue';",
       "const desk_check_status = 'awaiting_reviewer_signoff';",
-      'const shortVal = "ghp_abc123"; // wrong length, not a real token shape',
+      ['const shortVal = "ghp', '_abc123"; // wrong length, not a real token shape'].join(''),
       '',
     ].join('\n'),
     'placeholders.js': [
-      'const apiKey = "${SOME_VAR_FROM_ENV}";',
-      'const password = "<your-key-here>";',
-      'const clientSecret = "REDACTED_REDACTED_RED";',
-      'const authToken = "example_credential_value_123";',
+      kv(['api', 'Key'], '${SOME_VAR_FROM_ENV}'),
+      kv(['pass', 'word'], '<your-key-here>'),
+      kv(['client', 'Sec', 'ret'], 'REDACTED_REDACTED_RED'),
+      kv(['auth', 'To', 'ken'], 'example_credential_value_123'),
       `const awsDocSample = "${awsDocSample}";`,
       '',
     ].join('\n'),
     'lowentropy.js': [
-      'const password = "aaaaaaaaaaaaaaaaaaaa";',
-      'const tokenDescription = "this value is loaded by the operator at deploy time";',
+      kv(['pass', 'word'], 'a'.repeat(20)),
+      kv(['to', 'ken', 'Description'], 'this value is loaded by the operator at deploy time'),
       '',
     ].join('\n'),
     'docs.md': [
