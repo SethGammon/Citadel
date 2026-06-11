@@ -7,7 +7,7 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 
-const { classifyHookProblem, collectDashboard, readOperatorArtifacts, renderDashboard, relativeTime } = require('./dashboard');
+const { classifyHookProblem, collectDashboard, percentile, readOperatorArtifacts, renderDashboard, relativeTime } = require('./dashboard');
 
 function withTempProject(run) {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'citadel-dashboard-'));
@@ -30,6 +30,19 @@ function appendJsonl(filePath, entries) {
 assert.equal(relativeTime('2026-06-04T12:00:00.000Z', new Date('2026-06-04T12:00:30.000Z')), 'just now');
 assert.equal(relativeTime('2026-06-04T11:30:00.000Z', new Date('2026-06-04T12:00:00.000Z')), '30 min ago');
 assert.equal(relativeTime('2026-06-03T12:00:00.000Z', new Date('2026-06-04T12:00:00.000Z')), '1 day ago');
+
+// Percentile math: nearest-rank method on a sorted ascending array
+assert.equal(percentile([], 50), null);
+assert.equal(percentile([7], 50), 7);
+assert.equal(percentile([7], 95), 7);
+assert.equal(percentile([1, 2, 3, 4, 5, 6, 7, 8, 9, 10], 50), 5);
+assert.equal(percentile([1, 2, 3, 4, 5, 6, 7, 8, 9, 10], 95), 10);
+{
+  const oneToHundred = Array.from({ length: 100 }, (_, index) => index + 1);
+  assert.equal(percentile(oneToHundred, 50), 50);
+  assert.equal(percentile(oneToHundred, 95), 95);
+  assert.equal(percentile(oneToHundred, 100), 100);
+}
 
 {
   const classified = classifyHookProblem({
@@ -576,6 +589,59 @@ withTempProject((projectRoot) => {
   assert(output.includes('Trust level:                        familiar'));
   assert(!output.includes('{"hook"'));
   assert(!output.includes('undefined'));
+});
+
+// Hook Overhead: percentiles per hook from a synthetic hook-timing fixture
+withTempProject((projectRoot) => {
+  const timings = [];
+  for (let durationMs = 1; durationMs <= 20; durationMs++) {
+    timings.push({ timestamp: '2026-06-04T11:00:00.000Z', hook: 'post-edit', event: 'timing', duration_ms: durationMs });
+  }
+  timings.push({ timestamp: '2026-06-04T11:01:00.000Z', hook: 'session-end', event: 'timing', duration_ms: 300 });
+  timings.push({ timestamp: '2026-06-04T11:02:00.000Z', hook: 'session-end', event: 'timing', duration_ms: 100 });
+  // Counter entries have no duration and must be excluded from overhead stats
+  timings.push({ timestamp: '2026-06-04T11:03:00.000Z', hook: 'circuit-breaker', event: 'counter', metric: 'count' });
+  appendJsonl(path.join(projectRoot, '.planning', 'telemetry', 'hook-timing.jsonl'), timings);
+
+  const snapshot = collectDashboard({ projectRoot, now: '2026-06-04T12:00:00.000Z' });
+  const output = renderDashboard(snapshot);
+
+  assert.equal(snapshot.hookOverhead.length, 2);
+  assert.equal(snapshot.hookOverhead[0].hook, 'session-end'); // sorted by p95 descending
+  assert.equal(snapshot.hookOverhead[0].count, 2);
+  assert.equal(snapshot.hookOverhead[0].p50Ms, 100);
+  assert.equal(snapshot.hookOverhead[0].p95Ms, 300);
+  assert.equal(snapshot.hookOverhead[0].maxMs, 300);
+  assert.equal(snapshot.hookOverhead[1].hook, 'post-edit');
+  assert.equal(snapshot.hookOverhead[1].count, 20);
+  assert.equal(snapshot.hookOverhead[1].p50Ms, 10);
+  assert.equal(snapshot.hookOverhead[1].p95Ms, 19);
+  assert.equal(snapshot.hookOverhead[1].maxMs, 20);
+  const overheadIndex = output.indexOf('HOOK OVERHEAD');
+  assert(overheadIndex >= 0);
+  assert(output.indexOf('session-end', overheadIndex) < output.indexOf('post-edit', overheadIndex));
+  assert(!output.includes('(no hook timing data recorded yet)'));
+});
+
+// Hook Overhead: missing telemetry renders the one-line note and never crashes
+withTempProject((projectRoot) => {
+  const snapshot = collectDashboard({ projectRoot, now: '2026-06-04T12:00:00.000Z' });
+  const output = renderDashboard(snapshot);
+
+  assert.deepEqual(snapshot.hookOverhead, []);
+  assert(output.includes('HOOK OVERHEAD'));
+  assert(output.includes('(no hook timing data recorded yet)'));
+});
+
+// Hook Overhead: empty hook-timing.jsonl renders the note too
+withTempProject((projectRoot) => {
+  write(path.join(projectRoot, '.planning', 'telemetry', 'hook-timing.jsonl'), '');
+
+  const snapshot = collectDashboard({ projectRoot, now: '2026-06-04T12:00:00.000Z' });
+  const output = renderDashboard(snapshot);
+
+  assert.deepEqual(snapshot.hookOverhead, []);
+  assert(output.includes('(no hook timing data recorded yet)'));
 });
 
 console.log('dashboard tests passed');

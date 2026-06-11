@@ -197,6 +197,9 @@ function main() {
     // 8. Daemon bootstrap — detect active daemon and prompt continuation
     checkDaemonState();
 
+    // 9. Health line — one-line harness health summary
+    printHealthLine();
+
   } catch (err) {
     // Non-fatal — don't block session start
     process.exit(0);
@@ -245,6 +248,35 @@ function checkStaleCommandResult() {
   } catch {
     // Non-fatal — don't block session start
   }
+}
+
+/**
+ * Health line: one concise line summarizing harness health at session start.
+ * Single bounded read of the tail of hook-timing.jsonl (no spawning, no
+ * directory walks). Silently skips on any error or when no telemetry exists.
+ */
+function printHealthLine() {
+  try {
+    const file = path.join(PROJECT_ROOT, '.planning', 'telemetry', 'hook-timing.jsonl');
+    const size = fs.statSync(file).size;
+    const length = Math.min(size, 8192);
+    if (length === 0) return;
+    const buffer = Buffer.alloc(length);
+    const fd = fs.openSync(file, 'r');
+    fs.readSync(fd, buffer, 0, length, size - length);
+    fs.closeSync(fd);
+    let lines = buffer.toString('utf8').split('\n').filter(Boolean);
+    if (size > length) lines = lines.slice(1); // first line may be a partial record
+    const entries = [];
+    for (const line of lines) { try { entries.push(JSON.parse(line)); } catch { /* skip */ } }
+    if (entries.length === 0) return;
+    const gates = ['quality-gate', 'protect-files', 'circuit-breaker', 'external-action-gate'];
+    const verify = entries.slice().reverse().find((e) => e.typecheck === 'pass' || e.typecheck === 'fail' || e.typecheck === 'errors');
+    const parts = [`hooks ok (${entries.length} recent events)`];
+    if (entries.some((e) => gates.includes(e.hook))) parts.push('gates active');
+    parts.push(`last verify: ${verify ? (verify.typecheck === 'pass' ? 'pass' : 'fail') : 'none'}`);
+    process.stdout.write(`[citadel] ${parts.join(', ')}\n`);
+  } catch { /* best-effort, never block session start */ }
 }
 
 /**

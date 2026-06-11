@@ -210,6 +210,33 @@ Never blend real and estimated in the same total without flagging it.
 
 **Safety hooks always on (cannot be disabled):** protect-files, external-action-gate, circuit-breaker, quality-gate.
 
+## OTLP Export
+
+The JSONL files under `.planning/telemetry/` stay canonical. For standard observability
+stacks, `scripts/telemetry-otlp-export.js` translates new records into OTLP/HTTP JSON
+metrics and POSTs them to a collector. Byte offsets per source file live in
+`.planning/telemetry/otlp-export-state.json`, so repeat runs export only new records.
+
+```bash
+# Preview the OTLP payload without sending or advancing state
+node scripts/telemetry-otlp-export.js --dry-run
+
+# Export new records to a local collector (/v1/metrics appended when the url has no path)
+node scripts/telemetry-otlp-export.js --endpoint http://localhost:4318
+```
+
+| Metric | Type | Source file |
+|---|---|---|
+| `citadel.session.cost.usd` | sum (delta), `session.id` / `cost.source` attributes | `session-costs.jsonl` |
+| `citadel.session.tokens` | sum (delta), `token.type` attribute | `session-costs.jsonl` |
+| `citadel.hook.duration.ms` | gauge, `hook.name` attribute | `hook-timing.jsonl` |
+| `citadel.agent.runs` | sum (delta), `run.status` / `run.event` attributes | `agent-runs.jsonl` |
+
+`--reset` clears the offsets for a full re-export. On a non-2xx response or network
+error the exporter exits 1 without advancing state, so the next run retries the same
+records. Data point timestamps come from the JSONL records, never the current clock.
+Test with `node scripts/test-telemetry-otlp.js`.
+
 ## Quality Gates
 
 - Never show raw JSONL to the user — always parse and format
