@@ -1,5 +1,6 @@
 ---
 name: refactor
+license: MIT
 description: >-
   Safe multi-file refactoring with automatic rollback. Establishes a type/test
   baseline, plans all changes, executes file-by-file, and verifies zero

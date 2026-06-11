@@ -1,5 +1,6 @@
 ---
 name: review
+license: MIT
 description: 5-pass structured code review — correctness, security, performance, readability, consistency
 user-invocable: true
 trigger_keywords:

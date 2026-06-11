@@ -1,5 +1,6 @@
 ---
 name: ascii-diagram
+license: MIT
 description: >-
   Generate perfectly aligned ASCII diagrams — architecture, flow, sequence,
   box-and-arrow. Uses a programmatic character-grid approach so alignment is

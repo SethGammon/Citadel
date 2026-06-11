@@ -1,5 +1,6 @@
 ---
 name: loop
+license: MIT
 description: >-
   Bounded foreground repetition for the current session. Creates a loop
   contract, runs or coordinates an action plus verifier up to a declared attempt

@@ -1,5 +1,6 @@
 ---
 name: marshal
+license: MIT
 description: >-
   Meta-orchestrator that takes any direction — broad, specific, or vague — and
   autonomously chains skills and context into actionable work. Gathers context

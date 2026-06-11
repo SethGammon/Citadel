@@ -1,5 +1,6 @@
 ---
 name: experiment
+license: MIT
 description: >-
   Automated optimization loop with scalar fitness function. Proposes changes in
   isolated worktrees, measures with a metric command, keeps improvements, discards

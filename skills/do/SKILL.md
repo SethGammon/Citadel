@@ -1,5 +1,6 @@
 ---
 name: do
+license: MIT
 description: >-
   Unified router that auto-routes user intent to the right orchestrator or skill.
   Classifies input by scope, complexity, persistence needs, and parallelism, then

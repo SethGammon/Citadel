@@ -1,5 +1,6 @@
 ---
 name: create-app
+license: MIT
 description: >-
   End-to-end app creation from a single description. Five tiers: blank project,
   guided, templated, fully generated, or feature addition to existing codebase.

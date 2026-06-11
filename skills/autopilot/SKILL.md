@@ -1,5 +1,6 @@
 ---
 name: autopilot
+license: MIT
 description: >-
   Intake-to-delivery pipeline. Processes pending items from .planning/intake/:
   briefs new ideas, executes approved work through research → plan → build → verify.

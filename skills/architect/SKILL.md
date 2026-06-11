@@ -1,5 +1,6 @@
 ---
 name: architect
+license: MIT
 description: >-
   Given a PRD, produces an implementation architecture: file tree, component
   breakdown, data model, and a phased build plan with end conditions that

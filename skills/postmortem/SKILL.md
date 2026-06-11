@@ -1,5 +1,6 @@
 ---
 name: postmortem
+license: MIT
 description: >-
   Auto-generates a structured postmortem from a completed campaign. Reads the
   campaign file, telemetry logs, and feature ledger. Produces a documented

@@ -1,5 +1,6 @@
 ---
 name: wiki
+license: MIT
 description: >-
   Markdown-first knowledge base where the LLM acts as librarian. Ingests raw
   sources, compiles and interlinks topic files, self-maintains an index. No

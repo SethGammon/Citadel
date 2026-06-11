@@ -1,5 +1,6 @@
 ---
 name: triage
+license: MIT
 description: >-
   GitHub issue and PR investigator. Pulls open issues/PRs, classifies them, searches
   the codebase for root cause or reviews contributed code, proposes fixes with file:line

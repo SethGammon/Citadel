@@ -1,5 +1,6 @@
 ---
 name: daemon
+license: MIT
 description: >-
   Continuous autonomous operation mode. Keeps campaigns running 24/7 by
   chaining Claude Code sessions via RemoteTrigger. Each session picks up

@@ -1,5 +1,6 @@
 ---
 name: workspace
+license: MIT
 description: >-
   Multi-repo campaign coordinator. Same lifecycle as fleet -- scope claims,
   discovery relay, wave-based execution -- but the unit of work is a repo,

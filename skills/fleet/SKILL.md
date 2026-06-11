@@ -1,5 +1,6 @@
 ---
 name: fleet
+license: MIT
 description: >-
   Parallel campaign orchestrator. Runs multiple campaigns in coordinated waves
   within a single session. Spawns 2-3 agents per wave in isolated worktrees,

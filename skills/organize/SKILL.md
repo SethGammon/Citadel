@@ -1,5 +1,6 @@
 ---
 name: organize
+license: MIT
 description: >-
   Repository structure only: directory layout, file placement, naming
   conventions, and where-does-this-belong decisions. Detects the project's

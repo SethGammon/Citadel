@@ -1,5 +1,6 @@
 ---
 name: merge-review
+license: MIT
 description: >-
   Reviews pending fleet worktree merges before they're accepted. Reads the
   merge-check queue, detects file-level conflicts between branches, proposes a

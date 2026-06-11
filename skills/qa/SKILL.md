@@ -1,5 +1,6 @@
 ---
 name: qa
+license: MIT
 description: >-
   Browser-based QA verification. Launches a real browser, navigates the app,
   clicks buttons, fills forms, and tests user flows. Works as a standalone

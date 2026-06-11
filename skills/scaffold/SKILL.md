@@ -1,5 +1,6 @@
 ---
 name: scaffold
+license: MIT
 description: >-
   Project-aware file generation. Reads existing codebase conventions (naming,
   structure, imports, exports, test patterns) then generates new files that

@@ -1,5 +1,6 @@
 ---
 name: schedule
+license: MIT
 description: >-
   Manages recurring and one-off scheduled tasks. Session-scoped scheduling via
   CronCreate/CronDelete/CronList. Documents the cloud path for tasks that need

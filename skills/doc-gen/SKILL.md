@@ -1,5 +1,6 @@
 ---
 name: doc-gen
+license: MIT
 description: >-
   Documentation generator with three modes: function-level (JSDoc/docstrings),
   module-level (directory READMEs), and API reference (endpoints/exports).

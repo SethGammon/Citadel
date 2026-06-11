@@ -1,5 +1,6 @@
 ---
 name: unharness
+license: MIT
 description: >-
   Remove Citadel from a project. Exports valuable state (campaigns, postmortems,
   research, backlog, discoveries) to docs/citadel/ as human-readable markdown,
