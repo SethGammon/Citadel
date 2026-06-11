@@ -217,6 +217,8 @@ Four tiers let Citadel scale from a small edit to a multi-session campaign:
 
 ## Roadmap
 
+The full milestone plan with exit criteria lives in [docs/ROADMAP.md](docs/ROADMAP.md).
+
 Citadel is being developed around practical builder needs:
 
 - **Campaign recovery:** better rollback, resume, and repair tools for interrupted long-running work.

@@ -70,11 +70,15 @@ const DASHBOARD_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-dashboard.js');
 const DOC_SYNC_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-doc-sync.js');
 const FLEET_SESSION_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-fleet-session.js');
 const WORKTREE_READINESS_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-worktree-readiness.js');
+const POSTEDIT_TYPECHECK_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-postedit-typecheck.js');
+const ROUTING_SYNC_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-routing-sync.js');
+const WATCH_DEDUP_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-watch-dedup.js');
+const TEAMMATE_REBALANCE_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-teammate-rebalance.js');
 
 const STRICT = process.argv.includes('--strict');
 
 console.log('\nCitadel Full Test Suite\n' + '='.repeat(40));
-console.log('Running: hook smoke test + security tests + runtime contract test + runtime registry test + runtime matrix test + hook event test + skill lint + demo routing check + telemetry core check + telemetry integrity check + memory block check + evidence contract check + sandbox provider check + skill packaging check + map substrate check + delivery preflight check + delivery package check + continue action check + next action check + route preview check + loop core check + operating proof check + usefulness trial check + operator console check + operator journey check + first-use operator check + verification plan check + PR readiness check + stack plan check + coordination core check + hook installer check + campaign core check + discovery core check + discovery writer check + momentum synthesizer check + policy core check + Claude runtime check + Codex runtime check + Codex native integration check + Codex operational improvement check + installer check + project bootstrap check + compat fixtures + backward compat + cost tracker + dashboard + doc-sync + fleet session + worktree readiness\n');
+console.log('Running: hook smoke test + security tests + runtime contract test + runtime registry test + runtime matrix test + hook event test + skill lint + demo routing check + telemetry core check + telemetry integrity check + memory block check + evidence contract check + sandbox provider check + skill packaging check + map substrate check + delivery preflight check + delivery package check + continue action check + next action check + route preview check + loop core check + operating proof check + usefulness trial check + operator console check + operator journey check + first-use operator check + verification plan check + PR readiness check + stack plan check + coordination core check + hook installer check + campaign core check + discovery core check + discovery writer check + momentum synthesizer check + policy core check + Claude runtime check + Codex runtime check + Codex native integration check + Codex operational improvement check + installer check + project bootstrap check + compat fixtures + backward compat + cost tracker + dashboard + doc-sync + fleet session + worktree readiness + post-edit typecheck + routing sync + watch dedup + teammate rebalance\n');
 
 function run(label, scriptPath, extraArgs = []) {
   console.log(`\n> ${label}`);
@@ -143,6 +147,10 @@ const dashboardPassed = run('Dashboard Tests', DASHBOARD_TEST);
 const docSyncPassed = run('Doc Sync Tests', DOC_SYNC_TEST);
 const fleetSessionPassed = run('Fleet Session Tests', FLEET_SESSION_TEST);
 const worktreeReadinessPassed = run('Worktree Readiness Tests', WORKTREE_READINESS_TEST);
+const postEditTypecheckPassed = run('Post-Edit Typecheck Tests', POSTEDIT_TYPECHECK_TEST);
+const routingSyncPassed = run('Routing Sync Check', ROUTING_SYNC_TEST);
+const watchDedupPassed = run('Watch Dedup Tests', WATCH_DEDUP_TEST);
+const teammateRebalancePassed = run('Teammate Rebalance Tests', TEAMMATE_REBALANCE_TEST);
 
 console.log('\n' + '='.repeat(40));
 console.log('SUMMARY');
@@ -196,9 +204,13 @@ console.log(`  Dashboard:          ${dashboardPassed ? 'PASS' : 'FAIL'}`);
 console.log(`  Doc sync:           ${docSyncPassed ? 'PASS' : 'FAIL'}`);
 console.log(`  Fleet session:      ${fleetSessionPassed ? 'PASS' : 'FAIL'}`);
 console.log(`  Worktree readiness: ${worktreeReadinessPassed ? 'PASS' : 'FAIL'}`);
+console.log(`  Post-edit typecheck: ${postEditTypecheckPassed ? 'PASS' : 'FAIL'}`);
+console.log(`  Routing sync:       ${routingSyncPassed ? 'PASS' : 'FAIL'}`);
+console.log(`  Watch dedup:        ${watchDedupPassed ? 'PASS' : 'FAIL'}`);
+console.log(`  Teammate rebalance: ${teammateRebalancePassed ? 'PASS' : 'FAIL'}`);
 console.log('');
 
-if (hooksPassed && securityPassed && contractsPassed && runtimeRegistryPassed && runtimeMatrixPassed && hookEventsPassed && skillsPassed && demoPassed && telemetryPassed && telemetryIntegrityPassed && memoryBlockPassed && evidenceContractPassed && sandboxProviderPassed && skillPackagingPassed && mapSubstratePassed && deliveryPassed && deliveryPackagePassed && continueActionPassed && nextActionPassed && routePreviewPassed && loopsPassed && operatingProofPassed && usefulnessTrialPassed && operatorConsolePassed && operatorJourneyPassed && firstUseOperatorPassed && verificationPlanPassed && prReadyPassed && stackPlanPassed && coordinationPassed && hookInstallerPassed && campaignPassed && discoveryPassed && discoveryWriterPassed && momentumPassed && momentumWatcherPassed && policyPassed && claudeRuntimePassed && codexRuntimePassed && codexNativeIntegrationPassed && codexOperationalImprovementPassed && installerPassed && projectBootstrapPassed && compatFixturePassed && backwardCompatPassed && costTrackerPassed && dashboardPassed && docSyncPassed && fleetSessionPassed && worktreeReadinessPassed) {
+if (hooksPassed && securityPassed && contractsPassed && runtimeRegistryPassed && runtimeMatrixPassed && hookEventsPassed && skillsPassed && demoPassed && telemetryPassed && telemetryIntegrityPassed && memoryBlockPassed && evidenceContractPassed && sandboxProviderPassed && skillPackagingPassed && mapSubstratePassed && deliveryPassed && deliveryPackagePassed && continueActionPassed && nextActionPassed && routePreviewPassed && loopsPassed && operatingProofPassed && usefulnessTrialPassed && operatorConsolePassed && operatorJourneyPassed && firstUseOperatorPassed && verificationPlanPassed && prReadyPassed && stackPlanPassed && coordinationPassed && hookInstallerPassed && campaignPassed && discoveryPassed && discoveryWriterPassed && momentumPassed && momentumWatcherPassed && policyPassed && claudeRuntimePassed && codexRuntimePassed && codexNativeIntegrationPassed && codexOperationalImprovementPassed && installerPassed && projectBootstrapPassed && compatFixturePassed && backwardCompatPassed && costTrackerPassed && dashboardPassed && docSyncPassed && fleetSessionPassed && worktreeReadinessPassed && postEditTypecheckPassed && routingSyncPassed && watchDedupPassed && teammateRebalancePassed) {
   console.log('All tests pass.\n');
   console.log('Next steps:');
   console.log('  node scripts/skill-bench.js --list      see benchmark scenarios');
@@ -258,7 +270,11 @@ const dashboardFail = !dashboardPassed ? 33554432 : 0;
 const docSyncFail = !docSyncPassed ? 33554432 : 0;
 const fleetSessionFail = !fleetSessionPassed ? 67108864 : 0;
 const worktreeReadinessFail = !worktreeReadinessPassed ? 134217728 : 0;
-const code = hookFail | securityFail | contractFail | runtimeRegistryFail | runtimeMatrixFail | hookEventFail | skillFail | demoFail | telemetryFail | telemetryIntegrityFail | memoryBlockFail | evidenceContractFail | sandboxProviderFail | skillPackagingFail | mapSubstrateFail | deliveryFail | deliveryPackageFail | continueActionFail | nextActionFail | routePreviewFail | loopsFail | operatingProofFail | usefulnessTrialFail | operatorConsoleFail | operatorJourneyFail | firstUseOperatorFail | verificationPlanFail | prReadyFail | stackPlanFail | coordinationFail | hookInstallerFail | campaignFail | discoveryFail | discoveryWriterFail | momentumFail | momentumWatcherFail | policyFail | claudeRuntimeFail | codexRuntimeFail | codexNativeIntegrationFail | codexOperationalImprovementFail | installerFail | projectBootstrapFail | compatFixtureFail | backwardCompatFail | costTrackerFail | dashboardFail | docSyncFail | fleetSessionFail | worktreeReadinessFail;
+const postEditTypecheckFail = !postEditTypecheckPassed ? 1 : 0;
+const routingSyncFail = !routingSyncPassed ? 64 : 0;
+const watchDedupFail = !watchDedupPassed ? 16384 : 0;
+const teammateRebalanceFail = !teammateRebalancePassed ? 67108864 : 0;
+const code =hookFail | securityFail | contractFail | runtimeRegistryFail | runtimeMatrixFail | hookEventFail | skillFail | demoFail | telemetryFail | telemetryIntegrityFail | memoryBlockFail | evidenceContractFail | sandboxProviderFail | skillPackagingFail | mapSubstrateFail | deliveryFail | deliveryPackageFail | continueActionFail | nextActionFail | routePreviewFail | loopsFail | operatingProofFail | usefulnessTrialFail | operatorConsoleFail | operatorJourneyFail | firstUseOperatorFail | verificationPlanFail | prReadyFail | stackPlanFail | coordinationFail | hookInstallerFail | campaignFail | discoveryFail | discoveryWriterFail | momentumFail | momentumWatcherFail | policyFail | claudeRuntimeFail | codexRuntimeFail | codexNativeIntegrationFail | codexOperationalImprovementFail | installerFail | projectBootstrapFail | compatFixtureFail | backwardCompatFail | costTrackerFail | dashboardFail | docSyncFail | fleetSessionFail | worktreeReadinessFail | postEditTypecheckFail | routingSyncFail | watchDedupFail | teammateRebalanceFail;
 
 if (!hooksPassed) console.log('Hook smoke test failed. Fix hook issues before proceeding.');
 if (!securityPassed) console.log('Security tests failed. DO NOT SHIP - critical vulnerabilities present.');
@@ -310,5 +326,9 @@ if (!dashboardPassed) console.log('Dashboard tests failed. Fix dashboard renderi
 if (!docSyncPassed) console.log('Doc-sync tests failed. Fix queue processing or report generation before shipping.');
 if (!fleetSessionPassed) console.log('Fleet session tests failed. Fix Fleet work queue parsing or steward behavior before shipping.');
 if (!worktreeReadinessPassed) console.log('Worktree readiness tests failed. Fix readiness profile checks before shipping.');
+if (!postEditTypecheckPassed) console.log('Post-edit typecheck tests failed. Fix tsc resolution or outcome reporting in post-edit.js before shipping.');
+if (!routingSyncPassed) console.log('Routing sync check failed. Run: node scripts/generate-routing.js, then commit the regenerated surfaces.');
+if (!watchDedupPassed) console.log('Watch dedup tests failed. Fix marker hashing, intake dedup, or locking in scripts/watch.js before shipping.');
+if (!teammateRebalancePassed) console.log('Teammate rebalance tests failed. Fix the TeammateIdle rebalance append in teammate-idle.js before shipping.');
 console.log('');
 process.exit(code);
