@@ -49,7 +49,7 @@ to re-invoke than to waste tokens on over-routing.
 
 ## Hooks
 
-Automatic Node.js scripts that fire on 29 lifecycle events. 32 hooks total. Full reference: [docs/HOOKS.md](HOOKS.md).
+Automatic Node.js scripts: <!-- GENERATED: hook-script-count -->35<!-- /GENERATED --> hook scripts covering <!-- GENERATED: hook-event-count -->29<!-- /GENERATED --> lifecycle events. Full reference: [docs/HOOKS.md](HOOKS.md).
 
 | Category | Key Hooks | Purpose |
 |----------|-----------|---------|

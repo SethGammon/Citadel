@@ -405,7 +405,7 @@ Print the reference card with actual counts from detected config.
 │  3. /create-skill capture a repeated pattern             │
 │  4. /improve [target]   autonomous quality loop          │
 │                                                          │
-│  docs/SKILLS.md · QUICKSTART.md · /do --list            │
+│  docs/SKILLS.md · INSTALL.md · /do --list               │
 │                                                          │
 └──────────────────────────────────────────────────────────┘
 ```

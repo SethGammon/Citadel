@@ -233,7 +233,7 @@ Run the four verification tiers from the rubric for the targeted axis:
 1. **Programmatic**: execute the specific checks, confirm they now pass
 2. **Structural**: verify the structural requirements are met
 3. **Perceptual**: spawn a single evaluator agent (Evaluator B — Newcomer) and score just the targeted axis
-4. **Behavioral simulation**: clone the repo into a temp directory and follow QUICKSTART.md exactly as written — no prior knowledge, no shortcuts. Measure whether each step completes without error and record wall time to first successful `/do` command.
+4. **Behavioral simulation**: clone the repo into a temp directory and follow INSTALL.md exactly as written — no prior knowledge, no shortcuts. Measure whether each step completes without error and record wall time to first successful `/do` command.
    - Required when targeted axis is: `onboarding_friction`, `error_recovery`, `documentation_accuracy`, `command_discoverability`
    - Optional for all other axes
    - Result: `PASS {wall_time}` or `FAIL at step {n}: {what broke}`

@@ -74,6 +74,7 @@ const POSTEDIT_TYPECHECK_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-postedit
 const ROUTING_SYNC_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-routing-sync.js');
 const WATCH_DEDUP_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-watch-dedup.js');
 const TEAMMATE_REBALANCE_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-teammate-rebalance.js');
+const DOC_SURFACES_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-doc-surfaces.js');
 
 const STRICT = process.argv.includes('--strict');
 
@@ -151,6 +152,7 @@ const postEditTypecheckPassed = run('Post-Edit Typecheck Tests', POSTEDIT_TYPECH
 const routingSyncPassed = run('Routing Sync Check', ROUTING_SYNC_TEST);
 const watchDedupPassed = run('Watch Dedup Tests', WATCH_DEDUP_TEST);
 const teammateRebalancePassed = run('Teammate Rebalance Tests', TEAMMATE_REBALANCE_TEST);
+const docSurfacesPassed = run('Doc Surfaces Check', DOC_SURFACES_TEST);
 
 console.log('\n' + '='.repeat(40));
 console.log('SUMMARY');
@@ -208,9 +210,10 @@ console.log(`  Post-edit typecheck: ${postEditTypecheckPassed ? 'PASS' : 'FAIL'}
 console.log(`  Routing sync:       ${routingSyncPassed ? 'PASS' : 'FAIL'}`);
 console.log(`  Watch dedup:        ${watchDedupPassed ? 'PASS' : 'FAIL'}`);
 console.log(`  Teammate rebalance: ${teammateRebalancePassed ? 'PASS' : 'FAIL'}`);
+console.log(`  Doc surfaces:       ${docSurfacesPassed ? 'PASS' : 'FAIL'}`);
 console.log('');
 
-if (hooksPassed && securityPassed && contractsPassed && runtimeRegistryPassed && runtimeMatrixPassed && hookEventsPassed && skillsPassed && demoPassed && telemetryPassed && telemetryIntegrityPassed && memoryBlockPassed && evidenceContractPassed && sandboxProviderPassed && skillPackagingPassed && mapSubstratePassed && deliveryPassed && deliveryPackagePassed && continueActionPassed && nextActionPassed && routePreviewPassed && loopsPassed && operatingProofPassed && usefulnessTrialPassed && operatorConsolePassed && operatorJourneyPassed && firstUseOperatorPassed && verificationPlanPassed && prReadyPassed && stackPlanPassed && coordinationPassed && hookInstallerPassed && campaignPassed && discoveryPassed && discoveryWriterPassed && momentumPassed && momentumWatcherPassed && policyPassed && claudeRuntimePassed && codexRuntimePassed && codexNativeIntegrationPassed && codexOperationalImprovementPassed && installerPassed && projectBootstrapPassed && compatFixturePassed && backwardCompatPassed && costTrackerPassed && dashboardPassed && docSyncPassed && fleetSessionPassed && worktreeReadinessPassed && postEditTypecheckPassed && routingSyncPassed && watchDedupPassed && teammateRebalancePassed) {
+if (hooksPassed && securityPassed && contractsPassed && runtimeRegistryPassed && runtimeMatrixPassed && hookEventsPassed && skillsPassed && demoPassed && telemetryPassed && telemetryIntegrityPassed && memoryBlockPassed && evidenceContractPassed && sandboxProviderPassed && skillPackagingPassed && mapSubstratePassed && deliveryPassed && deliveryPackagePassed && continueActionPassed && nextActionPassed && routePreviewPassed && loopsPassed && operatingProofPassed && usefulnessTrialPassed && operatorConsolePassed && operatorJourneyPassed && firstUseOperatorPassed && verificationPlanPassed && prReadyPassed && stackPlanPassed && coordinationPassed && hookInstallerPassed && campaignPassed && discoveryPassed && discoveryWriterPassed && momentumPassed && momentumWatcherPassed && policyPassed && claudeRuntimePassed && codexRuntimePassed && codexNativeIntegrationPassed && codexOperationalImprovementPassed && installerPassed && projectBootstrapPassed && compatFixturePassed && backwardCompatPassed && costTrackerPassed && dashboardPassed && docSyncPassed && fleetSessionPassed && worktreeReadinessPassed && postEditTypecheckPassed && routingSyncPassed && watchDedupPassed && teammateRebalancePassed && docSurfacesPassed) {
   console.log('All tests pass.\n');
   console.log('Next steps:');
   console.log('  node scripts/skill-bench.js --list      see benchmark scenarios');
@@ -274,7 +277,8 @@ const postEditTypecheckFail = !postEditTypecheckPassed ? 1 : 0;
 const routingSyncFail = !routingSyncPassed ? 64 : 0;
 const watchDedupFail = !watchDedupPassed ? 16384 : 0;
 const teammateRebalanceFail = !teammateRebalancePassed ? 67108864 : 0;
-const code =hookFail | securityFail | contractFail | runtimeRegistryFail | runtimeMatrixFail | hookEventFail | skillFail | demoFail | telemetryFail | telemetryIntegrityFail | memoryBlockFail | evidenceContractFail | sandboxProviderFail | skillPackagingFail | mapSubstrateFail | deliveryFail | deliveryPackageFail | continueActionFail | nextActionFail | routePreviewFail | loopsFail | operatingProofFail | usefulnessTrialFail | operatorConsoleFail | operatorJourneyFail | firstUseOperatorFail | verificationPlanFail | prReadyFail | stackPlanFail | coordinationFail | hookInstallerFail | campaignFail | discoveryFail | discoveryWriterFail | momentumFail | momentumWatcherFail | policyFail | claudeRuntimeFail | codexRuntimeFail | codexNativeIntegrationFail | codexOperationalImprovementFail | installerFail | projectBootstrapFail | compatFixtureFail | backwardCompatFail | costTrackerFail | dashboardFail | docSyncFail | fleetSessionFail | worktreeReadinessFail | postEditTypecheckFail | routingSyncFail | watchDedupFail | teammateRebalanceFail;
+const docSurfacesFail = !docSurfacesPassed ? 64 : 0;
+const code =hookFail | securityFail | contractFail | runtimeRegistryFail | runtimeMatrixFail | hookEventFail | skillFail | demoFail | telemetryFail | telemetryIntegrityFail | memoryBlockFail | evidenceContractFail | sandboxProviderFail | skillPackagingFail | mapSubstrateFail | deliveryFail | deliveryPackageFail | continueActionFail | nextActionFail | routePreviewFail | loopsFail | operatingProofFail | usefulnessTrialFail | operatorConsoleFail | operatorJourneyFail | firstUseOperatorFail | verificationPlanFail | prReadyFail | stackPlanFail | coordinationFail | hookInstallerFail | campaignFail | discoveryFail | discoveryWriterFail | momentumFail | momentumWatcherFail | policyFail | claudeRuntimeFail | codexRuntimeFail | codexNativeIntegrationFail | codexOperationalImprovementFail | installerFail | projectBootstrapFail | compatFixtureFail | backwardCompatFail | costTrackerFail | dashboardFail | docSyncFail | fleetSessionFail | worktreeReadinessFail | postEditTypecheckFail | routingSyncFail | watchDedupFail | teammateRebalanceFail | docSurfacesFail;
 
 if (!hooksPassed) console.log('Hook smoke test failed. Fix hook issues before proceeding.');
 if (!securityPassed) console.log('Security tests failed. DO NOT SHIP - critical vulnerabilities present.');
@@ -330,5 +334,6 @@ if (!postEditTypecheckPassed) console.log('Post-edit typecheck tests failed. Fix
 if (!routingSyncPassed) console.log('Routing sync check failed. Run: node scripts/generate-routing.js, then commit the regenerated surfaces.');
 if (!watchDedupPassed) console.log('Watch dedup tests failed. Fix marker hashing, intake dedup, or locking in scripts/watch.js before shipping.');
 if (!teammateRebalancePassed) console.log('Teammate rebalance tests failed. Fix the TeammateIdle rebalance append in teammate-idle.js before shipping.');
+if (!docSurfacesPassed) console.log('Doc surfaces check failed. Run: node scripts/generate-doc-surfaces.js, then commit the regenerated docs.');
 console.log('');
 process.exit(code);

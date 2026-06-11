@@ -24,7 +24,7 @@ least one of them.
 | Doc drift | Counts, lists, and tables that can disagree with the code | 0 (generated) |
 | Hook overhead p95 | Added latency per tool call from the hook pipeline | < 200 ms |
 
-## M0: Trust the Safety Net (active)
+## M0: Trust the Safety Net (shipped 2026-06-11)
 
 The harness's value rests on its gates being real. This milestone makes every shipped gate do
 what it claims, on every platform.
@@ -42,7 +42,7 @@ what it claims, on every platform.
 `generate-routing --check` wired into CI; the typecheck regression guard proves an unavailable
 toolchain produces a visible advisory.
 
-## M1: One Source of Truth
+## M1: One Source of Truth (core shipped 2026-06-11)
 
 Eliminate every place where documentation can drift from code, by construction rather than
 discipline.
@@ -57,7 +57,7 @@ discipline.
 **Exit criteria:** a doc-drift test fails CI when any generated surface is stale; a new user
 has exactly one obvious document to follow from clone to first `/do`.
 
-## M2: Native Platform Spine
+## M2: Native Platform Spine (gates and contracts shipped 2026-06-11; plugin defaultEnabled deferred)
 
 Adopt the platform primitives that replace prompt conventions with contracts.
 
