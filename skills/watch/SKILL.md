@@ -9,6 +9,17 @@ description: >-
   per file.
 user-invocable: true
 auto-trigger: false
+trigger_keywords:
+  - watch
+  - watch files
+  - watch changes
+  - file sentinel
+  - monitor files
+  - watch start
+  - watch stop
+  - watch scan
+  - marker comments
+  - @citadel
 last-updated: 2026-03-29
 ---
 
@@ -104,8 +115,8 @@ Write `.planning/watch-state.json`:
   "lastScanTime": null,
   "interval": "5m",
   "cronId": "{id from step 3 or null}",
-  "pendingActions": [],
-  "processedMarkers": [],
+  "pendingActions": {},
+  "processedMarkers": {},
   "stats": {
     "scansRun": 0,
     "markersFound": 0,
@@ -194,7 +205,7 @@ Search changed files for:
 
 Unknown actions become intake items with the action preserved as metadata.
 
-**Deduplication:** Compare against `processedMarkers` (stored as `"{file}:{line}:{action}"`). Skip already-processed markers. Remove from `processedMarkers` when the file is modified again.
+**Deduplication:** Every marker gets a stable identity hash: sha256 over `{file path}`, `{action}`, and the normalized marker text (trimmed, internal whitespace collapsed), joined with NUL separators and truncated to 16 hex chars. Line numbers are excluded, so the hash survives line shifts. `processedMarkers` is a map keyed by this hash with `{file, action, firstSeen, lastSeen}`; `pendingActions` uses the same hash keys. Both maps are pruned past 500 entries by dropping the oldest `lastSeen`. Markers whose hash is already in `processedMarkers` are skipped.
 
 #### Step 4: Classify unmarked changes
 
@@ -215,26 +226,25 @@ For each new marker:
 
 #### Step 6: Write intake items
 
-Filename: `watch-{timestamp}-{index}.md` in `.planning/intake/`
+Filename: `watch-{action}-{file slug}-{epoch ms}.md` in `.planning/intake/`
 
 ```markdown
 ---
+title: "{action} {file}:{line}"
+status: pending
+priority: normal
+target: {file path}
 source: watch
-priority: {normal|high}
-created: {ISO timestamp}
+marker_hash: {16-char marker hash}
 ---
 
-# {brief description}
+Marker comment found at {file}:{line}:
+`{raw marker line}`
 
-File: {file path}
-Change type: {new|modified|deleted}
-Classification: {test change|doc change|source change|config change|marker overflow}
-{If marker: Action: {action}, Description: {description}}
-
-Detected by /watch scan at {ISO timestamp}.
+{description, if any}
 ```
 
-Before writing, check for duplicates (glob `.planning/intake/watch-*`, grep for file path).
+Before writing, skip the item if the marker hash is already in `processedMarkers`, or if any existing `.planning/intake/*.md` carries a matching `marker_hash` in its frontmatter. Every new intake item records its `marker_hash` so future scans (and concurrent processes) can detect it.
 
 #### Step 7: Update state
 
@@ -264,7 +274,6 @@ Cron poll: silent.
 - **Intake pipeline:** Writes to `.planning/intake/` for `/autopilot`.
 - **Intent router:** Routes markers through `/do` — never invokes skills directly.
 - **Daemon:** `/daemon` can start a watch alongside a campaign.
-- **Session-start hook:** `init-project.js` triggers a scan if state is `"watching"`.
 
 ---
 
@@ -279,8 +288,8 @@ Cron poll: silent.
 **Binary files:** Skip during marker scanning.
 **Corrupted state:** Reset to defaults, preserve `processedMarkers` if readable.
 **CronCreate not available:** Warn and suggest manual `/watch scan`.
-**Scan overlap:** Skip if `lastScanTime` within last 60 seconds.
-**Marker removed:** Remove stale entries from `processedMarkers` on each scan.
+**Scan overlap:** Scans serialize through a lock directory (`.planning/watch-state.json.lock`, acquired via atomic `mkdir` with ~10 retries at 100ms). Each scan records `scanStartedAt` and `scanPid` in state under the lock, and holds the lock across the state read-modify-write and intake writes. A scan that cannot acquire the lock and finds another scan started under 60 seconds ago logs a skip notice and exits cleanly. A lock older than 30 seconds (by mtime) is treated as stale and removed.
+**Marker removed:** Stale `processedMarkers` entries age out via the 500-entry oldest-`lastSeen` prune.
 
 ---
 
