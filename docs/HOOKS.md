@@ -18,7 +18,7 @@ You never invoke them manually. They provide automated quality enforcement and t
 | `cost-tracker.js` | PostToolUse | Real-time session cost monitoring |
 | `complexity-check.js` | PostToolUse (Edit/Write) | Advisory complexity score for JS/TS files |
 | `post-tool-batch.js` | PostToolBatch | Wave-level quality checkpoint (async, asyncRewake) |
-| `quality-gate.js` | Stop | Cold-path anti-pattern scan before session ends |
+| `quality-gate.js` | Stop | Cold-path anti-pattern scan plus advisory secrets sweep (AWS, GitHub, Slack, private keys, high-entropy literals) on session-changed files |
 | `stop-failure.js` | StopFailure | Log hook failures |
 | `user-prompt-submit.js` | UserPromptSubmit | Log turn boundaries; extension point for prompt gating |
 | `user-prompt-expansion.js` | UserPromptExpansion | Log skill invocations to skill-usage.jsonl |
@@ -132,6 +132,30 @@ the permission dialog. Safe patterns:
 - Write/Edit to `.citadel/**` (harness scaffolding)
 
 All permission requests (approved and deferred) are logged to `audit.jsonl`.
+
+## Permission Audit Report
+
+Every PermissionRequest (and PermissionDenied, where the runtime wires it) is also
+appended as a compact record to `.planning/telemetry/permission-events.jsonl`:
+
+```json
+{"ts": "2026-06-11T10:07:00.000Z", "event": "PermissionRequest", "tool": "Bash", "target": "git push origin main", "decision": "deferred"}
+```
+
+Fields: `ts` (ISO timestamp), `event` (hook event name), `tool`, `target` (command or
+file path, truncated to 120 chars), `decision` (`allow`, `deferred`, or `deny`).
+The write is observer-only: one append on the hot path, failures swallowed, exit 0 always.
+
+Render the audit report with:
+
+```bash
+node scripts/permission-audit.js
+```
+
+The report shows totals by tool, top 10 targets, denials, busiest hour buckets (UTC),
+and flags anomalies (denial rate over 20%, or a single tool exceeding 80% of requests).
+Historical `permission-request` entries from `audit.jsonl` that predate the dedicated
+log are merged in without double counting. Tests: `node scripts/test-permission-audit.js`.
 
 ## additionalContext Output
 

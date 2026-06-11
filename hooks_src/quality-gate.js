@@ -13,6 +13,9 @@
  *   - adversarial: XSS vectors, unsafe patterns in source files
  *   - contractual: skill files match required structure
  *   - cross-reference: docs match code (function signatures vs documentation)
+ *   - secrets: credential shapes (AWS, GitHub, Slack, private key blocks) and
+ *     high-entropy literals assigned to secret-like names (advisory, never
+ *     echoes the matched value)
  *   - custom: user-defined regex rules via harness.json
  *
  * Users can configure via harness.json verification.cold and qualityRules.custom.
@@ -92,6 +95,12 @@ function selectColdPathLenses(file) {
   // Always include custom rules for source files
   if (/\.(ts|tsx|js|jsx|py|go|rs|css|scss)$/.test(file)) {
     lenses.push('custom');
+  }
+
+  // Secrets sweep for source files. Deliberately excludes .md, since docs
+  // that describe token formats must never block.
+  if (/\.(ts|tsx|js|jsx|py|go|rs|css|scss)$/.test(file)) {
+    lenses.push('secrets');
   }
 
   return lenses.filter(l => !disabled.has(l));
@@ -189,6 +198,8 @@ function runColdLens(lens, file, content, config, builtInRules) {
       return lensContractual(file, content);
     case 'cross-reference':
       return lensCrossReference(file, content);
+    case 'secrets':
+      return lensSecrets(file, content);
     case 'custom':
       return lensCustom(file, content, config);
     default:
@@ -413,6 +424,115 @@ function lensCrossReference(file, content) {
         lens: 'cross-reference',
         message: `References non-existent file: ${refPath}`,
       });
+    }
+  }
+
+  return violations;
+}
+
+// ── Secrets Lens ────────────────────────────────────────────────────────────
+//
+// Scans session-changed source files for credential shapes. Advisory only
+// (flows through the same additionalContext channel as every other lens).
+// Messages name the file and the pattern class but NEVER echo the matched
+// value, since leaking a real secret back into the context window would
+// defeat the purpose of the sweep.
+
+// Named credential shapes. Anchored prefixes with real length requirements
+// so substrings inside ordinary identifiers (the sk- trap: "task_created")
+// can never match.
+const SECRET_PATTERNS = [
+  {
+    cls: 'aws-access-key-id',
+    regex: /\bAKIA[A-Z0-9]{16}\b/,
+    label: 'AWS access key ID',
+  },
+  {
+    cls: 'github-token',
+    regex: /\bghp_[A-Za-z0-9]{36}\b/,
+    label: 'GitHub personal access token',
+  },
+  {
+    cls: 'github-token',
+    regex: /\bgithub_pat_[A-Za-z0-9]{22}_[A-Za-z0-9]{59}\b/,
+    label: 'GitHub fine-grained personal access token',
+  },
+  {
+    cls: 'private-key-block',
+    regex: /-----BEGIN[A-Z ]* PRIVATE KEY-----/,
+    label: 'private key block',
+  },
+  {
+    cls: 'slack-token',
+    regex: /\bxox[bp]-(?:[0-9]{8,13}-){1,3}[A-Za-z0-9]{20,40}\b/,
+    label: 'Slack token',
+  },
+];
+
+// Lines carrying obvious placeholder or documentation values are not leaks.
+// Covers ${VAR} interpolation, <angle-bracket-placeholders>, and the usual
+// REDACTED / example / changeme vocabulary.
+const SECRET_PLACEHOLDER_HINT = /\$\{[^}\r\n]*\}|<[^<>\r\n]+>|redacted|example|placeholder|your[-_ ](?:key|secret|token|api)|change[-_]?me|dummy|x{6,}|\*{4,}/i;
+
+// Generic assignment: a key named like secret/token/apikey/password set to a
+// quoted literal of 16+ chars. The literal must clear a Shannon entropy bar
+// so prose and repeated filler never trip it.
+const SECRET_GENERIC_ASSIGN = /(?:secret|token|api[_-]?key|passwd|password)[A-Za-z0-9_]*["']?\s*[:=]+\s*["'`]([^"'`\r\n]{16,})["'`]/i;
+
+const SECRET_ENTROPY_THRESHOLD = 3.5;
+
+function shannonEntropy(value) {
+  if (!value) return 0;
+  const freq = new Map();
+  for (const ch of value) freq.set(ch, (freq.get(ch) || 0) + 1);
+  let bits = 0;
+  for (const count of freq.values()) {
+    const p = count / value.length;
+    bits -= p * Math.log2(p);
+  }
+  return bits;
+}
+
+function lensSecrets(file, content) {
+  // Defense in depth: docs describing token formats must never block.
+  if (/\.md$/.test(file)) return [];
+
+  const violations = [];
+  const seenClasses = new Set();
+
+  for (const line of content.split('\n')) {
+    if (SECRET_PLACEHOLDER_HINT.test(line)) continue;
+
+    for (const pattern of SECRET_PATTERNS) {
+      if (seenClasses.has(pattern.cls)) continue;
+      if (pattern.regex.test(line)) {
+        seenClasses.add(pattern.cls);
+        violations.push({
+          file,
+          lens: 'secrets',
+          rule: pattern.cls,
+          message: `Possible ${pattern.label} (class: ${pattern.cls}) - move it to environment configuration and rotate it if real`,
+        });
+      }
+    }
+
+    if (!seenClasses.has('high-entropy-assignment')) {
+      const match = SECRET_GENERIC_ASSIGN.exec(line);
+      if (match) {
+        const value = match[1];
+        const looksLikeProse = value.includes(' ');
+        if (!looksLikeProse &&
+            !SECRET_PLACEHOLDER_HINT.test(value) &&
+            shannonEntropy(value) >= SECRET_ENTROPY_THRESHOLD) {
+          seenClasses.add('high-entropy-assignment');
+          violations.push({
+            file,
+            lens: 'secrets',
+            rule: 'high-entropy-assignment',
+            message: 'Secret-like key assigned a high-entropy literal (class: high-entropy-assignment) - load it from environment configuration instead',
+          });
+        }
+      }
     }
   }
 
