@@ -255,7 +255,7 @@ QUICK COMMANDS
 **Large telemetry files:** Read last 50 lines only.
 **Missing timestamps:** Fall back to file modification time; display entry without timestamp if unavailable.
 **All campaigns completed:** Note "No active campaigns" at top of CAMPAIGNS section.
-**Completed campaign still active:** Show the exact `node scripts/campaign.js complete <slug> --archive` repair command; do not tell the user to `/do continue`.
+**Completed campaign still active:** Show the exact `node scripts/campaign.js complete <slug> --archive` repair command; suggesting `/do continue` here is wrong because the campaign is already finished.
 **Campaign ready for review package:** Show the exact `node scripts/package-delivery.js <slug>` repair command before showing campaign completion.
 **All fleet sessions idle:** Note "No active fleet sessions" under FLEET SESSIONS.
 **Mixed state:** Proceed with whatever state exists; note each missing directory inline.
