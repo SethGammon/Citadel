@@ -166,7 +166,7 @@ Skills cost zero tokens when not loaded. They're on-demand expertise.
   "language": "typescript",
   "framework": "react",
   "packageManager": "npm",
-  "typecheck": { "command": "npx tsc --noEmit", "perFile": true },
+  "typecheck": { "command": "npx tsc --noEmit", "timeoutMs": 25000 },
   "test": { "command": "npm test", "framework": "vitest" },
   "qualityRules": { "builtIn": ["no-confirm-alert"], "custom": [] },
   "protectedFiles": [".claude/harness.json"],

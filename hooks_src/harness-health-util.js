@@ -314,7 +314,9 @@ function detectStack() {
 function getTypecheckConfig(language) {
   switch (language) {
     case 'typescript':
-      return { command: 'npx tsc --noEmit', perFile: true };
+      // perFile is a Python-checker concept; the TS branch always runs a
+      // project-scope incremental check and warns if perFile is set.
+      return { command: 'npx tsc --noEmit', perFile: false };
     case 'python':
       // Try mypy first, fall back to pyright
       try {

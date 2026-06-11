@@ -12,7 +12,7 @@ You never invoke them manually. They provide automated quality enforcement and t
 | `protect-files.js` | PreToolUse | Block edits to protected files and out-of-scope paths |
 | `external-action-gate.js` | PreToolUse (Bash) | Gate external actions (git push, API calls) |
 | `governance.js` | PreToolUse (Edit/Write/Bash/Agent) | Audit every significant tool call |
-| `post-edit.js` | PostToolUse | Per-file typecheck + structural/performance/visual lenses |
+| `post-edit.js` | PostToolUse | Project-scope incremental typecheck + structural/performance/visual lenses |
 | `organize-enforce.js` | PostToolUse (Edit/Write) | Enforce file placement conventions |
 | `circuit-breaker.js` | PostToolUse (Bash) + PostToolUseFailure | Detect failure loops |
 | `cost-tracker.js` | PostToolUse | Real-time session cost monitoring |
@@ -147,10 +147,10 @@ CITADEL_UI mode (when `CITADEL_UI=true`) uses the Citadel-formatted JSON instead
 The `post-edit.js` hook detects your project's language from `.claude/harness.json`
 and runs the appropriate checker:
 
-| Language | Checker | Per-File? |
-|----------|---------|-----------|
-| TypeScript | `tsc --noEmit` | Yes |
-| Python | `mypy` or `pyright` | Yes |
+| Language | Checker | Scope |
+|----------|---------|-------|
+| TypeScript | `tsc --noEmit` | Project-scope incremental (build info cached in `.planning/cache/`) |
+| Python | `mypy` or `pyright` | Per-file |
 | Go | `go vet` | Package-level |
 | Rust | `cargo check` | Project-level |
 
@@ -160,10 +160,21 @@ Configure in `harness.json`:
 {
   "typecheck": {
     "command": "npx tsc --noEmit",
-    "perFile": true
+    "timeoutMs": 25000
   }
 }
 ```
+
+For TypeScript, the check runs on every `.ts`/`.tsx` edit (declaration files
+excluded) as a project-scope incremental `tsc --noEmit`. The binary is resolved
+directly (the project's `typescript` package, `node_modules/.bin/tsc`, or PATH,
+honoring `.cmd` on Windows) and is never spawned through `npx` or a shell. A
+custom `typecheck.command` is honored. The check has four outcomes: pass,
+errors, unavailable, and timeout. When the checker is missing or exceeds
+`timeoutMs`, the hook reports explicitly that the typecheck DID NOT RUN and
+why, exits 0, and never blocks on those infrastructure failures. `perFile` is
+not supported for TypeScript; if set, the hook warns and runs the project-scope
+incremental check instead.
 
 ## Dependency-Aware Pattern Detection
 
