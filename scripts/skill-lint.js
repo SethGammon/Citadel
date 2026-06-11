@@ -32,6 +32,9 @@ const { validateOptionalMetadata } = require('../core/skills/catalog');
 const PLUGIN_ROOT  = path.resolve(__dirname, '..');
 const SKILLS_DIR   = path.join(PLUGIN_ROOT, 'skills');
 
+// Max SKILL.md body lines before a WARN. Policy: docs/SKILL_LIFECYCLE.md#line-budget
+const LINE_BUDGET  = 300;
+
 // ── CLI args ─────────────────────────────────────────────────────────────────
 
 const args         = process.argv.slice(2);
@@ -166,6 +169,17 @@ const CHECKS = [
     description: 'describes when to use (or not to use) the skill',
     check: (fm, body) => /when to (use|route|invoke)|use.*when|do not use|don.t use|orientation|if the (user|task|input)/i.test(body),
     fix: 'Add a section explaining when to use this skill vs. alternatives',
+  },
+  {
+    id: 'line-budget',
+    level: 'WARN',
+    description: `SKILL.md body within ${LINE_BUDGET}-line budget`,
+    check: (fm, body, skillName) => {
+      const lineCount = body.split(/\r?\n/).length;
+      if (lineCount <= LINE_BUDGET) return true;
+      return `skills/${skillName}/SKILL.md body is ${lineCount} lines (budget: ${LINE_BUDGET}); see docs/SKILL_LIFECYCLE.md#line-budget`;
+    },
+    fix: 'Trim the skill: protocol and gates stay in SKILL.md; move rationale and reference material to a docs companion (docs/SKILL_LIFECYCLE.md#line-budget)',
   },
 ];
 
@@ -325,7 +339,12 @@ function printResults(skillResults) {
   const cleanSkills = skillResults.filter(r => r.failCount === 0 && r.warnCount === 0).length;
 
   console.log(`Skills: ${skillCount} total  |  ${cleanSkills} clean, ${warnSkills} warn, ${failSkills} fail`);
-  console.log(`Checks: ${totalPass} passed, ${totalWarn} warned, ${totalFail} failed\n`);
+  console.log(`Checks: ${totalPass} passed, ${totalWarn} warned, ${totalFail} failed`);
+
+  const overBudget = skillResults.filter(
+    sr => sr.results.some(r => r.id === 'line-budget' && !r.passed)
+  ).length;
+  console.log(`Line budget: ${overBudget} skill(s) exceed ${LINE_BUDGET} lines (see docs/SKILL_LIFECYCLE.md#line-budget)\n`);
 
   if (totalFail > 0) {
     console.log('Fix all FAIL items before shipping. WARNs are advisory.\n');

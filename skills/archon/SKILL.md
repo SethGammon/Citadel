@@ -38,10 +38,7 @@ On every invocation:
    - **Resuming**: active campaign exists → read it, continue from Active Context
    - **Directed**: user gave a direction → create new campaign, decompose, begin
    - **Undirected**: no direction, no active campaign → run Health Diagnostic
-5. **Log campaign start** (new campaigns only):
-   ```bash
-   node .citadel/scripts/telemetry-log.cjs --event campaign-start --agent archon --session {campaign-slug}
-   ```
+5. **Log campaign start** (new campaigns only): `node .citadel/scripts/telemetry-log.cjs --event campaign-start --agent archon --session {campaign-slug}`
 
 ### Step 2: DECOMPOSE (new campaigns only)
 
@@ -49,29 +46,8 @@ Break the direction into 3-8 phases:
 
 1. Analyze scope: which files, directories, and systems are involved?
 2. Identify dependencies: what must happen before what?
-3. Create phases in order:
-
-| Phase Type | Purpose | Typical Delegation |
-|---|---|---|
-| research | Understand before building | Marshal assess mode |
-| plan | Make architecture decisions | Marshal + review |
-| build | Write code | Marshal → sub-agents |
-| wire | Connect systems together | Marshal with specific targets |
-| verify | Confirm everything works | Typecheck, tests, manual review |
-| prune | Remove dead code, clean up | Marshal with removal targets |
-
-**Effort budget by phase type** (use `effort` parameter when invoking sub-agents):
-
-| Phase Type | Effort Level | Token Budget | Notes |
-|------------|-------------|--------------|-------|
-| audit      | low         | ~80K         | Read-heavy, minimal generation |
-| build      | high        | ~300K        | Full implementation, iterative |
-| refactor   | medium      | ~150K        | Structural changes, targeted scope |
-| design     | medium      | ~120K        | Planning + spec generation |
-| verify     | low         | ~60K         | Typecheck, test run, visual check |
-
-Prefer `effort` over `budget_tokens` for all sub-agent invocations — ~20-40% token reduction.
-
+3. Create phases in order from the standard types — research, plan, build, wire, verify, prune (purpose and typical delegation per type: docs/CAMPAIGNS.md#phase-types).
+   - Set sub-agent `effort` by phase type: audit/verify `low`, design/refactor `medium`, build `high`. Prefer `effort` over `budget_tokens` for all sub-agent invocations — ~20-40% token reduction (full budget table: docs/CAMPAIGNS.md#phase-effort-budgets).
 4. For each phase, write machine-verifiable end conditions:
    - Every phase MUST have at least one non-manual condition
    - Condition types: `file_exists`, `command_passes`, `metric_threshold`, `visual_verify`, `manual`
@@ -83,18 +59,11 @@ Prefer `effort` over `budget_tokens` for all sub-agent invocations — ~20-40% t
 
 ### Step 2.5: DAEMONIZE? (new campaigns with 2+ estimated sessions)
 
-1. Compute cost estimate:
-   - Read `.planning/telemetry/session-costs.jsonl` if it exists; use average `estimated_cost` per session
-   - If no prior data: use `$3` default per-session
-   - Total = per-session * estimated sessions
-2. Ask (single sentence):
-   ```
-   This is multi-session work (~{N} sessions, ~${total}). Run continuously? [y/n]
-   ```
+1. Compute cost estimate: average `estimated_cost` from `.planning/telemetry/session-costs.jsonl` if it exists, else `$3` default per session. Total = per-session * estimated sessions.
+2. Ask (single sentence): `This is multi-session work (~{N} sessions, ~${total}). Run continuously? [y/n]`
 3. If **yes**:
    - Write `.planning/daemon.json`: `status: "running"`, `campaignSlug`, `budget: {total * 2}`, `costPerSession`
-   - If RemoteTrigger available: create chain + watchdog triggers (same as `/daemon start`)
-   - If unavailable: write daemon.json only (SessionStart hook bridge handles continuation)
+   - If RemoteTrigger available: create chain + watchdog triggers (same as `/daemon start`); if unavailable: write daemon.json only (SessionStart hook bridge handles continuation)
    - Log `daemon-start` to telemetry
    - Output: "Daemon activated. Budget: ${budget}. Use `/daemon status` to check progress."
 4. If **no**: continue to Step 3.
@@ -106,26 +75,13 @@ Prefer `effort` over `budget_tokens` for all sub-agent invocations — ~20-40% t
 For each phase:
 
 1. **Direction check**: Is this phase still aligned with the campaign goal?
-
-1.5. **Create phase checkpoint**:
-   ```bash
-   git stash push --include-untracked -m "citadel-checkpoint-{campaign-slug}-phase-{N}"
-   ```
-   - Capture stash ref and write to campaign Continuation State: `checkpoint-phase-N: stash@{0}`
-   - If `git stash` fails: log `checkpoint-phase-N: none` and continue. Never block on checkpoint failure.
-
-2. **Log delegation start**:
-   ```bash
-   node .citadel/scripts/telemetry-log.cjs --event agent-start --agent {delegate-name} --session {campaign-slug}
-   ```
+1.5. **Create phase checkpoint**: `git stash push --include-untracked -m "citadel-checkpoint-{campaign-slug}-phase-{N}"`. Capture the stash ref and write to campaign Continuation State: `checkpoint-phase-N: stash@{0}`. If `git stash` fails: log `checkpoint-phase-N: none` and continue. Never block on checkpoint failure.
+2. **Log delegation start**: `node .citadel/scripts/telemetry-log.cjs --event agent-start --agent {delegate-name} --session {campaign-slug}`
 3. **Delegate**: Spawn a sub-agent with full context injection:
-   - CLAUDE.md content
-   - `.claude/agent-context/rules-summary.md`
-   - **Map slice** (if `.planning/map/index.json` exists): run
-     `node scripts/map-index.js --slice "<phase scope keywords>" --max-files 15` and inject results
+   - CLAUDE.md content and `.claude/agent-context/rules-summary.md`
+   - **Map slice** (if `.planning/map/index.json` exists): run `node scripts/map-index.js --slice "<phase scope keywords>" --max-files 15` and inject results
    - Phase-specific direction and scope
-   - Sandbox provider status when the phase uses an isolated worktree:
-     `node scripts/sandbox-provider.js status --provider worktree --worktree {path}`
+   - Sandbox provider status when the phase uses an isolated worktree: `node scripts/sandbox-provider.js status --provider worktree --worktree {path}`
    - Relevant decisions from the campaign's Decision Log
 4. **Verify end conditions** before marking a phase complete:
    - `file_exists`: check file exists on disk
@@ -135,73 +91,22 @@ For each phase:
    - `manual`: log to Review Queue, don't block
    - If ANY non-manual condition fails: phase is NOT complete. Fix what's failing.
    - Log which conditions passed/failed in the Feature Ledger
-
-4.25. **Validate exit evidence** if the campaign has an `## Exit Evidence`
-   table:
-   ```bash
-   node scripts/evidence-validate.js --file .planning/campaigns/{slug}.md --target phase:{N}
-   ```
-   - If the command passes: continue.
-   - If it fails with retries remaining: run again with `--write-repair`, keep
-     the phase active, and perform the repair task.
-   - If it fails with no retries remaining: block advancement or mark the phase
-     `partial`; do not mark it complete from prose alone.
-   - For package/review phases, use:
-     ```bash
-     node scripts/package-delivery.js {campaign-slug}
-     ```
-     or add `--pr <url>` when a pull request exists. This records the review
-     target in Exit Evidence before campaign completion.
-
-4.5. **Validate handoff** — spawn a Phase Validator (Haiku, read-only) to independently
-   confirm the HANDOFF demonstrates each exit condition was met:
-   ```
-   Agent(
-     subagent_type: "citadel:phase-validator",
-     prompt: "Campaign: {slug}. Phase {N} — {title}.
-              Exit conditions: {conditions from Phase End Conditions table}.
-              HANDOFF: {full handoff text from sub-agent}",
-     effort: "low"
-   )
-   ```
-   Parse the validator's JSON response:
+4.25. **Validate exit evidence** if the campaign has an `## Exit Evidence` table: run `node scripts/evidence-validate.js --file .planning/campaigns/{slug}.md --target phase:{N}`.
+   - Passes: continue. Fails with retries remaining: run again with `--write-repair`, keep the phase active, perform the repair task. Fails with no retries remaining: block advancement or mark the phase `partial`; never mark complete from prose alone.
+   - For package/review phases, run `node scripts/package-delivery.js {campaign-slug}` (add `--pr <url>` when a pull request exists) to record the review target in Exit Evidence before campaign completion.
+4.5. **Validate handoff** — spawn a Phase Validator (subagent_type `citadel:phase-validator`, Haiku, read-only, effort: low) with the campaign slug, phase number and title, the exit conditions from the Phase End Conditions table, and the sub-agent's full HANDOFF (invocation template: docs/CAMPAIGNS.md#phase-validation). Parse the validator's JSON response:
    - **`verdict: "pass"`**: proceed to step 5.
-   - **`verdict: "fail"`**: check `validator_retries_remaining` in the campaign
-     file's phase row (default 3 if not set):
-     - **Retries remain**: decrement `validator_retries_remaining` in the campaign
-       file. Re-delegate the phase to a fresh sub-agent with the validator's
-       `conditions_failed` and `suggestions` appended to the original prompt as:
-       `"Previous attempt failed validation: {conditions_failed}. Fix: {suggestions}."
-       Return to step 3.`
-     - **Retries exhausted (0)**: log `validator_halt: phase {N} failed validation
-       after 3 retries — {conditions_failed}` to the campaign Decision Log. Mark
-       phase `partial`. Advance to the next phase.
-
-   **Validator timeout**: if the validator does not return within 3 minutes,
-   treat the result as `verdict: "pass" with warnings: ["validator timed out"]`
-   and log the timeout. Never let validation block the campaign indefinitely.
-
+   - **`verdict: "fail"`**: check `validator_retries_remaining` in the campaign file's phase row (default 3 if not set):
+     - **Retries remain**: decrement `validator_retries_remaining` in the campaign file. Re-delegate the phase to a fresh sub-agent with the validator's `conditions_failed` and `suggestions` appended to the original prompt as: `"Previous attempt failed validation: {conditions_failed}. Fix: {suggestions}."` Return to step 3.
+     - **Retries exhausted (0)**: log `validator_halt: phase {N} failed validation after 3 retries — {conditions_failed}` to the campaign Decision Log. Mark phase `partial`. Advance to the next phase.
+   - **Validator timeout**: if the validator does not return within 3 minutes, treat the result as `verdict: "pass"` with `warnings: ["validator timed out"]` and log the timeout. Never let validation block the campaign indefinitely.
 5. **Review**: Read the sub-agent's HANDOFF. Did it accomplish the phase goal?
    - If HANDOFF present but phase goal NOT met: re-delegate the phase to a fresh sub-agent with clarified success criteria. If second attempt also fails goal: mark phase as `partial`, log the gap, continue to next phase.
-5. **Log delegation result**:
-   ```bash
-   node .citadel/scripts/telemetry-log.cjs --event agent-complete --agent {delegate-name} --session {campaign-slug} --status {success|partial|failed}
-   ```
+5.5. **Log delegation result**: `node .citadel/scripts/telemetry-log.cjs --event agent-complete --agent {delegate-name} --session {campaign-slug} --status {success|partial|failed}`
 6. **Record**: Update the campaign file:
-   - Mark phase status using `updatePhaseStatus`:
-     ```bash
-     node -e "
-       const {updatePhaseStatus} = require('./core/campaigns/update-campaign');
-       updatePhaseStatus('.planning/campaigns/{slug}.md', {N}, 'complete');
-     "
-     ```
-     Valid values: `pending`, `in-progress`, `design-complete`, `complete`, `partial`, `failed`, `skipped`
+   - Mark phase status using `updatePhaseStatus` from `core/campaigns/update-campaign` via `node -e` (snippet: docs/CAMPAIGNS.md#updating-phase-status). Valid values: `pending`, `in-progress`, `design-complete`, `complete`, `partial`, `failed`, `skipped`
    - Add entries to Feature Ledger; log decisions to Decision Log
-7. **Self-correct**: Run applicable checks from Step 4:
-   - Quality spot-check (every phase)
-   - Direction alignment (every 2nd phase)
-   - Regression guard (build phases only)
-   - Anti-pattern scan (build phases only)
+7. **Self-correct**: Run applicable checks from Step 4: quality spot-check (every phase), direction alignment (every 2nd phase), regression guard and anti-pattern scan (build phases only).
 
 ### Step 4: SELF-CORRECTION (Mandatory)
 
@@ -223,21 +128,12 @@ For each phase:
 
 1. Run typecheck via `node scripts/run-with-timeout.js 300`
 2. Compare error count to campaign baseline
-3. Escalation:
-   - 1-2 new errors: fix before continuing
-   - 3-4 new errors: log warning, attempt fixes, continue if resolved
-   - 5+ new errors: PARK the campaign
+3. Escalation: 1-2 new errors — fix before continuing; 3-4 — log warning, attempt fixes, continue if resolved; 5+ — PARK the campaign
 4. If test suite exists: run it. New failures trigger the same escalation.
 
 #### Anti-Pattern Scan (every build phase)
 
-Scan modified files for:
-- `transition-all` (name specific properties)
-- `confirm()`, `alert()`, `prompt()` (use in-app components)
-- Missing Escape key handlers in modals/overlays
-- Hardcoded values that should be constants
-
-Fix any found before marking the phase complete.
+Scan modified files for: `transition-all` (name specific properties); `confirm()`, `alert()`, `prompt()` (use in-app components); missing Escape key handlers in modals/overlays; hardcoded values that should be constants. Fix any found before marking the phase complete.
 
 ### Step 5: VERIFY (after build phases)
 
@@ -259,17 +155,10 @@ Fix any found before marking the phase complete.
 
 1. Run final verification via `node scripts/run-with-timeout.js 300`
 2. Update campaign status to `completed`
-2.5. **Propagate knowledge**:
-   ```bash
-   npm run propagate -- --campaign {slug}
-   ```
-   If unavailable: add `<!-- TODO: run npm run propagate -- --campaign {slug} -->` to LEARNINGS.md.
+2.5. **Propagate knowledge**: `npm run propagate -- --campaign {slug}`. If unavailable: add `<!-- TODO: run npm run propagate -- --campaign {slug} -->` to LEARNINGS.md.
 3. Move campaign file to `.planning/campaigns/completed/`
 4. Release scope claims
-5. Log completion:
-   ```bash
-   node .citadel/scripts/telemetry-log.cjs --event campaign-complete --agent archon --session {campaign-slug}
-   ```
+5. Log completion: `node .citadel/scripts/telemetry-log.cjs --event campaign-complete --agent archon --session {campaign-slug}`
 6. Output final HANDOFF
 7. Suggest `/postmortem`
 8. **Auto-fix handoff** — for any PRs created this campaign:
@@ -322,7 +211,7 @@ Park the campaign when:
 3. Run typecheck to confirm clean state
 4. Log rollback to Decision Log with what was restored and why
 
-Within a live session, prefer native rollback first: Claude Code checkpoints plus `/rewind` restore both conversation and files to the pre-phase state. The git stash path above remains the cross-session recovery mechanism; native checkpoints do not survive a session restart.
+Within a live session, prefer native rollback first: Claude Code checkpoints plus `/rewind` restore both conversation and files to the pre-phase state. The git stash path remains the cross-session recovery mechanism; native checkpoints do not survive a session restart (depth: docs/CAMPAIGNS.md#checkpoints-and-recovery).
 
 ## Fringe Cases
 
@@ -356,23 +245,9 @@ When a phase boundary or risk gate needs user confirmation (Step 2.5 daemonize, 
 
 ### Policy Gate (Red operations only)
 
-Before any Red-reversibility operation (remote push, PR creation, CI/CD modification), spawn the policy-enforcer to check Tier 1 rules:
-
-```
-Agent(
-  subagent_type: "citadel:policy-enforcer",
-  prompt: "Action: {description of the proposed operation}
-           Tier: 1
-           Rules: P-001, P-002, P-004, P-007
-           Context: campaign={slug}, agent=archon, session={campaign-slug}",
-  effort: "low"
-)
-```
-
-Parse the verdict JSON:
+Before any Red-reversibility operation (remote push, PR creation, CI/CD modification), spawn the policy-enforcer (subagent_type `citadel:policy-enforcer`, effort: low) to check Tier 1 rules P-001, P-002, P-004, P-007 against the proposed action, with campaign/agent/session context (invocation template: docs/CAMPAIGNS.md#policy-enforcement). Parse the verdict JSON:
 - **`verdict: "allow"`**: proceed with the operation.
-- **`verdict: "block"`**: do NOT proceed. Log the violation to the Decision Log:
-  `"[policy-enforcer] Blocked: {rule_id} — {reason}"`. Report to the user and stop.
+- **`verdict: "block"`**: do NOT proceed. Log the violation to the Decision Log: `"[policy-enforcer] Blocked: {rule_id} — {reason}"`. Report to the user and stop.
 
 The policy gate is non-negotiable for Tier 1 violations. Never override a block verdict.
 
@@ -386,10 +261,7 @@ Read trust level from `harness.json` (`readTrustLevel()` in harness-health-util.
 - **Familiar** (5-19 sessions): Confirm for campaigns > $10 or > 3 phases.
 - **Trusted** (20+ sessions): No confirmation for amber. Red only.
 
-Step 2.5 trust gating:
-- **Novice**: Skip Step 2.5 entirely — do not offer daemon.
-- **Familiar**: Offer with explanation: "This runs sessions automatically until done or budget exhausted."
-- **Trusted**: Offer with cost only: "Run continuously? (~${cost}) [y/n]"
+Step 2.5 trust gating: **Novice** — skip Step 2.5 entirely, do not offer daemon. **Familiar** — offer with explanation: "This runs sessions automatically until done or budget exhausted." **Trusted** — offer with cost only: "Run continuously? (~${cost}) [y/n]"
 
 ## Exit Protocol
 

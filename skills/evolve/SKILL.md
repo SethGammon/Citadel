@@ -55,8 +55,6 @@ never directly attacked.
 If no rubric exists, run `/improve {target}` Phase 0 first — `/evolve` requires
 an approved rubric and will not auto-generate one.
 
----
-
 ## Campaign Artifacts
 
 All findings are externalized incrementally — written after every phase, not
@@ -74,32 +72,10 @@ only at cycle end. A crashed or compacted session resumes with full context.
 
 Create `.planning/evolve/{target}/` on first invocation. Create `.planning/research/` if absent.
 
----
-
-## Cycle Digest Format
-
-```markdown
-# Cycle {n} — {target} | {date}
-
-## Scores
-| Axis | Prior | This Cycle | Delta |
-
-## Hypotheses
-| ID | Axis | Hypothesis | Scout Result | Confidence |
-
-## What Was Attacked
-| Axis | Skill | Delta | Mechanism Confirmed |
-
-## Patterns Discovered This Cycle
-- {pattern}: {evidence}
-
-## Belief Model Updates
-- {hypothesis confirmed / rejected / revised}
-
-## Spend: ${cycle} this cycle | ${cumulative} cumulative | Velocity: {v}
-```
-
----
+**Cycle digest contents:** scores table (axis, prior, this cycle, delta), hypotheses
+table (id, axis, hypothesis, scout result, confidence), what was attacked (axis,
+skill, delta, mechanism confirmed), patterns discovered this cycle, belief model
+updates, and the spend/velocity line. Full template: docs/QUALITY_LOOPS.md#cycle-digest-format.
 
 ## Director Cycle Protocol
 
@@ -134,10 +110,8 @@ Skip hypothesis generation for an axis if the belief model already has a
 For axes below 7.0, or axes with unconfirmed hypotheses: dispatch one scout
 agent per hypothesis. Scouts read — they do not modify files.
 
-Each scout returns:
-```json
-{ "hypothesis_id": "...", "confirmed": true, "evidence": "...", "confidence": 0.85 }
-```
+Each scout returns `{ "hypothesis_id", "confirmed", "evidence", "confidence" }`
+(schema example: docs/QUALITY_LOOPS.md#scout-result-schema).
 
 **Scout confidence protocol**: Scouts read relevant files only — no edits, no test runs. Assign `confidence`:
 - **0.9+**: mechanism is directly observable (explicit absence, missing section, wrong value in file)
@@ -176,15 +150,8 @@ Dispatch one agent per selected axis in an isolated worktree
 - Verification oracle: `node scripts/run-with-timeout.js 300 node scripts/test-all.js`
 
 Each agent returns a structured result:
-```json
-{
-  "axis": "...", "skill": "...",
-  "delta": 1.2,
-  "mechanism_confirmed": true,
-  "files_changed": ["..."],
-  "approach": "..."
-}
-```
+`{ "axis", "skill", "delta", "mechanism_confirmed", "files_changed", "approach" }`
+(schema example: docs/QUALITY_LOOPS.md#fleet-agent-result-schema).
 
 **Merge rules:**
 - Non-conflicting worktrees: merge all
@@ -256,23 +223,14 @@ edits the live rubric.
 **On normal loop:** increment cycle, compress prior cycle findings to
 continuation context, return to Phase 1.
 
----
-
 ## Unlimited Mode
 
-No `--n` and no `--budget` = unlimited. Declare before starting:
-
-```
-/evolve running in unlimited mode.
-Target: {target} | Exit: all axes ≥ 9.0 OR velocity < 0.2 for 3 cycles
-Estimated cost: $12–18/cycle | Spend so far: $0
-To halt after current cycle: type /stop or press Escape.
-```
-
-Every cycle, report:
-```
-Cycle {n} complete. Spend: ${cycle} | Cumulative: ${total} | Velocity: {v}
-```
+No `--n` and no `--budget` = unlimited. Declare before starting: target, exit
+conditions (all axes ≥ 9.0 OR velocity < 0.2 for 3 cycles), estimated cost
+($12–18/cycle), spend so far ($0), and how to halt (type /stop or press Escape
+to stop after the current cycle). At the end of every cycle report cycle spend,
+cumulative spend, and velocity. Literal declaration and report templates:
+docs/QUALITY_LOOPS.md#unlimited-mode-templates.
 
 When context approaches compression territory (session duration > 30 min or
 /compact recommended): write continuation checkpoint to director state,
@@ -282,8 +240,6 @@ one stopped.
 For overnight / unattended runs: combine with `/daemon`. The director is
 daemon-compatible — daemon calls `/evolve {target} --continue` each session.
 Set `--budget` to cap total spend.
-
----
 
 ## Fringe Cases
 
@@ -300,8 +256,6 @@ Set `--budget` to cap total spend.
 - **Pattern library > 50 entries**: consolidate — group by axis class, merge similar patterns, keep highest-confidence instance of each class. Log consolidation.
 - **Zero skills match target rubric**: error with message listing all `.planning/rubrics/*.md` targets.
 
----
-
 ## Quality Gates
 
 - Every hypothesis must have an explicit falsification criterion before Phase 3
@@ -311,8 +265,6 @@ Set `--budget` to cap total spend.
 - Regression on any previously-passing axis aborts that worktree commit
 - Pattern library and global patterns updated at every cycle end, even zero-improvement cycles
 - Cycle digest written even on abort or no-change cycles
-
----
 
 ## Contextual Gates
 
@@ -330,8 +282,6 @@ revertable; high volume. Range: `git revert {first}^..{last}`.
 - Novice (0-4 sessions): `--status` and `--n=1` only; unlimited blocked
 - Familiar (5-19): up to `--n=5`; unlimited requires explicit `--budget` cap
 - Trusted (20+): no cap; confirm if projected total > $100
-
----
 
 ## Exit Protocol
 

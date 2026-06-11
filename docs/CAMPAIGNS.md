@@ -109,9 +109,67 @@ to continue must be in the file.
 | verify | Test and check | 15-30 min |
 | prune | Clean up | 15-30 min |
 
+When Archon decomposes a campaign, each phase type maps to a typical
+delegation pattern:
+
+| Phase Type | Purpose | Typical Delegation |
+|---|---|---|
+| research | Understand before building | Marshal assess mode |
+| plan | Make architecture decisions | Marshal + review |
+| build | Write code | Marshal → sub-agents |
+| wire | Connect systems together | Marshal with specific targets |
+| verify | Confirm everything works | Typecheck, tests, manual review |
+| prune | Remove dead code, clean up | Marshal with removal targets |
+
+## Phase Effort Budgets
+
+Archon sets the `effort` parameter when invoking sub-agents (preferred over
+`budget_tokens` — ~20-40% token reduction):
+
+| Phase Type | Effort Level | Token Budget | Notes |
+|------------|-------------|--------------|-------|
+| audit      | low         | ~80K         | Read-heavy, minimal generation |
+| build      | high        | ~300K        | Full implementation, iterative |
+| refactor   | medium      | ~150K        | Structural changes, targeted scope |
+| design     | medium      | ~120K        | Planning + spec generation |
+| verify     | low         | ~60K         | Typecheck, test run, visual check |
+
+## Updating Phase Status
+
+Phase status is updated programmatically, not by hand-editing the table:
+
+```bash
+node -e "
+  const {updatePhaseStatus} = require('./core/campaigns/update-campaign');
+  updatePhaseStatus('.planning/campaigns/{slug}.md', {N}, 'complete');
+"
+```
+
+Valid status values: `pending`, `in-progress`, `design-complete`, `complete`,
+`partial`, `failed`, `skipped`.
+
 ## Phase Validation
 
 Archon spawns a **Phase Validator** agent at the end of each build or wire phase to confirm exit conditions before the campaign advances. The validator reads the phase plan, checks actual file state, and returns `pass` or `fail` with a specific reason. On `fail`, Archon re-enters the phase rather than advancing — preventing partially-complete phases from silently propagating into later work.
+
+The validator is invoked as a read-only Haiku sub-agent:
+
+```
+Agent(
+  subagent_type: "citadel:phase-validator",
+  prompt: "Campaign: {slug}. Phase {N} — {title}.
+           Exit conditions: {conditions from Phase End Conditions table}.
+           HANDOFF: {full handoff text from sub-agent}",
+  effort: "low"
+)
+```
+
+Each phase row carries a `validator_retries_remaining: 3` budget. On `fail`,
+Archon decrements the counter and re-delegates the phase to a fresh sub-agent
+with the validator's `conditions_failed` and `suggestions` appended to the
+original prompt. When the budget hits zero, the phase is marked `partial`, a
+`validator_halt` entry is logged to the Decision Log, and the campaign
+advances; validator failure alone never parks a campaign.
 
 For high-stakes decisions (abort, rollback, scope change), Archon may spawn 3 Phase Validators and require 2/3 agreement. A timed-out validator counts as `pass` to prevent indefinite blocking.
 
@@ -126,6 +184,47 @@ when retries are exhausted.
 ## Policy Enforcement
 
 Before executing Red-reversibility operations (force push, bulk delete, branch reset), Archon spawns a `policy-enforcer` agent — a read-only Haiku judge that checks the proposed action against the 3-tier constitution in `docs/CONSTITUTION.md`. A Tier 1 violation always blocks. The verdict and reason are logged to the Decision Log.
+
+The enforcer is invoked like this:
+
+```
+Agent(
+  subagent_type: "citadel:policy-enforcer",
+  prompt: "Action: {description of the proposed operation}
+           Tier: 1
+           Rules: P-001, P-002, P-004, P-007
+           Context: campaign={slug}, agent=archon, session={campaign-slug}",
+  effort: "low"
+)
+```
+
+On `verdict: "allow"` the operation proceeds. On `verdict: "block"` Archon
+logs `"[policy-enforcer] Blocked: {rule_id} — {reason}"` to the Decision Log,
+reports to the user, and stops. The policy gate is non-negotiable for Tier 1
+violations; a block verdict is never overridden.
+
+## Checkpoints and Recovery
+
+Before each phase, Archon creates a checkpoint:
+
+```bash
+git stash push --include-untracked -m "citadel-checkpoint-{campaign-slug}-phase-{N}"
+```
+
+The stash ref is written to the campaign's Continuation State as
+`checkpoint-phase-N: stash@{0}`. If `git stash` fails, Archon logs
+`checkpoint-phase-N: none` and continues; checkpoint failure never blocks a
+phase.
+
+To recover, Archon finds the checkpoint ref in Continuation State, runs
+`git stash pop <ref>` (or `git stash pop` if the ref is unavailable), runs
+typecheck to confirm a clean state, and logs the rollback to the Decision Log
+with what was restored and why.
+
+Within a live session, native rollback is preferred first: Claude Code
+checkpoints plus `/rewind` restore both conversation and files to the
+pre-phase state. The git stash path remains the cross-session recovery
+mechanism; native checkpoints do not survive a session restart.
 
 ## Intake Items
 
