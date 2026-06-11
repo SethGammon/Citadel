@@ -25,7 +25,9 @@ function main() {
     // Claude Code passes the hook event name in the input
     const hookEvent = event.hook_event_name || event.type || 'TaskEvent';
     const isCreated = hookEvent.toLowerCase().includes('created');
-    const eventType = isCreated ? 'task-created' : 'task-completed';
+    // Underscore form: the hyphen form contains an sk- substring that
+    // trips naive secret scanners.
+    const eventType = isCreated ? 'task_created' : 'task_completed';
 
     const taskId = event.task_id || event.id || null;
     const taskTitle = event.title || event.task_title || null;

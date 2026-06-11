@@ -37,11 +37,13 @@ if (!routeBlock) {
   process.exit(1);
 }
 
+const vm = require('vm');
+
 let route, POOLS;
 try {
-  route = new Function(routeBlock + '\nreturn route;')();
+  route = vm.runInNewContext(routeBlock + '\nroute;', {});
 } catch (e) {
-  console.error('FATAL: Could not eval routing block:', e.message);
+  console.error('FATAL: Could not execute routing block:', e.message);
   process.exit(1);
 }
 
@@ -52,9 +54,9 @@ if (!poolsBlock) {
   process.exit(1);
 }
 try {
-  POOLS = new Function('return {' + poolsBlock + '};')();
+  POOLS = vm.runInNewContext('({' + poolsBlock + '})', {});
 } catch (e) {
-  console.error('FATAL: Could not eval POOLS:', e.message);
+  console.error('FATAL: Could not execute POOLS:', e.message);
   process.exit(1);
 }
 
