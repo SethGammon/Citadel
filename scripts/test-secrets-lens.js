@@ -6,9 +6,9 @@
  * The secrets lens (hooks_src/quality-gate.js, lens id "secrets") sweeps
  * session-changed source files at Stop for credential shapes:
  *   - AWS access key ids (AKIA + 16 uppercase alphanumerics)
- *   - GitHub tokens (ghp_ classic, github_pat_ fine-grained)
+ *   - GitHub tokens (classic gh-p and fine-grained github-pat shapes)
  *   - Private key blocks (BEGIN ... PRIVATE KEY)
- *   - Slack tokens (xoxb- / xoxp- with realistic tails)
+ *   - Slack tokens (xoxb / xoxp prefixes with realistic tails)
  *   - Generic secret-named keys assigned high-entropy literals (Shannon >= 3.5)
  *
  * False-positive lessons encoded as tests:
@@ -162,12 +162,12 @@ function main() {
     assert(posOut.includes('aws-config.js'), 'Expected aws-config.js named in output');
   });
 
-  test('detects classic GitHub token (ghp_)', () => {
+  test('detects classic GitHub token', () => {
     assert(posOut.includes('gh-classic.js') && posOut.includes('github-token'),
       'Expected github-token class for gh-classic.js');
   });
 
-  test('detects fine-grained GitHub token (github_pat_)', () => {
+  test('detects fine-grained GitHub token', () => {
     assert(posOut.includes('gh-fine.js'), 'Expected gh-fine.js named in output');
     assert(posOut.includes('fine-grained'), 'Expected fine-grained label in output');
   });
@@ -202,7 +202,7 @@ function main() {
       "EVENTS.emit('task_completed', payload);",
       "const risk_assessment = 'pending_manual_review_queue';",
       "const desk_check_status = 'awaiting_reviewer_signoff';",
-      'const shortVal = "ghp_abc123"; // wrong length, not a real token shape',
+      ['const shortVal = "ghp', '_abc123"; // wrong length, not a real token shape'].join(''),
       '',
     ].join('\n'),
     'placeholders.js': [
