@@ -1,163 +1,134 @@
-# Citadel Roadmap: The Path to World Class
+# Citadel Roadmap: Mission Control for Coding Agents
 
-This is the working milestone plan for making Citadel the reference orchestration layer for
-Claude Code and OpenAI Codex. It is sequenced by leverage: each milestone removes a class of
-risk or unlocks a class of capability, and each has binary exit criteria so progress is
-verifiable rather than vibes.
+Citadel's thesis: the agent companies compete on the agent; nobody owns the operations layer
+above the agents. Memory, routing, guardrails, spend, parallel coordination, and visibility
+are naturally runtime-agnostic, and that layer is what Citadel is becoming.
 
-Origin: a full June 2026 audit of the harness (four deep-dive reviews plus an adversarial
-verification pass over every major finding). The audit confirmed strong fundamentals
-(near-total hook event coverage, quota-aware scheduling, tamper-evident telemetry, real tests)
-and identified the gaps this plan closes.
+This plan supersedes the June 2026 milestone ladder (M0-M7). The shipped milestones are
+recorded below; the unshipped ones are absorbed into the release tracks rather than dropped.
+Sequencing principle is unchanged: reliability over novelty, and every phase has binary exit
+criteria.
 
 ## North Star Metrics
-
-These are the numbers that define "world class" for a harness. Every milestone should move at
-least one of them.
 
 | Metric | Definition | Target |
 |---|---|---|
 | Install success rate | Fresh installs that reach a working `/do` without manual repair | > 95% |
 | Time to first routed task | Install start to first successful `/do` dispatch | < 10 minutes |
 | Campaign resume rate | Interrupted campaigns that resume correctly in a fresh session | > 95% |
-| Safety net honesty | Quality gates that report "did not run" instead of silently passing | 100% |
+| Time to comprehension | A stranger opens the dashboard and can say what Citadel is doing | < 60 seconds |
+| Safety net honesty | Gates that report "did not run" instead of silently passing | 100% |
 | Doc drift | Counts, lists, and tables that can disagree with the code | 0 (generated) |
-| Hook overhead p95 | Added latency per tool call from the hook pipeline | < 200 ms |
 
-## M0: Trust the Safety Net (shipped 2026-06-11)
+## Shipped Foundations (June 2026)
 
-The harness's value rests on its gates being real. This milestone makes every shipped gate do
-what it claims, on every platform.
+- **M0 Trust the Safety Net:** honest cross-platform typecheck outcomes, single source of
+  truth for routing, symmetric secrets protection, watch dedup, fleet teams pilot scaffolding.
+- **M1 One Source of Truth:** generated skill/hook counts across README and docs with a CI
+  drift check.
+- **M2 Native Platform Spine (core):** AskUserQuestion at approval gates, structured outputs
+  for judge agents, checkpoint-aware recovery.
+- **M5 Skill Platform Hygiene:** lint-enforced line budgets, benchmark coverage for
+  destructive skills, skill lifecycle policy.
 
-- Cross-platform post-edit typecheck with honest outcomes (pass, errors, unavailable, timeout).
-  No silent passes, ever.
-- Single source of truth for `/do` routing: keywords live in skill frontmatter, every surface
-  (router table, route preview, demo) is generated, and a drift check runs in CI.
-- Symmetric secrets protection: `.env` writes blocked by default across Edit, Write, and Bash;
-  the native Claude Code memory directory is allowlisted; block reasons are visible on stderr.
-- `/watch` intake dedup and cross-process locking implemented as documented.
-- Fleet Teams Mode pilot scaffolding: protocol, rebalance hook, fallback, benchmark scenario.
+## R1: See It (now to ~6 weeks)
 
-**Exit criteria:** `npm test` green on Windows and POSIX including the new regression tests;
-`generate-routing --check` wired into CI; the typecheck regression guard proves an unavailable
-toolchain produces a visible advisory.
+Convert the invisible parts of the harness (memory, gates, telemetry, loops) into the thing
+people screenshot. Full design in [DASHBOARD_SPEC.md](DASHBOARD_SPEC.md).
 
-## M1: One Source of Truth (core shipped 2026-06-11)
+- **Local dashboard v0.1, read-only.** `citadel dashboard` serves a localhost web app over
+  `.planning/` and telemetry: needs-you inbox, campaigns with phase progress, fleet agents
+  and worktrees, hook activity feed, handoff timeline. Live updates via file watching. The
+  files stay canonical; the dashboard is a view, never a second source of truth.
+- **Loops panel.** Every loop contract record rendered as a card: status, budget burn-down,
+  verifier history, stop-state badge, last review artifact. Loops are already first-class in
+  [LOOP_CONTRACT.md](LOOP_CONTRACT.md); this makes them visible.
+- **Dual-mode cost.** API-key users see estimated dollars (always labeled as estimates),
+  burn rate, and projected cost-to-finish. Subscription users see plan-window consumption
+  and per-skill attribution instead of dollars, mirroring how `/usage` treats them. Sourced
+  from a local OTLP receiver (`claude_code.cost.usage`, `claude_code.token.usage`) with
+  transcript parsing as fallback; Codex via adapter.
+- **Campaign recovery hardening** (carried from the old plan; it is load-bearing for the
+  dashboard story): rollback, resume, and repair for interrupted long-running work.
 
-Eliminate every place where documentation can drift from code, by construction rather than
-discipline.
+**Exit criteria:** a stranger installs Citadel, runs `/do` and `citadel dashboard`, and
+understands what it does in under 60 seconds without reading docs; campaign resume rate
+measured above 95% on the regression suite; dashboard cold start under 1 second and live
+update under 500 ms on a real project.
 
-- Skill counts, skill lists, and hook event tables generated from the catalog into README,
-  docs/SKILLS.md, and docs/ARCHITECTURE.md between markers.
-- Fix AGENTS.md runtime paths; make it a thin dispatcher to CLAUDE.md and Codex equivalents.
-- Consolidate INSTALL.md and QUICKSTART.md into one installation guide with per-runtime
-  sections; DEMO.md becomes a short copyable script that links into it.
-- Extend the routing generator pattern to all generated doc surfaces with one `--check`.
+## R2: Prove It (~6 weeks to 3 months)
 
-**Exit criteria:** a doc-drift test fails CI when any generated surface is stale; a new user
-has exactly one obvious document to follow from clone to first `/do`.
+Manufacture the reason to care: honest, reproducible numbers nobody else publishes.
 
-## M2: Native Platform Spine (gates and contracts shipped 2026-06-11; plugin defaultEnabled deferred)
+- **Public benchmark page** built from the usefulness-trial harness: completion rate and
+  cost on long tasks, bare agent vs harnessed, with methodology and scripts public.
+- **The 90-second demo video** (problem, learning, solution) and a Show HN built around the
+  dashboard plus benchmark page.
+- **Contribution pipeline** (absorbed from M7): good-first-skill issues, a submission
+  checklist, CI running full lint and bench on PRs.
 
-Adopt the platform primitives that replace prompt conventions with contracts.
+**Exit criteria:** a benchmark page we would defend in a comment thread, regenerated by
+script; at least one external contributor lands a skill through the pipeline.
 
-- AskUserQuestion at every approval gate: `/improve` rubric approval, Archon phase boundaries,
-  `/do` ambiguous-route confirmation. Multiple choice beats "STOP and wait".
-- Structured outputs for judge agents (policy-enforcer, phase-validator): schema-enforced
-  returns instead of "respond with ONLY this JSON".
-- Native checkpoint and rewind awareness in Archon recovery, alongside the existing git stash
-  checkpoints (stash for cross-session durability, rewind for in-session rollback).
-- /reload-skills in the create-skill and evolve loops; plugin `defaultEnabled` for invasive
-  components such as the Codex integration.
-- Plan-mode-aware campaign design: spec-first flows start read-only.
+## R3: Drive It (~3 to 5 months)
 
-**Exit criteria:** zero prompt-convention JSON parsing in judge agents; approval gates use
-AskUserQuestion; Archon recovery documents both rollback paths; benchmarks cover the gates.
+The dashboard becomes two-way. Browser actions write intent files into `.planning/` that
+hooks and agents consume, the same contract the terminal uses.
 
-## M3: Teams-Native Fleet GA
+- **Approvals in the browser:** phase gates and risky-action requests with full context
+  (diff, risk note, what happens next), keyboard-first.
+- **Steer, pause, and stop** per agent and per campaign, honoring safe boundaries.
+- **Loop Builder:** a guided flow (trigger, scope, budget, verifier, stop conditions) that
+  refuses to create a loop without a working verifier and a budget. `/do create a loop
+  that...` routes here.
+- **Fortress view:** the same state rendered as a keep; campaigns as banners, agents as
+  units, hook blocks as arrows off the walls, spend as treasury. One-click shareable image.
 
-Graduate the M0 pilot into the default coordination model where the runtime supports it.
+**Exit criteria:** an operator runs a full campaign without touching the terminal after
+launch; a loop authored in the builder runs overnight and stops on its declared conditions.
 
-- Run the Teams Mode pilot on a real multi-scope campaign; measure the success criteria
-  (zero lost discoveries against the .planning mirror, reassignment latency on TeammateIdle,
-  merge conflict rate no worse than classic).
-- Native task spine: scopes and phases live as native tasks with dependency links during
-  execution; `.planning/` remains the durable ledger and recovery source.
-- Make teams mode the default on supporting Claude Code versions with automatic classic
-  fallback; publish the pilot report.
-- Slim fleet SKILL.md below 300 lines by moving protocol depth into docs/FLEET.md.
+## R4: Harden It (~5 to 8 months)
 
-**Exit criteria:** pilot report committed with measured numbers; teams default behind version
-detection; fleet SKILL.md under the line budget; campaign resume works mid-teams-session.
+Depth work that makes the two-way surface safe to trust (absorbs M3 and M6).
 
-## M4: Observability That Sells
+- **Teams-native fleet GA:** run the pilot on a real multi-scope campaign, measure discovery
+  loss, reassignment latency, and merge conflict rate; default on supporting runtimes with
+  classic fallback; publish the pilot report.
+- **Security hardening v2:** sandboxed bash profiles for risky phases, threat model refresh
+  covering teams mode and remote triggers, permission audit reports from real session data,
+  secrets-scanning in the quality gate.
+- **Release integrity:** versioned releases with checksums and migration notes.
 
-Turn the telemetry that already exists into something operators and teams can see.
+**Exit criteria:** pilot report committed with measured numbers; THREAT_MODEL.md v2
+reviewed; a permission audit report renders from real session data.
 
-- OTLP exporter that reads the JSONL telemetry and ships standard OpenTelemetry metrics
-  (token spend, hook latency, agent runs, campaign phases). The hash-chained JSONL stays as
-  the tamper-evident system of record.
-- Dashboard upgrade: hook timing percentiles, campaign cost breakdown, gate outcomes,
-  routine quota usage.
-- Session-start health line: hooks installed, gates active, last verification result.
-- State hygiene: expired consent markers and stale locks cleaned automatically.
+## R5: Multiply It (~8 to 12 months)
 
-**Exit criteria:** one command exports to a local OTEL collector demo; dashboard shows hook
-p50/p95; no unbounded state files remain.
+- **Team workflows** (absorbed from M7): multi-operator campaign visibility, policy
+  templates per repository class, managed-settings guidance for organizations.
+- **Skill and loop registry:** community-contributed skills and loop templates with the
+  existing lint and bench suites as the quality bar, discoverable from the project site.
+- **Runtime expansion:** evaluate a third adapter (Gemini CLI or OpenCode) to make
+  runtime-agnostic undeniable. Adapter work must not regress the two supported runtimes.
 
-## M5: Skill Platform Hygiene (shipped 2026-06-11)
+**Exit criteria:** a team of 5+ runs Citadel as shared infrastructure; a skill or loop the
+maintainer did not write reaches meaningful installs through the registry.
 
-Make the skill collection sustainable as it grows.
+## Parked: Relay
 
-- Line budget enforced by skill-lint: no SKILL.md over 300 lines; split fleet, setup,
-  organize, and watch into core protocol plus linked appendices.
-- Merge `/research` and `/research-fleet` behind one flag; resolve the `/organize` versus
-  `/refactor` boundary (narrow organize or fold it in).
-- Benchmark coverage at 100% for every state-changing or destructive skill (houseclean,
-  organize, watch included).
-- Skill lifecycle policy: versioning field, deprecation path, and router regeneration on any
-  add, rename, or removal.
-
-**Exit criteria:** lint enforces the budget; every destructive skill has scenarios; a skill
-rename is a one-command operation that updates every surface.
-
-## M6: Security Hardening v2
-
-Extend the existing strong posture to the new execution models.
-
-- Sandboxed bash profiles for risky campaign phases, loosening prompts for reversible work
-  inside the sandbox.
-- Threat model refresh covering Teams Mode, routines, and remote triggers.
-- Permission audit reports compiled from the PermissionRequest and PermissionDenied hooks.
-- A secrets-scanning pass in the quality gate (pattern-based, stdlib only).
-- Release integrity: versioned releases of the plugin with checksums and migration notes.
-
-**Exit criteria:** THREAT_MODEL.md v2 reviewed; sandbox profile shipped and documented; a
-permission audit report renders from real session data.
-
-## M7: Team and Distribution
-
-Make Citadel adoptable by teams and discoverable by everyone else.
-
-- Multi-operator campaign visibility: shared campaign state conventions for repos with more
-  than one human operator.
-- Policy templates per repository class (library, service, monorepo, app) installable at
-  setup.
-- Managed-settings guidance for organizations (version pinning, marketplace allowlists).
-- Marketplace polish: accurate counts, per-skill context cost disclosure, screenshots, and a
-  60-second demo.
-- Contribution pipeline: good-first-skill issues, a skill submission checklist, and CI that
-  runs the full lint and bench suite on PRs.
-
-**Exit criteria:** at least two external contributors land skills through the pipeline; the
-marketplace listing is accurate by generation, not by hand.
+A hosted sync plane (cross-machine state, mobile status, push approvals) is deliberately
+not scheduled. It only makes sense after the dashboard is excellent and demand is
+demonstrated (waitlist signal, recurring requests). Nothing in R1-R5 may take a dependency
+on a hosted service; the local-first contract is the product.
 
 ## Sequencing Notes
 
-- M0 and M1 are foundation work: do not start M3 or M7 before they land. Shipping growth on
-  top of silent gates or drifting docs compounds the debt.
-- M2 and M4 can run in parallel after M0; they touch disjoint surfaces.
-- M3 depends on M0 (pilot scaffolding) and benefits from M2 (structured outputs for the lead's
-  judge calls).
-- Reliability over novelty, always: a smaller harness that never lies beats a larger one that
-  sometimes does.
+- R1 blocks everything: R2's video and Show HN are built around the dashboard, and R3 is
+  the dashboard's second act. Do not start R3 before R1's exit criteria are measured.
+- R2 can overlap late R1; the benchmark harness already exists.
+- R4's security work should land before R3's two-way surface is promoted as a default
+  workflow; intent files change the threat surface and the threat model must keep up.
+- The project site lives on GitHub Pages for now. A custom domain is a deferred decision
+  and nothing on the site may depend on one.
+- Reliability over novelty, always: a smaller harness that never lies beats a larger one
+  that sometimes does.
