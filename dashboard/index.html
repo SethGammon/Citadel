@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="color-scheme" content="dark light" />
+  <title>Citadel</title>
+  <link rel="stylesheet" href="/styles.css" />
+  <link rel="icon" type="image/svg+xml"
+    href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='96' fill='%230f1b2d'/%3E%3Cpath fill='%2338bdf8' d='M216 136h16v24h16v-24h16v24h16v-24h16v40h-80z'/%3E%3Crect x='216' y='176' width='80' height='200' fill='%2338bdf8'/%3E%3Crect x='128' y='228' width='60' height='148' fill='%2338bdf8'/%3E%3Crect x='324' y='228' width='60' height='148' fill='%2338bdf8'/%3E%3Crect x='112' y='376' width='288' height='40' fill='%230ea5e9'/%3E%3C/svg%3E" />
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand">
+        <svg class="brand-mark" viewBox="0 0 512 512" aria-hidden="true">
+          <path fill="currentColor" d="M216 136h16v24h16v-24h16v24h16v-24h16v40h-80z"/>
+          <rect x="216" y="176" width="80" height="200" fill="currentColor"/>
+          <path fill="currentColor" d="M128 196h12v18h12v-18h12v18h12v-18h12v32h-60z"/>
+          <rect x="128" y="228" width="60" height="148" fill="currentColor"/>
+          <path fill="currentColor" d="M324 196h12v18h12v-18h12v18h12v-18h12v32h-60z"/>
+          <rect x="324" y="228" width="60" height="148" fill="currentColor"/>
+          <rect x="112" y="376" width="288" height="40" fill="currentColor"/>
+        </svg>
+        <span class="brand-name">CITADEL</span>
+      </div>
+
+      <nav class="nav" id="nav">
+        <a href="#/overview" data-panel="overview">Needs You <span class="nav-count" id="count-needs"></span></a>
+        <a href="#/campaigns" data-panel="campaigns">Campaigns <span class="nav-count" id="count-campaigns"></span></a>
+        <a href="#/fleet" data-panel="fleet">Fleet <span class="nav-count" id="count-fleet"></span></a>
+        <a href="#/loops" data-panel="loops">Loops <span class="nav-count" id="count-loops"></span></a>
+        <a href="#/cost" data-panel="cost">Cost</a>
+        <a href="#/hooks" data-panel="hooks">Hook Feed</a>
+        <a href="#/handoffs" data-panel="handoffs">Handoffs</a>
+      </nav>
+
+      <div class="sidebar-foot">
+        <div class="health-line" id="health-line">
+          <span class="dot dot-unknown" id="health-dot"></span>
+          <span id="health-text">connecting…</span>
+        </div>
+        <div class="conn-line"><span class="dot dot-unknown" id="sse-dot"></span><span id="sse-text">live updates</span></div>
+        <div class="foot-note">read-only · localhost</div>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="main-head">
+        <h1 id="panel-title">Needs You</h1>
+        <div class="main-meta" id="panel-meta"></div>
+      </header>
+      <section class="content" id="content" tabindex="-1">
+        <div class="loading">Loading…</div>
+      </section>
+    </main>
+  </div>
+  <script src="/app.js"></script>
+</body>
+</html>

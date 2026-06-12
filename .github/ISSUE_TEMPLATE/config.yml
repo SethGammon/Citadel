@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Questions and discussion
+    url: https://github.com/SethGammon/Citadel/discussions
+    about: Usage questions, ideas, and show-and-tell belong in Discussions.
+  - name: Security vulnerability
+    url: https://github.com/SethGammon/Citadel/security/advisories/new
+    about: Report privately. Never open a public issue for a vulnerability.

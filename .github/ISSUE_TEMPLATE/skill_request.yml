@@ -1,0 +1,32 @@
+name: Skill or loop request
+description: Propose a new built-in skill or loop template
+title: "skill: "
+labels: ["enhancement", "skill"]
+body:
+  - type: textarea
+    id: workflow
+    attributes:
+      label: What workflow should this cover?
+      description: Describe the task you keep doing by hand, not the implementation.
+    validations:
+      required: true
+  - type: textarea
+    id: trigger
+    attributes:
+      label: How would someone invoke it?
+      placeholder: "/do keep my PRs green, or /loop nightly-deps"
+    validations:
+      required: true
+  - type: textarea
+    id: done
+    attributes:
+      label: What does "done" look like?
+      description: Skills and loops need verifiable exit conditions. What command or check proves it worked?
+    validations:
+      required: true
+  - type: checkboxes
+    id: willing
+    attributes:
+      label: Contribution
+      options:
+        - label: I am willing to build this with guidance
