@@ -42,6 +42,10 @@
       .rf-r2 { animation: rf-ring 8s linear 2s infinite both; }
       .rf-r3 { animation: rf-ring 8s linear 4s infinite both; }
       .rf-r4 { animation: rf-ring 8s linear 6s infinite both; }
+      @media (prefers-reduced-motion: reduce) {
+        .rf-p1, .rf-p2, .rf-p3, .rf-p4,
+        .rf-r1, .rf-r2, .rf-r3, .rf-r4 { animation: none; opacity: 0; }
+      }
     </style>
   </defs>
 

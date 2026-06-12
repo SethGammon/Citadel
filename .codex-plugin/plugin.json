@@ -31,7 +31,7 @@
     "privacyPolicyURL": "https://github.com/SethGammon/Citadel/blob/main/PRIVACY.md",
     "termsOfServiceURL": "https://github.com/SethGammon/Citadel/blob/main/LICENSE",
     "screenshots": [
-      "./assets/citadel-overview.png"
+      "./assets/social-preview.png"
     ],
     "shortDescription": "Codex-native orchestration: 46 skills, campaigns, fleet coordination, quality gates",
     "longDescription": "Citadel adds durable planning state, reusable skills, lifecycle hooks, telemetry, PR triage, and coordinated multi-agent workflows to Codex.",

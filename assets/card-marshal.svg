@@ -20,6 +20,9 @@
         50%      { opacity: 0.9; }
       }
       .cm-core { animation: cm-pulse 2.8s ease-in-out 0.4s infinite; }
+      @media (prefers-reduced-motion: reduce) {
+        .cm-core { animation: none; opacity: 0.6; }
+      }
     </style>
   </defs>
 

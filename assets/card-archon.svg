@@ -25,6 +25,10 @@
       }
       .ca-core   { animation: ca-pulse 3s ease-in-out 0.8s infinite; }
       .ca-orbiter { transform-origin: 60px 110px; animation: ca-orbit 8s linear infinite; }
+      @media (prefers-reduced-motion: reduce) {
+        .ca-core, .ca-orbiter { animation: none; }
+        .ca-core { opacity: 0.6; }
+      }
     </style>
   </defs>
 
@@ -85,5 +89,5 @@
   <text x="149" y="164" class="ca-sans" font-size="13" fill="#c9d1d9">Self-corrects direction every 2 phases</text>
 
   <circle cx="136" cy="186" r="3.5" fill="#f0883e" opacity="0.85"/>
-  <text x="149" y="190" class="ca-sans" font-size="13" fill="#c9d1d9">State written to disk — never lost</text>
+  <text x="149" y="190" class="ca-sans" font-size="13" fill="#c9d1d9">State written to disk · never lost</text>
 </svg>
