@@ -20,6 +20,9 @@
         50%      { opacity: 0.9; }
       }
       .cs-core { animation: cs-pulse 2.8s ease-in-out infinite; }
+      @media (prefers-reduced-motion: reduce) {
+        .cs-core { animation: none; opacity: 0.6; }
+      }
     </style>
   </defs>
 
@@ -74,5 +77,5 @@
   <text x="149" y="164" class="cs-sans" font-size="13" fill="#c9d1d9">Zero tokens when not invoked</text>
 
   <circle cx="136" cy="186" r="3.5" fill="#00d2ff" opacity="0.85"/>
-  <text x="149" y="190" class="cs-sans" font-size="13" fill="#c9d1d9">33 built-in — write your own</text>
+  <text x="149" y="190" class="cs-sans" font-size="13" fill="#c9d1d9">46 built-in · write your own</text>
 </svg>

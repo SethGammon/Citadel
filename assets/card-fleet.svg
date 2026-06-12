@@ -41,6 +41,11 @@
       .cf-a1 { animation: cf-wave1 4s linear 0s   infinite both; }
       .cf-a2 { animation: cf-wave2 4s linear 0.6s infinite both; }
       .cf-a3 { animation: cf-wave3 4s linear 1.2s infinite both; }
+      @media (prefers-reduced-motion: reduce) {
+        .cf-core, .cf-a1, .cf-a2, .cf-a3 { animation: none; }
+        .cf-core { opacity: 0.6; }
+        .cf-a1, .cf-a2, .cf-a3 { opacity: 0.5; }
+      }
     </style>
   </defs>
 

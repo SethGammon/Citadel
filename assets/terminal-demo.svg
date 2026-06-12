@@ -1,0 +1,204 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="648" viewBox="0 0 1200 648" role="img" aria-labelledby="td-title-a">
+  <title id="td-title-a">Illustrative Citadel session: /do routes an audit request through the router tiers to marshal, which reviews, fixes, tests, verifies, and writes a handoff.</title>
+  <defs>
+    <linearGradient id="td-accent" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#00d2ff"/>
+      <stop offset="55%" stop-color="#3a7bd5"/>
+      <stop offset="100%" stop-color="#7b2ff7"/>
+    </linearGradient>
+    <filter id="td-shadow" x="-6%" y="-6%" width="112%" height="116%">
+      <feDropShadow dx="0" dy="10" stdDeviation="18" flood-color="#000000" flood-opacity="0.45"/>
+    </filter>
+    <filter id="td-glow">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="3" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+
+    <style>
+      .td-mono { font-family: 'SF Mono','Cascadia Code','Consolas',monospace; font-size: 15px; }
+      .td-sans { font-family: 'Segoe UI',system-ui,-apple-system,sans-serif; }
+
+      /* ── Master 28s loop ──
+         type command 2–14% · router 17–31% · marshal 36–57%
+         summary 63–69% · prompt 74% · hold · fade 95–98% */
+
+      @keyframes td-reset {
+        0%      { opacity: 0; }
+        1%      { opacity: 1; }
+        95%     { opacity: 1; }
+        98%,100%{ opacity: 0; }
+      }
+      .td-scene { animation: td-reset 28s linear infinite; }
+
+      /* Command types in: 56 chars, 9px each = 504px */
+      @keyframes td-type {
+        0%  { width: 0; animation-timing-function: linear; }
+        2%  { width: 0; animation-timing-function: steps(56, end); }
+        14% { width: 504px; }
+        100%{ width: 504px; }
+      }
+      .td-typeclip { animation: td-type 28s infinite; }
+
+      /* Caret rides the typing edge, then parks + blinks until output starts */
+      @keyframes td-caret-x {
+        0%  { transform: translateX(0); animation-timing-function: linear; }
+        2%  { transform: translateX(0); animation-timing-function: steps(56, end); }
+        14% { transform: translateX(504px); }
+        100%{ transform: translateX(504px); }
+      }
+      @keyframes td-caret-on {
+        0%,15%   { opacity: 1; }
+        15.8%    { opacity: 0; }
+        16.4%    { opacity: 1; }
+        17%,100% { opacity: 0; }
+      }
+      .td-caret { animation: td-caret-x 28s infinite, td-caret-on 28s steps(1) infinite; }
+
+      /* Line reveals (instant, like a real terminal) */
+      @keyframes td-l1  { 0%,17%   { opacity: 0; } 17.2%,100% { opacity: 1; } }
+      @keyframes td-l2  { 0%,19.5% { opacity: 0; } 19.7%,100% { opacity: 1; } }
+      @keyframes td-l3  { 0%,22%   { opacity: 0; } 22.2%,100% { opacity: 1; } }
+      @keyframes td-l4  { 0%,24.5% { opacity: 0; } 24.7%,100% { opacity: 1; } }
+      @keyframes td-l5  { 0%,27.5% { opacity: 0; } 27.7%,100% { opacity: 1; } }
+      @keyframes td-l6  { 0%,31%   { opacity: 0; } 31.2%,100% { opacity: 1; } }
+      @keyframes td-l7  { 0%,36%   { opacity: 0; } 36.2%,100% { opacity: 1; } }
+      @keyframes td-l8  { 0%,43%   { opacity: 0; } 43.2%,100% { opacity: 1; } }
+      @keyframes td-l9  { 0%,50%   { opacity: 0; } 50.2%,100% { opacity: 1; } }
+      @keyframes td-l10 { 0%,57%   { opacity: 0; } 57.2%,100% { opacity: 1; } }
+      @keyframes td-l11 { 0%,63%   { opacity: 0; } 63.2%,100% { opacity: 1; } }
+      @keyframes td-l12 { 0%,66%   { opacity: 0; } 66.2%,100% { opacity: 1; } }
+      @keyframes td-l13 { 0%,69%   { opacity: 0; } 69.2%,100% { opacity: 1; } }
+      @keyframes td-l14 { 0%,74%   { opacity: 0; } 74.2%,100% { opacity: 1; } }
+      .td-r1  { animation: td-l1  28s linear infinite; }
+      .td-r2  { animation: td-l2  28s linear infinite; }
+      .td-r3  { animation: td-l3  28s linear infinite; }
+      .td-r4  { animation: td-l4  28s linear infinite; }
+      .td-r5  { animation: td-l5  28s linear infinite; }
+      .td-r6  { animation: td-l6  28s linear infinite; }
+      .td-r7  { animation: td-l7  28s linear infinite; }
+      .td-r8  { animation: td-l8  28s linear infinite; }
+      .td-r9  { animation: td-l9  28s linear infinite; }
+      .td-r10 { animation: td-l10 28s linear infinite; }
+      .td-r11 { animation: td-l11 28s linear infinite; }
+      .td-r12 { animation: td-l12 28s linear infinite; }
+      .td-r13 { animation: td-l13 28s linear infinite; }
+      .td-r14 { animation: td-l14 28s linear infinite; }
+
+      /* Routed badge flash */
+      @keyframes td-flash {
+        0%,31%  { opacity: 0; }
+        32%     { opacity: 0.25; }
+        36%,100%{ opacity: 0; }
+      }
+      .td-fl { animation: td-flash 28s linear infinite; }
+
+      /* Final prompt caret blinks forever (until scene fade) */
+      @keyframes td-caret2 {
+        0%,74%  { opacity: 0; }
+        74.2%   { opacity: 1; }
+        100%    { opacity: 1; }
+      }
+      @keyframes td-blink { 0%,49% { opacity: 1; } 50%,100% { opacity: 0; } }
+      .td-c2w { animation: td-caret2 28s linear infinite; }
+      .td-c2  { animation: td-blink 1.1s steps(1) infinite; }
+
+      @media (prefers-reduced-motion: reduce) {
+        .td-scene, .td-typeclip, .td-caret, .td-c2w, .td-c2, .td-fl,
+        .td-r1,.td-r2,.td-r3,.td-r4,.td-r5,.td-r6,.td-r7,
+        .td-r8,.td-r9,.td-r10,.td-r11,.td-r12,.td-r13,.td-r14 {
+          animation: none;
+        }
+        .td-typeclip { width: 504px; }
+        .td-caret, .td-fl { opacity: 0; }
+      }
+    </style>
+
+    <clipPath id="td-cmdclip">
+      <rect class="td-typeclip" x="262" y="96" width="0" height="26"/>
+    </clipPath>
+  </defs>
+
+  <!-- ════════════ WINDOW ════════════ -->
+  <g filter="url(#td-shadow)">
+    <rect x="60" y="20" width="1080" height="608" rx="12" fill="#0d1117"/>
+    <rect x="60.75" y="20.75" width="1078.5" height="606.5" rx="12" fill="none" stroke="#1e2632" stroke-width="1.5"/>
+  </g>
+
+  <!-- Chrome bar -->
+  <path d="M 60 32 a 12 12 0 0 1 12 -12 h 1056 a 12 12 0 0 1 12 12 v 30 h -1080 z" fill="#161b22"/>
+  <line x1="60" y1="62" x2="1140" y2="62" stroke="#1e2632" stroke-width="1"/>
+  <circle cx="88"  cy="41" r="6.5" fill="#ff5f57"/>
+  <circle cx="110" cy="41" r="6.5" fill="#febc2e"/>
+  <circle cx="132" cy="41" r="6.5" fill="#28c840"/>
+  <text x="600" y="46" class="td-sans" font-size="12.5" fill="#8b949e" text-anchor="middle">claude code · ~/your-project</text>
+  <text x="1118" y="46" class="td-sans" font-size="10" fill="#4a5568" text-anchor="end" letter-spacing="1">CITADEL · ILLUSTRATIVE SESSION</text>
+  <rect x="60" y="20" width="1080" height="2.5" rx="1.25" fill="url(#td-accent)" opacity="0.8"/>
+
+  <!-- ════════════ SCENE (everything that resets each loop) ════════════ -->
+  <g class="td-scene">
+
+    <!-- Command line -->
+    <text x="96" y="114" class="td-mono" fill="#3fb950">~/your-project $</text>
+    <g clip-path="url(#td-cmdclip)">
+      <text x="262" y="114" class="td-mono" fill="#79c0ff">/do audit the auth module and fix the highest-risk issue</text>
+    </g>
+    <rect class="td-caret" x="263" y="99" width="9" height="18" fill="#79c0ff"/>
+
+    <!-- Router block -->
+    <g class="td-r1">
+      <text x="96" y="166" class="td-mono" fill="#00d2ff" filter="url(#td-glow)">◇ citadel router</text>
+    </g>
+    <g class="td-r2">
+      <text x="122" y="194" class="td-mono" fill="#8b949e">tier 0 · pattern match <tspan fill="#30363d">·····················</tspan> <tspan fill="#4a5568">no match</tspan></text>
+    </g>
+    <g class="td-r3">
+      <text x="122" y="222" class="td-mono" fill="#8b949e">tier 1 · active state <tspan fill="#30363d">······················</tspan> <tspan fill="#4a5568">no open campaign</tspan></text>
+    </g>
+    <g class="td-r4">
+      <text x="122" y="250" class="td-mono" fill="#8b949e">tier 2 · keyword table <tspan fill="#30363d">·····················</tspan> <tspan fill="#e6edf3">"audit"</tspan> <tspan fill="#4a5568">→ candidate found</tspan></text>
+    </g>
+    <g class="td-r5">
+      <text x="122" y="278" class="td-mono" fill="#8b949e">tier 3 · llm classifier <tspan fill="#30363d">····················</tspan> <tspan fill="#4a5568">complexity 3/5 · single session</tspan></text>
+    </g>
+    <g class="td-r6">
+      <rect class="td-fl" x="114" y="296" width="252" height="30" rx="6" fill="#58a6ff"/>
+      <rect x="114" y="296" width="252" height="30" rx="6" fill="#0d1a2a" stroke="#58a6ff" stroke-width="1.2"/>
+      <text x="130" y="316" class="td-mono" fill="#58a6ff">➜ routed to /marshal</text>
+    </g>
+
+    <!-- Marshal block -->
+    <g class="td-r7">
+      <text x="96" y="372" class="td-mono" fill="#58a6ff">◆ marshal 1/4</text>
+      <text x="312" y="372" class="td-mono" fill="#c9d1d9">/review src/auth <tspan fill="#30363d">··················</tspan> <tspan fill="#3fb950">✓</tspan> <tspan fill="#f0883e">3 findings</tspan></text>
+    </g>
+    <g class="td-r8">
+      <text x="96" y="400" class="td-mono" fill="#58a6ff">◆ marshal 2/4</text>
+      <text x="312" y="400" class="td-mono" fill="#c9d1d9">fix: token expiry not enforced <tspan fill="#30363d">····</tspan> <tspan fill="#3fb950">✓ patched</tspan></text>
+    </g>
+    <g class="td-r9">
+      <text x="96" y="428" class="td-mono" fill="#58a6ff">◆ marshal 3/4</text>
+      <text x="312" y="428" class="td-mono" fill="#c9d1d9">/test-gen for changed files <tspan fill="#30363d">·······</tspan> <tspan fill="#3fb950">✓ 12 tests</tspan></text>
+    </g>
+    <g class="td-r10">
+      <text x="96" y="456" class="td-mono" fill="#58a6ff">◆ marshal 4/4</text>
+      <text x="312" y="456" class="td-mono" fill="#c9d1d9">verify: npm test <tspan fill="#30363d">··················</tspan> <tspan fill="#3fb950">✓ 84 passing</tspan></text>
+    </g>
+
+    <!-- Summary block -->
+    <g class="td-r11">
+      <text x="96" y="512" class="td-mono" fill="#3fb950" filter="url(#td-glow)">✓ done · highest-risk issue fixed and verified</text>
+    </g>
+    <g class="td-r12">
+      <text x="122" y="540" class="td-mono" fill="#8b949e">handoff → <tspan fill="#c9d1d9">.planning/handoffs/auth-audit.md</tspan> <tspan fill="#4a5568">· next session resumes from here</tspan></text>
+    </g>
+    <g class="td-r13">
+      <text x="122" y="568" class="td-mono" fill="#8b949e">/cost → <tspan fill="#f0883e">this task $0.42</tspan> <tspan fill="#4a5568">· session $1.87 · tracked locally</tspan></text>
+    </g>
+
+    <!-- Fresh prompt -->
+    <g class="td-r14">
+      <text x="96" y="608" class="td-mono" fill="#3fb950">~/your-project $</text>
+      <g class="td-c2w"><rect class="td-c2" x="263" y="593" width="9" height="18" fill="#79c0ff"/></g>
+    </g>
+  </g>
+</svg>

@@ -1,0 +1,99 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="640" viewBox="0 0 1280 640" role="img" aria-labelledby="sp-title-a">
+  <title id="sp-title-a">Citadel: the operating layer for Claude Code and OpenAI Codex.</title>
+  <defs>
+    <linearGradient id="sp-bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#0a0e14"/>
+      <stop offset="100%" stop-color="#0d1117"/>
+    </linearGradient>
+    <linearGradient id="sp-accent" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#00d2ff"/>
+      <stop offset="55%" stop-color="#3a7bd5"/>
+      <stop offset="100%" stop-color="#7b2ff7"/>
+    </linearGradient>
+    <linearGradient id="sp-title" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="70%" stop-color="#a0c4ff"/>
+      <stop offset="100%" stop-color="#8b9eff"/>
+    </linearGradient>
+    <linearGradient id="sp-keep" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#7dd3fc"/>
+      <stop offset="1" stop-color="#38bdf8"/>
+    </linearGradient>
+    <radialGradient id="sp-aur1" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#00d2ff" stop-opacity="0.12"/>
+      <stop offset="100%" stop-color="#00d2ff" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="sp-aur2" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#7b2ff7" stop-opacity="0.12"/>
+      <stop offset="100%" stop-color="#7b2ff7" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="sp-glow">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="4" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="sp-glow-lg">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="12" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <pattern id="sp-dots" x="0" y="0" width="26" height="26" patternUnits="userSpaceOnUse">
+      <circle cx="13" cy="13" r="0.8" fill="#1e2632" opacity="0.8"/>
+    </pattern>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1280" height="640" fill="url(#sp-bg)"/>
+  <rect width="1280" height="640" fill="url(#sp-dots)" opacity="0.55"/>
+  <ellipse cx="340" cy="140" rx="480" ry="260" fill="url(#sp-aur1)"/>
+  <ellipse cx="980" cy="500" rx="480" ry="280" fill="url(#sp-aur2)"/>
+  <rect x="40" y="0" width="1200" height="4" rx="2" fill="url(#sp-accent)" opacity="0.9"/>
+
+  <!-- Faint orbital rings behind the wordmark -->
+  <g opacity="0.55">
+    <circle cx="640" cy="290" r="210" fill="none" stroke="#2b3a55" stroke-width="1" opacity="0.45"/>
+    <circle cx="640" cy="290" r="290" fill="none" stroke="#2b3a55" stroke-width="1" opacity="0.30"/>
+    <circle cx="640" cy="290" r="380" fill="none" stroke="#2b3a55" stroke-width="1" opacity="0.18"/>
+    <circle cx="850" cy="290" r="6"   fill="#00d2ff" filter="url(#sp-glow)" opacity="0.9"/>
+    <circle cx="435" cy="488" r="7"   fill="#58a6ff" filter="url(#sp-glow)" opacity="0.9"/>
+    <circle cx="386" cy="125" r="6.5" fill="#f0883e" filter="url(#sp-glow)" opacity="0.9"/>
+    <circle cx="975" cy="513" r="7.5" fill="#bc8cff" filter="url(#sp-glow)" opacity="0.9"/>
+  </g>
+
+  <!-- Castle glyph -->
+  <g transform="translate(601,86) scale(0.152)">
+    <path fill="url(#sp-keep)" d="M216 136h16v24h16v-24h16v24h16v-24h16v40h-80z"/>
+    <rect x="216" y="176" width="80" height="200" fill="url(#sp-keep)"/>
+    <path fill="#38bdf8" d="M128 196h12v18h12v-18h12v18h12v-18h12v32h-60z"/>
+    <rect x="128" y="228" width="60" height="148" fill="#38bdf8"/>
+    <path fill="#38bdf8" d="M324 196h12v18h12v-18h12v18h12v-18h12v32h-60z"/>
+    <rect x="324" y="228" width="60" height="148" fill="#38bdf8"/>
+    <rect x="112" y="376" width="288" height="40" fill="#0ea5e9"/>
+    <path fill="#0f1b2d" d="M236 312a20 20 0 0 1 40 0v64h-40z"/>
+    <rect x="248" y="216" width="16" height="28" rx="8" fill="#0f1b2d"/>
+  </g>
+
+  <!-- Wordmark -->
+  <text x="640" y="318" text-anchor="middle" font-family="'Segoe UI',system-ui,-apple-system,sans-serif" font-size="118" font-weight="900" fill="#00d2ff" opacity="0.08" filter="url(#sp-glow-lg)" letter-spacing="8">CITADEL</text>
+  <text x="640" y="318" text-anchor="middle" font-family="'Segoe UI',system-ui,-apple-system,sans-serif" font-size="118" font-weight="900" fill="url(#sp-title)" letter-spacing="8">CITADEL</text>
+  <rect x="345" y="338" width="590" height="3" rx="1.5" fill="url(#sp-accent)" opacity="0.85"/>
+
+  <!-- Tagline -->
+  <text x="640" y="392" text-anchor="middle" font-family="'Segoe UI',system-ui,-apple-system,sans-serif" font-size="28" fill="#c9d1d9" letter-spacing="0.3">The operating layer for <tspan font-weight="600" fill="#e6edf3">Claude Code</tspan> and <tspan font-weight="600" fill="#e6edf3">OpenAI Codex</tspan></text>
+
+  <!-- Capability chips -->
+  <g font-family="'SF Mono','Cascadia Code','Consolas',monospace" font-size="14" text-anchor="middle">
+    <rect x="285" y="432" width="160" height="34" rx="17" fill="#0d1a2a" stroke="#58a6ff" stroke-width="1.2"/>
+    <text x="365" y="454" fill="#58a6ff">durable memory</text>
+    <rect x="457" y="432" width="132" height="34" rx="17" fill="#0d2020" stroke="#00d2ff" stroke-width="1.2"/>
+    <text x="523" y="454" fill="#00d2ff">/do routing</text>
+    <rect x="601" y="432" width="140" height="34" rx="17" fill="#0d1f12" stroke="#3fb950" stroke-width="1.2"/>
+    <text x="671" y="454" fill="#3fb950">safety hooks</text>
+    <rect x="753" y="432" width="160" height="34" rx="17" fill="#1a1000" stroke="#f0883e" stroke-width="1.2"/>
+    <text x="833" y="454" fill="#f0883e">cost telemetry</text>
+    <rect x="925" y="432" width="166" height="34" rx="17" fill="#140d22" stroke="#bc8cff" stroke-width="1.2"/>
+    <text x="1008" y="454" fill="#bc8cff">parallel fleets</text>
+  </g>
+
+  <!-- Footer -->
+  <text x="640" y="560" text-anchor="middle" font-family="'SF Mono','Cascadia Code','Consolas',monospace" font-size="17" fill="#aab6c5" letter-spacing="1">github.com/SethGammon/Citadel</text>
+  <text x="640" y="596" text-anchor="middle" font-family="'Segoe UI',system-ui,-apple-system,sans-serif" font-size="13" fill="#5a6a85" letter-spacing="0.5">MIT licensed · open source</text>
+</svg>
