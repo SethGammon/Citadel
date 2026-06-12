@@ -196,13 +196,13 @@ npm test
 
 ## Roadmap
 
-The full milestone plan with exit criteria lives in [docs/ROADMAP.md](docs/ROADMAP.md). Current priorities:
+The full plan with exit criteria lives in [docs/ROADMAP.md](docs/ROADMAP.md). The arc: make the harness visible, prove it with numbers, then make it steerable.
 
-- **Campaign recovery:** better rollback, resume, and repair tools for interrupted long-running work.
-- **Codex parity:** tighter native support for Codex plugin packaging, hooks, MCP wiring, and app verification.
-- **Fleet merge discipline:** clearer merge-review queues, conflict handling, and branch hygiene for parallel agents.
-- **Team workflows:** shared campaign visibility, policy templates, and safer defaults for multi-operator repositories.
-- **Observability:** better local dashboards for hook activity, cost, campaign health, and agent throughput.
+- **See It:** a local dashboard over `.planning/` state: campaigns, fleet, loops, hooks, and dual-mode cost (dollars for API users, plan-window burn for subscribers). Spec in [docs/DASHBOARD_SPEC.md](docs/DASHBOARD_SPEC.md).
+- **Prove It:** a public, reproducible benchmark page: completion rate and cost on long tasks, bare agent vs harnessed.
+- **Drive It:** approvals, steering, and a loop builder in the browser, through the same file contracts the terminal uses.
+- **Harden It:** teams-native fleet GA, sandboxed execution profiles, threat model v2, release integrity.
+- **Multiply It:** team workflows, a community skill and loop registry, and a third runtime adapter.
 
 ## Learn More
 
