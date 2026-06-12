@@ -1,0 +1,55 @@
+name: Bug report
+description: Something in the harness misbehaved
+title: "bug: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the report. Full error text beats screenshots of text, and
+        please scrub anything from `.planning/` you would not want public.
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect to happen?
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: What actually happened?
+      description: Include the full error output as text.
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. /do setup --express
+        2. /do review src/auth
+        3. ...
+    validations:
+      required: true
+  - type: dropdown
+    id: runtime
+    attributes:
+      label: Runtime
+      options:
+        - Claude Code
+        - OpenAI Codex
+        - Both
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: OS, shell, and Node version
+      placeholder: "Windows 11 / PowerShell 7 / Node 20.11"
+    validations:
+      required: true
+  - type: textarea
+    id: doctor
+    attributes:
+      label: Output of `npm test` from your Citadel clone (optional)
+      render: text

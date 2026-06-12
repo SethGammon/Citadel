@@ -13,6 +13,7 @@
     "codex:install": "node scripts/codex-install.js",
     "codex:verify": "node scripts/codex-readiness-check.js --write",
     "dashboard": "node scripts/dashboard.js",
+    "dashboard:web": "node scripts/dashboard-server.js",
     "campaign": "node scripts/campaign.js",
     "deliver": "node scripts/deliver.js",
     "continue": "node scripts/continue-action.js",
