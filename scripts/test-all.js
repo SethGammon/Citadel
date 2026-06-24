@@ -80,6 +80,7 @@ const STATE_HYGIENE_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-state-hygiene
 const PERMISSION_AUDIT_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-permission-audit.js');
 const SECRETS_LENS_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-secrets-lens.js');
 const DASHBOARD_WEB_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-dashboard-web.js');
+const NOOP_DETECT_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-noop-detect.js');
 
 const STRICT = process.argv.includes('--strict');
 
@@ -163,6 +164,7 @@ const stateHygienePassed = run('State Hygiene Tests', STATE_HYGIENE_TEST);
 const permissionAuditPassed = run('Permission Audit Tests', PERMISSION_AUDIT_TEST);
 const secretsLensPassed = run('Secrets Lens Tests', SECRETS_LENS_TEST);
 const dashboardWebPassed = run('Dashboard Web Tests', DASHBOARD_WEB_TEST);
+const noopDetectPassed = run('No-op Detector Calibration', NOOP_DETECT_TEST);
 
 console.log('\n' + '='.repeat(40));
 console.log('SUMMARY');
@@ -226,9 +228,10 @@ console.log(`  State hygiene:      ${stateHygienePassed ? 'PASS' : 'FAIL'}`);
 console.log(`  Permission audit:   ${permissionAuditPassed ? 'PASS' : 'FAIL'}`);
 console.log(`  Secrets lens:       ${secretsLensPassed ? 'PASS' : 'FAIL'}`);
 console.log(`  Dashboard web:      ${dashboardWebPassed ? 'PASS' : 'FAIL'}`);
+console.log(`  No-op detector:     ${noopDetectPassed ? 'PASS' : 'FAIL'}`);
 console.log('');
 
-if (hooksPassed && securityPassed && contractsPassed && runtimeRegistryPassed && runtimeMatrixPassed && hookEventsPassed && skillsPassed && demoPassed && telemetryPassed && telemetryIntegrityPassed && memoryBlockPassed && evidenceContractPassed && sandboxProviderPassed && skillPackagingPassed && mapSubstratePassed && deliveryPassed && deliveryPackagePassed && continueActionPassed && nextActionPassed && routePreviewPassed && loopsPassed && operatingProofPassed && usefulnessTrialPassed && operatorConsolePassed && operatorJourneyPassed && firstUseOperatorPassed && verificationPlanPassed && prReadyPassed && stackPlanPassed && coordinationPassed && hookInstallerPassed && campaignPassed && discoveryPassed && discoveryWriterPassed && momentumPassed && momentumWatcherPassed && policyPassed && claudeRuntimePassed && codexRuntimePassed && codexNativeIntegrationPassed && codexOperationalImprovementPassed && installerPassed && projectBootstrapPassed && compatFixturePassed && backwardCompatPassed && costTrackerPassed && dashboardPassed && docSyncPassed && fleetSessionPassed && worktreeReadinessPassed && postEditTypecheckPassed && routingSyncPassed && watchDedupPassed && teammateRebalancePassed && docSurfacesPassed && telemetryOtlpPassed && stateHygienePassed && permissionAuditPassed && secretsLensPassed && dashboardWebPassed) {
+if (hooksPassed && securityPassed && contractsPassed && runtimeRegistryPassed && runtimeMatrixPassed && hookEventsPassed && skillsPassed && demoPassed && telemetryPassed && telemetryIntegrityPassed && memoryBlockPassed && evidenceContractPassed && sandboxProviderPassed && skillPackagingPassed && mapSubstratePassed && deliveryPassed && deliveryPackagePassed && continueActionPassed && nextActionPassed && routePreviewPassed && loopsPassed && operatingProofPassed && usefulnessTrialPassed && operatorConsolePassed && operatorJourneyPassed && firstUseOperatorPassed && verificationPlanPassed && prReadyPassed && stackPlanPassed && coordinationPassed && hookInstallerPassed && campaignPassed && discoveryPassed && discoveryWriterPassed && momentumPassed && momentumWatcherPassed && policyPassed && claudeRuntimePassed && codexRuntimePassed && codexNativeIntegrationPassed && codexOperationalImprovementPassed && installerPassed && projectBootstrapPassed && compatFixturePassed && backwardCompatPassed && costTrackerPassed && dashboardPassed && docSyncPassed && fleetSessionPassed && worktreeReadinessPassed && postEditTypecheckPassed && routingSyncPassed && watchDedupPassed && teammateRebalancePassed && docSurfacesPassed && telemetryOtlpPassed && stateHygienePassed && permissionAuditPassed && secretsLensPassed && dashboardWebPassed && noopDetectPassed) {
   console.log('All tests pass.\n');
   console.log('Next steps:');
   console.log('  node scripts/skill-bench.js --list      see benchmark scenarios');
@@ -298,7 +301,8 @@ const stateHygieneFail = !stateHygienePassed ? 512 : 0;
 const permissionAuditFail = !permissionAuditPassed ? 2 : 0;
 const secretsLensFail = !secretsLensPassed ? 2 : 0;
 const dashboardWebFail = !dashboardWebPassed ? 4 : 0;
-const code =hookFail | securityFail | contractFail | runtimeRegistryFail | runtimeMatrixFail | hookEventFail | skillFail | demoFail | telemetryFail | telemetryIntegrityFail | memoryBlockFail | evidenceContractFail | sandboxProviderFail | skillPackagingFail | mapSubstrateFail | deliveryFail | deliveryPackageFail | continueActionFail | nextActionFail | routePreviewFail | loopsFail | operatingProofFail | usefulnessTrialFail | operatorConsoleFail | operatorJourneyFail | firstUseOperatorFail | verificationPlanFail | prReadyFail | stackPlanFail | coordinationFail | hookInstallerFail | campaignFail | discoveryFail | discoveryWriterFail | momentumFail | momentumWatcherFail | policyFail | claudeRuntimeFail | codexRuntimeFail | codexNativeIntegrationFail | codexOperationalImprovementFail | installerFail | projectBootstrapFail | compatFixtureFail | backwardCompatFail | costTrackerFail | dashboardFail | docSyncFail | fleetSessionFail | worktreeReadinessFail | postEditTypecheckFail | routingSyncFail | watchDedupFail | teammateRebalanceFail | docSurfacesFail | telemetryOtlpFail | stateHygieneFail | permissionAuditFail | secretsLensFail | dashboardWebFail;
+const noopDetectFail = !noopDetectPassed ? 8 : 0;
+const code =hookFail | securityFail | contractFail | runtimeRegistryFail | runtimeMatrixFail | hookEventFail | skillFail | demoFail | telemetryFail | telemetryIntegrityFail | memoryBlockFail | evidenceContractFail | sandboxProviderFail | skillPackagingFail | mapSubstrateFail | deliveryFail | deliveryPackageFail | continueActionFail | nextActionFail | routePreviewFail | loopsFail | operatingProofFail | usefulnessTrialFail | operatorConsoleFail | operatorJourneyFail | firstUseOperatorFail | verificationPlanFail | prReadyFail | stackPlanFail | coordinationFail | hookInstallerFail | campaignFail | discoveryFail | discoveryWriterFail | momentumFail | momentumWatcherFail | policyFail | claudeRuntimeFail | codexRuntimeFail | codexNativeIntegrationFail | codexOperationalImprovementFail | installerFail | projectBootstrapFail | compatFixtureFail | backwardCompatFail | costTrackerFail | dashboardFail | docSyncFail | fleetSessionFail | worktreeReadinessFail | postEditTypecheckFail | routingSyncFail | watchDedupFail | teammateRebalanceFail | docSurfacesFail | telemetryOtlpFail | stateHygieneFail | permissionAuditFail | secretsLensFail | dashboardWebFail | noopDetectFail;
 
 if (!hooksPassed) console.log('Hook smoke test failed. Fix hook issues before proceeding.');
 if (!securityPassed) console.log('Security tests failed. DO NOT SHIP - critical vulnerabilities present.');
@@ -360,5 +364,6 @@ if (!stateHygienePassed) console.log('State hygiene tests failed. Fix expired-st
 if (!permissionAuditPassed) console.log('Permission audit tests failed. Fix permission-events logging or report rendering before shipping.');
 if (!secretsLensPassed) console.log('Secrets lens tests failed. Fix the quality-gate secrets sweep before shipping.');
 if (!dashboardWebPassed) console.log('Dashboard web tests failed. Fix scripts/dashboard-server.js or the dashboard/ UI before shipping.');
+if (!noopDetectPassed) console.log('No-op detector calibration failed. The detector regressed against core/skills/noop-calibration.json. Fix core/skills/noop-detect.js before shipping.');
 console.log('');
 process.exit(code);

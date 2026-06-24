@@ -22,6 +22,49 @@ Moves to a docs companion (`docs/{TOPIC}.md`, linked from the skill):
 Trim by deleting, not by compressing prose into ambiguity. Stale or vague
 guidance actively degrades agent accuracy.
 
+## No-op detection
+
+A "no-op" is an instruction aimed at the agent's own disposition or effort with
+no specific, checkable criterion: "be thorough", "make it high-quality", "write
+clean code". Delete the line and a competent agent behaves the same (Pocock's
+ablation test). No-ops burn tokens and dilute the load-bearing instructions
+around them, so they are removed on sight - the same rule as the line budget:
+trim by deleting, not by softening.
+
+The pipeline is three tiers, cheap to expensive. Each tier only sees what the
+one before it surfaced, so cost stays bounded:
+
+| Tier | Command | Cost | Role |
+|---|---|---|---|
+| 1 - Static | `npm run noop:scan` | free, no LLM | Flag candidate lines (vocab hit, no anchor, not a guard). Advisory. |
+| 2 - Judge | `npm run noop:judge` | 1 batched `claude` call for ALL candidates | Adjudicate each: delete / trim / keep, with a reason. |
+| 3 - Ablation | `npm run noop:ablate -- --skill X` | ~2 calls per skill (batch+bisect) | Empirical Pocock test: rerun benchmarks with the line removed; same assertion vector => confirmed no-op. |
+| 4 - Apply | `npm run noop:apply -- --skill X` | free | Apply confirmed removals; bumps `last-updated`. |
+
+The detector (`core/skills/noop-detect.js`) is calibrated against
+`core/skills/noop-calibration.json` and regression-tested by
+`scripts/test-noop-detect.js`, which runs inside `node scripts/test-all.js`.
+The hard invariant: it must NEVER flag a fringe-case guard (the most dangerous
+false positive - it would delete a safeguard).
+
+Two facts make this affordable:
+- Static pre-filter means the LLM/ablation tiers only ever touch a handful of
+  lines, never the whole corpus.
+- Ablation removes ALL of a skill's candidates at once and runs the benchmarks
+  once; only a behavioral change triggers bisection. Most candidates are real
+  no-ops, so the single-pass branch dominates.
+
+Cadence:
+- **Every commit (free):** `test-all.js` runs the calibration test. `noop:scan`
+  is advisory - run it when editing skills.
+- **Pre-release:** run `noop:judge` on the current candidates; apply confirmed
+  trims/deletes.
+- **Audit / low-confidence:** escalate to `noop:ablate` for the empirical test.
+
+When a removal is confirmed, add the line (and any new false-positive pattern
+the scan surfaced) to `noop-calibration.json` so the detector keeps that
+knowledge - the calibration set is the contract and it only grows.
+
 ## Adding a skill
 
 1. Scaffold:

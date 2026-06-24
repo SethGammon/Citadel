@@ -1,0 +1,135 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="524" viewBox="0 0 1200 524" role="img" aria-labelledby="lf-title">
+  <title id="lf-title">Citadel operating loop: a /do request routes through tiers 0-3 to a skill, marshal, archon, or fleet; every path runs the same lifecycle hooks (protect, verify, record), which persist state to .planning/ memory, and the next session resumes from the router.</title>
+  <defs>
+    <linearGradient id="lf-bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0d1117"/>
+      <stop offset="100%" stop-color="#161b22"/>
+    </linearGradient>
+    <linearGradient id="lf-top" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#00d2ff"/>
+      <stop offset="100%" stop-color="#3a7bd5"/>
+    </linearGradient>
+    <filter id="lf-glow">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="4" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+
+    <marker id="lf-ar-cyan" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#00d2ff" fill-opacity="0.85"/></marker>
+    <marker id="lf-ar-skill" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#3fb950" fill-opacity="0.85"/></marker>
+    <marker id="lf-ar-marshal" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#58a6ff" fill-opacity="0.85"/></marker>
+    <marker id="lf-ar-archon" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#f0883e" fill-opacity="0.85"/></marker>
+    <marker id="lf-ar-fleet" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#bc8cff" fill-opacity="0.85"/></marker>
+
+    <style>
+      .lf-mono { font-family: 'SF Mono','Cascadia Code','Consolas',monospace; }
+      .lf-sans { font-family: 'Segoe UI',system-ui,sans-serif; }
+
+      /* Marching ants: dashes flow from .planning/ back toward the router */
+      @keyframes lf-march { to { stroke-dashoffset: -28; } }
+      .lf-loop { stroke-dasharray: 8 6; animation: lf-march 1.4s linear infinite; }
+
+      /* Write pulse on the .planning/ store */
+      @keyframes lf-pulse {
+        0%, 100% { opacity: 0; r: 8; }
+        50%      { opacity: 0.5; r: 20; }
+      }
+      .lf-write { animation: lf-pulse 3.2s ease-in-out infinite both; }
+
+      @media (prefers-reduced-motion: reduce) {
+        .lf-loop { animation: none; }
+        .lf-write { animation: none; opacity: 0; }
+      }
+    </style>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="524" rx="14" fill="url(#lf-bg)"/>
+  <rect x="0.75" y="0.75" width="1198.5" height="522.5" rx="14" fill="none" stroke="#00d2ff" stroke-width="1.5" stroke-opacity="0.2"/>
+  <rect x="30" y="11" width="1140" height="2.5" rx="1.25" fill="url(#lf-top)" opacity="0.6"/>
+
+  <!-- ── HEADER ── -->
+  <text x="48" y="48" class="lf-sans" font-size="18" font-weight="700" fill="#e6edf3" letter-spacing="4">CITADEL</text>
+  <text x="152" y="48" class="lf-mono" font-size="11" fill="#00d2ff" opacity="0.65" letter-spacing="2">/ OPERATING LOOP</text>
+  <text x="1152" y="48" class="lf-sans" font-size="12" fill="#8b949e" text-anchor="end" font-style="italic">Whatever runs, the same loop closes around it.</text>
+
+  <!-- Column headers -->
+  <text x="135"  y="78" class="lf-sans" font-size="10" fill="#4a5568" letter-spacing="2" font-weight="600" text-anchor="middle">REQUEST</text>
+  <text x="355"  y="78" class="lf-sans" font-size="10" fill="#4a5568" letter-spacing="2" font-weight="600" text-anchor="middle">ROUTE</text>
+  <text x="585"  y="78" class="lf-sans" font-size="10" fill="#4a5568" letter-spacing="2" font-weight="600" text-anchor="middle">EXECUTE</text>
+  <text x="840"  y="78" class="lf-sans" font-size="10" fill="#4a5568" letter-spacing="2" font-weight="600" text-anchor="middle">ENFORCE</text>
+  <text x="1077" y="78" class="lf-sans" font-size="10" fill="#4a5568" letter-spacing="2" font-weight="600" text-anchor="middle">PERSIST</text>
+
+  <!-- Header divider -->
+  <line x1="30" y1="90" x2="1170" y2="90" stroke="#21262d" stroke-width="1.5"/>
+
+  <!-- ═══════════ CONNECTORS (drawn first, under the boxes) ═══════════ -->
+  <!-- you -> router -->
+  <line x1="230" y1="288" x2="274" y2="288" stroke="#00d2ff" stroke-width="1.6" stroke-opacity="0.7" marker-end="url(#lf-ar-cyan)"/>
+
+  <!-- router -> ladder -->
+  <path d="M430 288 C 455 288, 455 171, 474 171" fill="none" stroke="#3fb950" stroke-width="1.4" stroke-opacity="0.7" marker-end="url(#lf-ar-skill)"/>
+  <path d="M430 288 C 455 288, 455 249, 474 249" fill="none" stroke="#58a6ff" stroke-width="1.4" stroke-opacity="0.7" marker-end="url(#lf-ar-marshal)"/>
+  <path d="M430 288 C 455 288, 455 327, 474 327" fill="none" stroke="#f0883e" stroke-width="1.4" stroke-opacity="0.7" marker-end="url(#lf-ar-archon)"/>
+  <path d="M430 288 C 455 288, 455 405, 474 405" fill="none" stroke="#bc8cff" stroke-width="1.4" stroke-opacity="0.7" marker-end="url(#lf-ar-fleet)"/>
+
+  <!-- ladder -> hooks -->
+  <path d="M690 171 C 720 171, 720 288, 743 288" fill="none" stroke="#3fb950" stroke-width="1.4" stroke-opacity="0.7" marker-end="url(#lf-ar-cyan)"/>
+  <path d="M690 249 C 720 249, 720 288, 743 288" fill="none" stroke="#58a6ff" stroke-width="1.4" stroke-opacity="0.7" marker-end="url(#lf-ar-cyan)"/>
+  <path d="M690 327 C 720 327, 720 288, 743 288" fill="none" stroke="#f0883e" stroke-width="1.4" stroke-opacity="0.7" marker-end="url(#lf-ar-cyan)"/>
+  <path d="M690 405 C 720 405, 720 288, 743 288" fill="none" stroke="#bc8cff" stroke-width="1.4" stroke-opacity="0.7" marker-end="url(#lf-ar-cyan)"/>
+
+  <!-- hooks -> .planning -->
+  <line x1="935" y1="288" x2="982" y2="288" stroke="#00d2ff" stroke-width="1.6" stroke-opacity="0.7" marker-end="url(#lf-ar-cyan)"/>
+
+  <!-- .planning -> router (loop back, animated) -->
+  <path class="lf-loop" d="M1077 326 V 452 a6 6 0 0 1 -6 6 H 361 a6 6 0 0 1 -6 -6 V 320" fill="none" stroke="#00d2ff" stroke-width="1.6" stroke-opacity="0.85" marker-end="url(#lf-ar-cyan)"/>
+  <text x="716" y="446" class="lf-sans" font-size="11" fill="#00d2ff" opacity="0.8" text-anchor="middle" font-style="italic">next session resumes &#8594; router</text>
+
+  <!-- ═══════════ NODES ═══════════ -->
+
+  <!-- YOU / request -->
+  <rect x="40" y="262" width="190" height="52" rx="10" fill="#0d1b22" stroke="#00d2ff" stroke-width="1.5" stroke-opacity="0.8"/>
+  <text x="58" y="285" class="lf-mono" font-size="15" fill="#79c0ff">/do &lt;task&gt;</text>
+  <text x="58" y="303" class="lf-sans" font-size="10" fill="#8b949e" opacity="0.7">plain-English request</text>
+
+  <!-- ROUTER -->
+  <rect x="280" y="260" width="150" height="56" rx="10" fill="#0d2027" stroke="#00d2ff" stroke-width="1.6" stroke-opacity="0.9"/>
+  <text x="355" y="285" class="lf-sans" font-size="13" fill="#00d2ff" text-anchor="middle" font-weight="700" letter-spacing="1">ROUTER</text>
+  <text x="355" y="303" class="lf-sans" font-size="10" fill="#00d2ff" text-anchor="middle" opacity="0.7">tiers 0&#8211;3</text>
+
+  <!-- LADDER: skill -->
+  <rect x="480" y="148" width="210" height="46" rx="8" fill="#0e1f0e" stroke="#3fb950" stroke-width="1.5" stroke-opacity="0.85"/>
+  <text x="498" y="169" class="lf-sans" font-size="14" fill="#3fb950" font-weight="600">&#9671;  skill</text>
+  <text x="498" y="185" class="lf-sans" font-size="10" fill="#3fb950" opacity="0.65">focused task &#183; loads on demand</text>
+
+  <!-- LADDER: marshal -->
+  <rect x="480" y="226" width="210" height="46" rx="8" fill="#0e1219" stroke="#58a6ff" stroke-width="1.5" stroke-opacity="0.85"/>
+  <text x="498" y="247" class="lf-sans" font-size="14" fill="#58a6ff" font-weight="600">&#9670;  marshal</text>
+  <text x="498" y="263" class="lf-sans" font-size="10" fill="#58a6ff" opacity="0.65">multi-step &#183; one session</text>
+
+  <!-- LADDER: archon -->
+  <rect x="480" y="304" width="210" height="46" rx="8" fill="#1c1108" stroke="#f0883e" stroke-width="1.5" stroke-opacity="0.85"/>
+  <text x="498" y="325" class="lf-sans" font-size="14" fill="#f0883e" font-weight="600">&#11041;  archon</text>
+  <text x="498" y="341" class="lf-sans" font-size="10" fill="#f0883e" opacity="0.65">multi-session campaign</text>
+
+  <!-- LADDER: fleet -->
+  <rect x="480" y="382" width="210" height="46" rx="8" fill="#120c1c" stroke="#bc8cff" stroke-width="1.5" stroke-opacity="0.85"/>
+  <text x="498" y="403" class="lf-sans" font-size="14" fill="#bc8cff" font-weight="600">&#11042;  fleet</text>
+  <text x="498" y="419" class="lf-sans" font-size="10" fill="#bc8cff" opacity="0.65">parallel &#183; isolated worktrees</text>
+
+  <!-- HOOKS -->
+  <rect x="745" y="256" width="190" height="64" rx="10" fill="#0d2027" stroke="#00d2ff" stroke-width="1.6" stroke-opacity="0.9"/>
+  <text x="840" y="281" class="lf-sans" font-size="12" fill="#00d2ff" text-anchor="middle" font-weight="700" letter-spacing="1">LIFECYCLE HOOKS</text>
+  <text x="840" y="301" class="lf-sans" font-size="10" fill="#00d2ff" text-anchor="middle" opacity="0.7">protect &#183; verify &#183; record</text>
+
+  <!-- .planning store (cylinder) -->
+  <circle class="lf-write" cx="1077" cy="289" r="8" fill="none" stroke="#00d2ff" stroke-width="1.5" opacity="0"/>
+  <path d="M985 254 V 324 A 92 11 0 0 0 1169 324 V 254" fill="#0d2027" stroke="#00d2ff" stroke-width="1.6" stroke-opacity="0.9"/>
+  <ellipse cx="1077" cy="254" rx="92" ry="11" fill="#0e242b" stroke="#00d2ff" stroke-width="1.6" stroke-opacity="0.9"/>
+  <text x="1077" y="290" class="lf-mono" font-size="13" fill="#00d2ff" text-anchor="middle" font-weight="600">.planning/</text>
+  <text x="1077" y="308" class="lf-sans" font-size="9.5" fill="#8b949e" text-anchor="middle" opacity="0.85">state &#183; telemetry &#183; handoffs</text>
+
+  <!-- Footer -->
+  <line x1="30" y1="490" x2="1170" y2="490" stroke="#21262d" stroke-width="1"/>
+  <text x="600" y="508" class="lf-sans" font-size="11" fill="#4a5568" text-anchor="middle" letter-spacing="1">Every path ends in the same lifecycle. State persists to disk, and the next session resumes where this one left off.</text>
+</svg>

@@ -126,20 +126,7 @@ Classification cascades through four tiers, cheapest first:
 
 Most requests resolve before Tier 3. Whatever runs, the same loop closes around it:
 
-```mermaid
-flowchart LR
-    A["you: /do &lt;task&gt;"] --> R{"router<br/>tiers 0-3"}
-    R --> S["skill<br/>focused task"]
-    R --> M["marshal<br/>multi-step"]
-    R --> C["archon<br/>multi-session"]
-    R --> F["fleet<br/>parallel worktrees"]
-    S --> H["lifecycle hooks<br/>protect · verify · record"]
-    M --> H
-    C --> H
-    F --> H
-    H --> P[(".planning/ memory<br/>state · telemetry · handoffs")]
-    P -.->|"next session resumes"| R
-```
+<img src="assets/loop-flow.svg" width="100%" alt="Operating loop: a /do request routes through tiers 0-3 to a skill, marshal, archon, or fleet; every path runs the same lifecycle hooks (protect, verify, record), which persist state to .planning/ memory, and the next session resumes from the router" />
 
 ## Orchestration Ladder
 

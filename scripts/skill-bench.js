@@ -1040,4 +1040,18 @@ function main() {
   process.exit(totalFail > 0 ? 1 : 0);
 }
 
-main();
+// Reusable pieces for other tools (e.g. scripts/noop-ablate.js). Exported only
+// when required as a module; running as a script still executes main().
+module.exports = {
+  parseScenario,
+  discoverScenarios,
+  setupProjectState,
+  executeClaudeScenario,
+  runAssertions,
+  findClaudeCLI,
+  STATES,
+};
+
+if (require.main === module) {
+  main();
+}

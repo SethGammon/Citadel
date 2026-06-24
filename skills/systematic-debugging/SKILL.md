@@ -13,7 +13,7 @@ trigger_keywords:
   - diagnose
   - why is
   - investigate bug
-last-updated: 2026-03-21
+last-updated: 2026-06-24
 ---
 
 # /systematic-debugging — Root Cause Before Fix
@@ -27,7 +27,7 @@ last-updated: 2026-03-21
 
 ### Phase 1: OBSERVATION & REPRODUCTION
 
-1. Read the error message, stack trace, or bug description thoroughly
+1. Read the error message, stack trace, or bug description
 2. Reproduce the issue:
    - If it's a type error: run typecheck and read the full error
    - If it's a runtime error: identify the triggering conditions
