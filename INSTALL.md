@@ -260,7 +260,7 @@ An improve loop hit distribution saturation and needs human approval for the nex
 
 - Add your project's conventions to `CLAUDE.md`; the more specific, the better.
 - Add your project's conventions to `AGENTS.md` if you use Codex.
-- Run `/do --list` to see all <!-- GENERATED: skill-count -->46<!-- /GENERATED --> installed skills.
+- Run `/do --list` to see all <!-- GENERATED: skill-count -->48<!-- /GENERATED --> installed skills.
 - Drop a task in `.planning/intake/` and run `/autopilot` for hands-off execution.
 - Try the copyable demo workflow in [DEMO.md](DEMO.md).
 - [docs/CLAUDE_INSTALLATION_GUIDE.md](docs/CLAUDE_INSTALLATION_GUIDE.md): Claude-specific install flow.
