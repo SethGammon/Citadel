@@ -1,0 +1,300 @@
+{
+  "version": 1,
+  "description": "Ground-truth labels for the no-op detector (scripts/noop-scan.js + core/skills/noop-detect.js). Each case is a single SKILL.md line (or a representative synthetic line). The detector is calibrated and regression-tested against this set by scripts/test-noop-detect.js. A 'no-op' is an instruction aimed at the agent's own disposition/effort with no specific, checkable criterion: deleting it does not change agent behavior (Pocock's ablation test).",
+  "labels": {
+    "noop": "Whole line is inert disposition/effort filler. Fix: delete it. Detector MUST flag.",
+    "noop-fragment": "Line carries a real instruction but contains trimmable filler (e.g. a trailing adverb). Fix: trim the filler, keep the instruction. Detector SHOULD flag (judge decides trim-vs-delete).",
+    "load-bearing": "Concrete, checkable instruction (command, file, threshold, named action). Fix: none. Detector MUST NOT flag.",
+    "fringe-load-bearing": "A guard for a missing/absent/error condition. Removing it deletes a real safeguard. Detector MUST NOT flag (critical exemption - a false positive here is the most dangerous failure mode)."
+  },
+  "cases": [
+    {
+      "text": "Be thorough in your analysis.",
+      "label": "noop",
+      "source": "synthetic",
+      "rationale": "Pure disposition. Agents already attempt thoroughness; the line adds no checkable criterion."
+    },
+    {
+      "text": "Make the commit message very detailed.",
+      "label": "noop",
+      "source": "synthetic (Pocock example)",
+      "rationale": "Effort directive, no criterion for 'detailed enough'. Agents already write detailed commit messages."
+    },
+    {
+      "text": "Make the implementation easy to read.",
+      "label": "noop",
+      "source": "synthetic (Pocock example)",
+      "rationale": "Disposition, not a constraint. No definition of 'easy to read' that changes behavior."
+    },
+    {
+      "text": "Always try your best to produce high-quality output.",
+      "label": "noop",
+      "source": "synthetic",
+      "rationale": "Stacked filler: 'try your best' + 'high-quality'. Zero checkable content."
+    },
+    {
+      "text": "Be careful and pay attention to detail.",
+      "label": "noop",
+      "source": "synthetic",
+      "rationale": "Disposition only; no object, no criterion."
+    },
+    {
+      "text": "Ensure the code is clean and well-structured.",
+      "label": "noop",
+      "source": "synthetic",
+      "rationale": "'clean', 'well-structured' are unmeasurable. No anchor, no condition."
+    },
+    {
+      "text": "Strive to write robust, production-grade code.",
+      "label": "noop",
+      "source": "synthetic",
+      "rationale": "'strive', 'robust', 'production-grade' all vague. No checkable bar."
+    },
+    {
+      "text": "Remember to be comprehensive.",
+      "label": "noop",
+      "source": "synthetic",
+      "rationale": "'remember to' + 'comprehensive': pure reminder with no content."
+    },
+    {
+      "text": "Take care to handle things properly.",
+      "label": "noop",
+      "source": "synthetic",
+      "rationale": "'take care', 'properly' with no object. Maximally inert."
+    },
+    {
+      "text": "Aim to make the output as clear as possible.",
+      "label": "noop",
+      "source": "synthetic",
+      "rationale": "'aim to', 'as clear as possible' - aspirational, not operational."
+    },
+    {
+      "text": "It's important to write good code.",
+      "label": "noop",
+      "source": "synthetic",
+      "rationale": "'it's important', 'good' - meta-commentary, no instruction."
+    },
+    {
+      "text": "Do your best to be helpful and thorough.",
+      "label": "noop",
+      "source": "synthetic",
+      "rationale": "'do your best', 'thorough' - disposition stack."
+    },
+    {
+      "text": "Make sure everything works correctly and seamlessly.",
+      "label": "noop",
+      "source": "synthetic",
+      "rationale": "'make sure', 'correctly', 'seamlessly' with no named check."
+    },
+    {
+      "text": "Keep the user experience smooth and intuitive.",
+      "label": "noop",
+      "source": "synthetic",
+      "rationale": "'smooth', 'intuitive' - unmeasurable UX adjectives."
+    },
+    {
+      "text": "Read the error message, stack trace, or bug description thoroughly",
+      "label": "noop-fragment",
+      "source": "skills/systematic-debugging/SKILL.md:30",
+      "rationale": "The instruction (read the error message / stack trace / bug description) is load-bearing; only the trailing 'thoroughly' is filler. Judge should trim the adverb, keep the line."
+    },
+    {
+      "text": "Familiar (5+ sessions): confirms deletions before executing; novices should review suggestions carefully before confirming",
+      "label": "load-bearing",
+      "source": "skills/houseclean/SKILL.md:227",
+      "rationale": "Carries session-tier logic ('5+ sessions') and a confirmation gate ('before confirming'). The numeric anchor and concrete gate make the line load-bearing; the lone 'carefully' is not worth a false-positive risk against an anchored line. The detector correctly declines to flag it."
+    },
+    {
+      "text": "Write a thorough and detailed summary of the changes.",
+      "label": "noop-fragment",
+      "source": "synthetic",
+      "rationale": "'Write a summary of the changes' is real; 'thorough and detailed' is filler to trim."
+    },
+    {
+      "text": "Carefully run the migration and verify the row counts match.",
+      "label": "noop-fragment",
+      "source": "synthetic",
+      "rationale": "'run the migration and verify row counts match' is checkable and load-bearing; leading 'Carefully' is trimmable filler."
+    },
+    {
+      "text": "Run `node scripts/test-all.js` before shipping.",
+      "label": "load-bearing",
+      "source": "CLAUDE.md (Testing)",
+      "rationale": "Names an exact command and a gate. Deleting it removes a real step. Inline code anchor."
+    },
+    {
+      "text": "Keep individual phases under 35 minutes of execution time.",
+      "label": "load-bearing",
+      "source": "CLAUDE.md (Campaign Design Principles)",
+      "rationale": "Numeric, checkable threshold. Anchored by '35 minutes'."
+    },
+    {
+      "text": "Output a HANDOFF block: 3-5 bullets, under 150 words.",
+      "label": "load-bearing",
+      "source": "CLAUDE.md (Handoff Summary)",
+      "rationale": "Specific format constraints (3-5 bullets, 150 words). Measurable."
+    },
+    {
+      "text": "Every phase must have a verifiable exit condition -- binary pass/fail signals (typecheck, tests, build).",
+      "label": "load-bearing",
+      "source": "CLAUDE.md (Campaign Design Principles)",
+      "rationale": "Names concrete signals (typecheck, tests, build) and a hard requirement. No filler."
+    },
+    {
+      "text": "Run `node scripts/skill-lint.js {name}` to verify structure.",
+      "label": "load-bearing",
+      "source": "CLAUDE.md",
+      "rationale": "Exact command, clear purpose. Inline code anchor."
+    },
+    {
+      "text": "Be thorough: run `npm run typecheck`, `npm test`, and `npm run build`, and fix every failure.",
+      "label": "load-bearing",
+      "source": "synthetic (anchored)",
+      "rationale": "Contains the phrase 'be thorough' BUT is anchored by three concrete commands and a checkable action ('fix every failure'). Tests that an anchor exempts the vocab hit. Deleting it removes real steps."
+    },
+    {
+      "text": "Make sure `.env` is listed in `.gitignore` before committing.",
+      "label": "load-bearing",
+      "source": "synthetic (anchored, security.md)",
+      "rationale": "Contains 'make sure' BUT names a concrete, checkable file condition (`.env` in `.gitignore`). Anchor exempts the vocab."
+    },
+    {
+      "text": "Subscribe returns a cleanup function - always call it.",
+      "label": "load-bearing",
+      "source": "rules/architecture.md (Event Bus)",
+      "rationale": "Specific, checkable behavior. No disposition filler."
+    },
+    {
+      "text": "Use stable keys for dynamic lists: `key={item.id}` - never `key={i}` when the list can change.",
+      "label": "load-bearing",
+      "source": "rules/coding-style.md",
+      "rationale": "Concrete rule with code anchor and a named anti-pattern."
+    },
+    {
+      "text": "Trim by deleting, not by compressing prose into ambiguity.",
+      "label": "load-bearing",
+      "source": "docs/SKILL_LIFECYCLE.md:22",
+      "rationale": "A specific directive about HOW to trim. Carries real, non-obvious guidance an agent would not default to."
+    },
+    {
+      "text": "Pass only distilled findings back to the orchestrator, never raw tool output.",
+      "label": "load-bearing",
+      "source": "CLAUDE.md (Campaign Design Principles)",
+      "rationale": "Concrete constraint on what to return. Changes behavior."
+    },
+    {
+      "text": "`.planning/` does not exist: skip Tier 1 gracefully and fall through to Tier 2.",
+      "label": "fringe-load-bearing",
+      "source": "skills/do/SKILL.md:288",
+      "rationale": "A guard for a missing directory. 'gracefully' here is a guard signal, not filler. Removing it deletes the missing-state path."
+    },
+    {
+      "text": "Screenshot tool unavailable (Playwright not installed): output what to check manually and exit gracefully.",
+      "label": "fringe-load-bearing",
+      "source": "skills/live-preview/SKILL.md:137",
+      "rationale": "Guard for an unavailable tool. The whole line is the safeguard."
+    },
+    {
+      "text": "No UI (API-only project): Report that /qa requires a browser-accessible interface, then stop gracefully.",
+      "label": "fringe-load-bearing",
+      "source": "skills/qa/SKILL.md:211",
+      "rationale": "Guard for the no-UI case. Removing it makes the skill crash or misbehave on API-only projects."
+    },
+    {
+      "text": "If the gh CLI is not installed or not authenticated, surface an install/auth hint instead of failing silently.",
+      "label": "fringe-load-bearing",
+      "source": "synthetic (matches gh-cli-guard lint rule)",
+      "rationale": "Guard for a missing dependency. 'if not installed' is a condition, not disposition."
+    },
+    {
+      "text": "When `.planning/campaigns/` is absent, treat it as empty and show the setup hint.",
+      "label": "fringe-load-bearing",
+      "source": "synthetic (matches planning-dir-guard lint rule)",
+      "rationale": "Missing-state guard with a concrete fallback ('treat as empty', 'show setup hint')."
+    },
+    {
+      "text": "Ensure the dev server is running (start it if not).",
+      "label": "fringe-load-bearing",
+      "source": "skills/live-preview/SKILL.md:56",
+      "rationale": "Contains 'Ensure' BUT carries a concrete conditional action ('start it if not'). The 'if not' guard plus the concrete action make this load-bearing, not filler."
+    },
+    {
+      "text": "Community/GitHub query (e.g., \"express error middleware best practices site:github.com\").",
+      "label": "load-bearing",
+      "source": "skills/research/SKILL.md:58",
+      "rationale": "Contains 'best practices' BUT it is a literal search-query EXAMPLE (note 'site:'), not an instruction to the agent. The site: marker and e.g. exempt it."
+    },
+    {
+      "text": "PASS: renders correctly, matches expectations.",
+      "label": "load-bearing",
+      "source": "skills/live-preview/SKILL.md:79",
+      "rationale": "A rubric/label line (verdict definition), not an instruction. 'correctly' is part of a PASS-criteria description, not effort filler."
+    },
+    {
+      "text": "Source of truth: `useDatabase` (Zustand + IDB).",
+      "label": "load-bearing",
+      "source": "rules/architecture.md (State Management)",
+      "rationale": "Names a concrete API. Informational anchor, no filler."
+    },
+    {
+      "text": "Define event types in `src/kernel/system/eventBus.ts`.",
+      "label": "load-bearing",
+      "source": "rules/architecture.md",
+      "rationale": "Exact file path. Concrete, checkable."
+    },
+    {
+      "text": "Skills live in `skills/`. Each skill is a directory `skills/{name}/SKILL.md`.",
+      "label": "load-bearing",
+      "source": "CLAUDE.md (Key Conventions)",
+      "rationale": "Structural fact with path anchors. No disposition."
+    },
+    {
+      "text": "Handle all the edge cases properly and make it robust.",
+      "label": "noop",
+      "source": "synthetic",
+      "rationale": "'edge cases' sounds concrete but 'properly' and 'robust' carry no named case or criterion - pure hand-wave. Contrast with the fringe-load-bearing guards that name the actual condition."
+    },
+    {
+      "text": "Follow best practices and industry standards throughout.",
+      "label": "noop",
+      "source": "synthetic",
+      "rationale": "'best practices', 'industry standards' with no named practice. Inert (no site: example, no concrete rule)."
+    },
+    {
+      "text": "Write clean, maintainable, well-documented code.",
+      "label": "noop",
+      "source": "synthetic",
+      "rationale": "Adjective stack with no measurable target."
+    },
+    {
+      "text": "Use TypeScript strict mode.",
+      "label": "load-bearing",
+      "source": "rules/coding-style.md",
+      "rationale": "Specific, checkable setting. No filler despite being short."
+    },
+    {
+      "text": "Prefer `const` over `let`, never use `var`.",
+      "label": "load-bearing",
+      "source": "rules/coding-style.md",
+      "rationale": "Concrete, enforceable rule with named tokens."
+    },
+    {
+      "text": "Recommendations are concrete actions (not \"be more careful\").",
+      "label": "load-bearing",
+      "source": "skills/postmortem/SKILL.md:164",
+      "rationale": "Contains 'careful' BUT it is cited as a NEGATED anti-example of what a recommendation must not be. A negated disposition word is the opposite of an instruction. Regression case for the negation guard."
+    },
+    {
+      "text": "Stop at 3-6 credible sources (not exhaustive - focused).",
+      "label": "load-bearing",
+      "source": "skills/research/SKILL.md:69",
+      "rationale": "Contains 'exhaustive' BUT negated ('not exhaustive') and anchored by '3-6 sources'. The line is a concrete stopping rule. Regression case for negation + the sources/queries numeric anchor."
+    },
+    {
+      "text": "Search exhaustively (2-4 queries, 3-6 sources per agent, done).",
+      "label": "load-bearing",
+      "source": "skills/research/SKILL.md:251",
+      "rationale": "Contains 'exhaustively' BUT immediately bounded by concrete counts (2-4 queries, 3-6 sources). The numbers define exactly what 'exhaustively' means here, so it is load-bearing, not filler."
+    }
+  ]
+}
