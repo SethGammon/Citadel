@@ -117,6 +117,17 @@
       "description": "Real-time harness observability dashboard. Reads campaigns, fleet sessions, telemetry, and pending queues to present a snapshot of harness state at a glance. Invoked by /dashboard, /do status, or phrases like \"what's happening\" and \"show activity\"."
     },
     {
+      "name": "decision-map",
+      "keywords": [
+        "decision map",
+        "plan this out",
+        "figure this out",
+        "investigation plan",
+        "planning map"
+      ],
+      "description": "Turn a loose idea into a git-tracked, session-resumable map of typed investigation tickets, then drive them to resolution one at a time. The planning-loop engine for work that is still being figured out — too fuzzy for a campaign, too big for a single intake item. Resolved tickets graduate into .planning/intake/ for the autopilot to build."
+    },
+    {
       "name": "design",
       "keywords": [
         "design",
@@ -175,6 +186,18 @@
         "at the same time"
       ],
       "description": "Parallel campaign orchestrator. Runs multiple campaigns in coordinated waves within a single session. Spawns 2-3 agents per wave in isolated worktrees, collects discoveries, shares context between waves. Use when work decomposes into 3+ independent streams that can run simultaneously."
+    },
+    {
+      "name": "grill",
+      "keywords": [
+        "grill me",
+        "grill",
+        "stress-test the plan",
+        "sharpen the plan",
+        "pressure-test",
+        "interview me"
+      ],
+      "description": "Relentless one-question-at-a-time interview that sharpens a vague plan or design into shared understanding before any build. The elicitation engine other planning skills call instead of inventing their own interview. Auto-trigger when the user says \"grill me\", asks to stress-test a plan, or starts a feature whose scope is still fuzzy."
     },
     {
       "name": "houseclean",

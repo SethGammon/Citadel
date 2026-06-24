@@ -153,7 +153,7 @@ Four tiers let Citadel scale from a one-line edit to a multi-session campaign. Y
 | **Cost telemetry** | `/cost` and `/dashboard` show real token usage and session spend instead of guesses | [Reports](docs/REPORT_ARTIFACTS.md) |
 | **Operator console** | `/do next` is a decision-first cockpit: current state, next action, risk boundary, verification profile | [Operating loop](docs/OPERATING_LOOP_PROOF.md) |
 | **Parallel fleets** | Broad work decomposes across agents in isolated worktrees, with discoveries shared between waves | [Fleet](docs/FLEET.md) |
-| **Skills** | <!-- GENERATED: skill-count -->46<!-- /GENERATED --> built-in skills covering review, refactor, tests, QA, telemetry, and setup; write your own in one file | [Skills](docs/SKILLS.md) |
+| **Skills** | <!-- GENERATED: skill-count -->48<!-- /GENERATED --> built-in skills covering review, refactor, tests, QA, telemetry, and setup; write your own in one file | [Skills](docs/SKILLS.md) |
 | **Repeatable setup** | Runtime-specific installers plus `/do setup --express` produce the same project state on Codex and Claude Code | [Install](INSTALL.md) |
 
 ## Why Citadel Exists
@@ -172,7 +172,7 @@ Citadel adds the missing layer around the runtime: persistent state, intent rout
 
 Everything described above ships in this repository:
 
-- <!-- GENERATED: skill-count -->46<!-- /GENERATED --> skills under [`skills/`](skills/), hook source under [`hooks_src/`](hooks_src/), runtime adapters under [`runtimes/`](runtimes/), installers and verification under [`scripts/`](scripts/).
+- <!-- GENERATED: skill-count -->48<!-- /GENERATED --> skills under [`skills/`](skills/), hook source under [`hooks_src/`](hooks_src/), runtime adapters under [`runtimes/`](runtimes/), installers and verification under [`scripts/`](scripts/).
 - Trust boundaries are documented in [SECURITY.md](SECURITY.md) and [THREAT_MODEL.md](THREAT_MODEL.md): local automation risk, generated state, hooks, approval gates, and public-artifact review.
 - The [loop contract](docs/LOOP_CONTRACT.md) makes repeated agent workflows inspectable, with shared budgets, verifiers, and stop conditions.
 - CI runs the full local verification suite on every push. Run it yourself from a clone:
@@ -228,7 +228,7 @@ Those files describe your project. Citadel adds the operating layer around the a
 </details>
 
 <details>
-<summary><strong>Do I need to learn all <!-- GENERATED: skill-count -->46<!-- /GENERATED --> skills?</strong></summary>
+<summary><strong>Do I need to learn all <!-- GENERATED: skill-count -->48<!-- /GENERATED --> skills?</strong></summary>
 
 <br>
 

@@ -142,11 +142,13 @@ and any project-level custom skills in `.claude/skills/`.
 | "create skill", "new skill", "make a skill", "teach the harness", "custom skill", "my own skill", "skill for", "automate this pattern", "repeated pattern" | `/create-skill` |
 | "daemon", "continuous", "run overnight", "keep running", "24/7", "unattended", "run autonomously", "daemon start", "daemon stop", "daemon status" | `/daemon` |
 | "dashboard", "what's happening", "what's going on", "show activity", "harness state", "show me status" | `/dashboard` |
+| "decision map", "plan this out", "figure this out", "investigation plan", "planning map" | `/decision-map` |
 | "design", "style guide", "design manifest", "visual consistency" | `/design` |
 | "document", "docs", "docstring", "jsdoc", "readme", "api docs" | `/doc-gen` |
 | "evolve", "sustained improve", "improvement director", "research-driven improve", "multi-cycle improve", "run until done", "improve until ceiling", "keep improving", "hypothesis", "belief model", "scout agents" | `/evolve` |
 | "experiment", "optimize", "try", "A/B", "measure" | `/experiment` |
 | "parallel", "simultaneous", "multiple agents", "at the same time" | `/fleet --quick` |
+| "grill me", "grill", "stress-test the plan", "sharpen the plan", "pressure-test", "interview me" | `/grill` |
 | "houseclean", "house clean", "disk space", "free space", "c drive full", "drive full", "running out of space", "clean up disk", "orphaned worktrees", "clean worktrees", "disk audit", "storage audit", "move to another drive", "free up space" | `/houseclean` |
 | "improve", "improvement loop", "quality loop", "rubric", "score against", "run improvement", "improve citadel" | `/improve` |
 | "infra", "infrastructure", "what databases", "what systems", "docker-compose", "infra audit", "map infrastructure", "what does this connect to" | `/infra-audit` |
