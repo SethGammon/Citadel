@@ -171,6 +171,17 @@ original prompt. When the budget hits zero, the phase is marked `partial`, a
 `validator_halt` entry is logged to the Decision Log, and the campaign
 advances; validator failure alone never parks a campaign.
 
+**Holistic escalation (tier-aware validation).** The Phase Validator is the *mechanical* judge — it
+reasons about whether the HANDOFF credibly claims the exit conditions were met, and its `fail` is
+retryable. For an *irreducibly holistic* call — "is this work actually sound, correct, coherent?", or
+the binding accept/reject after the retry budget is exhausted (where Archon would otherwise accept its
+own `partial`) — escalate instead to the strong-tier **`arbiter`** agent (`agents/arbiter.md`). The
+arbiter *acts* (re-runs the objective gates itself rather than trusting prose) and its
+`verdict: "block"` is **binding** — Archon may not accept around it. Pair the arbiter with a model of
+a *different family* from the worker (decorrelated blind spots) and keep it strong: it runs once per
+artifact and is the floor of the loop. See `docs/JUDGE_TIERING.md` for which judge owns which decision
+and why a small model is right for mechanical reads but wrong for holistic quality.
+
 For high-stakes decisions (abort, rollback, scope change), Archon may spawn 3 Phase Validators and require 2/3 agreement. A timed-out validator counts as `pass` to prevent indefinite blocking.
 
 Campaigns can also declare an `## Exit Evidence` table. Run
