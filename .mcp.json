@@ -14,6 +14,21 @@
         "required": false,
         "instructions": "Use citadel_status to orient on campaign, fleet, telemetry, and artifact state before invoking Citadel workflows."
       }
+    },
+    "codebase-memory": {
+      "command": "node",
+      "args": [
+        "mcp-servers/codebase-memory/index.js"
+      ],
+      "env": {
+        "CITADEL_MCP_SERVER": "codebase-memory"
+      },
+      "_codex": {
+        "startup_timeout_sec": 15,
+        "tool_timeout_sec": 60,
+        "required": false,
+        "instructions": "Call get_architecture to orient on a cold/large repo, then who_imports, dependencies_of, trace_path, and impact_of_change for structural questions instead of grepping. Read-only; complements (never replaces) CLAUDE.md/AGENTS.md doctrine."
+      }
     }
   }
 }
