@@ -196,6 +196,7 @@ The full plan with exit criteria lives in [docs/ROADMAP.md](docs/ROADMAP.md). Th
 - [Install and first run](INSTALL.md) - setup, first-run paths, and troubleshooting for both runtimes
 - [Demo workflow](DEMO.md) - copyable operating-loop demo for a real repo
 - [Interactive routing demo](https://sethgammon.github.io/Citadel/) - watch the tier cascade animate
+- [Lab report: 103 days in](docs/LAB_REPORT.md) - the real numbers, what the platforms absorbed, and what survived
 - [Routing preview guide](docs/ROUTING_PREVIEW.md) - compare Skill, Marshal, Archon, and Fleet before heavier work
 - [Skills reference](docs/SKILLS.md) - all built-in skills with invocation and examples
 - [Hooks reference](docs/HOOKS.md) - lifecycle events and enforcement behavior
