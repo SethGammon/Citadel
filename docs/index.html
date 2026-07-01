@@ -1976,6 +1976,8 @@
         desc: "Real-time harness observability dashboard. Reads campaigns, fleet sessions, telemetry, and pending queues to present a snapshot of harness state at a glance. Invoked by /dashboard, /do status, or phrases like \"what's happening\" and \"show activity\".", icon: '◇' },
       { re: /\b(decision map|plan this out|figure this out|investigation plan|planning map)\b/i, skill: '/decision-map',
         desc: "Turn a loose idea into a git-tracked, session-resumable map of typed investigation tickets, then drive them to resolution one at a time. The planning-loop engine for work that is still being figured out — too fuzzy for a campaign, too big for a single intake item. Resolved tickets graduate into .planning/intake/ for the autopilot to build.", icon: '◇' },
+      { re: /\b(deploy steward|deploy queue|merge steward|mainline steward|land prs|land PRs|deploy prs|deploy PRs|merge queue|release train)\b/i, skill: '/deploy-steward',
+        desc: "Mainline deploy steward. Consumes ready PRs, owns a lease on mainline landing, refreshes PR state, updates stale branches, waits for CI and deploy gates, merges or queues one candidate at a time, and opens repair tasks for failures.", icon: '◇' },
       { re: /\b(design|style guide|design manifest|visual consistency)\b/i, skill: '/design',
         desc: "Generates and maintains a design manifest for visual consistency. In existing projects, reads current styles and documents the design language. In new projects, asks a few questions and generates a starter manifest. The post-edit hook reads the manifest and flags deviations.", icon: '◇' },
       { re: /\b(document|docs|docstring|jsdoc|readme|api docs)\b/i, skill: '/doc-gen',

@@ -27,6 +27,8 @@
     "loop:run": "node scripts/loop-runner.js",
     "stack:plan": "node scripts/stack-plan.js",
     "stack:plan:json": "node scripts/stack-plan.js --json",
+    "deploy:steward": "node scripts/deploy-steward.js",
+    "deploy-steward": "node scripts/deploy-steward.js",
     "verify:plan": "node scripts/verification-plan.js",
     "deliver:package": "node scripts/package-delivery.js",
     "pr:ready": "node scripts/pr-ready.js",

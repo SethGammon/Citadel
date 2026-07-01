@@ -49,6 +49,8 @@ const FIRST_USE_OPERATOR_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-first-us
 const VERIFICATION_PLAN_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-verification-plan.js');
 const PR_READY_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-pr-ready.js');
 const STACK_PLAN_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-stack-plan.js');
+const DEPLOY_STEWARD_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-deploy-steward.js');
+const AGENTS_MD_ONLY_STEWARD_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-agents-md-only-steward.js');
 const COORDINATION_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-coordination-core.js');
 const HOOK_INSTALLER_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-hook-installers.js');
 const CAMPAIGN_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-campaign-core.js');
@@ -85,7 +87,7 @@ const NOOP_DETECT_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-noop-detect.js'
 const STRICT = process.argv.includes('--strict');
 
 console.log('\nCitadel Full Test Suite\n' + '='.repeat(40));
-console.log('Running: hook smoke test + security tests + runtime contract test + runtime registry test + runtime matrix test + hook event test + skill lint + demo routing check + telemetry core check + telemetry integrity check + memory block check + evidence contract check + sandbox provider check + skill packaging check + map substrate check + delivery preflight check + delivery package check + continue action check + next action check + route preview check + loop core check + operating proof check + usefulness trial check + operator console check + operator journey check + first-use operator check + verification plan check + PR readiness check + stack plan check + coordination core check + hook installer check + campaign core check + discovery core check + discovery writer check + momentum synthesizer check + policy core check + Claude runtime check + Codex runtime check + Codex native integration check + Codex operational improvement check + installer check + project bootstrap check + compat fixtures + backward compat + cost tracker + dashboard + doc-sync + fleet session + worktree readiness + post-edit typecheck + routing sync + watch dedup + teammate rebalance\n');
+console.log('Running: hook smoke test + security tests + runtime contract test + runtime registry test + runtime matrix test + hook event test + skill lint + demo routing check + telemetry core check + telemetry integrity check + memory block check + evidence contract check + sandbox provider check + skill packaging check + map substrate check + delivery preflight check + delivery package check + continue action check + next action check + route preview check + loop core check + operating proof check + usefulness trial check + operator console check + operator journey check + first-use operator check + verification plan check + PR readiness check + stack plan check + deploy steward check + AGENTS.md-only steward check + coordination core check + hook installer check + campaign core check + discovery core check + discovery writer check + momentum synthesizer check + policy core check + Claude runtime check + Codex runtime check + Codex native integration check + Codex operational improvement check + installer check + project bootstrap check + compat fixtures + backward compat + cost tracker + dashboard + doc-sync + fleet session + worktree readiness + post-edit typecheck + routing sync + watch dedup + teammate rebalance\n');
 
 function run(label, scriptPath, extraArgs = []) {
   console.log(`\n> ${label}`);
@@ -133,6 +135,8 @@ const firstUseOperatorPassed = run('First-Use Operator Check', FIRST_USE_OPERATO
 const verificationPlanPassed = run('Verification Plan Check', VERIFICATION_PLAN_TEST);
 const prReadyPassed = run('PR Readiness Check', PR_READY_TEST);
 const stackPlanPassed = run('Stack Plan Check', STACK_PLAN_TEST);
+const deployStewardPassed = run('Deploy Steward Check', DEPLOY_STEWARD_TEST);
+const agentsMdOnlyStewardPassed = run('AGENTS.md-only Steward Check', AGENTS_MD_ONLY_STEWARD_TEST);
 const coordinationPassed = run('Coordination Core Check', COORDINATION_TEST);
 const hookInstallerPassed = run('Hook Installer Check', HOOK_INSTALLER_TEST);
 const campaignPassed = run('Campaign Core Check', CAMPAIGN_TEST);
@@ -197,6 +201,8 @@ console.log(`  First-use operator: ${firstUseOperatorPassed ? 'PASS' : 'FAIL'}`)
 console.log(`  Verification plan:  ${verificationPlanPassed ? 'PASS' : 'FAIL'}`);
 console.log(`  PR readiness:       ${prReadyPassed ? 'PASS' : 'FAIL'}`);
 console.log(`  Stack plan:         ${stackPlanPassed ? 'PASS' : 'FAIL'}`);
+console.log(`  Deploy steward:     ${deployStewardPassed ? 'PASS' : 'FAIL'}`);
+console.log(`  AGENTS.md-only:     ${agentsMdOnlyStewardPassed ? 'PASS' : 'FAIL'}`);
 console.log(`  Coordination core:  ${coordinationPassed ? 'PASS' : 'FAIL'}`);
 console.log(`  Hook installers:    ${hookInstallerPassed ? 'PASS' : 'FAIL'}`);
 console.log(`  Campaign core:      ${campaignPassed ? 'PASS' : 'FAIL'}`);
@@ -231,7 +237,7 @@ console.log(`  Dashboard web:      ${dashboardWebPassed ? 'PASS' : 'FAIL'}`);
 console.log(`  No-op detector:     ${noopDetectPassed ? 'PASS' : 'FAIL'}`);
 console.log('');
 
-if (hooksPassed && securityPassed && contractsPassed && runtimeRegistryPassed && runtimeMatrixPassed && hookEventsPassed && skillsPassed && demoPassed && telemetryPassed && telemetryIntegrityPassed && memoryBlockPassed && evidenceContractPassed && sandboxProviderPassed && skillPackagingPassed && mapSubstratePassed && deliveryPassed && deliveryPackagePassed && continueActionPassed && nextActionPassed && routePreviewPassed && loopsPassed && operatingProofPassed && usefulnessTrialPassed && operatorConsolePassed && operatorJourneyPassed && firstUseOperatorPassed && verificationPlanPassed && prReadyPassed && stackPlanPassed && coordinationPassed && hookInstallerPassed && campaignPassed && discoveryPassed && discoveryWriterPassed && momentumPassed && momentumWatcherPassed && policyPassed && claudeRuntimePassed && codexRuntimePassed && codexNativeIntegrationPassed && codexOperationalImprovementPassed && installerPassed && projectBootstrapPassed && compatFixturePassed && backwardCompatPassed && costTrackerPassed && dashboardPassed && docSyncPassed && fleetSessionPassed && worktreeReadinessPassed && postEditTypecheckPassed && routingSyncPassed && watchDedupPassed && teammateRebalancePassed && docSurfacesPassed && telemetryOtlpPassed && stateHygienePassed && permissionAuditPassed && secretsLensPassed && dashboardWebPassed && noopDetectPassed) {
+if (hooksPassed && securityPassed && contractsPassed && runtimeRegistryPassed && runtimeMatrixPassed && hookEventsPassed && skillsPassed && demoPassed && telemetryPassed && telemetryIntegrityPassed && memoryBlockPassed && evidenceContractPassed && sandboxProviderPassed && skillPackagingPassed && mapSubstratePassed && deliveryPassed && deliveryPackagePassed && continueActionPassed && nextActionPassed && routePreviewPassed && loopsPassed && operatingProofPassed && usefulnessTrialPassed && operatorConsolePassed && operatorJourneyPassed && firstUseOperatorPassed && verificationPlanPassed && prReadyPassed && stackPlanPassed && deployStewardPassed && agentsMdOnlyStewardPassed && coordinationPassed && hookInstallerPassed && campaignPassed && discoveryPassed && discoveryWriterPassed && momentumPassed && momentumWatcherPassed && policyPassed && claudeRuntimePassed && codexRuntimePassed && codexNativeIntegrationPassed && codexOperationalImprovementPassed && installerPassed && projectBootstrapPassed && compatFixturePassed && backwardCompatPassed && costTrackerPassed && dashboardPassed && docSyncPassed && fleetSessionPassed && worktreeReadinessPassed && postEditTypecheckPassed && routingSyncPassed && watchDedupPassed && teammateRebalancePassed && docSurfacesPassed && telemetryOtlpPassed && stateHygienePassed && permissionAuditPassed && secretsLensPassed && dashboardWebPassed && noopDetectPassed) {
   console.log('All tests pass.\n');
   console.log('Next steps:');
   console.log('  node scripts/skill-bench.js --list      see benchmark scenarios');
@@ -270,6 +276,8 @@ const firstUseOperatorFail = !firstUseOperatorPassed ? 128 : 0;
 const verificationPlanFail = !verificationPlanPassed ? 128 : 0;
 const prReadyFail = !prReadyPassed ? 128 : 0;
 const stackPlanFail = !stackPlanPassed ? 128 : 0;
+const deployStewardFail = !deployStewardPassed ? 128 : 0;
+const agentsMdOnlyStewardFail = !agentsMdOnlyStewardPassed ? 128 : 0;
 const coordinationFail = !coordinationPassed ? 256 : 0;
 const hookInstallerFail = !hookInstallerPassed ? 512 : 0;
 const campaignFail = !campaignPassed ? 1024 : 0;
@@ -302,7 +310,7 @@ const permissionAuditFail = !permissionAuditPassed ? 2 : 0;
 const secretsLensFail = !secretsLensPassed ? 2 : 0;
 const dashboardWebFail = !dashboardWebPassed ? 4 : 0;
 const noopDetectFail = !noopDetectPassed ? 8 : 0;
-const code =hookFail | securityFail | contractFail | runtimeRegistryFail | runtimeMatrixFail | hookEventFail | skillFail | demoFail | telemetryFail | telemetryIntegrityFail | memoryBlockFail | evidenceContractFail | sandboxProviderFail | skillPackagingFail | mapSubstrateFail | deliveryFail | deliveryPackageFail | continueActionFail | nextActionFail | routePreviewFail | loopsFail | operatingProofFail | usefulnessTrialFail | operatorConsoleFail | operatorJourneyFail | firstUseOperatorFail | verificationPlanFail | prReadyFail | stackPlanFail | coordinationFail | hookInstallerFail | campaignFail | discoveryFail | discoveryWriterFail | momentumFail | momentumWatcherFail | policyFail | claudeRuntimeFail | codexRuntimeFail | codexNativeIntegrationFail | codexOperationalImprovementFail | installerFail | projectBootstrapFail | compatFixtureFail | backwardCompatFail | costTrackerFail | dashboardFail | docSyncFail | fleetSessionFail | worktreeReadinessFail | postEditTypecheckFail | routingSyncFail | watchDedupFail | teammateRebalanceFail | docSurfacesFail | telemetryOtlpFail | stateHygieneFail | permissionAuditFail | secretsLensFail | dashboardWebFail | noopDetectFail;
+const code =hookFail | securityFail | contractFail | runtimeRegistryFail | runtimeMatrixFail | hookEventFail | skillFail | demoFail | telemetryFail | telemetryIntegrityFail | memoryBlockFail | evidenceContractFail | sandboxProviderFail | skillPackagingFail | mapSubstrateFail | deliveryFail | deliveryPackageFail | continueActionFail | nextActionFail | routePreviewFail | loopsFail | operatingProofFail | usefulnessTrialFail | operatorConsoleFail | operatorJourneyFail | firstUseOperatorFail | verificationPlanFail | prReadyFail | stackPlanFail | deployStewardFail | agentsMdOnlyStewardFail | coordinationFail | hookInstallerFail | campaignFail | discoveryFail | discoveryWriterFail | momentumFail | momentumWatcherFail | policyFail | claudeRuntimeFail | codexRuntimeFail | codexNativeIntegrationFail | codexOperationalImprovementFail | installerFail | projectBootstrapFail | compatFixtureFail | backwardCompatFail | costTrackerFail | dashboardFail | docSyncFail | fleetSessionFail | worktreeReadinessFail | postEditTypecheckFail | routingSyncFail | watchDedupFail | teammateRebalanceFail | docSurfacesFail | telemetryOtlpFail | stateHygieneFail | permissionAuditFail | secretsLensFail | dashboardWebFail | noopDetectFail;
 
 if (!hooksPassed) console.log('Hook smoke test failed. Fix hook issues before proceeding.');
 if (!securityPassed) console.log('Security tests failed. DO NOT SHIP - critical vulnerabilities present.');
@@ -333,6 +341,8 @@ if (!firstUseOperatorPassed) console.log('First-use operator check failed. Fix f
 if (!verificationPlanPassed) console.log('Verification plan check failed. Fix profile selection before shipping.');
 if (!prReadyPassed) console.log('PR readiness check failed. Fix final readiness gates or report generation before shipping.');
 if (!stackPlanPassed) console.log('Stack plan check failed. Fix PR readiness ordering or approval-boundary reporting before shipping.');
+if (!deployStewardPassed) console.log('Deploy steward check failed. Fix queue, lease, merge, deploy, or repair-task behavior before shipping.');
+if (!agentsMdOnlyStewardPassed) console.log('AGENTS.md-only steward check failed. Fix the standalone AGENTS.md bootstrap or 15-agent acceptance scenario before sending it.');
 if (!coordinationPassed) console.log('Coordination core check failed. Fix coordination regressions before shipping.');
 if (!hookInstallerPassed) console.log('Hook installer check failed. Fix runtime installer regressions before shipping.');
 if (!campaignPassed) console.log('Campaign core check failed. Fix campaign regressions before shipping.');
