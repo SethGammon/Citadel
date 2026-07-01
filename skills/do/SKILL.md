@@ -143,6 +143,7 @@ and any project-level custom skills in `.claude/skills/`.
 | "daemon", "continuous", "run overnight", "keep running", "24/7", "unattended", "run autonomously", "daemon start", "daemon stop", "daemon status" | `/daemon` |
 | "dashboard", "what's happening", "what's going on", "show activity", "harness state", "show me status" | `/dashboard` |
 | "decision map", "plan this out", "figure this out", "investigation plan", "planning map" | `/decision-map` |
+| "deploy steward", "deploy queue", "merge steward", "mainline steward", "land prs", "land PRs", "deploy prs", "deploy PRs", "merge queue", "release train" | `/deploy-steward` |
 | "design", "style guide", "design manifest", "visual consistency" | `/design` |
 | "document", "docs", "docstring", "jsdoc", "readme", "api docs" | `/doc-gen` |
 | "evolve", "sustained improve", "improvement director", "research-driven improve", "multi-cycle improve", "run until done", "improve until ceiling", "keep improving", "hypothesis", "belief model", "scout agents" | `/evolve` |

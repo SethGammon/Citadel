@@ -128,6 +128,22 @@
       "description": "Turn a loose idea into a git-tracked, session-resumable map of typed investigation tickets, then drive them to resolution one at a time. The planning-loop engine for work that is still being figured out — too fuzzy for a campaign, too big for a single intake item. Resolved tickets graduate into .planning/intake/ for the autopilot to build."
     },
     {
+      "name": "deploy-steward",
+      "keywords": [
+        "deploy steward",
+        "deploy queue",
+        "merge steward",
+        "mainline steward",
+        "land prs",
+        "land PRs",
+        "deploy prs",
+        "deploy PRs",
+        "merge queue",
+        "release train"
+      ],
+      "description": "Mainline deploy steward. Consumes ready PRs, owns a lease on mainline landing, refreshes PR state, updates stale branches, waits for CI and deploy gates, merges or queues one candidate at a time, and opens repair tasks for failures."
+    },
+    {
       "name": "design",
       "keywords": [
         "design",

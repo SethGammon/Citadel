@@ -33,7 +33,7 @@
     "screenshots": [
       "./assets/social-preview.png"
     ],
-    "shortDescription": "Codex-native orchestration: 46 skills, campaigns, fleet coordination, quality gates",
+    "shortDescription": "Codex-native orchestration: 49 skills, campaigns, fleet coordination, quality gates",
     "longDescription": "Citadel adds durable planning state, reusable skills, lifecycle hooks, telemetry, PR triage, and coordinated multi-agent workflows to Codex.",
     "developerName": "Citadel",
     "category": "Developer Tools",

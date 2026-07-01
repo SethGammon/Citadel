@@ -103,6 +103,19 @@ function profileForFiles(changedFiles, scripts = {}) {
       'node scripts/integration-test.js'
     );
     notes.push('Run hook smoke, synthetic hook verification, and integration sequences before relying on broad tests.');
+  } else if (hasAny(files, (file) => file === 'scripts/deploy-steward.js' || file === 'scripts/test-deploy-steward.js' || file.startsWith('core/deploy-steward/') || file.startsWith('skills/deploy-steward/'))) {
+    id = 'deploy-steward';
+    label = 'Deploy steward verification';
+    reason = 'Deploy steward changes affect mainline serialization, CI gates, merge behavior, deploy handoff, and repair task generation.';
+    commands.unshift(
+      'node scripts/test-deploy-steward.js',
+      'node scripts/test-pr-ready.js',
+      'node scripts/test-stack-plan.js'
+    );
+    if (hasAny(files, (file) => file.startsWith('skills/deploy-steward/'))) {
+      commands.unshift('node scripts/skill-lint.js deploy-steward');
+    }
+    notes.push('Steward changes must prove queue/lease behavior plus the PR readiness and stack-plan inputs that feed it.');
   } else if (hasAny(files, (file) => file.startsWith('skills/') || file === 'scripts/skill-lint.js')) {
     id = 'skill-surface';
     label = 'Skill surface verification';

@@ -30,6 +30,8 @@ assert.equal(profileForFiles(['skills/do/SKILL.md', 'scripts/operator-console.js
 assert(profileForFiles(['skills/do/SKILL.md', 'scripts/operator-console.js'], { test: 'node test.js' }).commands.includes('node scripts/test-operator-journey.js'));
 assert.equal(profileForFiles(['scripts/pr-ready.js'], { test: 'node test.js' }).id, 'review-readiness');
 assert(profileForFiles(['core/verification/profiles.js'], { test: 'node test.js' }).commands.includes('node scripts/test-verification-plan.js'));
+assert.equal(profileForFiles(['scripts/deploy-steward.js'], { test: 'node test.js' }).id, 'deploy-steward');
+assert(profileForFiles(['scripts/deploy-steward.js'], { test: 'node test.js' }).commands.includes('node scripts/test-deploy-steward.js'));
 assert.equal(profileForFiles(['core/campaigns/update-campaign.js'], { test: 'node test.js' }).id, 'campaign-delivery');
 assert.equal(profileForFiles(['docs/CAMPAIGNS.md'], { test: 'node test.js' }).id, 'documentation');
 
