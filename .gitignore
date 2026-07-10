@@ -21,6 +21,7 @@ apps/
 
 # Telemetry logs and runtime state
 .planning/telemetry/
+.planning/acquisition/
 .planning/doc-sync/
 .planning/pr-readiness/
 .planning/next-actions/

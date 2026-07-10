@@ -27,6 +27,28 @@ function tempProject(prefix) {
   return fs.mkdtempSync(path.join(os.tmpdir(), prefix));
 }
 
+function stagePluginRoot(targetRoot) {
+  const excluded = new Set(['.git', '.planning', 'node_modules']);
+  fs.cpSync(CITADEL_ROOT, targetRoot, {
+    recursive: true,
+    filter(source) {
+      const relative = path.relative(CITADEL_ROOT, source);
+      const topLevel = relative.split(path.sep)[0];
+      return !excluded.has(topLevel);
+    },
+  });
+}
+
+function snapshotSourcePluginArtifacts() {
+  return [
+    path.join(CITADEL_ROOT, '.codex', 'config.toml'),
+    path.join(CITADEL_ROOT, '.agents', 'plugins', 'marketplace.json'),
+  ].map((file) => ({
+    file,
+    contents: fs.existsSync(file) ? fs.readFileSync(file, 'utf8') : null,
+  }));
+}
+
 function testReadinessCheck() {
   const tmp = tempProject('citadel-readiness-');
   try {
@@ -85,12 +107,19 @@ function testPluginMarketplaceSmoke() {
 
 function testCodexInstallScript() {
   const tmp = tempProject('citadel-codex-install-');
+  const projectRoot = path.join(tmp, 'project');
+  const pluginRoot = path.join(tmp, 'plugin');
+  const sourceArtifactsBefore = snapshotSourcePluginArtifacts();
   try {
-    fs.writeFileSync(path.join(tmp, 'AGENTS.md'), '# Test\n\n## Review guidelines\n\n- Focus on P0/P1 issues.\n', 'utf8');
+    fs.mkdirSync(projectRoot, { recursive: true });
+    stagePluginRoot(pluginRoot);
+    fs.writeFileSync(path.join(projectRoot, 'AGENTS.md'), '# Test\n\n## Review guidelines\n\n- Focus on P0/P1 issues.\n', 'utf8');
     const output = execFileSync(process.execPath, [
       path.join(CITADEL_ROOT, 'scripts', 'codex-install.js'),
       '--project-root',
-      tmp,
+      projectRoot,
+      '--plugin-root',
+      pluginRoot,
       '--json',
     ], {
       cwd: CITADEL_ROOT,
@@ -101,19 +130,23 @@ function testCodexInstallScript() {
     const report = JSON.parse(output);
     assert(report.pass, JSON.stringify(report.steps.filter((step) => !step.pass), null, 2));
     assert.equal(report.mode, 'plugin-and-project');
+    assert(report.steps.some((step) => step.name === 'Refresh Citadel Codex plugin artifacts'));
     assert(report.steps.some((step) => step.name === 'Write and validate local Codex plugin marketplace'));
     assert(report.steps.some((step) => step.name === 'Verify Codex project readiness'));
-    assert(fs.existsSync(path.join(tmp, '.codex', 'config.toml')));
-    assert(fs.existsSync(path.join(tmp, '.planning', 'verification', 'codex-readiness.json')));
-    assert(fs.existsSync(path.join(CITADEL_ROOT, '.agents', 'plugins', 'marketplace.json')));
+    assert.equal(report.pluginRoot, pluginRoot);
+    assert(fs.existsSync(path.join(projectRoot, '.codex', 'config.toml')));
+    assert(fs.existsSync(path.join(projectRoot, '.planning', 'verification', 'codex-readiness.json')));
+    assert(fs.existsSync(path.join(pluginRoot, '.agents', 'plugins', 'marketplace.json')));
     assert(report.nextSteps.codexApp.some((step) => step.includes('Add to Codex')));
 
-    const dryRun = execFileSync(process.execPath, [
+    const noRefresh = execFileSync(process.execPath, [
       path.join(CITADEL_ROOT, 'scripts', 'codex-install.js'),
       '--project-root',
-      tmp,
+      projectRoot,
+      '--plugin-root',
+      pluginRoot,
       '--plugin-only',
-      '--dry-run',
+      '--skip-plugin-refresh',
       '--json',
     ], {
       cwd: CITADEL_ROOT,
@@ -121,10 +154,12 @@ function testCodexInstallScript() {
       encoding: 'utf8',
       timeout: 20000,
     });
-    const dryRunReport = JSON.parse(dryRun);
-    assert(dryRunReport.pass, JSON.stringify(dryRunReport, null, 2));
-    assert.equal(dryRunReport.mode, 'plugin-only');
-    assert(dryRunReport.steps.every((step) => step.skipped));
+    const noRefreshReport = JSON.parse(noRefresh);
+    assert(noRefreshReport.pass, JSON.stringify(noRefreshReport, null, 2));
+    assert.equal(noRefreshReport.mode, 'plugin-only');
+    assert(!noRefreshReport.steps.some((step) => step.name === 'Refresh Citadel Codex plugin artifacts'));
+    assert(noRefreshReport.steps.some((step) => step.name === 'Write and validate local Codex plugin marketplace'));
+    assert.deepEqual(snapshotSourcePluginArtifacts(), sourceArtifactsBefore, 'staged installs must not mutate an immutable source checkout');
   } finally {
     fs.rmSync(tmp, { recursive: true, force: true });
   }

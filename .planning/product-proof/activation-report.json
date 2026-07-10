@@ -1,0 +1,13 @@
+{
+  "schema": 1,
+  "redacted": true,
+  "transmitted": false,
+  "total_events": 0,
+  "unique_installations": 0,
+  "invalid_events": 0,
+  "migrated_events": 0,
+  "by_stage": {},
+  "by_status": {},
+  "by_failure_code": {},
+  "by_acquisition_source": {}
+}

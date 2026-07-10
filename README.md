@@ -151,6 +151,8 @@ Four tiers let Citadel scale from a one-line edit to a multi-session campaign. Y
 | **`/do` routing** | Describe the task once; pattern, state, and keyword tiers resolve most requests for zero tokens | [Routing preview](docs/ROUTING_PREVIEW.md) |
 | **Safety hooks** | <!-- GENERATED: hook-script-count -->35<!-- /GENERATED --> Node hook scripts across <!-- GENERATED: hook-event-count -->29<!-- /GENERATED --> lifecycle events protect files, gate risky actions, and record handoffs | [Hooks](docs/HOOKS.md) |
 | **Cost telemetry** | `/cost` and `/dashboard` show real token usage and session spend instead of guesses | [Reports](docs/REPORT_ARTIFACTS.md) |
+| **Product evidence** | Local activation stages and maintainer GitHub traffic history separate attention from verified use without hosted analytics | [Activation metrics](docs/ACTIVATION_METRICS.md) |
+| **Golden-path verification** | Claude and Codex fixture journeys prove install, setup, route, verification, handoff, resume, and exact rollback while labeling human evidence separately | [Golden path](docs/GOLDEN_PATH.md) |
 | **Operator console** | `/do next` is a decision-first cockpit: current state, next action, risk boundary, verification profile | [Operating loop](docs/OPERATING_LOOP_PROOF.md) |
 | **Parallel fleets** | Broad work decomposes across agents in isolated worktrees, with discoveries shared between waves | [Fleet](docs/FLEET.md) |
 | **Skills** | <!-- GENERATED: skill-count -->49<!-- /GENERATED --> built-in skills covering review, refactor, tests, QA, telemetry, and setup; write your own in one file | [Skills](docs/SKILLS.md) |
@@ -203,6 +205,8 @@ The full plan with exit criteria lives in [docs/ROADMAP.md](docs/ROADMAP.md). Th
 - [Campaign guide](docs/CAMPAIGNS.md) - persistent state, phases, and handoffs
 - [Fleet guide](docs/FLEET.md) - parallel agents, worktree isolation, discovery relay
 - [Operating loop proof](docs/OPERATING_LOOP_PROOF.md) - evidence checklist for demos and PRs
+- [Activation and acquisition metrics](docs/ACTIVATION_METRICS.md) - local funnel privacy, GitHub traffic history, and honest interpretation
+- [Golden path verification](docs/GOLDEN_PATH.md) - deterministic runtime fixtures, cross-OS matrix rules, and human-proof boundaries
 - [Skill and memory visibility](docs/SKILL_MEMORY_VISIBILITY.md) - inspect available skills and compiled project memory
 - [Public positioning](docs/PUBLIC_POSITIONING.md) - how to describe Citadel without overclaiming
 - [Security model](SECURITY.md) - path traversal, shell injection, and defensive measures

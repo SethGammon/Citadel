@@ -1,6 +1,6 @@
 {
   "name": "citadel",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Codex-native agent orchestration harness for durable campaigns, skills, hooks, telemetry, and parallel work",
   "author": "",
   "license": "MIT",
@@ -22,6 +22,11 @@
     "operator:summary": "node scripts/operator-console.js --summary",
     "operating:proof": "node scripts/operating-proof.js",
     "usefulness:trial": "node scripts/usefulness-trial.js",
+    "activation:status": "node scripts/activation-telemetry.js status",
+    "activation:report": "node scripts/activation-telemetry.js report",
+    "acquisition:snapshot": "node scripts/github-traffic-snapshot.js",
+    "golden:path": "node scripts/golden-path.js",
+    "golden:path:matrix": "node scripts/golden-path-matrix.js",
     "route:preview": "node scripts/route-preview.js",
     "loops": "node scripts/loops.js",
     "loop:run": "node scripts/loop-runner.js",
@@ -38,6 +43,9 @@
     "telemetry:report": "node scripts/telemetry-report.cjs",
     "telemetry:log": "node scripts/telemetry-log.cjs",
     "telemetry:verify": "node scripts/verify-telemetry-integrity.js",
+    "release:dry-run": "node scripts/release-package.js --dry-run --verify-reproducible",
+    "release:verify": "node scripts/release-verify.js",
+    "update": "node scripts/update.js",
     "memory:compile": "node scripts/memory-compile.js compile",
     "memory:lint": "node scripts/memory-compile.js lint",
     "evidence:validate": "node scripts/evidence-validate.js",
@@ -75,5 +83,8 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/SethGammon/Citadel"
+  },
+  "engines": {
+    "node": ">=18"
   }
 }

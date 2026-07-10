@@ -1,0 +1,375 @@
+{
+  "schema": 1,
+  "mode": "fixture-automation-matrix",
+  "generated_at": "2026-07-10T19:34:34.452Z",
+  "fixture_id": "minimal-node",
+  "status": "failed",
+  "failure": {
+    "code": "MATRIX_INCOMPLETE_GRID"
+  },
+  "evidence_kind": "fixture-automation-timing",
+  "sources": [
+    {
+      "kind": "local-execution",
+      "platform": "win32",
+      "fixture": "C:\\Users\\gammo\\Desktop\\Citadel\\scripts\\fixtures\\golden-path\\minimal-node.json",
+      "runner": "C:\\Users\\gammo\\Desktop\\Citadel\\scripts\\golden-path.js",
+      "repeat": 5
+    }
+  ],
+  "runs": [
+    {
+      "run_id": "7099b27bc037512e2bbf4a10",
+      "fixture_id": "minimal-node",
+      "runtime": "claude",
+      "platform": "win32",
+      "status": "passed",
+      "failure": null,
+      "metrics": {
+        "install_to_route_ms": 2169,
+        "install_to_verified_handoff_ms": 5789,
+        "total_ms": 19828
+      },
+      "install_setup_succeeded": true,
+      "verified_handoff_succeeded": true,
+      "resume_resolved": true,
+      "rollback_exact": true,
+      "limitations": [
+        "This is deterministic fixture automation, not real plugin registration.",
+        "This does not execute /do setup --express.",
+        "This does not execute an LLM task.",
+        "This is not a multi-OS matrix result.",
+        "Machine fixture timings are not human timing proof."
+      ]
+    },
+    {
+      "run_id": "e5dc32c354afdecfeae31f93",
+      "fixture_id": "minimal-node",
+      "runtime": "claude",
+      "platform": "win32",
+      "status": "passed",
+      "failure": null,
+      "metrics": {
+        "install_to_route_ms": 3127,
+        "install_to_verified_handoff_ms": 15384,
+        "total_ms": 29488
+      },
+      "install_setup_succeeded": true,
+      "verified_handoff_succeeded": true,
+      "resume_resolved": true,
+      "rollback_exact": true,
+      "limitations": [
+        "This is deterministic fixture automation, not real plugin registration.",
+        "This does not execute /do setup --express.",
+        "This does not execute an LLM task.",
+        "This is not a multi-OS matrix result.",
+        "Machine fixture timings are not human timing proof."
+      ]
+    },
+    {
+      "run_id": "dbba22b17ead166bba0b3710",
+      "fixture_id": "minimal-node",
+      "runtime": "claude",
+      "platform": "win32",
+      "status": "passed",
+      "failure": null,
+      "metrics": {
+        "install_to_route_ms": 4499,
+        "install_to_verified_handoff_ms": 15689,
+        "total_ms": 30035
+      },
+      "install_setup_succeeded": true,
+      "verified_handoff_succeeded": true,
+      "resume_resolved": true,
+      "rollback_exact": true,
+      "limitations": [
+        "This is deterministic fixture automation, not real plugin registration.",
+        "This does not execute /do setup --express.",
+        "This does not execute an LLM task.",
+        "This is not a multi-OS matrix result.",
+        "Machine fixture timings are not human timing proof."
+      ]
+    },
+    {
+      "run_id": "b0e473a0d58754aaff740a2c",
+      "fixture_id": "minimal-node",
+      "runtime": "claude",
+      "platform": "win32",
+      "status": "passed",
+      "failure": null,
+      "metrics": {
+        "install_to_route_ms": 2867,
+        "install_to_verified_handoff_ms": 16551,
+        "total_ms": 43724
+      },
+      "install_setup_succeeded": true,
+      "verified_handoff_succeeded": true,
+      "resume_resolved": true,
+      "rollback_exact": true,
+      "limitations": [
+        "This is deterministic fixture automation, not real plugin registration.",
+        "This does not execute /do setup --express.",
+        "This does not execute an LLM task.",
+        "This is not a multi-OS matrix result.",
+        "Machine fixture timings are not human timing proof."
+      ]
+    },
+    {
+      "run_id": "dd6788a2c22622bb6dcb6fed",
+      "fixture_id": "minimal-node",
+      "runtime": "claude",
+      "platform": "win32",
+      "status": "passed",
+      "failure": null,
+      "metrics": {
+        "install_to_route_ms": 15500,
+        "install_to_verified_handoff_ms": 23715,
+        "total_ms": 43883
+      },
+      "install_setup_succeeded": true,
+      "verified_handoff_succeeded": true,
+      "resume_resolved": true,
+      "rollback_exact": true,
+      "limitations": [
+        "This is deterministic fixture automation, not real plugin registration.",
+        "This does not execute /do setup --express.",
+        "This does not execute an LLM task.",
+        "This is not a multi-OS matrix result.",
+        "Machine fixture timings are not human timing proof."
+      ]
+    },
+    {
+      "run_id": "930799bfd68a3c2f793bd061",
+      "fixture_id": "minimal-node",
+      "runtime": "codex",
+      "platform": "win32",
+      "status": "passed",
+      "failure": null,
+      "metrics": {
+        "install_to_route_ms": 3122,
+        "install_to_verified_handoff_ms": 7781,
+        "total_ms": 20588
+      },
+      "install_setup_succeeded": true,
+      "verified_handoff_succeeded": true,
+      "resume_resolved": true,
+      "rollback_exact": true,
+      "limitations": [
+        "This is deterministic fixture automation, not real plugin registration.",
+        "This does not execute /do setup --express.",
+        "This does not execute an LLM task.",
+        "This is not a multi-OS matrix result.",
+        "Machine fixture timings are not human timing proof."
+      ]
+    },
+    {
+      "run_id": "fa67591d76c75364057f7d5a",
+      "fixture_id": "minimal-node",
+      "runtime": "codex",
+      "platform": "win32",
+      "status": "passed",
+      "failure": null,
+      "metrics": {
+        "install_to_route_ms": 3644,
+        "install_to_verified_handoff_ms": 7741,
+        "total_ms": 19770
+      },
+      "install_setup_succeeded": true,
+      "verified_handoff_succeeded": true,
+      "resume_resolved": true,
+      "rollback_exact": true,
+      "limitations": [
+        "This is deterministic fixture automation, not real plugin registration.",
+        "This does not execute /do setup --express.",
+        "This does not execute an LLM task.",
+        "This is not a multi-OS matrix result.",
+        "Machine fixture timings are not human timing proof."
+      ]
+    },
+    {
+      "run_id": "cad8b950f453ac30306fb7f1",
+      "fixture_id": "minimal-node",
+      "runtime": "codex",
+      "platform": "win32",
+      "status": "passed",
+      "failure": null,
+      "metrics": {
+        "install_to_route_ms": 2969,
+        "install_to_verified_handoff_ms": 6329,
+        "total_ms": 19001
+      },
+      "install_setup_succeeded": true,
+      "verified_handoff_succeeded": true,
+      "resume_resolved": true,
+      "rollback_exact": true,
+      "limitations": [
+        "This is deterministic fixture automation, not real plugin registration.",
+        "This does not execute /do setup --express.",
+        "This does not execute an LLM task.",
+        "This is not a multi-OS matrix result.",
+        "Machine fixture timings are not human timing proof."
+      ]
+    },
+    {
+      "run_id": "bf80673b8259a3d1845f7c3a",
+      "fixture_id": "minimal-node",
+      "runtime": "codex",
+      "platform": "win32",
+      "status": "passed",
+      "failure": null,
+      "metrics": {
+        "install_to_route_ms": 2926,
+        "install_to_verified_handoff_ms": 10533,
+        "total_ms": 22736
+      },
+      "install_setup_succeeded": true,
+      "verified_handoff_succeeded": true,
+      "resume_resolved": true,
+      "rollback_exact": true,
+      "limitations": [
+        "This is deterministic fixture automation, not real plugin registration.",
+        "This does not execute /do setup --express.",
+        "This does not execute an LLM task.",
+        "This is not a multi-OS matrix result.",
+        "Machine fixture timings are not human timing proof."
+      ]
+    },
+    {
+      "run_id": "de6cd2e81e41d4eaa019936f",
+      "fixture_id": "minimal-node",
+      "runtime": "codex",
+      "platform": "win32",
+      "status": "passed",
+      "failure": null,
+      "metrics": {
+        "install_to_route_ms": 8928,
+        "install_to_verified_handoff_ms": 27197,
+        "total_ms": 52653
+      },
+      "install_setup_succeeded": true,
+      "verified_handoff_succeeded": true,
+      "resume_resolved": true,
+      "rollback_exact": true,
+      "limitations": [
+        "This is deterministic fixture automation, not real plugin registration.",
+        "This does not execute /do setup --express.",
+        "This does not execute an LLM task.",
+        "This is not a multi-OS matrix result.",
+        "Machine fixture timings are not human timing proof."
+      ]
+    }
+  ],
+  "cells": {
+    "win32/claude": {
+      "total": 5,
+      "successes": 5,
+      "success_rate": 1,
+      "aggregate_metrics": {
+        "median_install_to_route_ms": 3127,
+        "p90_install_to_verified_handoff_ms": 23715
+      }
+    },
+    "win32/codex": {
+      "total": 5,
+      "successes": 5,
+      "success_rate": 1,
+      "aggregate_metrics": {
+        "median_install_to_route_ms": 3122,
+        "p90_install_to_verified_handoff_ms": 27197
+      }
+    },
+    "linux/claude": {
+      "total": 0,
+      "successes": 0,
+      "success_rate": 0,
+      "aggregate_metrics": {
+        "median_install_to_route_ms": null,
+        "p90_install_to_verified_handoff_ms": null
+      }
+    },
+    "linux/codex": {
+      "total": 0,
+      "successes": 0,
+      "success_rate": 0,
+      "aggregate_metrics": {
+        "median_install_to_route_ms": null,
+        "p90_install_to_verified_handoff_ms": null
+      }
+    },
+    "darwin/claude": {
+      "total": 0,
+      "successes": 0,
+      "success_rate": 0,
+      "aggregate_metrics": {
+        "median_install_to_route_ms": null,
+        "p90_install_to_verified_handoff_ms": null
+      }
+    },
+    "darwin/codex": {
+      "total": 0,
+      "successes": 0,
+      "success_rate": 0,
+      "aggregate_metrics": {
+        "median_install_to_route_ms": null,
+        "p90_install_to_verified_handoff_ms": null
+      }
+    }
+  },
+  "summary": {
+    "total_runs": 10,
+    "complete_grid": false,
+    "fixture_success_rate": 1,
+    "install_setup_success_rate": 1,
+    "verified_handoff_success_rate": 1,
+    "resume_success_rate": 1,
+    "rollback_success_rate": 1,
+    "median_install_to_route_ms": 3124.5,
+    "p90_install_to_verified_handoff_ms": 23715,
+    "gates": {
+      "complete_grid": {
+        "threshold": "6 cells with >=5 actual runs",
+        "actual": false,
+        "passed": false
+      },
+      "fixture_success": {
+        "threshold": ">0.95",
+        "actual": 1,
+        "passed": true
+      },
+      "install_setup_success": {
+        "threshold": ">0.95",
+        "actual": 1,
+        "passed": true
+      },
+      "verified_handoff_success": {
+        "threshold": ">0.95",
+        "actual": 1,
+        "passed": true
+      },
+      "route_median_ms": {
+        "threshold": "<600000",
+        "actual": 3124.5,
+        "passed": true
+      },
+      "handoff_p90_ms": {
+        "threshold": "<900000",
+        "actual": 23715,
+        "passed": true
+      },
+      "rollback_success": {
+        "threshold": "=1.0",
+        "actual": 1,
+        "passed": true
+      }
+    }
+  },
+  "limitations": [
+    "Fixture automation timings are not human or stranger install-to-value timings.",
+    "Each run proves only the platform recorded by that run; missing platforms are never synthesized.",
+    "This is deterministic fixture automation, not real plugin registration.",
+    "This does not execute /do setup --express.",
+    "This does not execute an LLM task.",
+    "This is not a multi-OS matrix result.",
+    "Machine fixture timings are not human timing proof."
+  ]
+}
