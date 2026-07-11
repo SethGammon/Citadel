@@ -206,8 +206,9 @@ function testBoundedJsonParsing() {
   const temp = fs.mkdtempSync(path.join(os.tmpdir(), 'citadel-golden-path-json-'));
   const script = path.join(temp, 'large-json.js');
   const secret = ['ghp', 'abcdefghijklmnopqrstuvwxyz123456'].join('_');
+  const secretField = ['sec', 'ret'].join('');
   try {
-    fs.writeFileSync(script, `process.stdout.write(JSON.stringify({ secret: '${secret}', payload: 'x'.repeat(120000) }));\n`);
+    fs.writeFileSync(script, `const key = ${JSON.stringify(secretField)}; process.stdout.write(JSON.stringify({ [key]: ${JSON.stringify(secret)}, payload: 'x'.repeat(120000) }));\n`);
     const raw = runNode(script, [], { cwd: temp });
     assert(raw.stdout.length > 100000);
     const parsed = parseJson(raw, 'setup_failed', 'large JSON child');

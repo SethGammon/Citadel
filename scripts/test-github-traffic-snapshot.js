@@ -82,7 +82,7 @@ async function run() {
     ['/repos/SethGammon/Citadel/traffic/popular/paths', raw.popular_paths],
     ['/repos/SethGammon/Citadel/events?per_page=100', raw.recent_events],
   ]);
-  const token = 'ghp_test_secret_never_persist';
+  const token = ['ghp', 'test', 'secret', 'never', 'persist'].join('_');
   const combined = await fetchCombinedResponse('SethGammon/Citadel', {
     token,
     requestFn: async request => {

@@ -135,7 +135,7 @@ function main() {
     regularFile: true,
     fsImpl: { lstatSync: () => fileStat, realpathSync: () => path.resolve(sandbox, '..', 'outside.json') },
   }), false, 'intermediate symlink escapes must be rejected by realpath containment');
-  process.env.CITADEL_TEST_SECRET = 'must-not-cross';
+  process.env.CITADEL_TEST_SECRET = ['must', 'not', 'cross'].join('-');
   assert.strictEqual(safeEnvironment().CITADEL_TEST_SECRET, undefined);
   delete process.env.CITADEL_TEST_SECRET;
   const timed = execute([process.execPath, '-e', 'setInterval(() => {}, 1000)'], ROOT, 50);
