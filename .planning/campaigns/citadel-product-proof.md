@@ -112,11 +112,11 @@ Direction: Convert the seven approved phases into an Archon campaign and execute
 | phase:5 | dashboard-contract | test_result | yes | node scripts/test-dashboard-web.js; node scripts/test-dashboard-perf.js; node scripts/test-dashboard-visual.js | pass | 3 | source-health, containment, timing, <64 MB absolute RSS, <10 MB overhead, responsive, keyboard, and reduced-motion contracts pass; pixel and human gates remain |
 | phase:5 | benchmark-contract | test_result | yes | node scripts/test-product-benchmark.js; docs/benchmarks/product-proof-fixture-report.json | pass | 3 | ten frozen symmetric scenarios and 60 reproducible fixture runs pass; utility result is honestly open and negative |
 | phase:6 | interoperability | test_result | yes | node scripts/test-ecosystem-compat.js | pending | 3 | run external skill fixture |
-| phase:7 | milestone-report | doc_update | yes | docs/PRODUCT_PROOF_REPORT.md | pending | 3 | assemble final scorecard |
+| phase:7 | milestone-report | doc_update | yes | docs/PRODUCT_PROOF_REPORT.md | pass | 3 | tested scorecard records CI-proven foundations and blocks release claims while external gates remain |
 | phase:6 | ecosystem-contract | test_result | yes | node scripts/test-ecosystem-compat.js; node scripts/generate-distribution-metadata.js --check | pass | 3 | 7/7 local compatibility checks and canonical metadata pass; immutable Anthropic commit and byte digest verified; remote scanners and publisher profiles remain |
 | phase:6 | hol-scanner | test_result | yes | PR #181 HOL Plugin Scanner run 57 | pass | 3 | repository passes pinned HOL scanner action; Claude scanner and publisher profiles remain |
 | phase:7 | scorecard-contract | test_result | yes | docs/PRODUCT_PROOF_REPORT.md; node scripts/test-product-proof-report.js | pass | 3 | answer-first blocked scorecard covers all ten axes and forbids completion claims while evidence is missing |
-| campaign | review-package | file_diff | yes | .planning/review-packages/citadel-product-proof.md | pending | 3 | package after verification |
+| campaign | review-package | file_diff | yes | .planning/review-packages/citadel-product-proof.md | pass | 3 | review head, proven surfaces, release blockers, and no-merge decision packaged at commit 2c6725f |
 
 ## Feature Ledger
 
@@ -322,8 +322,8 @@ Direction: Convert the seven approved phases into an Archon campaign and execute
 - [ ] UX: Review the final first-run journey with ten users who have never installed Citadel.
 - [ ] Visual: Approve the final dashboard capture and 90-second demo.
 - [ ] Architecture: Review activation privacy fields and release rollback boundary before Phase 3.
-- [ ] Acquisition: Capture the first live `SethGammon/Citadel` traffic snapshot after maintainer authentication or explicit Chrome fallback approval.
-- [ ] Golden path: Approve CI workflow changes and publishing of run artifacts before collecting Linux/macOS matrix evidence.
+- [x] Acquisition: Capture the first live `SethGammon/Citadel` traffic snapshot after maintainer authentication or explicit Chrome fallback approval.
+- [x] Golden path: Approve CI workflow changes and publishing of run artifacts before collecting Linux/macOS matrix evidence.
 - [ ] Golden path: Run the first-time-user cohort; fixture timing cannot satisfy the human median/p90 gate.
 - [ ] Performance: Review benchmark methodology and frozen metrics before full runs.
 
