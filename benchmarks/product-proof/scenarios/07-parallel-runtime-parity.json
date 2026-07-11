@@ -1,0 +1,16 @@
+{
+  "schema": 1,
+  "id": "parallel-runtime-parity",
+  "category": "parallel_work",
+  "repository": "https://github.com/SethGammon/Citadel.git",
+  "pinned_ref": "6a507f16cd198889d9580555cf2a706d9d27764f",
+  "task": "Investigate Claude and Codex runtime parity in parallel, reconcile the findings into one implementation, and add tests that prevent generated-config drift.",
+  "setup_command": ["node", "--version"],
+  "verification_command": ["node", "scripts/test-codex-operational-improvements.js"],
+  "expected_artifacts": ["scripts/codex-install.js", "scripts/claude-install.js"],
+  "timeout_minutes": 60,
+  "context_reset_at": null,
+  "cleanup_assertions": ["workspace_removed"],
+  "runtime": "codex",
+  "model": "gpt-5.4"
+}

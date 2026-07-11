@@ -68,7 +68,7 @@ function installerArgs(runtime, target, plugin) {
   const shared = ['--project-root', target, '--plugin-root', plugin, '--json'];
   return runtime === 'claude'
     ? [...shared, '--install-hooks', '--skip-validate']
-    : [...shared, '--skip-plugin-refresh', '--skip-windows-check'];
+    : [...shared, '--skip-windows-check'];
 }
 
 function recordStep(result, id, operation) {
@@ -206,7 +206,7 @@ function runGoldenPath(options) {
         `${options.runtime} installer`,
       );
       if (value.pass !== true) throw new GoldenPathError('install_failed', 'installer reported pass=false', evidenceFor(raw));
-      return { evidence: [`installer_pass=${value.pass}`, `registration_requested=false`, `plugin_refresh=${options.runtime === 'codex' ? 'skipped' : 'n/a'}`] };
+      return { evidence: [`installer_pass=${value.pass}`, `registration_requested=false`, `plugin_refresh=${options.runtime === 'codex' ? 'performed' : 'n/a'}`] };
     });
 
     recordStep(result, 'setup', () => ({ evidence: runSetup(options.pluginRoot, state.target) }));

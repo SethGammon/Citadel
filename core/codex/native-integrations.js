@@ -281,28 +281,35 @@ function createPluginMarketplace(options = {}) {
   const displayName = options.displayName || 'Citadel Harness';
   const pluginRoot = path.join(projectRoot, pluginPath.replace(/^\.\//, ''));
   const pluginManifestPath = path.join(pluginRoot, '.codex-plugin', 'plugin.json');
+  let pluginManifest = {};
+  try { pluginManifest = JSON.parse(fs.readFileSync(pluginManifestPath, 'utf8')); } catch { /* check below reports absence */ }
+  const pluginRecord = {
+    name: pluginName,
+    source: {
+      source: 'local',
+      path: pluginPath,
+    },
+    policy: {
+      installation: 'AVAILABLE',
+      authentication: 'ON_INSTALL',
+    },
+    category: 'Developer Tools',
+    interface: {
+      displayName,
+    },
+  };
+  for (const field of ['version', 'description', 'repository']) {
+    if (typeof pluginManifest[field] === 'string' && pluginManifest[field]) pluginRecord[field] = pluginManifest[field];
+  }
+  if (fs.existsSync(path.join(projectRoot, 'citadel-metadata.json'))) {
+    pluginRecord.metadata = '../../citadel-metadata.json';
+  }
   const marketplace = {
     name: options.marketplaceName || 'citadel-local',
     interface: {
       displayName: options.marketplaceDisplayName || 'Citadel Local Plugins',
     },
-    plugins: [
-      {
-        name: pluginName,
-        source: {
-          source: 'local',
-          path: pluginPath,
-        },
-        policy: {
-          installation: 'AVAILABLE',
-          authentication: 'ON_INSTALL',
-        },
-        category: 'Developer Tools',
-        interface: {
-          displayName,
-        },
-      },
-    ],
+    plugins: [pluginRecord],
   };
 
   const checks = [

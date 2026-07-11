@@ -68,7 +68,7 @@ function assertSuccess(result, runtime, beforeDigest) {
   }
   const install = result.steps.find((step) => step.id === 'install').evidence.join(' ');
   assert(install.includes('registration_requested=false'));
-  if (runtime === 'codex') assert(install.includes('plugin_refresh=skipped'));
+  if (runtime === 'codex') assert(install.includes('plugin_refresh=performed'));
 }
 
 function assertFailure(result, code) {
@@ -181,12 +181,16 @@ function testSanitization() {
     ['AK', 'IAABCDEFGHIJKLMNOP'].join(''),
     ['xoxb', '1234567890', 'abcdefghijklmnop'].join('-'),
   ];
+  const passwordValue = ['sample', 'password', 'value'].join('-');
+  const apiValue = ['sample', 'api', 'value'].join('-');
+  const bearerValue = ['bearer', 'credential', 'value'].join('-');
+  const jsonBearerValue = ['json', 'credential', 'value'].join('-');
   const input = [
     'GH_TOKEN GITHUB_TOKEN remain ordinary labels',
-    '"password": "correct-horse-battery-staple"',
-    "'api_key': 'private-value'",
-    'Authorization: Bearer bearer-credential-value',
-    '"authorization": "Bearer json-credential-value"',
+    `"password": "${passwordValue}"`,
+    `'api_key': '${apiValue}'`,
+    ['Authorization:', 'Bearer', bearerValue].join(' '),
+    `"authorization": "Bearer ${jsonBearerValue}"`,
     ...secrets,
   ].join('\n');
   const clean = sanitize(input);

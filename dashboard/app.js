@@ -13,6 +13,7 @@
     cost: { title: 'Cost', endpoint: '/api/cost', render: renderCost },
     hooks: { title: 'Hook Feed', endpoint: '/api/hooks/feed', render: renderHooks },
     handoffs: { title: 'Handoffs', endpoint: '/api/handoffs', render: renderHandoffs },
+    activation: { title: 'Activation', endpoint: '/api/activation', render: renderActivation },
   };
 
   const content = document.getElementById('content');
@@ -66,6 +67,20 @@
     parent.appendChild(el('span', 'est', 'est.'));
   }
 
+  function known(value) {
+    return value === null || value === undefined ? 'unknown' : value;
+  }
+
+  function sourceNotice(data) {
+    const state = data && data.state;
+    if (!state || typeof state !== 'object' || !['unknown', 'unreadable'].includes(state.status)) return null;
+    const card = el('div', `card state-${state.status}`);
+    card.appendChild(el('div', 'card-title', state.status === 'unreadable' ? 'Source unreadable' : 'Source unknown'));
+    card.appendChild(el('div', 'card-sub', `${state.path}: ${state.detail}`));
+    for (const pathname of state.unreadable || []) card.appendChild(el('div', 'evidence', pathname));
+    return card;
+  }
+
   async function fetchView(endpoint) {
     const response = await fetch(endpoint, { cache: 'no-store' });
     if (!response.ok) throw new Error(`${endpoint} -> ${response.status}`);
@@ -86,9 +101,9 @@
 
     const stats = el('div', 'stats');
     stats.appendChild(stat(data.needs_you.length, 'need you', data.needs_you.length ? 'archon' : 'ok'));
-    stats.appendChild(stat(data.active.campaigns, 'active campaigns', 'archon'));
-    stats.appendChild(stat(data.active.fleet_sessions, 'fleet sessions', 'fleet'));
-    stats.appendChild(stat(data.active.loops, 'active loops', 'marshal'));
+    stats.appendChild(stat(known(data.active.campaigns), 'active campaigns', 'archon'));
+    stats.appendChild(stat(known(data.active.fleet_sessions), 'fleet sessions', 'fleet'));
+    stats.appendChild(stat(known(data.active.loops), 'active loops', 'marshal'));
     if (data.cost) {
       const hasReal = typeof data.cost.real === 'number' && data.cost.real > 0;
       const value = hasReal ? data.cost.real : data.cost.estimated;
@@ -110,6 +125,9 @@
       data.needs_you.forEach((item, index) => {
         const row = el('div', `row${index === selectedIndex ? ' selected' : ''}`);
         row.dataset.index = String(index);
+        row.tabIndex = index === selectedIndex ? 0 : -1;
+        row.setAttribute('role', 'button');
+        if (item.evidence) row.dataset.evidence = item.evidence;
         row.appendChild(badge(item.kind, item.severity === 'action' ? 'action' : 'info'));
         const main = el('div', 'row-main');
         main.appendChild(el('div', 'row-title', item.title));
@@ -404,6 +422,9 @@
     } else {
       for (const handoff of data.handoffs) {
         const row = el('div', 'row');
+        row.tabIndex = 0;
+        row.setAttribute('role', 'link');
+        row.dataset.evidence = handoff.path;
         row.appendChild(badge('handoff', 'skill'));
         const main = el('div', 'row-main');
         main.appendChild(el('div', 'row-title', handoff.name));
@@ -431,6 +452,38 @@
     return frag;
   }
 
+  function renderActivation(data) {
+    const frag = document.createDocumentFragment();
+    if (!data.report) {
+      frag.appendChild(emptyState(data.note || 'Activation evidence is unknown.', 'node scripts/activation-telemetry.js report'));
+      return frag;
+    }
+    const report = data.report;
+    const stats = el('div', 'stats');
+    stats.appendChild(stat(report.total_events, 'events', 'skill', 'local · redacted'));
+    stats.appendChild(stat(report.unique_installations, 'installations', 'marshal'));
+    stats.appendChild(stat(report.invalid_events, 'invalid events', report.invalid_events ? 'archon' : 'ok'));
+    stats.appendChild(stat(report.migrated_events, 'migrated events', 'fleet'));
+    frag.appendChild(stats);
+    const note = el('div', 'card');
+    note.appendChild(el('div', 'card-title', data.mode === 'empty' ? 'No activation events yet' : 'Activation evidence'));
+    note.appendChild(el('div', 'card-sub', data.note));
+    frag.appendChild(note);
+    for (const [title, values] of [['Stages', report.by_stage], ['Outcomes', report.by_status], ['Acquisition', report.by_acquisition_source]]) {
+      const block = section(title);
+      const entries = Object.entries(values || {});
+      if (!entries.length) block.appendChild(emptyState(`No ${title.toLowerCase()} recorded.`, 'activation events populate this view'));
+      for (const [label, value] of entries) {
+        const row = el('div', 'row');
+        row.appendChild(el('div', 'row-main', label));
+        row.appendChild(el('span', 'row-age', value));
+        block.appendChild(row);
+      }
+      frag.appendChild(block);
+    }
+    return frag;
+  }
+
   // ── chrome: health, counts, SSE ──
 
   function updateChrome(overview) {
@@ -440,9 +493,9 @@
     const countEl = document.getElementById('count-needs');
     countEl.textContent = needsYouCount || '';
     countEl.classList.toggle('hot', needsYouCount > 0);
-    document.getElementById('count-campaigns').textContent = overview.active.campaigns || '';
-    document.getElementById('count-fleet').textContent = overview.active.fleet_sessions || '';
-    document.getElementById('count-loops').textContent = overview.active.loops || '';
+    document.getElementById('count-campaigns').textContent = overview.active.campaigns ?? '?';
+    document.getElementById('count-fleet').textContent = overview.active.fleet_sessions ?? '?';
+    document.getElementById('count-loops').textContent = overview.active.loops ?? '?';
 
     const dot = document.getElementById('health-dot');
     const text = document.getElementById('health-text');
@@ -451,8 +504,10 @@
       dot.className = 'dot dot-warn';
       text.textContent = 'no .planning yet';
     } else if (health && health.hooksInstalled > 0) {
-      dot.className = 'dot dot-ok';
-      text.textContent = `${health.hooksInstalled} hooks · trust: ${health.trustLevel || 'unknown'}`;
+      dot.className = overview.state === 'unreadable' ? 'dot dot-danger' : 'dot dot-ok';
+      text.textContent = overview.state === 'unreadable'
+        ? 'one or more sources unreadable'
+        : `${health.hooksInstalled} hooks · trust: ${health.trustLevel || 'unknown'}`;
     } else {
       dot.className = 'dot dot-unknown';
       text.textContent = 'hooks not detected';
@@ -476,7 +531,9 @@
       const overview = activePanel === 'overview' ? body.data : overviewBody.data;
       updateChrome(overview);
       metaEl.textContent = `as of ${new Date(body.generated_at).toLocaleTimeString()}`;
-      content.replaceChildren(panel.render(body.data));
+      const rendered = panel.render(body.data);
+      const notice = sourceNotice(body.data);
+      content.replaceChildren(notice || rendered);
     } catch (error) {
       content.replaceChildren(emptyState(`Could not reach the dashboard server: ${error.message}`, 'node scripts/dashboard-server.js'));
     }
@@ -494,7 +551,21 @@
 
   document.addEventListener('keydown', (event) => {
     if (event.target instanceof HTMLInputElement) return;
+    if (event.key === '?') {
+      event.preventDefault();
+      const help = document.getElementById('keyboard-help');
+      help.hidden = !help.hidden;
+      return;
+    }
     const rows = content.querySelectorAll('.row[data-index]');
+    if (event.key === 'Enter') {
+      const selected = rows[selectedIndex] || document.activeElement;
+      if (selected && selected.dataset && selected.dataset.evidence) {
+        event.preventDefault();
+        window.open(`/evidence?path=${encodeURIComponent(selected.dataset.evidence)}`, '_blank', 'noopener');
+      }
+      return;
+    }
     if (!rows.length) return;
     if (event.key === 'j' || event.key === 'k') {
       event.preventDefault();
@@ -502,6 +573,8 @@
         ? Math.min(rows.length - 1, selectedIndex + 1)
         : Math.max(0, selectedIndex - 1);
       rows.forEach((row, index) => row.classList.toggle('selected', index === selectedIndex));
+      rows.forEach((row, index) => { row.tabIndex = index === selectedIndex ? 0 : -1; });
+      rows[selectedIndex].focus({ preventScroll: true });
       rows[selectedIndex].scrollIntoView({ block: 'nearest' });
     }
   });

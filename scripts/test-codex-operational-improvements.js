@@ -85,6 +85,10 @@ function testPluginMarketplaceSmoke() {
     const report = createPluginMarketplace({ projectRoot: tmp, write: true });
     assert(report.pass, JSON.stringify(report.checks, null, 2));
     assert(fs.existsSync(path.join(tmp, '.agents', 'plugins', 'marketplace.json')));
+    const generatedManifest = JSON.parse(fs.readFileSync(path.join(tmp, '.agents', '.codex-plugin', 'plugin.json'), 'utf8'));
+    assert.equal(report.marketplace.plugins[0].version, generatedManifest.version);
+    assert.equal(report.marketplace.plugins[0].description, generatedManifest.description);
+    assert.equal(report.marketplace.plugins[0].repository, generatedManifest.repository);
     assert(report.codexCliCommands.some((command) => command.includes('codex plugin marketplace add')));
 
     const smoke = execFileSync(process.execPath, [

@@ -1,0 +1,16 @@
+{
+  "schema": 1,
+  "id": "context-handoff-recovery",
+  "category": "context_reset",
+  "repository": "https://github.com/SethGammon/Citadel.git",
+  "pinned_ref": "6a507f16cd198889d9580555cf2a706d9d27764f",
+  "task": "Repair a malformed handoff ingestion path, force a context reset after diagnosis, and finish with tests that distinguish recoverable from unreadable handoffs.",
+  "setup_command": ["node", "--version"],
+  "verification_command": ["node", "scripts/test-usefulness-trial.js"],
+  "expected_artifacts": ["scripts/parse-handoff.cjs", "scripts/test-usefulness-trial.js"],
+  "timeout_minutes": 60,
+  "context_reset_at": 2,
+  "cleanup_assertions": ["workspace_removed"],
+  "runtime": "claude",
+  "model": "claude-opus-4-6"
+}

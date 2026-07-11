@@ -1,0 +1,10 @@
+{
+  "schema": 1,
+  "frozen_at": "2026-07-10",
+  "scenario_count": 10,
+  "scenario_set_id": "scenario-set-sha256:df6f921ac762ebacfaa02ef51634e8c79993efeb982f40c15b2e19d05472e0f1",
+  "metric_set_id": "metric-set-sha256:fc89a12828dc552e3e65498e5a39b602f3459741d1ebb9fea1ce50adef37d18e",
+  "policy": "Scenario and metric identities may not be removed or changed after real runs begin. Additive revisions require a new scenario set identity and must retain prior negative results.",
+  "external_scenario": null,
+  "attestation_public_key": null
+}

@@ -1,0 +1,16 @@
+{
+  "schema": 1,
+  "id": "long-install-reliability",
+  "category": "long_task",
+  "repository": "https://github.com/SethGammon/Citadel.git",
+  "pinned_ref": "6a507f16cd198889d9580555cf2a706d9d27764f",
+  "task": "Diagnose and harden first-use installation rollback across the supported installers, add regression coverage, and document the verified recovery behavior.",
+  "setup_command": ["node", "--version"],
+  "verification_command": ["node", "scripts/test-all.js", "--strict"],
+  "expected_artifacts": ["scripts/install.js", "scripts/test-installers.js", "INSTALL.md"],
+  "timeout_minutes": 60,
+  "context_reset_at": null,
+  "cleanup_assertions": ["workspace_removed"],
+  "runtime": "codex",
+  "model": "gpt-5.4"
+}

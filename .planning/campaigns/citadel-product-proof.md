@@ -45,8 +45,8 @@ Direction: Convert the seven approved phases into an Archon campaign and execute
 | 2 |   complete | build | Hermetic reliability and versioned release | Strict suite passes from writable and read-only source copies; deterministic release, checksum, update, rollback, and OS/runtime matrix gates pass | 3 |
 | 3 |   complete | build | Local activation and acquisition measurement | Privacy-safe local funnel and maintainer acquisition snapshots pass schema, redaction, no-network, history, and reporting tests | 3 |
 | 4 |  in-progress | build | Stranger-tested golden path | Claude/Codex × Linux/macOS/Windows matrix exceeds 95%; first route and verified handoff timing gates pass; rollback restores fixtures | 3 |
-| 5 | pending | build | Complete R1 See It and R2 Prove It | Dashboard comprehension/performance/honesty gates and symmetric public benchmark utility gates pass with raw reproducible evidence | 3 |
-| 6 | pending | wire | Ecosystem and distribution proof | Unmodified external skill runs under Citadel; canonical metadata is drift-free; both plugin scanners and verified registry profiles pass | 3 |
+| 5 | in-progress | build | Complete R1 See It and R2 Prove It | Dashboard comprehension/performance/honesty gates and symmetric public benchmark utility gates pass with raw reproducible evidence | 2 |
+| 6 | in-progress | wire | Ecosystem and distribution proof | Unmodified external skill runs under Citadel; canonical metadata is drift-free; both plugin scanners and verified registry profiles pass | 2 |
 | 7 | pending | verify | Showcase and product-proof scorecard | Tagged release, real demo, benchmark, dashboard, user trials, retention, compatibility, and product-proof report satisfy every milestone exit gate | 3 |
 
 ## Phase End Conditions
@@ -108,8 +108,12 @@ Direction: Convert the seven approved phases into an Archon campaign and execute
 | phase:4 | stranger-timing | test_result | yes | recorded first-time-user trial cohort | pending | 3 | fixture milliseconds are not human install-to-value evidence |
 | phase:5 | dashboard-proof | test_result | yes | dashboard web/perf/visual tests | pending | 3 | complete R1 |
 | phase:5 | benchmark-proof | test_result | yes | product benchmark report and raw runs | pending | 3 | complete R2 |
+| phase:5 | dashboard-contract | test_result | yes | node scripts/test-dashboard-web.js; node scripts/test-dashboard-perf.js; node scripts/test-dashboard-visual.js | pass | 3 | source-health, containment, timing, responsive, keyboard, and reduced-motion contracts pass; absolute RSS, pixel, and human gates remain |
+| phase:5 | benchmark-contract | test_result | yes | node scripts/test-product-benchmark.js; docs/benchmarks/product-proof-fixture-report.json | pass | 3 | ten frozen symmetric scenarios and 60 reproducible fixture runs pass; utility result is honestly open and negative |
 | phase:6 | interoperability | test_result | yes | node scripts/test-ecosystem-compat.js | pending | 3 | run external skill fixture |
 | phase:7 | milestone-report | doc_update | yes | docs/PRODUCT_PROOF_REPORT.md | pending | 3 | assemble final scorecard |
+| phase:6 | ecosystem-contract | test_result | yes | node scripts/test-ecosystem-compat.js; node scripts/generate-distribution-metadata.js --check | pass | 3 | 7/7 local compatibility checks and canonical metadata pass; immutable Anthropic commit and byte digest verified; remote scanners and publisher profiles remain |
+| phase:7 | scorecard-contract | test_result | yes | docs/PRODUCT_PROOF_REPORT.md; node scripts/test-product-proof-report.js | pass | 3 | answer-first blocked scorecard covers all ten axes and forbids completion claims while evidence is missing |
 | campaign | review-package | file_diff | yes | .planning/review-packages/citadel-product-proof.md | pending | 3 | package after verification |
 
 ## Feature Ledger
@@ -123,6 +127,10 @@ Direction: Convert the seven approved phases into an Archon campaign and execute
 | Local activation and acquisition measurement | complete | 3 | Privacy-safe activation, GitHub history, docs, strict regression, 5/5 evidence, and independent validation pass; live snapshot remains operator-gated |
 | Deterministic golden-path fixture | complete | 4 | Both runtime preparations reach 5/5 usefulness, HANDOFF, fresh continuation, closed failures, exact rollback, and independent security review pass |
 | Golden-path evidence matrix | in-progress | 4 | Hardened Windows rerun 10/10 passes; Linux, macOS, and stranger trial evidence remain |
+| Read-only operator dashboard | implementation-complete | 5 | Nine schema-1 views, explicit unknown/unreadable state, activation, path-contained evidence, keyboard/mobile/reduced-motion contracts; absolute RSS, pixels, and stranger comprehension remain |
+| Product benchmark | implementation-complete | 5 | Ten frozen scenarios, symmetric runner, deterministic raw/report regeneration, closed failure codes, and published negative fixture result; actual runs and external scenario remain |
+| External skill interoperability | implementation-complete | 6 | Digested Anthropic template snapshot installs unchanged into Claude/Codex projections, routes, executes, emits local telemetry and HANDOFF, and cleans up; immutable provenance and registries remain |
+| Product-proof scorecard | complete | 7 | docs/PRODUCT_PROOF_REPORT.md truthfully reports the milestone blocked and separates local, CI, human, release, and missing evidence |
 
 ## Decision Log
 
@@ -226,6 +234,60 @@ Direction: Convert the seven approved phases into an Archon campaign and execute
   Reason: the user explicitly authorized CI and publishing; the enforcer requires a normal push,
   no hook bypass, no tags/releases/deployments, and a final staged-secret and scope audit.
 
+- 2026-07-10T20:37:51.000Z: Main delivery moved to PR #181 after branch protection rejected a direct push.
+  Reason: the policy enforcer allowed the compliant branch and PR path with no force, bypass,
+  override, tag, release, or deployment; the reviewed foundation commit remained unchanged.
+
+- 2026-07-10T20:42:00.000Z: The first real cross-OS grid failed honestly at 15/30 successful runs.
+  Reason: every Claude cell passed, but fresh CI checkouts lacked an untracked generated Codex
+  manifest and the fixture had skipped regeneration. The disposable staged plugin now performs
+  the real Codex refresh; focused golden-path tests pass after the repair.
+
+- 2026-07-10T20:42:00.000Z: Phase 5 checkpoint recorded as none.
+  Reason: the PR branch was clean at exact commit 6a507f1, so git reported no local changes to save.
+
+- 2026-07-10T21:10:00.000Z: Phase 5 implementation contracts pass but the evidence phase remains open.
+  Reason: dashboard unit/web/performance/visual-contract tests and benchmark tests pass. The
+  dashboard measured 53.4 MB absolute RSS against a <50 MB gate and lacks pixel/human trials;
+  benchmark fixture evidence intentionally misses the utility threshold and is not an actual run.
+
+- 2026-07-10T21:20:00.000Z: Live dashboard preview remains blocked by browser security policy.
+  Reason: the policy explicitly rejected localhost navigation and prohibited alternate browser
+  automation. No screenshots or app artifacts were created; structural visual tests are not pixels.
+
+- 2026-07-10T21:28:00.000Z: Phase 6 local interoperability implementation is complete but metadata sync is blocked.
+  Reason: six of seven focused checks pass, including symlink-safe install/evidence cleanup. The
+  protected marketplace manifest still lacks version 1.1.0 because the approval usage cap rejected
+  both delegated and root edits. Immutable upstream ref and remote registry profiles remain open.
+
+- 2026-07-10T21:34:00.000Z: Phase 7 scorecard contract passes without claiming milestone completion.
+  Reason: docs/PRODUCT_PROOF_REPORT.md covers every exit axis, links evidence, retains the failed
+  15/30 CI grid and negative fixture benchmark, and marks human/release/showcase gates blocked.
+
+- 2026-07-10T21:46:00.000Z: Independent Phase 5 validator failed the product evidence gates; retries now 2.
+  Reason: implementation contracts pass, but absolute RSS is above 50 MB, update timing showed a
+  flaky over-budget run, pixel and 10-person comprehension evidence are absent, and fixture benchmark
+  runs miss the intervention/recovery gate without actual runs or an external scenario.
+
+- 2026-07-10T21:46:00.000Z: Independent Phase 6 validator failed distribution evidence; retries now 2.
+  Reason: local external-skill proof passes, but protected marketplace metadata still drifts,
+  upstream provenance is mutable, release-artifact scanner results are absent, and publisher-profile
+  identity/version/install/runtime evidence has not been captured.
+
+- 2026-07-11T00:41:00.000Z: Integrated local release gates pass after independent P1 review and repair.
+  Reason: final strict validation passed every listed check in 214.6 seconds; benchmark evidence now rejects
+  missing metrics, wrong types, failed git-status cleanup claims, manifest drift, unsigned receipts, and
+  non-Ed25519 keys; dashboard fallback observes nested
+  edits on Node 18 and watcher errors; distribution metadata is canonical and compatibility passes 7/7.
+
+- 2026-07-11T00:41:00.000Z: External skill provenance is now immutable and locally verified.
+  Reason: GitHub returned Anthropic template blob 50a4f9b104357d96361e257adb70454604cd15c0 at
+  commit 9d2f1ae187231d8199c64b5b762e1bdf2244733d, and its UTF-8 bytes match the recorded SHA-256.
+
+- 2026-07-11T00:41:00.000Z: The final worktree release package is reproducible and independently verified.
+  Reason: two final worktree builds matched SHA-256 63c0d1692d99135a1a38949d5406e2ab3034c280a262f383f7812cf48a89db31;
+  release verification passed for 617 files under citadel-1.1.0. No tag, release, or deployment was created.
+
 ## Review Queue
 
 - [ ] UX: Review the final first-run journey with ten users who have never installed Citadel.
@@ -248,27 +310,29 @@ Direction: Convert the seven approved phases into an Archon campaign and execute
 
 ## Active Context
 
-Phases 1 through 3 are complete. Phase 4 fixture automation is complete, independently reviewed,
-and green on Windows: ten of ten hardened local Claude/Codex preparation journeys pass with exact
-rollback, and the final strict suite is green. Phase 4 remains active only because Linux/macOS grid
-evidence and real stranger timing do not exist. CI modification/publishing and the trial cohort
-require operator authority.
+Phases 1 through 3 are complete. Phase 4 through 6 implementation contracts are locally green and
+independently reviewed: the integrated strict suite passes, the package is reproducible, the dashboard
+and symmetric benchmark contracts are hardened, and external-skill compatibility passes 7/7 with
+immutable provenance. The milestone remains open because hosted cross-OS/scanner evidence, dashboard
+pixels/RSS/human comprehension, actual externally selected benchmark runs, return-use evidence,
+publisher profiles, the tagged release, and the real demo do not yet exist.
 
 ## Continuation State
 
-Phase: 4
-Sub-step: collect real Linux/macOS matrix artifacts and stranger-trial timing evidence
-Files modified: prior Phase 2 files plus .gitignore, README.md, CHANGELOG.md, package.json, core/telemetry/activation.js, core/telemetry/github-traffic.js, scripts/activation-telemetry.js, scripts/github-traffic-snapshot.js, scripts/test-activation-telemetry.js, scripts/test-github-traffic-snapshot.js, scripts/test-all.js, docs/ACTIVATION_METRICS.md, .planning/product-proof/activation-report.json, and this campaign file
-Blocking: none
+Phase: 4-7 evidence closure
+Sub-step: publish the integrated PR branch, inspect hosted CI/scanner evidence, then execute human and actual-run gates
+Files modified: see git status on codex/citadel-1-1-product-proof; README, dashboard, benchmark, interoperability, CI, scorecard, and campaign surfaces are integrated
+Blocking: browser security prevented pixel capture; human cohorts, external scenario selection, publisher-profile evidence, and return-use windows require real external participants/state
 checkpoint-phase-1: none
 checkpoint-phase-2: none
 checkpoint-phase-3: none
 checkpoint-phase-4: none
 Next actions:
-1. Obtain explicit approval before changing CI or publishing matrix artifacts.
-2. Run five Claude and five Codex fixture journeys on Linux and macOS, then merge with the Windows report using `--require-complete`.
-3. Run the first-time-user cohort and record real install-to-route and install-to-handoff timing.
-4. Validate complete Phase 4 Exit Evidence and obtain an independent phase-validator verdict.
+1. Commit and push the reviewed branch to PR #181, then inspect every hosted all-OS and scanner result.
+2. Repair any hosted regression without bypassing checks; do not merge while product-proof gates remain open.
+3. Capture real dashboard pixels and run the first-time-user comprehension/timing cohort.
+4. Have an external reviewer select a frozen scenario, run actual symmetric trials, and retain negative results.
+5. Collect return-use, publisher-profile, tagged-release, and non-mocked demo evidence before milestone completion.
 
 <!-- session-end: 2026-07-10T15:45:46.955Z -->
 

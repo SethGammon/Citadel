@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "name": "citadel",
+  "version": "1.1.0",
+  "description": "Codex-native agent orchestration harness for durable campaigns, skills, hooks, telemetry, and parallel work",
+  "license": "MIT",
+  "source_repository": "https://github.com/SethGammon/Citadel",
+  "runtime_support": {
+    "node": ">=18",
+    "claude_code": {
+      "manifest": ".claude-plugin/plugin.json",
+      "marketplace": ".claude-plugin/marketplace.json",
+      "install_command": "node scripts/install.js --runtime claude --install --scope local"
+    },
+    "codex": {
+      "manifest": ".codex-plugin/plugin.json",
+      "marketplace": ".agents/plugins/marketplace.json",
+      "install_command": "node scripts/install.js --runtime codex --add-marketplace"
+    }
+  },
+  "skills": {
+    "path": "skills/",
+    "count": 49
+  },
+  "proof_links": [
+    "README.md#see-it-run",
+    "docs/GOLDEN_PATH.md",
+    "docs/INTEROPERABILITY.md",
+    "docs/RELEASES.md"
+  ],
+  "interoperability": {
+    "external_skill_fixture": "scripts/fixtures/ecosystem/anthropics-template-skill",
+    "local_scanner_contracts": [
+      "claude-local",
+      "codex-local"
+    ],
+    "immutable_source_verified": true,
+    "immutable_source_verification": "anthropics/skills@9d2f1ae187231d8199c64b5b762e1bdf2244733d",
+    "remote_registry_verification": "not-claimed"
+  }
+}

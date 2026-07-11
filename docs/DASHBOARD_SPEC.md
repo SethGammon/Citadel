@@ -1,10 +1,10 @@
-# Citadel Dashboard Specification (R1: v0.1 read-only)
+# Citadel Dashboard Specification (R1: schema 1 read-only)
 
 `citadel dashboard` (also `npm run dashboard:web`) serves a local web app that renders the
 project's `.planning/` state and telemetry live. It is the visible form of the harness:
 campaigns, fleet, loops, hooks, costs, and handoffs in one glanceable surface.
 
-This document specifies v0.1 (read-only) and names the contracts that v0.2+ (two-way) will
+This document specifies the read-only schema-1 projection and names the contracts that v0.2+ (two-way) will
 build on. Roadmap context lives in [ROADMAP.md](ROADMAP.md) R1 and R3.
 
 ## Principles
@@ -32,7 +32,6 @@ scripts/dashboard-server.js     Node, stdlib only, no new runtime deps
   ├── normalizers (core/…)      parse-campaign, loops, fleet, telemetry readers
   ├── GET /api/*                normalized JSON snapshots
   ├── GET /api/events           SSE: push invalidation keys on file change
-  ├── POST /otlp/v1/metrics     OTLP/HTTP receiver (cost mode, see below)
   └── static /                  single-bundle SPA (no CDN, works offline)
 ```
 
@@ -46,19 +45,23 @@ scripts/dashboard-server.js     Node, stdlib only, no new runtime deps
 
 ## Data contracts (v0.1 endpoints)
 
-All endpoints return `{ generated_at, source_files: [...], data }`. Shapes are versioned
+All endpoints return `{ schema: 1, generated_at, source_files: [...], data }`. Shapes are versioned
 with a top-level `schema: 1` so v0.2 can evolve without breaking saved clients.
+
+Every panel payload includes `state: { path, status, detail, count, unreadable }`. Status is
+`healthy`, `empty`, `mid-run`, `unknown`, or `unreadable`. Missing input is `unknown`, malformed
+input is `unreadable`, and neither may be presented as a green zero.
 
 | Endpoint | Source | `data` shape (summary) |
 |---|---|---|
 | `/api/overview` | all below | `{ needs_you: Item[], active: {campaigns, fleet_agents, loops}, cost_today, last_verify }` |
 | `/api/campaigns` | `.planning/campaigns/*.md` | `[{ id, title, status, phase: {n, of, title}, progress, started_at, last_handoff, evidence }]` |
-| `/api/campaigns/:id` | campaign file + handoffs | full phase list, exit conditions, decisions, artifacts |
 | `/api/fleet` | `.planning/fleet/` | `[{ session, agents: [{ name, scope, worktree, status, last_discovery }], wave, merge_queue }]` |
 | `/api/loops` | `.planning/loops/*.json`, `daemon.json` | `[{ id, type, trigger, budget: {kind, total, spent}, verifier, last_run: {at, status}, stop_state }]` |
 | `/api/hooks/feed` | telemetry JSONL | last N hook events: `{ at, event, decision, reason, target }` (blocks first) |
 | `/api/handoffs` | `.planning/handoffs/`, campaign records | timeline of `{ at, campaign, summary, path }` |
 | `/api/cost` | OTLP receiver + transcript fallback | see Cost modes |
+| `/api/activation` | activation report or local activation JSONL | redacted totals by stage, status, failure, and acquisition source |
 
 `needs_you` is the product. It aggregates anything waiting on a human: campaign phase gates,
 fleet merge reviews, loops in `needs-human-review` or `blocked`, stale approvals. Sorted by
@@ -69,31 +72,18 @@ age. The dashboard's home answers "do I need to do anything?" in one glance.
 Two user populations, two units. Mode is detected per session and shown explicitly.
 
 **API-key mode (unit: estimated USD).**
-- Source of truth: OTLP metrics from the runtime. Setup wires the env vars
-  (`CLAUDE_CODE_ENABLE_TELEMETRY=1`, `OTEL_METRICS_EXPORTER=otlp`,
-  `OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf`,
-  `OTEL_EXPORTER_OTLP_ENDPOINT=http://127.0.0.1:4180/otlp`) opt-in during `/do setup`.
-- Metrics consumed: `claude_code.cost.usage` (USD), `claude_code.token.usage`, and request
-  events carrying `cost_usd` with `skill.name` / `agent.name` / `mcp_server.name` / model /
-  effort attribution. Attribution powers per-skill and per-campaign-phase cost breakdowns.
+- Source of truth in schema 1 is local session cost telemetry. An OTLP receiver is a future
+  extension and is not exposed by the read-only server.
+- Current projections aggregate `session-costs.jsonl` and label campaign totals as estimates.
 - Every dollar figure renders with "est." and a tooltip: estimates are computed locally
   from token counts and can differ from the bill; the Console is authoritative.
-- Burn rate and projected cost-to-finish are derived from the active campaign's phase
-  history. Projections are labeled as projections.
 
 **Subscription mode (unit: plan window).**
-- Pro/Max users do not pay per token; dollars are the wrong unit. Render plan-window
-  consumption (session tokens, share of recent usage by skill/agent, activity over 24h/7d)
-  from the same token telemetry, mirroring how `/usage` treats subscribers.
-- Optional delight stat: "this campaign would have cost ~$X at API prices, included in
-  your plan." Same "est." discipline.
-- Window-percentage math is an estimate from local history (other devices not visible);
-  say so in the UI.
+- Pro/Max users do not pay per token; the current UI calls estimated dollars plan-load
+  indicators rather than charges. Plan-window percentages remain future work.
 
-**Fallbacks.** No OTLP: parse transcript JSONL usage fields where available. Bedrock,
-Vertex, and Foundry emit no cost metrics: tokens-only with a note. Codex: token usage via
-the Codex adapter; cost treated as API mode when a key is configured. Unknown: render
-"telemetry off" with the one-line instruction to enable it, never zeros.
+**Fallbacks.** When no local cost telemetry is available, render unknown with a one-line
+instruction to enable it, never zero. Provider-specific token and OTLP adapters remain future work.
 
 ## Panels (v0.1)
 
@@ -103,8 +93,9 @@ the Codex adapter; cost treated as API mode when a key is configured. Unknown: r
 | Campaigns | cards: phase progress, status, last handoff, evidence freshness | campaign md, handoff md |
 | Fleet | agents, scopes, worktrees, wave status, merge queue preview | worktree paths, discovery log |
 | Loops | contract cards: budget burn-down, verifier history, stop-state badge | loop JSON, review artifact |
-| Cost | mode-appropriate spend, per-skill attribution, burn rate | telemetry lines |
+| Cost | tracked or estimated session and campaign spend, explicitly labeled | telemetry lines |
 | Hook feed | recent decisions, blocks first, friendly reason text | rule + target file |
+| Activation | local redacted funnel totals and acquisition source counts | activation report JSON |
 
 Multi-project switching, fortress view, and any write action are explicitly v0.2+
 (ROADMAP R3). Ship the six panels well.
@@ -134,13 +125,27 @@ switcher reserved for v0.2.
 
 - Unit: normalizers against fixture `.planning/` trees (healthy, mid-campaign, corrupted,
   empty) — corrupted files render as "unreadable: <path>" rows, never crash the panel.
-- Contract: every `/api/*` response validates against its schema; schema files live next
-  to the server and are the v0.2 compatibility baseline.
+- Contract: every documented projection endpoint returns a schema-1 envelope and explicit source state.
 - Perf: budget script in CI per the table above.
 - Visual: screenshot pass on the fixture project (the make-frame technique from the README
   work) checked at desktop and 380 px widths, dark and light.
 - Manual exit check (matches ROADMAP R1): a person who has never seen Citadel opens the
   dashboard on a live project and explains what is happening within 60 seconds.
+
+### Current evidence (2026-07-10)
+
+- `node scripts/test-dashboard-web.js`: healthy, initialized-empty, absent, mid-run, and
+  corrupt fixtures pass; all nine API projections return schema 1 with explicit source state.
+- `node scripts/test-dashboard-perf.js`: deterministic 1,000-file Windows focused runs after
+  update-path caching measured 251.9-588.4 ms cold and 110.8-228.5 ms invalidated updates.
+  Absolute RSS was 53.3-53.5 MB, so the strict
+  `<50 MB` target is **not proven** on this runtime. The portable test gates dashboard-attributed
+  overhead and reports the absolute result for CI/platform evaluation.
+- `node scripts/test-dashboard-visual.js`: dark/light desktop and 380 px design-token/layout
+  baselines plus keyboard and reduced-motion contracts pass. This is browserless structural
+  evidence, not a pixel screenshot baseline; pixel captures remain pending a browser runtime.
+- Human comprehension remains external: the 8/10 first-time-user result and the under-60-second
+  explanation check are not yet proven.
 
 ## Out of scope for v0.1
 

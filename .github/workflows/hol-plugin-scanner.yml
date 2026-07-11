@@ -24,3 +24,6 @@ jobs:
           fail_on_severity: high
           format: sarif
           upload_sarif: true
+      - name: Summarize scanner finding coordinates
+        if: failure()
+        run: node scripts/sarif-coordinates.js plugin-scanner.sarif

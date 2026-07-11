@@ -912,8 +912,40 @@ function readWorktreeReadiness(projectRoot) {
   }));
 }
 
-function safeCostDashboard() {
+function projectCostDashboard(projectRoot) {
+  const filePath = path.join(projectRoot, '.planning', 'telemetry', 'session-costs.jsonl');
+  const detail = readJsonlDetailed(filePath);
+  if (!detail.exists) return null;
+  const byCampaign = {};
+  let total = 0;
+  for (const entry of detail.entries) {
+    const slug = entry.campaign_slug || '_unattached';
+    const value = typeof entry.override_cost === 'number' ? entry.override_cost
+      : typeof entry.real_cost === 'number' ? entry.real_cost
+        : typeof entry.estimated_cost === 'number' ? entry.estimated_cost : 0;
+    if (!byCampaign[slug]) byCampaign[slug] = { sessions: 0, total_cost: 0 };
+    byCampaign[slug].sessions++;
+    byCampaign[slug].total_cost += value;
+    total += value;
+  }
+  return {
+    total_cost: total, session_count: detail.entries.length, by_campaign: byCampaign,
+    real_total: null, real_sessions: 0, estimated_total: total,
+    data_source: detail.entries.length ? 'estimated-only' : 'unavailable',
+    total_messages: null, total_subagents: null,
+  };
+}
+
+function safeCostDashboard(projectRoot) {
   try {
+    const configuredRoot = path.resolve(process.env.CLAUDE_PROJECT_DIR || process.cwd());
+    if (path.resolve(projectRoot) !== configuredRoot) {
+      return projectCostDashboard(projectRoot) || {
+        total_cost: null, session_count: null, by_campaign: {}, data_source: 'unavailable',
+        real_total: null, real_sessions: 0, estimated_total: null,
+        total_messages: null, total_subagents: null,
+      };
+    }
     return readCostDashboard();
   } catch {
     return {
@@ -941,10 +973,13 @@ function collectDashboard(options = {}) {
   const hookOverhead = readHookOverhead(projectRoot);
   const hookValue = readHookValue(projectRoot);
   const health = readHealth(projectRoot);
-  const cost = safeCostDashboard();
+  const cost = safeCostDashboard(projectRoot);
   const coordination = readCoordination(projectRoot);
   const worktrees = readWorktrees(projectRoot);
-  const gitStatus = readGitStatus(projectRoot);
+  // Planning-file invalidations can reuse the last git snapshot. The caller
+  // performs a full refresh after the TTL, so this avoids spawning git for
+  // every SSE update without making repository state indefinitely stale.
+  const gitStatus = options.gitStatus || readGitStatus(projectRoot);
   const worktreeReadiness = readWorktreeReadiness(projectRoot);
   const operatorArtifacts = readOperatorArtifacts(projectRoot);
   const pending = readQueueCounts(projectRoot);
@@ -1275,7 +1310,11 @@ function renderDashboard(snapshot) {
 
   lines.push('');
   lines.push('COSTS');
-  lines.push(`  Total: ${money(snapshot.cost.total_cost)} across ${snapshot.cost.session_count || 0} sessions (${snapshot.cost.data_source || 'unknown'})`);
+  if (snapshot.cost.data_source === 'unavailable') {
+    lines.push('  Total: unknown (no cost telemetry available)');
+  } else {
+    lines.push(`  Total: ${money(snapshot.cost.total_cost)} across ${snapshot.cost.session_count || 0} sessions (${snapshot.cost.data_source || 'unknown'})`);
+  }
   if (snapshot.cost.total_messages !== null || snapshot.cost.total_subagents !== null) {
     lines.push(`  Messages: ${snapshot.cost.total_messages || 0} | Subagents: ${snapshot.cost.total_subagents || 0}`);
   }

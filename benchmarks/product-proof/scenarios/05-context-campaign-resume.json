@@ -1,0 +1,16 @@
+{
+  "schema": 1,
+  "id": "context-campaign-resume",
+  "category": "context_reset",
+  "repository": "https://github.com/SethGammon/Citadel.git",
+  "pinned_ref": "6a507f16cd198889d9580555cf2a706d9d27764f",
+  "task": "Implement and test a campaign-state repair that must survive a forced context reset, then resume from the recorded continuation without repeating completed work.",
+  "setup_command": ["node", "--version"],
+  "verification_command": ["node", "scripts/test-campaign-core.js"],
+  "expected_artifacts": ["scripts/campaign.js", "scripts/test-campaign-core.js"],
+  "timeout_minutes": 60,
+  "context_reset_at": 2,
+  "cleanup_assertions": ["workspace_removed"],
+  "runtime": "codex",
+  "model": "gpt-5.4"
+}

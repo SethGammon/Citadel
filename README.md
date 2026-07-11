@@ -153,6 +153,9 @@ Four tiers let Citadel scale from a one-line edit to a multi-session campaign. Y
 | **Cost telemetry** | `/cost` and `/dashboard` show real token usage and session spend instead of guesses | [Reports](docs/REPORT_ARTIFACTS.md) |
 | **Product evidence** | Local activation stages and maintainer GitHub traffic history separate attention from verified use without hosted analytics | [Activation metrics](docs/ACTIVATION_METRICS.md) |
 | **Golden-path verification** | Claude and Codex fixture journeys prove install, setup, route, verification, handoff, resume, and exact rollback while labeling human evidence separately | [Golden path](docs/GOLDEN_PATH.md) |
+| **Read-only dashboard** | Nine schema-1 views expose needs-you, campaign, fleet, loop, hook, handoff, cost, and activation state; missing data stays `unknown`, never false green | [Dashboard spec](docs/DASHBOARD_SPEC.md) |
+| **Product benchmark** | Ten frozen bare-versus-harnessed scenarios preserve symmetric inputs, raw runs, negative results, and an explicit open utility gate | [Benchmark](docs/BENCHMARK.md) |
+| **Skill interoperability** | A digested external `SKILL.md` fixture installs unchanged under Claude and Codex projections, routes, verifies, emits local telemetry, hands off, and rolls back | [Interoperability](docs/INTEROPERABILITY.md) |
 | **Operator console** | `/do next` is a decision-first cockpit: current state, next action, risk boundary, verification profile | [Operating loop](docs/OPERATING_LOOP_PROOF.md) |
 | **Parallel fleets** | Broad work decomposes across agents in isolated worktrees, with discoveries shared between waves | [Fleet](docs/FLEET.md) |
 | **Skills** | <!-- GENERATED: skill-count -->49<!-- /GENERATED --> built-in skills covering review, refactor, tests, QA, telemetry, and setup; write your own in one file | [Skills](docs/SKILLS.md) |
@@ -187,8 +190,8 @@ npm test
 
 The full plan with exit criteria lives in [docs/ROADMAP.md](docs/ROADMAP.md). The arc: make the harness visible, prove it with numbers, then make it steerable.
 
-- **See It:** a local dashboard over `.planning/` state: campaigns, fleet, loops, hooks, and dual-mode cost (dollars for API users, plan-window burn for subscribers). Spec in [docs/DASHBOARD_SPEC.md](docs/DASHBOARD_SPEC.md).
-- **Prove It:** a public, reproducible benchmark page: completion rate and cost on long tasks, bare agent vs harnessed.
+- **See It:** the read-only local dashboard now projects nine versioned views with explicit source health. Pixel baselines, the `<50 MB` absolute RSS target, and stranger comprehension remain open gates. See [docs/DASHBOARD_SPEC.md](docs/DASHBOARD_SPEC.md).
+- **Prove It:** the reproducible benchmark contract now freezes ten symmetric bare-versus-harnessed scenarios and publishes its negative fixture result. Actual runs and external scenario selection remain open. See [docs/BENCHMARK.md](docs/BENCHMARK.md).
 - **Drive It:** approvals, steering, and a loop builder in the browser, through the same file contracts the terminal uses.
 - **Harden It:** teams-native fleet GA, sandboxed execution profiles, threat model v2, release integrity.
 - **Multiply It:** team workflows, a community skill and loop registry, and a third runtime adapter.
@@ -207,6 +210,9 @@ The full plan with exit criteria lives in [docs/ROADMAP.md](docs/ROADMAP.md). Th
 - [Operating loop proof](docs/OPERATING_LOOP_PROOF.md) - evidence checklist for demos and PRs
 - [Activation and acquisition metrics](docs/ACTIVATION_METRICS.md) - local funnel privacy, GitHub traffic history, and honest interpretation
 - [Golden path verification](docs/GOLDEN_PATH.md) - deterministic runtime fixtures, cross-OS matrix rules, and human-proof boundaries
+- [Product benchmark](docs/BENCHMARK.md) - frozen methodology, raw fixture evidence, negative results, and remaining real-run gates
+- [Interoperability](docs/INTEROPERABILITY.md) - external skill compatibility, provenance limits, and remote registry boundaries
+- [Citadel 1.1 product-proof scorecard](docs/PRODUCT_PROOF_REPORT.md) - what is locally proven, CI-proven, human-proven, and still blocked
 - [Skill and memory visibility](docs/SKILL_MEMORY_VISIBILITY.md) - inspect available skills and compiled project memory
 - [Public positioning](docs/PUBLIC_POSITIONING.md) - how to describe Citadel without overclaiming
 - [Security model](SECURITY.md) - path traversal, shell injection, and defensive measures
