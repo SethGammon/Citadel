@@ -14,7 +14,7 @@ It gives your coding agent durable project memory, `/do` intent routing, safety 
 
 If `CLAUDE.md` and `AGENTS.md` tell the runtime **what** your project is, Citadel tells the runtime **how** to operate on it.
 
-[Install](#quick-install) · [See It Run](#see-it-run) · [How It Works](#how-it-works) · [Why It Exists](#why-citadel-exists) · [Roadmap](#roadmap)
+[Install](#quick-install) · [See It Run](#see-it-run) · [How It Works](#how-it-works) · [Why It Exists](#why-citadel-exists) · [Roadmap](#roadmap) · [Help Test 1.1](https://github.com/SethGammon/Citadel/discussions/182)
 
 </div>
 
@@ -257,6 +257,7 @@ Yes. Hooks and scripts run on Node.js, and the Codex installer includes Windows 
 
 ## Community
 
+- [Help test Citadel 1.1](https://github.com/SethGammon/Citadel/discussions/182) - independent benchmark review, first-time-user trials, and return-use evidence
 - [GitHub Discussions](https://github.com/SethGammon/Citadel/discussions) - questions, use cases, bugs, and workflow requests
 - [X / Twitter](https://x.com/SethGammon) - project updates
 

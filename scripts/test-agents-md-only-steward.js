@@ -24,7 +24,7 @@ function writeJson(filePath, value) {
 }
 
 function extractStewardScript(agentsMd) {
-  const match = agentsMd.match(/<!-- BEGIN_STEWARD_SCRIPT -->\s*```js\n([\s\S]*?)\n```\s*<!-- END_STEWARD_SCRIPT -->/);
+  const match = agentsMd.match(/<!-- BEGIN_STEWARD_SCRIPT -->\s*```js\r?\n([\s\S]*?)\r?\n```\s*<!-- END_STEWARD_SCRIPT -->/);
   assert(match, 'AGENTS.md must contain a BEGIN_STEWARD_SCRIPT JavaScript block');
   return match[1];
 }
