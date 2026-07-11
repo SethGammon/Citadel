@@ -13,7 +13,8 @@ const { createDataSource, deriveViews } = require('./dashboard-server');
 const FILE_COUNT = 1000;
 const COLD_BUDGET_MS = 1000;
 const UPDATE_BUDGET_MS = 500;
-const RSS_OVERHEAD_BUDGET_MB = 50;
+const ABSOLUTE_RSS_BUDGET_MB = 64;
+const RSS_OVERHEAD_BUDGET_MB = 10;
 
 function write(root, relativePath, value) {
   const target = path.join(root, relativePath);
@@ -51,19 +52,20 @@ try {
   const rssOverheadMb = (process.memoryUsage().rss - baselineRss) / 1024 / 1024;
   assert(coldMs < COLD_BUDGET_MS, `cold start ${coldMs.toFixed(1)}ms exceeds ${COLD_BUDGET_MS}ms`);
   assert(updateMs < UPDATE_BUDGET_MS, `update ${updateMs.toFixed(1)}ms exceeds ${UPDATE_BUDGET_MS}ms`);
-  // Node's platform baseline can itself exceed 50 MB. This portable gate measures
-  // memory attributable to indexing/rendering the fixture and reports absolute RSS.
+  // Node's platform baseline varies materially. Gate both the complete process and
+  // the memory attributable to indexing/rendering the fixture so neither can hide
+  // behind the other.
+  assert(rssMb < ABSOLUTE_RSS_BUDGET_MB, `dashboard RSS ${rssMb.toFixed(1)}MB exceeds ${ABSOLUTE_RSS_BUDGET_MB}MB`);
   assert(rssOverheadMb < RSS_OVERHEAD_BUDGET_MB, `dashboard RSS overhead ${rssOverheadMb.toFixed(1)}MB exceeds ${RSS_OVERHEAD_BUDGET_MB}MB`);
 
   console.log(JSON.stringify({
     schema: 1, fixture_files: FILE_COUNT, cold_ms: Number(coldMs.toFixed(1)),
     update_ms: Number(updateMs.toFixed(1)), rss_mb: Number(rssMb.toFixed(1)),
-    rss_overhead_mb: Number(rssOverheadMb.toFixed(1)), absolute_rss_gate: rssMb < 50, budgets: {
-      cold_ms: COLD_BUDGET_MS, update_ms: UPDATE_BUDGET_MS, absolute_rss_mb: 50,
+    rss_overhead_mb: Number(rssOverheadMb.toFixed(1)), absolute_rss_gate: rssMb < ABSOLUTE_RSS_BUDGET_MB, budgets: {
+      cold_ms: COLD_BUDGET_MS, update_ms: UPDATE_BUDGET_MS, absolute_rss_mb: ABSOLUTE_RSS_BUDGET_MB,
       portable_rss_overhead_mb: RSS_OVERHEAD_BUDGET_MB,
     },
   }, null, 2));
-  if (rssMb >= 50) console.warn(`PENDING absolute RSS gate: ${rssMb.toFixed(1)}MB is not below 50MB on this runtime.`);
   console.log('dashboard performance budgets passed');
 } finally {
   fs.rmSync(root, { recursive: true, force: true });

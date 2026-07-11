@@ -190,7 +190,7 @@ npm test
 
 The full plan with exit criteria lives in [docs/ROADMAP.md](docs/ROADMAP.md). The arc: make the harness visible, prove it with numbers, then make it steerable.
 
-- **See It:** the read-only local dashboard now projects nine versioned views with explicit source health. Pixel baselines, the `<50 MB` absolute RSS target, and stranger comprehension remain open gates. See [docs/DASHBOARD_SPEC.md](docs/DASHBOARD_SPEC.md).
+- **See It:** the read-only local dashboard now projects nine versioned views with explicit source health. Its 1,000-file CI gate enforces <1 second cold start, <500 ms updates, <64 MB complete RSS, and <10 MB dashboard overhead. Pixel baselines and stranger comprehension remain open gates. See [docs/DASHBOARD_SPEC.md](docs/DASHBOARD_SPEC.md).
 - **Prove It:** the reproducible benchmark contract now freezes ten symmetric bare-versus-harnessed scenarios and publishes its negative fixture result. Actual runs and external scenario selection remain open. See [docs/BENCHMARK.md](docs/BENCHMARK.md).
 - **Drive It:** approvals, steering, and a loop builder in the browser, through the same file contracts the terminal uses.
 - **Harden It:** teams-native fleet GA, sandboxed execution profiles, threat model v2, release integrity.

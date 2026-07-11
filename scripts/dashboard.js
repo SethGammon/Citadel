@@ -854,7 +854,18 @@ function readCoordination(projectRoot) {
   }
 }
 
+function hasGitContext(projectRoot) {
+  let current = path.resolve(projectRoot);
+  while (true) {
+    if (fileExists(path.join(current, '.git'))) return true;
+    const parent = path.dirname(current);
+    if (parent === current) return false;
+    current = parent;
+  }
+}
+
 function readWorktrees(projectRoot) {
+  if (!hasGitContext(projectRoot)) return [];
   try {
     const output = execFileSync('git', ['worktree', 'list', '--porcelain'], {
       cwd: projectRoot,
@@ -877,6 +888,14 @@ function readWorktrees(projectRoot) {
 }
 
 function readGitStatus(projectRoot) {
+  if (!hasGitContext(projectRoot)) {
+    return {
+      available: false,
+      dirty: false,
+      changedFiles: 0,
+      sample: [],
+    };
+  }
   try {
     const output = execFileSync('git', ['status', '--short'], {
       cwd: projectRoot,

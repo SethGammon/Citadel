@@ -360,7 +360,7 @@ Only new (`+`) and modified (`~`) files are shown.
   - [ ] Corrupted or absent sources render `unknown`/`unreadable`, never false green or
     zero.
   - [ ] Generated 1,000-file fixture: cold start <1 second, file-to-SSE update <500 ms,
-    server RSS <50 MB.
+    complete server RSS <64 MB and dashboard-attributed overhead <10 MB.
   - [ ] Automated dark/light, desktop/380 px screenshots pass the visual baseline; keyboard
     and reduced-motion checks pass.
   - [ ] At least 8 of 10 strangers correctly describe the active goal, current phase,

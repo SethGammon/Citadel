@@ -39,9 +39,11 @@ function main() {
   }
 
   for (const evidence of [
-    '206.0 seconds',
+    '304.0 seconds',
     '15/30',
-    '53.3-55.2 MB',
+    '47.6 MB',
+    '55.1-55.5 MB',
+    '3.9-4.4 MB',
     'zero events',
     '60 deterministic runs',
     'PR #181',
