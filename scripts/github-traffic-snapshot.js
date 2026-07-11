@@ -37,6 +37,8 @@ function help() {
     '  --output-root <dir>    Root containing .planning/acquisition (default: cwd)',
     '  --captured-at <ISO>    Override capture time for deterministic tests',
     '  --json                 Print machine-readable result',
+    '',
+    'Live capture uses GH_TOKEN/GITHUB_TOKEN when set, otherwise the authenticated gh CLI.',
   ].join('\n');
 }
 

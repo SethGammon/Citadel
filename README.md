@@ -151,7 +151,7 @@ Four tiers let Citadel scale from a one-line edit to a multi-session campaign. Y
 | **`/do` routing** | Describe the task once; pattern, state, and keyword tiers resolve most requests for zero tokens | [Routing preview](docs/ROUTING_PREVIEW.md) |
 | **Safety hooks** | <!-- GENERATED: hook-script-count -->35<!-- /GENERATED --> Node hook scripts across <!-- GENERATED: hook-event-count -->29<!-- /GENERATED --> lifecycle events protect files, gate risky actions, and record handoffs | [Hooks](docs/HOOKS.md) |
 | **Cost telemetry** | `/cost` and `/dashboard` show real token usage and session spend instead of guesses | [Reports](docs/REPORT_ARTIFACTS.md) |
-| **Product evidence** | Local activation stages and maintainer GitHub traffic history separate attention from verified use without hosted analytics | [Activation metrics](docs/ACTIVATION_METRICS.md) |
+| **Product evidence** | Local activation stages and authenticated GitHub traffic snapshots separate attention and discovery sources from verified use without hosted analytics | [Activation metrics](docs/ACTIVATION_METRICS.md) |
 | **Golden-path verification** | A hosted 30/30 Claude/Codex × Windows/Linux/macOS fixture grid proves install, setup, route, verification, handoff, resume, and exact rollback while labeling human evidence separately | [Golden path](docs/GOLDEN_PATH.md) |
 | **Read-only dashboard** | Nine schema-1 views expose needs-you, campaign, fleet, loop, hook, handoff, cost, and activation state; missing data stays `unknown`, never false green | [Dashboard spec](docs/DASHBOARD_SPEC.md) |
 | **Product benchmark** | Ten frozen bare-versus-harnessed scenarios preserve symmetric inputs, raw runs, negative results, and an explicit open utility gate | [Benchmark](docs/BENCHMARK.md) |

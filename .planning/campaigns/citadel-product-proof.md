@@ -96,7 +96,8 @@ Direction: Convert the seven approved phases into an Archon campaign and execute
 | phase:2 | release-integrity | test_result | yes | node scripts/test-release-integrity.js | pass | 3 | exit 0; integrity and planning-state exclusion pass; reproducible SHA-256 c0570b739aea78b92506254b38e9b52c4848d09c4f0720f57a7147e51b79e246 |
 | phase:2 | release-docs | doc_update | yes | CHANGELOG.md; docs/RELEASES.md | pass | 3 | version, package, verification, plan-first update, rollback, compatibility, and release invariants documented |
 | phase:3 | activation-tests | test_result | yes | node scripts/test-activation-telemetry.js | pass | 3 | 17/17: schema, privacy rejection, opt-out, migration, full journey, redaction, and zero-network pass |
-| phase:3 | acquisition-tests | test_result | yes | node scripts/test-github-traffic-snapshot.js | pass | 3 | endpoint, API version, watcher semantics, token redaction, fixture, and append-only history tests pass |
+| phase:3 | acquisition-tests | test_result | yes | node scripts/test-github-traffic-snapshot.js | pass | 3 | endpoint, API version, watcher semantics, token redaction, authenticated gh fallback, fixture, and append-only history tests pass |
+| phase:3 | acquisition-live | file_diff | yes | .planning/acquisition/2026-07-11.json | pass | 3 | authenticated snapshot: 656 stars, 490 unique viewers, 506 unique cloners; leading unique referrers GitHub 126, X 104, Google 79, Reddit 51 |
 | phase:3 | measurement-docs | doc_update | yes | docs/ACTIVATION_METRICS.md | pass | 3 | privacy contract, stages, acquisition limits, commands, and honest interpretation documented |
 | phase:3 | activation-baseline | file_diff | yes | .planning/product-proof/activation-report.json | pass | 3 | truthful local baseline: zero historical events; no activation history was invented |
 | phase:3 | strict-regression | test_result | yes | node scripts/test-all.js --strict | pass | 3 | exit 0 in 234.1s; activation and acquisition suites included in aggregate gate |
@@ -140,6 +141,9 @@ Direction: Convert the seven approved phases into an Archon campaign and execute
 
 - 2026-07-11T03:05:00.000Z: Keep the one-second dashboard cold-start target and remove avoidable Git subprocesses for non-Git projects.
   Reason: profiling attributed roughly 497 ms to two guaranteed-to-fail Git probes on the generated fixture. Git-context detection removed those probes; the complete strict suite then passed every check in 304.0 seconds with the dashboard performance gate green.
+
+- 2026-07-11T06:21:56.082Z: Capture the first live authenticated GitHub acquisition snapshot and add credential-safe `gh` CLI fallback.
+  Reason: the rolling window shows 490 unique viewers and 506 unique cloners, led by GitHub, X, Google, and Reddit referrers. This explains wave-shaped discovery but remains attention evidence, not activation, utility, or retention proof. The post-change strict aggregate passed every check in 301.2 seconds.
 
 - 2026-07-10T14:25:12.420Z: Bound the campaign to seven phases by combining dashboard and benchmark into one parallel R1/R2 phase.
   Reason: matches the approved seven-step milestone while retaining independent workstreams and gates.

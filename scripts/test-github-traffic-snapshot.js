@@ -107,7 +107,20 @@ async function run() {
   const savedGitHubToken = process.env.GITHUB_TOKEN;
   delete process.env.GH_TOKEN;
   delete process.env.GITHUB_TOKEN;
-  await assert.rejects(fetchCombinedResponse('SethGammon/Citadel'), /requires GH_TOKEN or GITHUB_TOKEN.*write access/);
+  const cliCalls = [];
+  const cliCombined = await fetchCombinedResponse('SethGammon/Citadel', {
+    cliRequestFn: async request => {
+      cliCalls.push(request);
+      return responses.get(request.path);
+    },
+  });
+  assert.deepEqual(cliCombined.repository, raw.repository);
+  assert.equal(cliCalls.length, responses.size);
+  assert(cliCalls.every(call => !Object.hasOwn(call, 'headers')), 'CLI fallback must not synthesize or expose credentials');
+  await assert.rejects(
+    fetchCombinedResponse('SethGammon/Citadel', { cliRequestFn: async () => { throw new Error('gh auth required'); } }),
+    /gh auth required/,
+  );
   assert.equal(
     redactSecrets('requires GH_TOKEN or GITHUB_TOKEN with repository write access'),
     'requires GH_TOKEN or GITHUB_TOKEN with repository write access',

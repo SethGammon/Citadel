@@ -39,7 +39,7 @@ function main() {
   }
 
   for (const evidence of [
-    '304.0 seconds',
+    '301.2 seconds',
     '15/30',
     '47.6 MB',
     '55.1-55.5 MB',

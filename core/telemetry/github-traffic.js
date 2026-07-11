@@ -3,6 +3,7 @@
 const fs = require('fs');
 const https = require('https');
 const path = require('path');
+const { execFile } = require('child_process');
 
 const API_VERSION = '2026-03-10';
 const USER_AGENT = 'Citadel-Acquisition-Snapshot/1.1';
@@ -60,6 +61,26 @@ function requestGitHub({ path: requestPath, headers }) {
   });
 }
 
+function requestGitHubCli({ path: requestPath }) {
+  return new Promise((resolve, reject) => {
+    execFile('gh', ['api', requestPath.replace(/^\/+/, '')], {
+      encoding: 'utf8',
+      windowsHide: true,
+      maxBuffer: 4 * 1024 * 1024,
+    }, (error, stdout, stderr) => {
+      if (error) {
+        reject(new Error(`GitHub CLI request failed: ${(stderr || error.message).trim()}`));
+        return;
+      }
+      try {
+        resolve(JSON.parse(stdout || 'null'));
+      } catch {
+        reject(new Error('GitHub CLI returned invalid JSON'));
+      }
+    });
+  });
+}
+
 function redactSecrets(value, secrets = []) {
   let message = String(value instanceof Error ? value.message : value);
   for (const secret of secrets) {
@@ -71,10 +92,7 @@ function redactSecrets(value, secrets = []) {
 async function fetchCombinedResponse(repository, options = {}) {
   const parsed = parseRepository(repository);
   const token = options.token || process.env.GH_TOKEN || process.env.GITHUB_TOKEN;
-  if (!token) {
-    throw new Error('Live GitHub traffic capture requires GH_TOKEN or GITHUB_TOKEN with repository write access');
-  }
-  const requestFn = options.requestFn || requestGitHub;
+  const requestFn = options.requestFn || (token ? requestGitHub : (options.cliRequestFn || requestGitHubCli));
   const base = `/repos/${encodeURIComponent(parsed.owner)}/${encodeURIComponent(parsed.repo)}`;
   const endpoints = {
     repository: base,
@@ -87,7 +105,11 @@ async function fetchCombinedResponse(repository, options = {}) {
   try {
     const entries = await Promise.all(Object.entries(endpoints).map(async ([key, requestPath]) => [
       key,
-      await requestFn({ method: 'GET', path: requestPath, headers: githubHeaders(token) }),
+      await requestFn({
+        method: 'GET',
+        path: requestPath,
+        ...(token ? { headers: githubHeaders(token) } : {}),
+      }),
     ]));
     return Object.fromEntries(entries.map(([key, response]) => [key, response?.data ?? response]));
   } catch (error) {
@@ -218,5 +240,6 @@ module.exports = {
   parseRepository,
   redactSecrets,
   requestGitHub,
+  requestGitHubCli,
   validateHistory,
 };

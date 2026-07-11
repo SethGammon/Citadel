@@ -68,13 +68,29 @@ daily history. The API limitation means the snapshot should be run at least once
 not recover traffic that GitHub has already aged out.
 
 ```sh
-GH_TOKEN=<maintainer-token> node scripts/github-traffic-snapshot.js --repo SethGammon/Citadel
+node scripts/github-traffic-snapshot.js --repo SethGammon/Citadel
 ```
 
-`GITHUB_TOKEN` is also accepted. Tokens are used only for authenticated requests and are never
-written to snapshots or errors. Each run appends to
+Live capture uses `GH_TOKEN`/`GITHUB_TOKEN` when explicitly supplied, or the existing authenticated
+`gh` CLI session without copying its credential into the process environment. The credential must
+have repository write access. Tokens are used only for authenticated requests and are never written
+to snapshots or errors. Each run appends to
 `.planning/acquisition/YYYY-MM-DD.json`; repeated same-day captures are preserved rather than
 overwritten. These files are ignored by git by default.
+
+### Current maintainer snapshot
+
+The authenticated snapshot captured `2026-07-11T06:21:56.082Z` records the rolling GitHub
+traffic window at 656 stars, 64 forks, 918 views from 490 unique viewers, and 873 clones from
+506 unique cloners. The leading reported referrers by unique visitor were GitHub (126), X via
+`t.co` (104), Google (79), and Reddit (51). The repository overview accounted for 463 unique
+path visitors; `INSTALL.md` accounted for 10.
+
+This supports a mixed discovery explanation: GitHub-native circulation, renewed social sharing,
+search, and Reddit can each create waves even after the maintainer stops posting. GitHub omits
+direct and low-volume attribution from the top-referrer list, its unique counts are scoped per
+metric rather than globally deduplicated, and none of these numbers proves installation, task
+completion, repeat use, or causation for a specific star.
 
 For deterministic offline verification:
 
