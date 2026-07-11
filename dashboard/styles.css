@@ -337,6 +337,22 @@ kbd {
 
 .est { color: var(--dim); font-size: 0.78em; vertical-align: super; margin-left: 2px; }
 
+.state-unreadable { border-color: var(--danger); }
+.state-unknown { border-color: var(--warn); }
+
+.help {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: color-mix(in srgb, var(--bg) 82%, transparent);
+}
+.help[hidden] { display: none; }
+.help-card { max-width: 520px; border: 1px solid var(--border-strong); border-radius: 12px; padding: 22px; background: var(--panel); }
+.help-card h2 { margin-top: 0; }
+
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; animation: none !important; }
 }

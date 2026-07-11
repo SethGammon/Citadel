@@ -82,7 +82,19 @@ const STATE_HYGIENE_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-state-hygiene
 const PERMISSION_AUDIT_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-permission-audit.js');
 const SECRETS_LENS_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-secrets-lens.js');
 const DASHBOARD_WEB_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-dashboard-web.js');
+const DASHBOARD_PERF_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-dashboard-perf.js');
+const DASHBOARD_VISUAL_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-dashboard-visual.js');
 const NOOP_DETECT_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-noop-detect.js');
+const RELEASE_INTEGRITY_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-release-integrity.js');
+const ACTIVATION_TELEMETRY_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-activation-telemetry.js');
+const GITHUB_TRAFFIC_SNAPSHOT_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-github-traffic-snapshot.js');
+const GOLDEN_PATH_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-golden-path.js');
+const GOLDEN_PATH_MATRIX_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-golden-path-matrix.js');
+const PRODUCT_BENCHMARK_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-product-benchmark.js');
+const PRODUCT_PROOF_COHORT_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-product-proof-cohort.js');
+const SARIF_COORDINATES_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-sarif-coordinates.js');
+const ECOSYSTEM_COMPAT_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-ecosystem-compat.js');
+const PRODUCT_PROOF_REPORT_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-product-proof-report.js');
 
 const STRICT = process.argv.includes('--strict');
 
@@ -168,7 +180,19 @@ const stateHygienePassed = run('State Hygiene Tests', STATE_HYGIENE_TEST);
 const permissionAuditPassed = run('Permission Audit Tests', PERMISSION_AUDIT_TEST);
 const secretsLensPassed = run('Secrets Lens Tests', SECRETS_LENS_TEST);
 const dashboardWebPassed = run('Dashboard Web Tests', DASHBOARD_WEB_TEST);
+const dashboardPerfPassed = run('Dashboard Performance Tests', DASHBOARD_PERF_TEST);
+const dashboardVisualPassed = run('Dashboard Visual Contract Tests', DASHBOARD_VISUAL_TEST);
 const noopDetectPassed = run('No-op Detector Calibration', NOOP_DETECT_TEST);
+const releaseIntegrityPassed = run('Release Integrity Tests', RELEASE_INTEGRITY_TEST);
+const activationTelemetryPassed = run('Activation Telemetry Tests', ACTIVATION_TELEMETRY_TEST);
+const githubTrafficSnapshotPassed = run('GitHub Traffic Snapshot Tests', GITHUB_TRAFFIC_SNAPSHOT_TEST);
+const goldenPathPassed = run('Golden Path Fixture Tests', GOLDEN_PATH_TEST);
+const goldenPathMatrixPassed = run('Golden Path Matrix Tests', GOLDEN_PATH_MATRIX_TEST);
+const productBenchmarkPassed = run('Product Benchmark Tests', PRODUCT_BENCHMARK_TEST);
+const productProofCohortPassed = run('Product Proof Cohort Tests', PRODUCT_PROOF_COHORT_TEST);
+const sarifCoordinatesPassed = run('SARIF Coordinate Tests', SARIF_COORDINATES_TEST);
+const ecosystemCompatPassed = run('Ecosystem Compatibility Tests', ECOSYSTEM_COMPAT_TEST);
+const productProofReportPassed = run('Product Proof Report Tests', PRODUCT_PROOF_REPORT_TEST);
 
 console.log('\n' + '='.repeat(40));
 console.log('SUMMARY');
@@ -234,10 +258,22 @@ console.log(`  State hygiene:      ${stateHygienePassed ? 'PASS' : 'FAIL'}`);
 console.log(`  Permission audit:   ${permissionAuditPassed ? 'PASS' : 'FAIL'}`);
 console.log(`  Secrets lens:       ${secretsLensPassed ? 'PASS' : 'FAIL'}`);
 console.log(`  Dashboard web:      ${dashboardWebPassed ? 'PASS' : 'FAIL'}`);
+console.log(`  Dashboard perf:     ${dashboardPerfPassed ? 'PASS' : 'FAIL'}`);
+console.log(`  Dashboard visual:   ${dashboardVisualPassed ? 'PASS' : 'FAIL'}`);
 console.log(`  No-op detector:     ${noopDetectPassed ? 'PASS' : 'FAIL'}`);
+console.log(`  Release integrity:  ${releaseIntegrityPassed ? 'PASS' : 'FAIL'}`);
+console.log(`  Activation metrics: ${activationTelemetryPassed ? 'PASS' : 'FAIL'}`);
+console.log(`  Acquisition history: ${githubTrafficSnapshotPassed ? 'PASS' : 'FAIL'}`);
+console.log(`  Golden path fixture: ${goldenPathPassed ? 'PASS' : 'FAIL'}`);
+console.log(`  Golden path matrix:  ${goldenPathMatrixPassed ? 'PASS' : 'FAIL'}`);
+console.log(`  Product benchmark:   ${productBenchmarkPassed ? 'PASS' : 'FAIL'}`);
+console.log(`  Product proof cohort: ${productProofCohortPassed ? 'PASS' : 'FAIL'}`);
+console.log(`  SARIF coordinates:   ${sarifCoordinatesPassed ? 'PASS' : 'FAIL'}`);
+console.log(`  Ecosystem compat:    ${ecosystemCompatPassed ? 'PASS' : 'FAIL'}`);
+console.log(`  Product proof report: ${productProofReportPassed ? 'PASS' : 'FAIL'}`);
 console.log('');
 
-if (hooksPassed && securityPassed && contractsPassed && runtimeRegistryPassed && runtimeMatrixPassed && hookEventsPassed && skillsPassed && demoPassed && telemetryPassed && telemetryIntegrityPassed && memoryBlockPassed && evidenceContractPassed && sandboxProviderPassed && skillPackagingPassed && mapSubstratePassed && deliveryPassed && deliveryPackagePassed && continueActionPassed && nextActionPassed && routePreviewPassed && loopsPassed && operatingProofPassed && usefulnessTrialPassed && operatorConsolePassed && operatorJourneyPassed && firstUseOperatorPassed && verificationPlanPassed && prReadyPassed && stackPlanPassed && deployStewardPassed && agentsMdOnlyStewardPassed && coordinationPassed && hookInstallerPassed && campaignPassed && discoveryPassed && discoveryWriterPassed && momentumPassed && momentumWatcherPassed && policyPassed && claudeRuntimePassed && codexRuntimePassed && codexNativeIntegrationPassed && codexOperationalImprovementPassed && installerPassed && projectBootstrapPassed && compatFixturePassed && backwardCompatPassed && costTrackerPassed && dashboardPassed && docSyncPassed && fleetSessionPassed && worktreeReadinessPassed && postEditTypecheckPassed && routingSyncPassed && watchDedupPassed && teammateRebalancePassed && docSurfacesPassed && telemetryOtlpPassed && stateHygienePassed && permissionAuditPassed && secretsLensPassed && dashboardWebPassed && noopDetectPassed) {
+if (hooksPassed && securityPassed && contractsPassed && runtimeRegistryPassed && runtimeMatrixPassed && hookEventsPassed && skillsPassed && demoPassed && telemetryPassed && telemetryIntegrityPassed && memoryBlockPassed && evidenceContractPassed && sandboxProviderPassed && skillPackagingPassed && mapSubstratePassed && deliveryPassed && deliveryPackagePassed && continueActionPassed && nextActionPassed && routePreviewPassed && loopsPassed && operatingProofPassed && usefulnessTrialPassed && operatorConsolePassed && operatorJourneyPassed && firstUseOperatorPassed && verificationPlanPassed && prReadyPassed && stackPlanPassed && deployStewardPassed && agentsMdOnlyStewardPassed && coordinationPassed && hookInstallerPassed && campaignPassed && discoveryPassed && discoveryWriterPassed && momentumPassed && momentumWatcherPassed && policyPassed && claudeRuntimePassed && codexRuntimePassed && codexNativeIntegrationPassed && codexOperationalImprovementPassed && installerPassed && projectBootstrapPassed && compatFixturePassed && backwardCompatPassed && costTrackerPassed && dashboardPassed && docSyncPassed && fleetSessionPassed && worktreeReadinessPassed && postEditTypecheckPassed && routingSyncPassed && watchDedupPassed && teammateRebalancePassed && docSurfacesPassed && telemetryOtlpPassed && stateHygienePassed && permissionAuditPassed && secretsLensPassed && dashboardWebPassed && dashboardPerfPassed && dashboardVisualPassed && noopDetectPassed && releaseIntegrityPassed && activationTelemetryPassed && githubTrafficSnapshotPassed && goldenPathPassed && goldenPathMatrixPassed && productBenchmarkPassed && productProofCohortPassed && sarifCoordinatesPassed && ecosystemCompatPassed && productProofReportPassed) {
   console.log('All tests pass.\n');
   console.log('Next steps:');
   console.log('  node scripts/skill-bench.js --list      see benchmark scenarios');
@@ -310,7 +346,15 @@ const permissionAuditFail = !permissionAuditPassed ? 2 : 0;
 const secretsLensFail = !secretsLensPassed ? 2 : 0;
 const dashboardWebFail = !dashboardWebPassed ? 4 : 0;
 const noopDetectFail = !noopDetectPassed ? 8 : 0;
-const code =hookFail | securityFail | contractFail | runtimeRegistryFail | runtimeMatrixFail | hookEventFail | skillFail | demoFail | telemetryFail | telemetryIntegrityFail | memoryBlockFail | evidenceContractFail | sandboxProviderFail | skillPackagingFail | mapSubstrateFail | deliveryFail | deliveryPackageFail | continueActionFail | nextActionFail | routePreviewFail | loopsFail | operatingProofFail | usefulnessTrialFail | operatorConsoleFail | operatorJourneyFail | firstUseOperatorFail | verificationPlanFail | prReadyFail | stackPlanFail | deployStewardFail | agentsMdOnlyStewardFail | coordinationFail | hookInstallerFail | campaignFail | discoveryFail | discoveryWriterFail | momentumFail | momentumWatcherFail | policyFail | claudeRuntimeFail | codexRuntimeFail | codexNativeIntegrationFail | codexOperationalImprovementFail | installerFail | projectBootstrapFail | compatFixtureFail | backwardCompatFail | costTrackerFail | dashboardFail | docSyncFail | fleetSessionFail | worktreeReadinessFail | postEditTypecheckFail | routingSyncFail | watchDedupFail | teammateRebalanceFail | docSurfacesFail | telemetryOtlpFail | stateHygieneFail | permissionAuditFail | secretsLensFail | dashboardWebFail | noopDetectFail;
+const releaseIntegrityFail = !releaseIntegrityPassed ? 16 : 0;
+const activationTelemetryFail = !activationTelemetryPassed ? 32 : 0;
+const githubTrafficSnapshotFail = !githubTrafficSnapshotPassed ? 64 : 0;
+const goldenPathFail = !goldenPathPassed ? 128 : 0;
+const goldenPathMatrixFail = !goldenPathMatrixPassed ? 128 : 0;
+// Exit statuses are only eight bits on common platforms, so the historical
+// diagnostic bitmask can truncate to zero when a high-order check is the only
+// failure. The summary above carries the per-check detail; any failed check
+// must produce one portable non-zero release-gate status.
 
 if (!hooksPassed) console.log('Hook smoke test failed. Fix hook issues before proceeding.');
 if (!securityPassed) console.log('Security tests failed. DO NOT SHIP - critical vulnerabilities present.');
@@ -375,5 +419,15 @@ if (!permissionAuditPassed) console.log('Permission audit tests failed. Fix perm
 if (!secretsLensPassed) console.log('Secrets lens tests failed. Fix the quality-gate secrets sweep before shipping.');
 if (!dashboardWebPassed) console.log('Dashboard web tests failed. Fix scripts/dashboard-server.js or the dashboard/ UI before shipping.');
 if (!noopDetectPassed) console.log('No-op detector calibration failed. The detector regressed against core/skills/noop-calibration.json. Fix core/skills/noop-detect.js before shipping.');
+if (!releaseIntegrityPassed) console.log('Release integrity tests failed. Fix deterministic packaging, verification, update, or rollback behavior before shipping.');
+if (!activationTelemetryPassed) console.log('Activation telemetry tests failed. Fix local-only schema, privacy, migration, opt-out, or reporting behavior before shipping.');
+if (!githubTrafficSnapshotPassed) console.log('GitHub traffic snapshot tests failed. Fix API normalization, credential redaction, or append-only history behavior before shipping.');
+if (!goldenPathPassed) console.log('Golden path fixture tests failed. Fix installer, setup, route, handoff, resume, failure recovery, or rollback behavior before shipping.');
+if (!goldenPathMatrixPassed) console.log('Golden path matrix tests failed. Fix real-platform aggregation, completeness, percentile, or threshold behavior before shipping.');
+if (!productBenchmarkPassed) console.log('Product benchmark tests failed. Fix scenario symmetry, runner containment, evidence, or utility-gate behavior before shipping.');
+if (!productProofCohortPassed) console.log('Product-proof cohort tests failed. Fix privacy, evidence identity, timing, comprehension, or retention gates before shipping.');
+if (!sarifCoordinatesPassed) console.log('SARIF coordinate tests failed. Fix scanner diagnostic redaction before shipping.');
+if (!ecosystemCompatPassed) console.log('Ecosystem compatibility tests failed. Fix metadata drift or external-skill compatibility before shipping.');
+if (!productProofReportPassed) console.log('Product proof report tests failed. Fix scorecard completeness or evidence claims before shipping.');
 console.log('');
-process.exit(code);
+process.exit(1);

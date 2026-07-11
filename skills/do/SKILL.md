@@ -231,8 +231,7 @@ REQUIRES_TASTE: true | false (quality judgment beyond tests?)
 
 **Ambiguity gate:** When multiple Tier 2 candidates survive or classifier confidence is below 0.7, and the AskUserQuestion tool is available: present the top 2-3 candidate routes as options, each with a label and a one-line tradeoff, and route to the user's pick. When unavailable, apply the rules above unchanged (tie-break, then `/marshal` default).
 
-**Important:** A repeated pattern complaint ("I keep doing X manually", "the agent
-always makes this mistake") should route to `/create-skill`. A repeated pattern
+**Important:** A repeated pattern complaint ("I keep doing X manually", "the agent always makes this mistake") should route to `/create-skill`. A repeated pattern
 is a skill waiting to be extracted.
 
 ### Step 3.5: Proportionality Check

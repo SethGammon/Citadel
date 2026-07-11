@@ -16,12 +16,65 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest]
+        os: [ubuntu-latest, macos-latest, windows-latest]
         node: [18, 20]
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
       - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
         with:
           node-version: ${{ matrix.node }}
-      - name: Run verification suite
-        run: npm test
+      - name: Run strict verification suite
+        run: node scripts/test-all.js --strict
+
+  golden-path-evidence:
+    name: golden path on ${{ matrix.slug }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            slug: linux
+          - os: macos-latest
+            slug: macos
+          - os: windows-latest
+            slug: windows
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+        with:
+          node-version: 20
+      - name: Collect five Claude and five Codex fixture journeys
+        run: node scripts/golden-path-matrix.js --fixture scripts/fixtures/golden-path/minimal-node.json --runtime both --repeat 5 --output artifacts/golden-path-matrix-${{ matrix.slug }}.json
+      - name: Upload platform evidence
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: golden-path-${{ matrix.slug }}
+          path: artifacts/golden-path-matrix-${{ matrix.slug }}.json
+          if-no-files-found: error
+          retention-days: 30
+
+  golden-path-matrix:
+    name: complete golden-path matrix
+    needs: golden-path-evidence
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+        with:
+          node-version: 20
+      - name: Download platform evidence
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          pattern: golden-path-*
+          path: artifacts
+          merge-multiple: true
+      - name: Enforce the complete 30-run grid
+        run: node scripts/golden-path-matrix.js --merge artifacts/golden-path-matrix-windows.json,artifacts/golden-path-matrix-linux.json,artifacts/golden-path-matrix-macos.json --output artifacts/golden-path-matrix-complete.json --require-complete
+      - name: Upload complete matrix
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: golden-path-complete
+          path: artifacts/golden-path-matrix-complete.json
+          if-no-files-found: error
+          retention-days: 30

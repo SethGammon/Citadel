@@ -159,7 +159,8 @@ if (missingScripts.length > 0) {
   } else {
     console.error(`Citadel install script is missing required files:\n${missingScripts.join('\n')}`);
   }
-  process.exit(1);
+  process.exitCode = 1;
+  return;
 }
 
 const steps = [];
@@ -253,4 +254,6 @@ if (jsonOnly) {
   printHuman(report);
 }
 
-process.exit(pass ? 0 : 1);
+// Setting exitCode lets piped JSON flush completely on macOS. Calling
+// process.exit() here can truncate stdout before the parent parses the report.
+process.exitCode = pass ? 0 : 1;

@@ -1,0 +1,53 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: verify node ${{ matrix.node }} on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        node: [18, 20]
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+        with:
+          node-version: ${{ matrix.node }}
+      - name: Run strict verification suite
+        run: node scripts/test-all.js --strict
+      - name: Verify deterministic release packaging
+        run: node scripts/release-package.js --ref "${{ github.ref_name }}" --dry-run --verify-reproducible
+
+  package:
+    name: package tagged release
+    needs: verify
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+        with:
+          node-version: 20
+      - name: Build tagged artifact
+        run: node scripts/release-package.js --ref "${{ github.ref_name }}" --output-dir dist/release --verify-reproducible
+      - name: Verify tagged artifact
+        run: node scripts/release-verify.js "dist/release/citadel-${{ github.ref_name }}.tar.gz" --ref "${{ github.ref_name }}"
+      - name: Publish verified GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+        run: gh release create "$TAG" dist/release/* --verify-tag --generate-notes --title "Citadel $TAG"

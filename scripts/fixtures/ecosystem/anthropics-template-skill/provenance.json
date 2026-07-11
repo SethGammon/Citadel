@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "source_url": "https://github.com/anthropics/skills/blob/9d2f1ae187231d8199c64b5b762e1bdf2244733d/template/SKILL.md",
+  "source_repository": "https://github.com/anthropics/skills",
+  "source_ref": "9d2f1ae187231d8199c64b5b762e1bdf2244733d",
+  "source_ref_immutable": true,
+  "immutable_source_verified": true,
+  "immutable_source_verification": "GitHub contents API returned blob 50a4f9b104357d96361e257adb70454604cd15c0 at this commit; UTF-8 bytes match the recorded SHA-256",
+  "source_path": "template/SKILL.md",
+  "retrieved_on": "2026-07-10",
+  "license": "Apache-2.0",
+  "license_verification": "inferred for the non-document template from the repository README licensing statement; no root LICENSE file was verified",
+  "license_url": "https://github.com/anthropics/skills/blob/9d2f1ae187231d8199c64b5b762e1bdf2244733d/README.md#about-this-repository",
+  "sha256": "eb685d91de039ed864fbd790cddf31684b017fd4a34ee1a55760d8d7cdbadefa"
+}

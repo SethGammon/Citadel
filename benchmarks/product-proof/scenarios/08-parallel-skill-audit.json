@@ -1,0 +1,16 @@
+{
+  "schema": 1,
+  "id": "parallel-skill-audit",
+  "category": "parallel_work",
+  "repository": "https://github.com/SethGammon/Citadel.git",
+  "pinned_ref": "6a507f16cd198889d9580555cf2a706d9d27764f",
+  "task": "Audit three independent skill families in parallel for structural drift, make only evidence-backed repairs, and leave the full skill catalog lint-clean.",
+  "setup_command": ["node", "--version"],
+  "verification_command": ["node", "scripts/skill-lint.js"],
+  "expected_artifacts": ["skills"],
+  "timeout_minutes": 60,
+  "context_reset_at": null,
+  "cleanup_assertions": ["workspace_removed"],
+  "runtime": "claude",
+  "model": "claude-opus-4-6"
+}

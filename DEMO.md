@@ -60,3 +60,7 @@ What to look for:
 If the task is not actually parallel, Citadel should downgrade or recommend a lighter workflow. That is a feature, not a failure: Fleet is for independent streams, not every task.
 
 For a 90-second proof clip, record the core demo end to end in a real terminal or agent window: real repo, real commands, real output. The evidence checklist behind the recording is [Operating Loop Proof](docs/OPERATING_LOOP_PROOF.md); for a stricter post-landing first-use assessment, run the [Usefulness Trial](docs/USEFULNESS_TRIAL.md).
+
+Before recording, the maintainer can run the [Golden path fixture](docs/GOLDEN_PATH.md) for both
+runtime preparations. It catches deterministic install, setup, route, verification, handoff,
+resume, and rollback regressions, but it does not replace the real interactive demo above.

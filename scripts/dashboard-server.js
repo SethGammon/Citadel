@@ -21,6 +21,7 @@ const { spawn } = require('child_process');
 
 const { collectDashboard } = require('./dashboard');
 const { listLoops } = require('../core/loops/registry');
+const { report: activationReport } = require('../core/telemetry/activation');
 
 const DEFAULT_PORT = 4180;
 const BIND_HOST = '127.0.0.1';
@@ -86,14 +87,21 @@ function createDataSource(projectRoot) {
       if (!fs.existsSync(dir)) return [];
       return fs.readdirSync(dir)
         .filter((name) => name.endsWith('.md'))
+        .filter((name) => {
+          try {
+            const stat = fs.lstatSync(path.join(dir, name));
+            return stat.isFile() && !stat.isSymbolicLink();
+          } catch { return false; }
+        })
+        .sort((a, b) => b.localeCompare(a))
+        .slice(0, 50)
         .map((name) => {
           const filePath = path.join(dir, name);
           let modifiedAt = null;
           try { modifiedAt = fs.statSync(filePath).mtime.toISOString(); } catch { /* render as unknown */ }
           return { name, path: `.planning/handoffs/${name}`, modifiedAt };
         })
-        .sort((a, b) => String(b.modifiedAt).localeCompare(String(a.modifiedAt)))
-        .slice(0, 50);
+        .sort((a, b) => String(b.modifiedAt).localeCompare(String(a.modifiedAt)) || b.name.localeCompare(a.name));
     } catch {
       return [];
     }
@@ -108,11 +116,16 @@ function createDataSource(projectRoot) {
     }
   }
 
-  function collect() {
+  function collect(options = {}) {
     let snapshot;
     let collectError = null;
     try {
-      snapshot = collectDashboard({ projectRoot, recentLimit: RECENT_LIMIT });
+      snapshot = collectDashboard({
+        projectRoot,
+        recentLimit: RECENT_LIMIT,
+        gitStatus: options.reuseGitStatus && state.cache && state.cache.snapshot
+          ? state.cache.snapshot.gitStatus : undefined,
+      });
     } catch (error) {
       collectError = String(error && error.message ? error.message : error);
       snapshot = null;
@@ -121,20 +134,23 @@ function createDataSource(projectRoot) {
     try {
       loops = listLoops(projectRoot) || [];
     } catch { /* loops panel renders empty with a note */ }
-    return {
+    const collected = {
       snapshot,
       collectError,
       loops,
       daemon: readDaemon(),
       handoffs: readHandoffs(),
     };
+    collected.sources = inspectSources(projectRoot, collected);
+    collected.activation = readActivation(projectRoot, collected.sources.activation);
+    return collected;
   }
 
   return {
     get() {
       const now = Date.now();
       if (state.dirty || !state.cache || now - state.collectedAt > SNAPSHOT_TTL_MS) {
-        state.cache = collect();
+        state.cache = collect({ reuseGitStatus: state.dirty && Boolean(state.cache) });
         state.collectedAt = now;
         state.dirty = false;
       }
@@ -146,6 +162,123 @@ function createDataSource(projectRoot) {
   };
 }
 
+function source(pathname, status, detail, count = null, unreadable = []) {
+  return { path: pathname.replace(/\\/g, '/'), status, detail, count, unreadable };
+}
+
+function inspectDirectory(projectRoot, relativeDir, options = {}) {
+  const absolute = path.join(projectRoot, relativeDir);
+  if (!fs.existsSync(absolute)) return source(relativeDir, 'unknown', 'source is absent');
+  let names;
+  try {
+    names = fs.readdirSync(absolute).filter((name) => !options.filter || options.filter(name));
+  } catch (error) {
+    return source(relativeDir, 'unreadable', error.message, null, [relativeDir]);
+  }
+  if (names.length === 0) return source(relativeDir, 'empty', 'source exists and is empty', 0);
+  const unreadable = [];
+  if (options.json) {
+    for (const name of names) {
+      try { JSON.parse(fs.readFileSync(path.join(absolute, name), 'utf8')); }
+      catch { unreadable.push(`${relativeDir}/${name}`.replace(/\\/g, '/')); }
+    }
+  }
+  if (options.jsonl) {
+    for (const name of names) {
+      let lines;
+      try { lines = fs.readFileSync(path.join(absolute, name), 'utf8').split(/\r?\n/).filter(Boolean); }
+      catch { unreadable.push(`${relativeDir}/${name}`.replace(/\\/g, '/')); continue; }
+      if (lines.some((line) => { try { JSON.parse(line); return false; } catch { return true; } })) {
+        unreadable.push(`${relativeDir}/${name}`.replace(/\\/g, '/'));
+      }
+    }
+  }
+  if (unreadable.length) return source(relativeDir, 'unreadable', `${unreadable.length} file(s) could not be parsed`, names.length, unreadable);
+  return source(relativeDir, options.midRun ? 'mid-run' : 'healthy', options.midRun ? 'work is active' : 'source is readable', names.length);
+}
+
+function inspectFile(projectRoot, relativePath, options = {}) {
+  const absolute = path.join(projectRoot, relativePath);
+  if (!fs.existsSync(absolute)) return source(relativePath, 'unknown', 'source is absent');
+  try {
+    const raw = fs.readFileSync(absolute, 'utf8');
+    if (!raw.trim()) return source(relativePath, 'empty', 'source exists and is empty', 0);
+    if (options.json) {
+      const value = JSON.parse(raw);
+      if (options.schema && value.schema !== options.schema) throw new Error(`expected schema ${options.schema}`);
+    }
+    return source(relativePath, 'healthy', 'source is readable', 1);
+  } catch (error) {
+    return source(relativePath, 'unreadable', error.message, null, [relativePath]);
+  }
+}
+
+function inspectSources(projectRoot, data) {
+  const planningExists = fs.existsSync(path.join(projectRoot, '.planning'));
+  if (!planningExists) {
+    const missing = (name, pathname) => [name, source(pathname, 'unknown', '.planning is absent')];
+    return Object.fromEntries([
+      missing('campaigns', '.planning/campaigns'), missing('fleet', '.planning/fleet'),
+      missing('loops', '.planning/loops'), missing('hooks', '.planning/telemetry'),
+      missing('handoffs', '.planning/handoffs'), missing('cost', '.planning/telemetry'),
+      missing('activation', '.planning/product-proof/activation-report.json'),
+    ]);
+  }
+
+  const campaignState = inspectDirectory(projectRoot, '.planning/campaigns', {
+    filter: (name) => name.endsWith('.md'), midRun: Boolean(data.snapshot && data.snapshot.campaigns && data.snapshot.campaigns.length),
+  });
+  if (data.snapshot && data.snapshot.skippedCampaigns && data.snapshot.skippedCampaigns.length) {
+    campaignState.status = 'unreadable';
+    campaignState.detail = `${data.snapshot.skippedCampaigns.length} campaign file(s) could not be parsed`;
+    campaignState.unreadable = data.snapshot.skippedCampaigns.map((item) => path.relative(projectRoot, item.filePath).replace(/\\/g, '/'));
+  }
+  const fleetState = inspectDirectory(projectRoot, '.planning/fleet', {
+    filter: (name) => /^session-.*\.md$/i.test(name), midRun: Boolean(data.snapshot && data.snapshot.fleetSessions && data.snapshot.fleetSessions.length),
+  });
+  const loopsState = inspectDirectory(projectRoot, '.planning/loops', {
+    filter: (name) => name.endsWith('.json'), json: true,
+    midRun: (data.loops || []).some((loop) => !['done', 'stopped', 'verifier-passed'].includes(loop.status || (loop.state && loop.state.status))),
+  });
+  const hooksState = inspectDirectory(projectRoot, '.planning/telemetry', {
+    filter: (name) => /^(hook-timing|hook-errors|audit|agent-runs|task-events)\.jsonl$/.test(name), jsonl: true,
+  });
+  const handoffsState = inspectDirectory(projectRoot, '.planning/handoffs', { filter: (name) => name.endsWith('.md') });
+  const cost = data.snapshot && data.snapshot.cost;
+  const costFileState = inspectDirectory(projectRoot, '.planning/telemetry', {
+    filter: (name) => name === 'session-costs.jsonl', jsonl: true,
+  });
+  const costState = costFileState.status === 'unreadable' ? costFileState
+    : cost && (cost.session_count > 0 || cost.real_sessions > 0)
+      ? source('.planning/telemetry/session-costs.jsonl', 'healthy', cost.data_source || 'telemetry available', cost.session_count || cost.real_sessions)
+      : source('.planning/telemetry/session-costs.jsonl', 'unknown', 'no cost telemetry is available');
+  let activationState = inspectFile(projectRoot, '.planning/product-proof/activation-report.json', { json: true, schema: 1 });
+  if (activationState.status === 'unknown') {
+    activationState = inspectDirectory(projectRoot, '.planning/telemetry', {
+      filter: (name) => name === 'activation.jsonl', jsonl: true,
+    });
+    if (activationState.status === 'empty') activationState = source('.planning/telemetry/activation.jsonl', 'unknown', 'source is absent');
+  }
+  return { campaigns: campaignState, fleet: fleetState, loops: loopsState, hooks: hooksState, handoffs: handoffsState, cost: costState, activation: activationState };
+}
+
+function readActivation(projectRoot, state) {
+  if (!state || state.status === 'unknown') return { mode: 'unknown', note: 'No activation report has been recorded.', report: null };
+  if (state.status === 'unreadable') return { mode: 'unreadable', note: state.detail, report: null };
+  try {
+    const reportPath = path.join(projectRoot, '.planning', 'product-proof', 'activation-report.json');
+    const value = fs.existsSync(reportPath)
+      ? JSON.parse(fs.readFileSync(reportPath, 'utf8'))
+      : activationReport(projectRoot);
+    if (value.schema !== 1) throw new Error('activation report is not schema 1');
+    return { mode: value.total_events > 0 ? 'healthy' : 'empty', note: value.total_events > 0 ? 'local, redacted activation evidence' : 'Activation telemetry is enabled but no events are recorded.', report: value };
+  } catch (error) {
+    state.status = 'unreadable';
+    state.detail = error.message;
+    return { mode: 'unreadable', note: error.message, report: null };
+  }
+}
+
 // ---------------------------------------------------------------------------
 // View derivations (snapshot -> per-endpoint payloads)
 // ---------------------------------------------------------------------------
@@ -153,7 +286,21 @@ function createDataSource(projectRoot) {
 function deriveNeedsYou(data) {
   const items = [];
   const snapshot = data.snapshot;
-  if (!snapshot) return items;
+  if (!snapshot) {
+    items.push({
+      kind: 'state', severity: 'danger', title: 'Dashboard state is unreadable',
+      detail: data.collectError || 'collector returned no snapshot', age: 'now', evidence: null,
+    });
+    return items;
+  }
+
+  for (const state of Object.values(data.sources || {})) {
+    if (state.status !== 'unreadable') continue;
+    items.push({
+      kind: 'source', severity: 'danger', title: `Unreadable: ${state.path}`,
+      detail: state.detail, age: 'now', evidence: state.path,
+    });
+  }
 
   for (const problem of snapshot.problems || []) {
     if (problem.actionable) {
@@ -229,25 +376,42 @@ function deriveNeedsYou(data) {
   return items;
 }
 
+function projectedCount(state, value) {
+  return state && !['unknown', 'unreadable'].includes(state.status) ? value : null;
+}
+
+function projectionState(sources) {
+  const values = Object.values(sources || {});
+  if (values.some((item) => item.status === 'unreadable')) return 'unreadable';
+  if (values.some((item) => item.status === 'mid-run')) return 'mid-run';
+  if (values.length === 0 || values.every((item) => item.status === 'unknown')) return 'unknown';
+  if (values.every((item) => ['empty', 'unknown'].includes(item.status))) return 'empty';
+  return 'healthy';
+}
+
 function deriveViews(data) {
   const snapshot = data.snapshot || {};
+  const sources = data.sources || {};
   const needsYou = deriveNeedsYou(data);
   const cost = snapshot.cost || null;
-  const costMode = cost ? (cost.data_source || 'estimated') : 'unavailable';
+  const costUnavailable = !sources.cost || ['unknown', 'unreadable'].includes(sources.cost.status);
+  const costMode = cost && !costUnavailable ? (cost.data_source || 'estimated') : 'unavailable';
 
   return {
     overview: {
+      state: projectionState(sources),
+      sources,
       project_root: snapshot.projectRoot || null,
       planning_exists: Boolean(snapshot.planningExists),
       collect_error: data.collectError,
       needs_you: needsYou,
       active: {
-        campaigns: (snapshot.campaigns || []).length,
-        fleet_sessions: (snapshot.fleetSessions || []).length,
-        loops: (data.loops || []).filter((loop) => {
+        campaigns: projectedCount(sources.campaigns, (snapshot.campaigns || []).length),
+        fleet_sessions: projectedCount(sources.fleet, (snapshot.fleetSessions || []).length),
+        loops: projectedCount(sources.loops, (data.loops || []).filter((loop) => {
           const status = loop.status || (loop.state && loop.state.status);
           return status && !['done', 'stopped', 'verifier-passed'].includes(status);
-        }).length,
+        }).length),
       },
       cost: cost ? { real: cost.real_total, estimated: cost.estimated_total, mode: costMode } : null,
       health: snapshot.health || null,
@@ -255,72 +419,121 @@ function deriveViews(data) {
       problem_summary: snapshot.problemSummary || null,
     },
     campaigns: {
+      state: sources.campaigns || source('.planning/campaigns', 'unknown', 'source state unavailable'),
       active: snapshot.campaigns || [],
       skipped: snapshot.skippedCampaigns || [],
       ledger: snapshot.outcomeLedger || [],
     },
     fleet: {
+      state: sources.fleet || source('.planning/fleet', 'unknown', 'source state unavailable'),
       sessions: snapshot.fleetSessions || [],
       worktrees: snapshot.worktrees || [],
       coordination: snapshot.coordination || { instances: [], claims: [] },
       readiness: snapshot.worktreeReadiness || [],
     },
     loops: {
+      state: sources.loops || source('.planning/loops', 'unknown', 'source state unavailable'),
       loops: data.loops || [],
       daemon: data.daemon,
     },
     hooks: {
+      state: sources.hooks || source('.planning/telemetry', 'unknown', 'source state unavailable'),
       feed: snapshot.hookActivity || [],
       value: snapshot.hookValue || null,
       overhead: snapshot.hookOverhead || [],
       blocks: (snapshot.problems || []).filter((problem) => problem.category === 'safety-block'),
     },
     cost: cost
-      ? { ...cost, mode: costMode }
-      : { mode: 'unavailable', note: 'No telemetry found. Costs appear once sessions run with telemetry enabled.' },
+      ? { ...cost, mode: costMode, state: sources.cost || source('.planning/telemetry', 'unknown', 'source state unavailable'), note: costUnavailable ? 'No cost telemetry is available; spend is unknown, not zero.' : null }
+      : { mode: 'unavailable', state: sources.cost || source('.planning/telemetry', 'unknown', 'source state unavailable'), note: 'No telemetry found. Costs appear once sessions run with telemetry enabled.' },
     handoffs: {
+      state: sources.handoffs || source('.planning/handoffs', 'unknown', 'source state unavailable'),
       handoffs: data.handoffs || [],
       recent_activity: snapshot.recentActivity || [],
+    },
+    activation: {
+      state: sources.activation || source('.planning/product-proof/activation-report.json', 'unknown', 'source state unavailable'),
+      ...(data.activation || { mode: 'unknown', note: 'Activation report is unavailable.', report: null }),
     },
   };
 }
 
-function envelope(data) {
-  return JSON.stringify({ schema: 1, generated_at: new Date().toISOString(), data });
+function envelope(data, sourceFiles = []) {
+  return JSON.stringify({ schema: 1, generated_at: new Date().toISOString(), source_files: sourceFiles, data });
 }
 
 // ---------------------------------------------------------------------------
 // Watching + SSE
 // ---------------------------------------------------------------------------
 
-function startWatcher(projectRoot, onChange) {
+function planningSignature(planningDir) {
+  const entries = [];
+  const visit = (directory) => {
+    let children = [];
+    try { children = fs.readdirSync(directory, { withFileTypes: true }); } catch { return; }
+    children.sort((a, b) => a.name.localeCompare(b.name));
+    for (const child of children) {
+      const absolute = path.join(directory, child.name);
+      const relative = path.relative(planningDir, absolute).replace(/\\/g, '/');
+      try {
+        const stat = fs.lstatSync(absolute);
+        if (stat.isSymbolicLink()) {
+          entries.push(`${relative}:symlink`);
+        } else if (stat.isDirectory()) {
+          entries.push(`${relative}:directory`);
+          visit(absolute);
+        } else if (stat.isFile()) {
+          entries.push(`${relative}:file:${stat.size}:${stat.mtimeMs}`);
+        }
+      } catch { /* entry changed during scan; the next poll will settle it */ }
+    }
+  };
+  visit(planningDir);
+  return entries.join(';');
+}
+
+function startWatcher(projectRoot, onChange, options = {}) {
   const planningDir = path.join(projectRoot, '.planning');
+  const watchImpl = options.watchImpl || fs.watch.bind(fs);
+  const pollMs = options.pollMs || WATCH_POLL_FALLBACK_MS;
+  const debounceMs = options.debounceMs || WATCH_DEBOUNCE_MS;
   let timer = null;
+  let watcher = null;
+  let interval = null;
+  let stopped = false;
   const fire = () => {
     if (timer) clearTimeout(timer);
-    timer = setTimeout(onChange, WATCH_DEBOUNCE_MS);
+    timer = setTimeout(onChange, debounceMs);
   };
-  try {
-    const watcher = fs.watch(planningDir, { recursive: true }, fire);
-    watcher.on('error', () => { /* fall back below on next tick */ });
-    return () => watcher.close();
-  } catch {
-    // Recursive watch unsupported (some Linux): poll top-level mtimes.
-    let lastSignature = '';
-    const interval = setInterval(() => {
-      let signature = '';
-      try {
-        for (const entry of fs.readdirSync(planningDir)) {
-          try { signature += `${entry}:${fs.statSync(path.join(planningDir, entry)).mtimeMs};`; } catch { /* skip */ }
-        }
-      } catch { /* planning dir missing; nothing to signal */ }
+  const startPolling = () => {
+    if (stopped || interval) return;
+    let lastSignature = planningSignature(planningDir);
+    interval = setInterval(() => {
+      const signature = planningSignature(planningDir);
       if (signature !== lastSignature) {
         lastSignature = signature;
         fire();
       }
-    }, WATCH_POLL_FALLBACK_MS);
-    return () => clearInterval(interval);
+    }, pollMs);
+    interval.unref?.();
+  };
+  try {
+    watcher = watchImpl(planningDir, { recursive: true }, fire);
+    watcher.on('error', () => {
+      watcher?.close();
+      watcher = null;
+      startPolling();
+    });
+  } catch {
+    // Recursive watch unsupported (notably Node 18 on Linux): poll the full tree.
+    startPolling();
   }
+  return () => {
+    stopped = true;
+    watcher?.close();
+    if (interval) clearInterval(interval);
+    if (timer) clearTimeout(timer);
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -330,8 +543,44 @@ function startWatcher(projectRoot, onChange) {
 function safeStaticPath(urlPath) {
   const clean = urlPath === '/' ? '/index.html' : urlPath;
   const resolved = path.normalize(path.join(STATIC_DIR, clean));
-  if (!resolved.startsWith(STATIC_DIR)) return null;
+  const relative = path.relative(STATIC_DIR, resolved);
+  if (relative.startsWith('..') || path.isAbsolute(relative)) return null;
   return resolved;
+}
+
+function escapesRoot(root, candidate) {
+  const relative = path.relative(root, candidate);
+  return relative.startsWith('..') || path.isAbsolute(relative);
+}
+
+function resolveEvidencePath(projectRoot, requested, fileSystem = fs) {
+  try {
+    const normalizedRequest = String(requested || '').replace(/\\/g, '/');
+    if (!normalizedRequest.startsWith('.planning/')) return null;
+
+    const planningRoot = path.resolve(projectRoot, '.planning');
+    const target = path.resolve(projectRoot, normalizedRequest);
+    if (escapesRoot(planningRoot, target)) return null;
+
+    const rootStat = fileSystem.lstatSync(planningRoot);
+    if (rootStat.isSymbolicLink() || !rootStat.isDirectory()) return null;
+
+    const relativeParts = path.relative(planningRoot, target).split(path.sep).filter(Boolean);
+    let cursor = planningRoot;
+    for (const part of relativeParts) {
+      cursor = path.join(cursor, part);
+      const entryStat = fileSystem.lstatSync(cursor);
+      if (entryStat.isSymbolicLink()) return null;
+    }
+    if (!fileSystem.lstatSync(target).isFile()) return null;
+
+    const realPlanningRoot = fileSystem.realpathSync(planningRoot);
+    const realTarget = fileSystem.realpathSync(target);
+    if (escapesRoot(realPlanningRoot, realTarget)) return null;
+    return realTarget;
+  } catch {
+    return null;
+  }
 }
 
 function createServer(options) {
@@ -382,14 +631,31 @@ function createServer(options) {
         '/api/hooks/feed': views.hooks,
         '/api/cost': views.cost,
         '/api/handoffs': views.handoffs,
+        '/api/activation': views.activation,
         '/api/snapshot': data.snapshot,
       };
       if (route in routes) {
         res.writeHead(200, { 'content-type': MIME['.json'], 'cache-control': 'no-store' });
-        res.end(envelope(routes[route]));
+        const view = routes[route];
+        const viewSources = route === '/api/overview'
+          ? Object.values(data.sources || {}).map((item) => item.path)
+          : [view && view.state && view.state.path].filter(Boolean);
+        res.end(envelope(view, viewSources));
       } else {
-        res.writeHead(404, { 'content-type': MIME['.json'] }).end(envelope({ error: 'unknown endpoint' }));
+        res.writeHead(404, { 'content-type': MIME['.json'] }).end(envelope({ error: 'unknown endpoint' }, []));
       }
+      return;
+    }
+
+    if (route === '/evidence') {
+      const requested = url.searchParams.get('path') || '';
+      const target = resolveEvidencePath(options.projectRoot, requested);
+      if (!target) {
+        res.writeHead(404, { 'content-type': 'text/plain; charset=utf-8' }).end('evidence not found');
+        return;
+      }
+      res.writeHead(200, { 'content-type': 'text/plain; charset=utf-8', 'cache-control': 'no-store' });
+      fs.createReadStream(target).pipe(res);
       return;
     }
 
@@ -446,4 +712,4 @@ if (require.main === module) {
   main();
 }
 
-module.exports = { createServer, createDataSource, deriveViews, deriveNeedsYou, parseArgs };
+module.exports = { createServer, createDataSource, deriveViews, deriveNeedsYou, inspectSources, parseArgs, planningSignature, projectionState, resolveEvidencePath, startWatcher };

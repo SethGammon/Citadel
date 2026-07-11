@@ -1,0 +1,81 @@
+{
+  "schema": 1,
+  "report_id": "benchmark-report-sha256:6d86a0694d2e139ce9e17150be00c2505968a1c633ef8d464e64445301bdf4a8",
+  "scenario_set_id": "scenario-set-sha256:df6f921ac762ebacfaa02ef51634e8c79993efeb982f40c15b2e19d05472e0f1",
+  "metric_set_id": "metric-set-sha256:fc89a12828dc552e3e65498e5a39b602f3459741d1ebb9fea1ce50adef37d18e",
+  "evidence_kind": "fixture-simulation",
+  "generated_from_raw_sha256": "6d86a0694d2e139ce9e17150be00c2505968a1c633ef8d464e64445301bdf4a8",
+  "generated_at": "2026-01-01T00:00:59.000Z",
+  "frozen_inputs": true,
+  "external_scenario_selected": false,
+  "external_scenario": null,
+  "actual_run_attestation_verified": false,
+  "repetitions_per_mode_minimum": 3,
+  "modes": {
+    "bare": {
+      "runs": 30,
+      "verified_completion_rate": 1,
+      "completion_recovery_rate": 1,
+      "total_human_interventions": 30,
+      "median_duration_ms": 1212,
+      "median_estimated_cost": 1,
+      "regression_count": 0,
+      "cleanup_rate": 1
+    },
+    "harnessed": {
+      "runs": 30,
+      "verified_completion_rate": 1,
+      "completion_recovery_rate": 1,
+      "total_human_interventions": 30,
+      "median_duration_ms": 1333,
+      "median_estimated_cost": 1.1,
+      "regression_count": 0,
+      "cleanup_rate": 1
+    }
+  },
+  "target_long_segment": {
+    "bare": {
+      "runs": 18,
+      "verified_completion_rate": 1,
+      "completion_recovery_rate": 1,
+      "total_human_interventions": 18,
+      "median_duration_ms": 1232,
+      "median_estimated_cost": 1,
+      "regression_count": 0,
+      "cleanup_rate": 1
+    },
+    "harnessed": {
+      "runs": 18,
+      "verified_completion_rate": 1,
+      "completion_recovery_rate": 1,
+      "total_human_interventions": 18,
+      "median_duration_ms": 1355,
+      "median_estimated_cost": 1.1,
+      "regression_count": 0,
+      "cleanup_rate": 1
+    },
+    "delta": {
+      "intervention_reduction": 0,
+      "completion_recovery_gain": 0,
+      "median_cost_overhead": 0.1
+    }
+  },
+  "utility_gate": {
+    "status": "open",
+    "engineering_threshold_met": false,
+    "no_worse_verified_completion": true,
+    "intervention_reduction_met": false,
+    "completion_recovery_gain_met": false,
+    "median_cost_overhead_met": true,
+    "blockers": [
+      "UTILITY_THRESHOLD_MISSED",
+      "EXTERNAL_SCENARIO_NOT_SELECTED",
+      "ACTUAL_RUNS_REQUIRED"
+    ]
+  },
+  "limitations": [
+    "Fixture/simulation evidence validates the engineering contract only.",
+    "No LLM, human reviewer, or external repository task was executed.",
+    "The real benchmark gate remains open until actual symmetric runs and external scenario selection complete."
+  ]
+}

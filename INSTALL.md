@@ -198,6 +198,16 @@ npm test
 
 Success is a zero exit code; the suite covers hooks, skill structure, and installer checks.
 
+To verify the complete deterministic first-use seam for both runtime preparations:
+
+```bash
+node scripts/golden-path.js --runtime claude --fixture scripts/fixtures/golden-path/minimal-node.json
+node scripts/golden-path.js --runtime codex --fixture scripts/fixtures/golden-path/minimal-node.json
+```
+
+These are isolated fixture runs, not proof of plugin registration or real-user timing. See
+[Golden path verification](docs/GOLDEN_PATH.md) for the exact boundary and cross-OS matrix gate.
+
 In your target project, success looks like this scaffold, created by the `init-project` hook on first session start:
 
 ```
