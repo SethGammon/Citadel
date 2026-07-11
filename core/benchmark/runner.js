@@ -45,7 +45,7 @@ function isContainedPath(root, candidate, options = {}) {
     if (stat.isSymbolicLink()) return false;
     if (options.regularFile && !stat.isFile()) return false;
     if (!options.regularFile && !stat.isFile() && !stat.isDirectory()) return false;
-    return contained(root, fsImpl.realpathSync(candidate));
+    return contained(fsImpl.realpathSync(root), fsImpl.realpathSync(candidate));
   } catch (_) {
     return false;
   }

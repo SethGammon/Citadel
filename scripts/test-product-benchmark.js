@@ -129,12 +129,27 @@ function main() {
   const symlinkStat = { isSymbolicLink: () => true, isFile: () => false, isDirectory: () => false };
   assert.strictEqual(isContainedPath(sandbox, path.join(sandbox, 'output.json'), {
     regularFile: true,
-    fsImpl: { lstatSync: () => symlinkStat, realpathSync: () => path.join(sandbox, 'output.json') },
+    fsImpl: { lstatSync: () => symlinkStat, realpathSync: (value) => value },
   }), false, 'final symlinks must be rejected without relying on host symlink support');
   assert.strictEqual(isContainedPath(sandbox, path.join(sandbox, 'linked', 'output.json'), {
     regularFile: true,
-    fsImpl: { lstatSync: () => fileStat, realpathSync: () => path.resolve(sandbox, '..', 'outside.json') },
+    fsImpl: {
+      lstatSync: () => fileStat,
+      realpathSync: (value) => path.resolve(value) === path.resolve(sandbox)
+        ? sandbox : path.resolve(sandbox, '..', 'outside.json'),
+    },
   }), false, 'intermediate symlink escapes must be rejected by realpath containment');
+  const aliasRoot = path.join(sandbox, 'alias-root');
+  const aliasOutput = path.join(aliasRoot, 'output.json');
+  const realRoot = path.join(sandbox, 'real-root');
+  assert.strictEqual(isContainedPath(aliasRoot, aliasOutput, {
+    regularFile: true,
+    fsImpl: {
+      lstatSync: () => fileStat,
+      realpathSync: (value) => path.resolve(value) === path.resolve(aliasRoot)
+        ? realRoot : path.join(realRoot, 'output.json'),
+    },
+  }), true, 'root and child must be compared after equivalent platform realpath canonicalization');
   process.env.CITADEL_TEST_SECRET = ['must', 'not', 'cross'].join('-');
   assert.strictEqual(safeEnvironment().CITADEL_TEST_SECRET, undefined);
   delete process.env.CITADEL_TEST_SECRET;
