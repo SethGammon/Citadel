@@ -104,7 +104,7 @@ Direction: Convert the seven approved phases into an Archon campaign and execute
 | phase:4 | matrix-contract | test_result | yes | node scripts/test-golden-path-matrix.js | pass | 3 | strict grid, merge, percentile, threshold, duplicate, and failed-run retention tests pass |
 | phase:4 | windows-matrix | test_result | yes | .planning/product-proof/golden-path-matrix-windows.json | pass | 3 | hardened rerun: 10/10 Windows fixture runs pass; median route 3124.5ms, p90 handoff 23715ms, resume and rollback 100% |
 | phase:4 | strict-regression | test_result | yes | node scripts/test-all.js --strict | pass | 3 | final post-review exit 0 in 363.5s with fixture and matrix suites integrated |
-| phase:4 | cross-os-grid | test_result | yes | .planning/product-proof/golden-path-matrix-complete.json | pending | 3 | requires five Claude and five Codex runs on win32, linux, and darwin; no platforms synthesized |
+| phase:4 | cross-os-grid | test_result | yes | PR #181 Tests run 37 complete golden-path matrix artifact | pass | 3 | 30/30 hosted fixture runs pass across Claude/Codex, win32/linux/darwin; no platforms synthesized |
 | phase:4 | stranger-timing | test_result | yes | recorded first-time-user trial cohort | pending | 3 | fixture milliseconds are not human install-to-value evidence |
 | phase:5 | dashboard-proof | test_result | yes | dashboard web/perf/visual tests | pending | 3 | complete R1 |
 | phase:5 | benchmark-proof | test_result | yes | product benchmark report and raw runs | pending | 3 | complete R2 |
@@ -113,6 +113,7 @@ Direction: Convert the seven approved phases into an Archon campaign and execute
 | phase:6 | interoperability | test_result | yes | node scripts/test-ecosystem-compat.js | pending | 3 | run external skill fixture |
 | phase:7 | milestone-report | doc_update | yes | docs/PRODUCT_PROOF_REPORT.md | pending | 3 | assemble final scorecard |
 | phase:6 | ecosystem-contract | test_result | yes | node scripts/test-ecosystem-compat.js; node scripts/generate-distribution-metadata.js --check | pass | 3 | 7/7 local compatibility checks and canonical metadata pass; immutable Anthropic commit and byte digest verified; remote scanners and publisher profiles remain |
+| phase:6 | hol-scanner | test_result | yes | PR #181 HOL Plugin Scanner run 57 | pass | 3 | repository passes pinned HOL scanner action; Claude scanner and publisher profiles remain |
 | phase:7 | scorecard-contract | test_result | yes | docs/PRODUCT_PROOF_REPORT.md; node scripts/test-product-proof-report.js | pass | 3 | answer-first blocked scorecard covers all ten axes and forbids completion claims while evidence is missing |
 | campaign | review-package | file_diff | yes | .planning/review-packages/citadel-product-proof.md | pending | 3 | package after verification |
 
@@ -302,6 +303,10 @@ Direction: Convert the seven approved phases into an Archon campaign and execute
   Reason: every Claude and Codex cell on Windows, Linux, and macOS completed five runs with successful
   install/setup, verified handoff, fresh-process resume, and exact rollback. Human timing remains separate.
 
+- 2026-07-11T02:02:00.000Z: Hosted engineering and HOL scanner gates are green at commit 77ebbb2.
+  Reason: Tests run 37 passes every Node 18/20 strict job on Windows, Linux, and macOS plus the 30/30
+  golden-path aggregate; HOL run 57 passes after credential fixtures stopped resembling live secrets.
+
 ## Review Queue
 
 - [ ] UX: Review the final first-run journey with ten users who have never installed Citadel.
@@ -327,14 +332,14 @@ Direction: Convert the seven approved phases into an Archon campaign and execute
 Phases 1 through 3 are complete. Phase 4 through 6 implementation contracts are locally green and
 independently reviewed: the integrated strict suite passes, the package is reproducible, the dashboard
 and symmetric benchmark contracts are hardened, and external-skill compatibility passes 7/7 with
-immutable provenance. The milestone remains open because hosted cross-OS/scanner evidence, dashboard
-pixels/RSS/human comprehension, actual externally selected benchmark runs, return-use evidence,
-publisher profiles, the tagged release, and the real demo do not yet exist.
+immutable provenance. Hosted strict, 30/30 golden-path, and HOL scanner gates are green. The milestone
+remains open because dashboard pixels/RSS/human comprehension, actual externally selected benchmark
+runs, return-use evidence, Claude scanner/publisher profiles, the tagged release, and the real demo do not yet exist.
 
 ## Continuation State
 
 Phase: 4-7 evidence closure
-Sub-step: publish the integrated PR branch, inspect hosted CI/scanner evidence, then execute human and actual-run gates
+Sub-step: preserve green hosted checks while executing human, actual-run, registry, and showcase gates
 Files modified: see git status on codex/citadel-1-1-product-proof; README, dashboard, benchmark, interoperability, CI, scorecard, and campaign surfaces are integrated
 Blocking: browser security prevented pixel capture; human cohorts, external scenario selection, publisher-profile evidence, and return-use windows require real external participants/state
 checkpoint-phase-1: none
@@ -342,12 +347,13 @@ checkpoint-phase-2: none
 checkpoint-phase-3: none
 checkpoint-phase-4: none
 Next actions:
-1. Commit and push the reviewed branch to PR #181, then inspect every hosted all-OS and scanner result.
-2. Repair any hosted regression without bypassing checks; do not merge while product-proof gates remain open.
-3. Capture real dashboard pixels and run the first-time-user comprehension/timing cohort.
-4. Have an external reviewer select a frozen scenario, run actual symmetric trials, and retain negative results.
-5. Collect return-use, publisher-profile, tagged-release, and non-mocked demo evidence before milestone completion.
+1. Capture real dashboard pixels and run the first-time-user comprehension/timing cohort.
+2. Have an external reviewer select a frozen scenario, run actual signed symmetric trials, and retain negative results.
+3. Collect return-use and Claude scanner/publisher-profile evidence.
+4. Create the tagged release and non-mocked demo only after every remaining gate passes.
 
 <!-- session-end: 2026-07-10T15:45:46.955Z -->
 
 <!-- session-end: 2026-07-10T20:01:22.223Z -->
+
+<!-- session-end: 2026-07-11T02:13:33.158Z -->
