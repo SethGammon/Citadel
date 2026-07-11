@@ -46,7 +46,7 @@ Direction: Convert the seven approved phases into an Archon campaign and execute
 | 3 |   complete | build | Local activation and acquisition measurement | Privacy-safe local funnel and maintainer acquisition snapshots pass schema, redaction, no-network, history, and reporting tests | 3 |
 | 4 |  in-progress | build | Stranger-tested golden path | Claude/Codex × Linux/macOS/Windows matrix exceeds 95%; first route and verified handoff timing gates pass; rollback restores fixtures | 3 |
 | 5 | in-progress | build | Complete R1 See It and R2 Prove It | Dashboard comprehension/performance/honesty gates and symmetric public benchmark utility gates pass with raw reproducible evidence | 2 |
-| 6 | in-progress | wire | Ecosystem and distribution proof | Unmodified external skill runs under Citadel; canonical metadata is drift-free; both plugin scanners and verified registry profiles pass | 2 |
+| 6 | complete | wire | Ecosystem and distribution proof | Unmodified external skill runs under Citadel; canonical metadata is drift-free; ClaudePluginHub ownership/version and hosted HOL scanner pass | 2 |
 | 7 | pending | verify | Showcase and product-proof scorecard | Tagged release, real demo, benchmark, dashboard, user trials, retention, compatibility, and product-proof report satisfy every milestone exit gate | 3 |
 
 ## Phase End Conditions
@@ -115,7 +115,7 @@ Direction: Convert the seven approved phases into an Archon campaign and execute
 | phase:7 | milestone-report | doc_update | yes | docs/PRODUCT_PROOF_REPORT.md | pass | 3 | tested scorecard records CI-proven foundations and blocks release claims while external gates remain |
 | phase:6 | ecosystem-contract | test_result | yes | node scripts/test-ecosystem-compat.js; node scripts/generate-distribution-metadata.js --check | pass | 3 | 7/7 local compatibility checks and canonical metadata pass; immutable Anthropic commit and byte digest verified; remote scanners and publisher profiles remain |
 | phase:6 | hol-scanner | test_result | yes | PR #181 HOL Plugin Scanner run 57 | pass | 3 | repository passes pinned HOL scanner action; Claude scanner and publisher profiles remain |
-| phase:6 | registry-audit | test_result | yes | ClaudePluginHub sethgammon-citadel; HOL citadel/citadel | fail | 2 | Claude listing is current 1.1.0 but unclaimed; HOL trust is 92 but version is stale 1.0.0 and publisher verification is No |
+| phase:6 | registry-audit | test_result | yes | ClaudePluginHub sethgammon-citadel; HOL scanner on PR #181 | pass | 2 | SethGammon claimed the current 1.1.0 listing; HOL removed its legacy plugin-profile route, while the current hosted scanner passes |
 | phase:7 | scorecard-contract | test_result | yes | docs/PRODUCT_PROOF_REPORT.md; node scripts/test-product-proof-report.js | pass | 3 | answer-first blocked scorecard covers all ten axes and forbids completion claims while evidence is missing |
 | campaign | review-package | file_diff | yes | .planning/review-packages/citadel-product-proof.md | pass | 3 | review head, proven surfaces, release blockers, and no-merge decision packaged at commit 2c6725f |
 
@@ -132,7 +132,7 @@ Direction: Convert the seven approved phases into an Archon campaign and execute
 | Golden-path evidence matrix | in-progress | 4 | Hardened Windows rerun 10/10 passes; Linux, macOS, and stranger trial evidence remain |
 | Read-only operator dashboard | implementation-complete | 5 | Nine schema-1 views, explicit unknown/unreadable state, activation, path-contained evidence, bounded RSS, keyboard/mobile/reduced-motion contracts; pixels and stranger comprehension remain |
 | Product benchmark | implementation-complete | 5 | Ten frozen scenarios, symmetric runner, deterministic raw/report regeneration, closed failure codes, and published negative fixture result; actual runs and external scenario remain |
-| External skill interoperability | implementation-complete | 6 | Digested Anthropic template snapshot installs unchanged into Claude/Codex projections, routes, executes, emits local telemetry and HANDOFF, and cleans up; immutable provenance and registries remain |
+| External skill interoperability | complete | 6 | Digested Anthropic template snapshot installs unchanged into Claude/Codex projections; immutable provenance, verified ClaudePluginHub ownership/version, and hosted HOL scanning pass |
 | Product-proof scorecard | complete | 7 | docs/PRODUCT_PROOF_REPORT.md truthfully reports the milestone blocked and separates local, CI, human, release, and missing evidence |
 
 ## Decision Log
@@ -148,6 +148,9 @@ Direction: Convert the seven approved phases into an Archon campaign and execute
 
 - 2026-07-11T06:45:00.000Z: Live registry inspection proves discoverability but fails publisher verification.
   Reason: ClaudePluginHub exposes Citadel 1.1.0 with the expected surfaces but asks the owner to sign in and claim it; HOL reports trust 92 while publishing stale version 1.0.0 and publisher verification No. Claiming an external identity requires explicit user authorization.
+
+- 2026-07-11T14:08:00.000Z: SethGammon claimed the ClaudePluginHub listing and the obsolete HOL profile requirement was removed.
+  Reason: ClaudePluginHub now states “You own this plugin” for the personal repository and exposes management controls. HOL's old plugin URL now returns 404 because its current registry covers agents and skills; Citadel retains the passing hosted HOL plugin-scanner gate instead of claiming a nonexistent publisher surface.
 
 - 2026-07-10T14:25:12.420Z: Bound the campaign to seven phases by combining dashboard and benchmark into one parallel R1/R2 phase.
   Reason: matches the approved seven-step milestone while retaining independent workstreams and gates.
@@ -373,3 +376,7 @@ Next actions:
 <!-- session-end: 2026-07-11T02:13:33.158Z -->
 
 <!-- session-end: 2026-07-11T06:42:24.982Z -->
+
+<!-- session-end: 2026-07-11T06:48:19.465Z -->
+
+<!-- session-end: 2026-07-11T14:08:03.264Z -->

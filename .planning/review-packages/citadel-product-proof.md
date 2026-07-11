@@ -24,8 +24,8 @@ Status: **engineering foundation accepted; release milestone blocked**
 - Ten independent first-time users have not completed the timing/comprehension cohort.
 - An external reviewer has not selected and run the signed actual benchmark scenario.
 - Five independent users have not demonstrated a second real task within 14 days.
-- ClaudePluginHub lists version 1.1.0 but is unclaimed; HOL reports publisher verification
-  `No` and stale version 1.0.0. The registry gate is inspected and failed, not unknown.
+- ClaudePluginHub ownership/version and hosted HOL scanning now pass. HOL's removed legacy
+  plugin-profile route is documented and is not substituted with a nonexistent profile claim.
 - Browser-verified dashboard pixels and the 90-second non-mocked demo are absent.
 - No `v1.1.0` tag or GitHub release exists; creating either before the above gates pass
   would contradict the milestone contract.

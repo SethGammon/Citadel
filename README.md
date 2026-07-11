@@ -6,6 +6,7 @@
 [![Tests](https://github.com/SethGammon/Citadel/actions/workflows/tests.yml/badge.svg)](https://github.com/SethGammon/Citadel/actions/workflows/tests.yml)
 ![Node.js 18+](https://img.shields.io/badge/Node.js-18%2B-green.svg)
 [![GitHub stars](https://img.shields.io/github/stars/SethGammon/Citadel?style=social)](https://github.com/SethGammon/Citadel/stargazers)
+[![ClaudePluginHub verified](https://img.shields.io/badge/ClaudePluginHub-verified-7c3aed.svg)](https://www.claudepluginhub.com/plugins/sethgammon-citadel)
 [![Interactive Demo](https://img.shields.io/badge/Try_the_Router-00d2ff.svg)](https://sethgammon.github.io/Citadel/)
 
 **Citadel is an open-source orchestration layer for Claude Code and OpenAI Codex.**

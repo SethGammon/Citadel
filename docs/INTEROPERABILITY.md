@@ -37,22 +37,22 @@ README's licensing statement; no root license file was verified.
 ## What this proves
 
 The local Claude Code skill-directory contract and Citadel's Codex projection
-contract both pass. This does **not** claim acceptance by any remote plugin
-registry, marketplace review, profile scanner, or third-party runtime. Those
-remain external distribution checks. Immutable upstream provenance is locally verified;
-publisher identity and registry acceptance remain external gates rather than inferred claims.
+contract both pass. Immutable upstream provenance is locally verified. Remote
+distribution proof is limited to the verified ClaudePluginHub publisher listing and
+the hosted HOL scanner; neither is treated as third-party runtime adoption or usage.
 
 ## Live registry inspection (2026-07-11)
 
 - [ClaudePluginHub](https://www.claudepluginhub.com/plugins/sethgammon-citadel) indexes
   `sethgammon/citadel` as version `1.1.0`, attributes it to SethGammon, and exposes 49
-  skills, 7 agents, 1 hook group, and 2 MCP servers. The listing also shows “Own this
-  plugin? Sign in to claim,” so the publisher account is not verified. Its install count
-  is zero; indexing and stars are not install or runtime proof.
-- [HOL](https://hol.org/registry/plugins/citadel%2Fcitadel) lists `citadel/citadel` as safe
-  with trust score 92, but its registry snapshot is still version `1.0.0` and explicitly
-  reports publisher verification `No`.
+  skills, 7 agents, 1 hook group, and 2 MCP servers. On 2026-07-11 the SethGammon GitHub
+  identity claimed the personal-repository match; the page now states “You own this plugin”
+  and exposes publisher management controls. Its install count is zero, so verification and
+  indexing are not install or runtime proof.
+- HOL's former `citadel/citadel` plugin-profile URL now returns 404. The current HOL registry
+  indexes agents and skills rather than maintaining the old plugin publisher pages. Citadel's
+  relevant current HOL proof is therefore the hosted plugin-scanner check, which passes on PR
+  #181; the removed legacy profile is not a release gate.
 
-These pages prove discoverability and scanner acceptance. They also directly contradict the
-milestone's verified-publisher/current-version requirement, so the registry gate remains failed
-until ownership is claimed and HOL refreshes to the released version.
+Together these surfaces prove current Claude publisher identity, metadata discovery, and HOL
+scanner acceptance. They do not prove installs, successful user tasks, or retention.

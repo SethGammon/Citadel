@@ -391,10 +391,11 @@ Only new (`+`) and modified (`~`) files are shown.
     produces a Citadel handoff without modifying the fixture's source skill.
   - [ ] `node scripts/generate-distribution-metadata.js --check` proves README, plugin
     manifests, runtime support, install command, version, skill count, and proof links agree.
-  - [ ] Claude and Codex plugin scanners accept the release artifact.
-  - [ ] ClaudePluginHub and HOL show verified publisher identity, current version, canonical
-    install path, and current runtime support; captured profile evidence is stored in the
-    campaign.
+  - [ ] ClaudePluginHub indexes the release with verified publisher identity, current version,
+    canonical install path, and current runtime support; captured profile evidence is stored in
+    the campaign.
+  - [ ] The hosted HOL plugin scanner accepts the repository. A separate HOL publisher-profile
+    gate is not required because HOL removed its plugin-profile registry surface in July 2026.
   - [ ] No new syntax/type-contract errors; all existing tests pass.
 
 ### Phase 6: Showcase and product-proof scorecard
