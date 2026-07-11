@@ -41,3 +41,18 @@ contract both pass. This does **not** claim acceptance by any remote plugin
 registry, marketplace review, profile scanner, or third-party runtime. Those
 remain external distribution checks. Immutable upstream provenance is locally verified;
 publisher identity and registry acceptance remain external gates rather than inferred claims.
+
+## Live registry inspection (2026-07-11)
+
+- [ClaudePluginHub](https://www.claudepluginhub.com/plugins/sethgammon-citadel) indexes
+  `sethgammon/citadel` as version `1.1.0`, attributes it to SethGammon, and exposes 49
+  skills, 7 agents, 1 hook group, and 2 MCP servers. The listing also shows “Own this
+  plugin? Sign in to claim,” so the publisher account is not verified. Its install count
+  is zero; indexing and stars are not install or runtime proof.
+- [HOL](https://hol.org/registry/plugins/citadel%2Fcitadel) lists `citadel/citadel` as safe
+  with trust score 92, but its registry snapshot is still version `1.0.0` and explicitly
+  reports publisher verification `No`.
+
+These pages prove discoverability and scanner acceptance. They also directly contradict the
+milestone's verified-publisher/current-version requirement, so the registry gate remains failed
+until ownership is claimed and HOL refreshes to the released version.

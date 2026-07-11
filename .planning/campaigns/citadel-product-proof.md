@@ -115,6 +115,7 @@ Direction: Convert the seven approved phases into an Archon campaign and execute
 | phase:7 | milestone-report | doc_update | yes | docs/PRODUCT_PROOF_REPORT.md | pass | 3 | tested scorecard records CI-proven foundations and blocks release claims while external gates remain |
 | phase:6 | ecosystem-contract | test_result | yes | node scripts/test-ecosystem-compat.js; node scripts/generate-distribution-metadata.js --check | pass | 3 | 7/7 local compatibility checks and canonical metadata pass; immutable Anthropic commit and byte digest verified; remote scanners and publisher profiles remain |
 | phase:6 | hol-scanner | test_result | yes | PR #181 HOL Plugin Scanner run 57 | pass | 3 | repository passes pinned HOL scanner action; Claude scanner and publisher profiles remain |
+| phase:6 | registry-audit | test_result | yes | ClaudePluginHub sethgammon-citadel; HOL citadel/citadel | fail | 2 | Claude listing is current 1.1.0 but unclaimed; HOL trust is 92 but version is stale 1.0.0 and publisher verification is No |
 | phase:7 | scorecard-contract | test_result | yes | docs/PRODUCT_PROOF_REPORT.md; node scripts/test-product-proof-report.js | pass | 3 | answer-first blocked scorecard covers all ten axes and forbids completion claims while evidence is missing |
 | campaign | review-package | file_diff | yes | .planning/review-packages/citadel-product-proof.md | pass | 3 | review head, proven surfaces, release blockers, and no-merge decision packaged at commit 2c6725f |
 
@@ -144,6 +145,9 @@ Direction: Convert the seven approved phases into an Archon campaign and execute
 
 - 2026-07-11T06:21:56.082Z: Capture the first live authenticated GitHub acquisition snapshot and add credential-safe `gh` CLI fallback.
   Reason: the rolling window shows 490 unique viewers and 506 unique cloners, led by GitHub, X, Google, and Reddit referrers. This explains wave-shaped discovery but remains attention evidence, not activation, utility, or retention proof. The post-change strict aggregate passed every check in 301.2 seconds.
+
+- 2026-07-11T06:45:00.000Z: Live registry inspection proves discoverability but fails publisher verification.
+  Reason: ClaudePluginHub exposes Citadel 1.1.0 with the expected surfaces but asks the owner to sign in and claim it; HOL reports trust 92 while publishing stale version 1.0.0 and publisher verification No. Claiming an external identity requires explicit user authorization.
 
 - 2026-07-10T14:25:12.420Z: Bound the campaign to seven phases by combining dashboard and benchmark into one parallel R1/R2 phase.
   Reason: matches the approved seven-step milestone while retaining independent workstreams and gates.
@@ -367,3 +371,5 @@ Next actions:
 <!-- session-end: 2026-07-10T20:01:22.223Z -->
 
 <!-- session-end: 2026-07-11T02:13:33.158Z -->
+
+<!-- session-end: 2026-07-11T06:42:24.982Z -->
