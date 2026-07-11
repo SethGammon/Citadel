@@ -23,6 +23,7 @@ jobs:
           min_score: 80
           fail_on_severity: high
           format: sarif
+          output: ${{ github.workspace }}/plugin-scanner.sarif
           upload_sarif: true
       - name: Summarize scanner finding coordinates
         if: failure()

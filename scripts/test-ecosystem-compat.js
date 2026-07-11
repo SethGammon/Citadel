@@ -121,10 +121,10 @@ test('containment rejects traversal and symlinked fixture roots', () => {
 
 test('target containment rejects existing symlinks with portable and live coverage', () => {
   const temp = fs.mkdtempSync(path.join(os.tmpdir(), 'citadel-ecosystem-target-'));
-  const candidate = path.join(temp, 'telemetry.jsonl');
+  const candidate = path.join(fs.realpathSync(temp), 'telemetry.jsonl');
   const fakeFs = {
-    existsSync: (value) => path.resolve(value) === candidate || fs.existsSync(value),
-    lstatSync: (value) => path.resolve(value) === candidate
+    existsSync: (value) => path.resolve(value) === path.resolve(candidate) || fs.existsSync(value),
+    lstatSync: (value) => path.resolve(value) === path.resolve(candidate)
       ? { isSymbolicLink: () => true }
       : fs.lstatSync(value),
     realpathSync: fs.realpathSync,

@@ -298,6 +298,10 @@ Direction: Convert the seven approved phases into an Archon campaign and execute
   contracts, handoff symlinks are excluded, executor paths are normalized, and failed scanner SARIF will be
   retained as a workflow artifact for diagnosis. The local strict repair run passed in 206.0 seconds.
 
+- 2026-07-11T01:52:00.000Z: The hosted golden-path fixture gate passes 30/30 on PR #181 run 34.
+  Reason: every Claude and Codex cell on Windows, Linux, and macOS completed five runs with successful
+  install/setup, verified handoff, fresh-process resume, and exact rollback. Human timing remains separate.
+
 ## Review Queue
 
 - [ ] UX: Review the final first-run journey with ten users who have never installed Citadel.

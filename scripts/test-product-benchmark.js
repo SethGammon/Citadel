@@ -183,7 +183,7 @@ function main() {
         if (argv[0] === 'node' && argv[1] === '--version') {
           return failStage === 'setup' ? { ...ok, status: 1, stderr: ['password', sensitivePassword].join('=') } : ok;
         }
-        if (argv[0] === process.execPath && path.resolve(argv[1] || '') === path.resolve(executorFile)) {
+        if (path.resolve(argv[1] || '') === path.resolve(executorFile)) {
           const input = JSON.parse(fs.readFileSync(argv[2], 'utf8'));
           if (failStage === 'adapter') fs.writeFileSync(input.output_path, '{invalid', 'utf8');
           else if (failStage === 'adapter-symlink') fs.symlinkSync(externalJson, input.output_path, 'file');
