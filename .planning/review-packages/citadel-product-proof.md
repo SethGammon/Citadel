@@ -5,7 +5,7 @@ Status: **engineering foundation accepted; release milestone blocked**
 ## Review head
 
 - PR: `#181` (`codex/citadel-1-1-product-proof` -> `main`)
-- Commit: `2c6725f105881f3351203fee51cbc853ebf98298`
+- Last fully hosted-verified candidate: `0329d86` (12/12 checks)
 - Hosted proof: 12/12 checks pass on Node 18/20, Linux/macOS/Windows, the complete
   30/30 Claude/Codex golden-path matrix, and HOL/plugin scanning.
 - Local proof: `node scripts/test-all.js --strict` passes in 301.2 seconds;
@@ -32,7 +32,9 @@ Status: **engineering foundation accepted; release milestone blocked**
 
 The recruitment and aggregation contract is now documented in `docs/PRODUCT_PROOF_TRIAL.md` and
 enforced by `scripts/product-proof-cohort.js`; it intentionally remains negative until public,
-independent discussion-comment evidence exists.
+independent discussion-comment evidence exists. [Discussion #182](https://github.com/SethGammon/Citadel/discussions/182)
+is now publicly recruiting one external benchmark reviewer, ten first-time users, and at least five
+24-hour-to-14-day return users. Opening recruitment is progress, not human proof.
 
 ## Merge decision
 

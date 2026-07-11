@@ -1,8 +1,8 @@
 # Citadel 1.1 product-proof report
 
-> **Current verdict (2026-07-10): blocked, not release-ready.** Citadel 1.1 has a
+> **Current verdict (2026-07-11): blocked, not release-ready.** Citadel 1.1 has a
 > substantial implementation and strong local engineering proof, but the milestone's
-> human, benchmark, registry, release, and showcase gates are not
+> human, benchmark, release, and showcase gates are not
 > closed. [PR #181](https://github.com/SethGammon/Citadel/pull/181) is the current delivery
 > path. At commit `77ebbb2`, Tests run 37 and HOL run 57 are green, and the hosted
 > golden-path artifact is 30/30 across Claude/Codex, Windows/Linux/macOS.
@@ -29,7 +29,7 @@ The axes and thresholds come from the [product-proof architecture](../.planning/
 |---|---|---|---|
 | **Reliable** | **CI-proven** | At commit `64006f0`, the hosted Tests and HOL checks pass across Linux, macOS, and Windows. The current local aggregate passed every listed check in 172.5 seconds, including the fail-closed cohort, dashboard, benchmark, acquisition, and release-integrity contracts. | Preserve these required checks on the eventual milestone commit. |
 | **Installable** | **CI-proven fixture gate; human timing blocked** | PR #181 run 34 produced a complete 30/30 Claude/Codex × Linux/macOS/Windows fixture matrix, exceeding the greater-than-95% install/setup/handoff/resume thresholds with exact rollback. The workflow and artifact contract are in the [complete matrix](../.github/workflows/tests.yml#L29-L80). | Run independent stranger timings; deterministic fixtures do not prove first value under 10 minutes. |
-| **Fast to value** | **Blocked** | The deterministic fixture exercises route-to-handoff and documents its limits in the [golden-path contract](GOLDEN_PATH.md#evidence-and-thresholds). The [independent trial protocol](PRODUCT_PROOF_TRIAL.md) now validates public-comment evidence without collecting prompts or project data. | Recruit and record independent stranger timings; a protocol and fixture cannot prove median first routed task under 10 minutes or p90 verified handoff under 15 minutes. |
+| **Fast to value** | **Blocked; recruitment open** | The deterministic fixture exercises route-to-handoff and documents its limits in the [golden-path contract](GOLDEN_PATH.md#evidence-and-thresholds). The [independent trial protocol](PRODUCT_PROOF_TRIAL.md) validates public-comment evidence without collecting prompts or project data, and [Discussion #182](https://github.com/SethGammon/Citadel/discussions/182) is recruiting the external reviewer and first-time cohort. | Record independent stranger timings; an open recruitment thread, protocol, and fixture cannot prove median first routed task under 10 minutes or p90 verified handoff under 15 minutes. |
 | **Resumable** | **CI-proven fixture gate** | PR #181 run 34 verified fresh-process continuation and exact rollback in all 30 hosted fixture journeys; see [golden-path evidence](GOLDEN_PATH.md). | Retain the hosted artifact and separately test recovery with real first-time users; fixture automation is not human proof. |
 | **Understandable** | **Blocked** | Nine versioned, read-only dashboard contracts pass. Focused isolated 1,000-file runs measured 251.9-717.2 ms cold start and 110.8-458.4 ms invalidated updates; a deliberately concurrent stress sample reached 1,276.0 ms. A bare Node 22 process measured 47.6 MB; complete runs measured 55.1-55.5 MB with 3.9-4.4 MB fixture overhead, inside the enforced `<64 MB` absolute and `<10 MB` overhead gates. Browserless keyboard, responsive, and reduced-motion contracts pass. | Capture pixel screenshots once browser security allows it; prove at least 8/10 strangers identify state and next action in under 60 seconds. |
 | **Useful** | **Blocked** | The [benchmark methodology](BENCHMARK.md) freezes 10 symmetric scenarios. Its [raw fixture evidence](benchmarks/product-proof-fixture-raw.jsonl) contains 60 deterministic runs and the [fixture report](benchmarks/product-proof-fixture-report.json) keeps the utility gate open/negative. | Select the external scenario and run actual bare-versus-harnessed trials. Fixture simulation cannot satisfy the utility gate. |
@@ -47,7 +47,7 @@ The axes and thresholds come from the [product-proof architecture](../.planning/
 | Cross-OS matrix | [CI workflow](../.github/workflows/tests.yml#L29-L80), [Windows baseline](../.planning/product-proof/golden-path-matrix-windows.json) | `node scripts/golden-path-matrix.js --merge <windows>,<linux>,<macos> --require-complete` |
 | Dashboard contracts | [dashboard specification](DASHBOARD_SPEC.md#verification-evidence) | `node scripts/test-dashboard-web.js && node scripts/test-dashboard-perf.js && node scripts/test-dashboard-visual.js` |
 | Benchmark | [methodology](BENCHMARK.md), [fixture report](benchmarks/product-proof-fixture-report.json) | `node scripts/test-product-benchmark.js` |
-| Independent cohort | [trial protocol](PRODUCT_PROOF_TRIAL.md) | `node scripts/product-proof-cohort.js --input <records.jsonl> --require-complete` |
+| Independent cohort | [trial protocol](PRODUCT_PROOF_TRIAL.md), [recruitment and evidence discussion](https://github.com/SethGammon/Citadel/discussions/182) | `node scripts/product-proof-cohort.js --input <records.jsonl> --require-complete` |
 | Interoperability | [contract and registry boundaries](INTEROPERABILITY.md) | `node scripts/test-ecosystem-compat.js` |
 | Activation | [privacy and metric definitions](ACTIVATION_METRICS.md), [zero-event report](../.planning/product-proof/activation-report.json) | `node scripts/activation-telemetry.js report` |
 | Release | [release and rollback procedure](RELEASES.md) | `node scripts/release-package.js --ref v1.1.0 --dry-run --verify-reproducible` |

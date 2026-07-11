@@ -112,6 +112,7 @@ Direction: Convert the seven approved phases into an Archon campaign and execute
 | phase:5 | dashboard-contract | test_result | yes | node scripts/test-dashboard-web.js; node scripts/test-dashboard-perf.js; node scripts/test-dashboard-visual.js | pass | 3 | source-health, containment, timing, <64 MB absolute RSS, <10 MB overhead, responsive, keyboard, and reduced-motion contracts pass; pixel and human gates remain |
 | phase:5 | benchmark-contract | test_result | yes | node scripts/test-product-benchmark.js; docs/benchmarks/product-proof-fixture-report.json | pass | 3 | ten frozen symmetric scenarios and 60 reproducible fixture runs pass; utility result is honestly open and negative |
 | phase:5 | cohort-contract | test_result | yes | node scripts/test-product-proof-cohort.js; docs/PRODUCT_PROOF_TRIAL.md | pass | 3 | privacy-minimal GitHub-comment evidence, external selection ordering, timing, comprehension, and 14-day retention gates fail closed |
+| phase:4 | cohort-recruitment | external_action | yes | https://github.com/SethGammon/Citadel/discussions/182 | pass | 3 | public call recruits one external benchmark selector, ten first-time users, and at least five return users; failures are retained and sensitive task data is prohibited |
 | phase:6 | interoperability | test_result | yes | node scripts/test-ecosystem-compat.js | pending | 3 | run external skill fixture |
 | phase:7 | milestone-report | doc_update | yes | docs/PRODUCT_PROOF_REPORT.md | pass | 3 | tested scorecard records CI-proven foundations and blocks release claims while external gates remain |
 | phase:6 | ecosystem-contract | test_result | yes | node scripts/test-ecosystem-compat.js; node scripts/generate-distribution-metadata.js --check | pass | 3 | 7/7 local compatibility checks and canonical metadata pass; immutable Anthropic commit and byte digest verified; remote scanners and publisher profiles remain |
@@ -155,6 +156,9 @@ Direction: Convert the seven approved phases into an Archon campaign and execute
 
 - 2026-07-11T14:25:00.000Z: Add a fail-closed independent cohort and benchmark-selection evidence contract before recruitment.
   Reason: public GitHub comment URLs establish auditable independent evidence while exact-field validation prohibits prompts, paths, repository names, and personal data. Ten-user timing/comprehension and 24-hour-to-14-day return gates remain blocked until real records exist. The integrated strict suite passes in 172.5 seconds.
+
+- 2026-07-11T14:44:00.000Z: Open public product-proof recruitment in GitHub Discussion #182.
+  Reason: hosted checks are 12/12 green, so the next honest gate requires independent people rather than more maintainer-generated fixtures. The post gives exact release-candidate installation instructions, welcomes failures, and prohibits prompts, paths, logs, repository names, and personal or client data.
 
 - 2026-07-10T14:25:12.420Z: Bound the campaign to seven phases by combining dashboard and benchmark into one parallel R1/R2 phase.
   Reason: matches the approved seven-step milestone while retaining independent workstreams and gates.
@@ -362,15 +366,15 @@ runs, return-use evidence, Claude scanner/publisher profiles, the tagged release
 Phase: 4-7 evidence closure
 Sub-step: preserve green hosted checks while executing human, actual-run, registry, and showcase gates
 Files modified: see git status on codex/citadel-1-1-product-proof; README, dashboard, benchmark, interoperability, CI, scorecard, and campaign surfaces are integrated
-Blocking: browser security prevented pixel capture; human cohorts, external scenario selection, publisher-profile evidence, and return-use windows require real external participants/state
+Blocking: browser security prevented pixel capture; human cohorts, external scenario selection, and return-use windows require real external participants/state
 checkpoint-phase-1: none
 checkpoint-phase-2: none
 checkpoint-phase-3: none
 checkpoint-phase-4: none
 Next actions:
-1. Capture real dashboard pixels and run the first-time-user comprehension/timing cohort.
-2. Have an external reviewer select a frozen scenario, run actual signed symmetric trials, and retain negative results.
-3. Collect return-use and Claude scanner/publisher-profile evidence.
+1. Recruit through Discussion #182; wait for an external reviewer to select a frozen scenario before participant runs begin.
+2. Run the first-time-user comprehension/timing cohort and actual signed symmetric trials, retaining negative results.
+3. Collect five qualifying return-use records and capture real dashboard pixels.
 4. Create the tagged release and non-mocked demo only after every remaining gate passes.
 
 <!-- session-end: 2026-07-10T15:45:46.955Z -->

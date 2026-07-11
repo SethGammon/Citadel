@@ -5,6 +5,10 @@ minimum aggregate facts needed to test first value, dashboard comprehension, ben
 and return use. Do not post prompts, repository names, paths, command output, emails, or other
 personal/project data.
 
+Recruitment and public evidence live in [GitHub Discussion #182](https://github.com/SethGammon/Citadel/discussions/182).
+Because 1.1 is still a release candidate, use the exact branch and installer instructions in that
+discussion rather than installing from `main`.
+
 ## Who qualifies
 
 - A first-time Citadel user who is not the maintainer and did not contribute to the trial tooling.
@@ -20,7 +24,8 @@ personal/project data.
    HANDOFF are visible.
 4. Open `citadel dashboard`. Within 60 seconds, identify the active goal, current phase, blocked
    item, and next action. Record only how many of those four were correct, not the answer text.
-5. Comment on the recruitment discussion using the JSON template below. Use a random opaque ID;
+5. Comment on [the recruitment discussion](https://github.com/SethGammon/Citadel/discussions/182)
+   using the JSON template below. Use a random opaque ID;
    do not use your username, email, or repository name in the record.
 6. If you voluntarily use Citadel for a second real task at least 24 hours later and within 14
    days, edit or reply to your comment with `second_task_at`. No task content is requested.
