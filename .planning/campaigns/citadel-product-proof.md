@@ -113,6 +113,7 @@ Direction: Convert the seven approved phases into an Archon campaign and execute
 | phase:5 | benchmark-contract | test_result | yes | node scripts/test-product-benchmark.js; docs/benchmarks/product-proof-fixture-report.json | pass | 3 | ten frozen symmetric scenarios and 60 reproducible fixture runs pass; utility result is honestly open and negative |
 | phase:5 | cohort-contract | test_result | yes | node scripts/test-product-proof-cohort.js; docs/PRODUCT_PROOF_TRIAL.md | pass | 3 | privacy-minimal GitHub-comment evidence, external selection ordering, timing, comprehension, and 14-day retention gates fail closed |
 | phase:4 | cohort-recruitment | external_action | yes | https://github.com/SethGammon/Citadel/discussions/182 | pass | 3 | public call recruits one external benchmark selector, ten first-time users, and at least five return users; failures are retained and sensitive task data is prohibited |
+| phase:4 | recruitment-mainline | external_action | yes | PR #183; main c45a309 | pass | 3 | default README links Discussion #182 from the top navigation and Community; the PR also repaired the Windows CRLF steward-test failure it exposed, with 6/6 hosted checks green |
 | phase:6 | interoperability | test_result | yes | node scripts/test-ecosystem-compat.js | pending | 3 | run external skill fixture |
 | phase:7 | milestone-report | doc_update | yes | docs/PRODUCT_PROOF_REPORT.md | pass | 3 | tested scorecard records CI-proven foundations and blocks release claims while external gates remain |
 | phase:6 | ecosystem-contract | test_result | yes | node scripts/test-ecosystem-compat.js; node scripts/generate-distribution-metadata.js --check | pass | 3 | 7/7 local compatibility checks and canonical metadata pass; immutable Anthropic commit and byte digest verified; remote scanners and publisher profiles remain |
@@ -159,6 +160,9 @@ Direction: Convert the seven approved phases into an Archon campaign and execute
 
 - 2026-07-11T14:44:00.000Z: Open public product-proof recruitment in GitHub Discussion #182.
   Reason: hosted checks are 12/12 green, so the next honest gate requires independent people rather than more maintainer-generated fixtures. The post gives exact release-candidate installation instructions, welcomes failures, and prohibits prompts, paths, logs, repository names, and personal or client data.
+
+- 2026-07-11T20:54:47.000Z: Merge the independent-trial recruitment surface to default-branch README through PR #183.
+  Reason: visitors arriving on `main` could not see a call that existed only on the release-candidate branch. The narrow PR added top-level and Community links to Discussion #182. Its first run exposed a pre-existing Windows-only CRLF regex failure in the standalone AGENTS.md steward acceptance test; the source-consistent `\r?\n` repair passed the 15-merge/15-deploy scenario, the 173.5-second local aggregate, and all six hosted checks before squash merge at `c45a309`.
 
 - 2026-07-10T14:25:12.420Z: Bound the campaign to seven phases by combining dashboard and benchmark into one parallel R1/R2 phase.
   Reason: matches the approved seven-step milestone while retaining independent workstreams and gates.
@@ -388,3 +392,7 @@ Next actions:
 <!-- session-end: 2026-07-11T06:48:19.465Z -->
 
 <!-- session-end: 2026-07-11T14:08:03.264Z -->
+
+<!-- session-end: 2026-07-11T14:43:54.417Z -->
+
+<!-- session-end: 2026-07-11T14:46:32.277Z -->

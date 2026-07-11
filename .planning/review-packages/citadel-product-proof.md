@@ -34,7 +34,9 @@ The recruitment and aggregation contract is now documented in `docs/PRODUCT_PROO
 enforced by `scripts/product-proof-cohort.js`; it intentionally remains negative until public,
 independent discussion-comment evidence exists. [Discussion #182](https://github.com/SethGammon/Citadel/discussions/182)
 is now publicly recruiting one external benchmark reviewer, ten first-time users, and at least five
-24-hour-to-14-day return users. Opening recruitment is progress, not human proof.
+24-hour-to-14-day return users. PR #183 merged the recruitment link into the default README at
+`c45a309` after all six hosted checks passed. Opening and distributing recruitment is progress,
+not human proof.
 
 ## Merge decision
 
