@@ -122,18 +122,14 @@ test('containment rejects traversal and symlinked fixture roots', () => {
 test('target containment rejects existing symlinks with portable and live coverage', () => {
   const temp = fs.mkdtempSync(path.join(os.tmpdir(), 'citadel-ecosystem-target-'));
   const candidate = path.join(temp, 'telemetry.jsonl');
-  const originalExists = fs.existsSync;
-  const originalLstat = fs.lstatSync;
-  try {
-    fs.existsSync = (value) => path.resolve(value) === candidate || originalExists(value);
-    fs.lstatSync = (value) => path.resolve(value) === candidate
+  const fakeFs = {
+    existsSync: (value) => path.resolve(value) === candidate || fs.existsSync(value),
+    lstatSync: (value) => path.resolve(value) === candidate
       ? { isSymbolicLink: () => true }
-      : originalLstat(value);
-    assert.throws(() => resolveTarget(temp, 'telemetry.jsonl', 'telemetry'), /symlink/);
-  } finally {
-    fs.existsSync = originalExists;
-    fs.lstatSync = originalLstat;
-  }
+      : fs.lstatSync(value),
+    realpathSync: fs.realpathSync,
+  };
+  assert.throws(() => resolveTarget(temp, 'telemetry.jsonl', 'telemetry', fakeFs), /symlink/);
 
   const outside = fs.mkdtempSync(path.join(os.tmpdir(), 'citadel-ecosystem-outside-'));
   const linkedDirectory = path.join(temp, 'evidence');

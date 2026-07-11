@@ -87,6 +87,12 @@ function createDataSource(projectRoot) {
       if (!fs.existsSync(dir)) return [];
       return fs.readdirSync(dir)
         .filter((name) => name.endsWith('.md'))
+        .filter((name) => {
+          try {
+            const stat = fs.lstatSync(path.join(dir, name));
+            return stat.isFile() && !stat.isSymbolicLink();
+          } catch { return false; }
+        })
         .sort((a, b) => b.localeCompare(a))
         .slice(0, 50)
         .map((name) => {

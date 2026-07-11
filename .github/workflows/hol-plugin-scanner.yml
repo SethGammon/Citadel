@@ -27,3 +27,11 @@ jobs:
       - name: Summarize scanner finding coordinates
         if: failure()
         run: node scripts/sarif-coordinates.js plugin-scanner.sarif
+      - name: Upload failed scanner report
+        if: failure()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: hol-plugin-scanner-sarif
+          path: plugin-scanner.sarif
+          if-no-files-found: error
+          retention-days: 7

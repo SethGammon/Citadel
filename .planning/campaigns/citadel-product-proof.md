@@ -275,7 +275,7 @@ Direction: Convert the seven approved phases into an Archon campaign and execute
   identity/version/install/runtime evidence has not been captured.
 
 - 2026-07-11T00:41:00.000Z: Integrated local release gates pass after independent P1 review and repair.
-  Reason: final strict validation passed every listed check in 214.6 seconds; benchmark evidence now rejects
+  Reason: latest strict repair validation passed every listed check in 206.0 seconds; benchmark evidence now rejects
   missing metrics, wrong types, failed git-status cleanup claims, manifest drift, unsigned receipts, and
   non-Ed25519 keys; dashboard fallback observes nested
   edits on Node 18 and watcher errors; distribution metadata is canonical and compatibility passes 7/7.
@@ -287,6 +287,16 @@ Direction: Convert the seven approved phases into an Archon campaign and execute
 - 2026-07-11T00:41:00.000Z: The final worktree release package is reproducible and independently verified.
   Reason: two final worktree builds matched SHA-256 63c0d1692d99135a1a38949d5406e2ab3034c280a262f383f7812cf48a89db31;
   release verification passed for 617 files under citadel-1.1.0. No tag, release, or deployment was created.
+
+- 2026-07-11T01:35:00.000Z: First hosted repair grid retained real negative evidence instead of merging.
+  Reason: Windows and Linux golden-path cells passed, while macOS Codex install failed for 25/30 total;
+  strict jobs exposed macOS stdout flushing, cross-platform line-ending, portable symlink-test, executor-path,
+  and dashboard symlink-count assumptions. HOL also failed without standard SARIF result coordinates.
+
+- 2026-07-11T01:45:00.000Z: Hosted failure repairs pass focused tests and the full local strict gate.
+  Reason: Codex JSON now flushes before exit, the external fixture is LF-pinned, filesystem tests use injected
+  contracts, handoff symlinks are excluded, executor paths are normalized, and failed scanner SARIF will be
+  retained as a workflow artifact for diagnosis. The local strict repair run passed in 206.0 seconds.
 
 ## Review Queue
 

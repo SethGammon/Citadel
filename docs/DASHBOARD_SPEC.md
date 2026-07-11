@@ -138,7 +138,7 @@ switcher reserved for v0.2.
   corrupt fixtures pass; all nine API projections return schema 1 with explicit source state.
 - `node scripts/test-dashboard-perf.js`: deterministic 1,000-file Windows focused runs after
   update-path caching measured 251.9-588.4 ms cold and 110.8-228.5 ms invalidated updates.
-  Absolute RSS was 53.3-53.5 MB, so the strict
+  Absolute RSS was 53.3-55.2 MB across focused and aggregate runs, so the strict
   `<50 MB` target is **not proven** on this runtime. The portable test gates dashboard-attributed
   overhead and reports the absolute result for CI/platform evaluation.
 - `node scripts/test-dashboard-visual.js`: dark/light desktop and 380 px design-token/layout
