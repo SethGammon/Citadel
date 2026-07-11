@@ -91,6 +91,7 @@ const GITHUB_TRAFFIC_SNAPSHOT_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-git
 const GOLDEN_PATH_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-golden-path.js');
 const GOLDEN_PATH_MATRIX_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-golden-path-matrix.js');
 const PRODUCT_BENCHMARK_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-product-benchmark.js');
+const PRODUCT_PROOF_COHORT_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-product-proof-cohort.js');
 const SARIF_COORDINATES_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-sarif-coordinates.js');
 const ECOSYSTEM_COMPAT_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-ecosystem-compat.js');
 const PRODUCT_PROOF_REPORT_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-product-proof-report.js');
@@ -188,6 +189,7 @@ const githubTrafficSnapshotPassed = run('GitHub Traffic Snapshot Tests', GITHUB_
 const goldenPathPassed = run('Golden Path Fixture Tests', GOLDEN_PATH_TEST);
 const goldenPathMatrixPassed = run('Golden Path Matrix Tests', GOLDEN_PATH_MATRIX_TEST);
 const productBenchmarkPassed = run('Product Benchmark Tests', PRODUCT_BENCHMARK_TEST);
+const productProofCohortPassed = run('Product Proof Cohort Tests', PRODUCT_PROOF_COHORT_TEST);
 const sarifCoordinatesPassed = run('SARIF Coordinate Tests', SARIF_COORDINATES_TEST);
 const ecosystemCompatPassed = run('Ecosystem Compatibility Tests', ECOSYSTEM_COMPAT_TEST);
 const productProofReportPassed = run('Product Proof Report Tests', PRODUCT_PROOF_REPORT_TEST);
@@ -265,12 +267,13 @@ console.log(`  Acquisition history: ${githubTrafficSnapshotPassed ? 'PASS' : 'FA
 console.log(`  Golden path fixture: ${goldenPathPassed ? 'PASS' : 'FAIL'}`);
 console.log(`  Golden path matrix:  ${goldenPathMatrixPassed ? 'PASS' : 'FAIL'}`);
 console.log(`  Product benchmark:   ${productBenchmarkPassed ? 'PASS' : 'FAIL'}`);
+console.log(`  Product proof cohort: ${productProofCohortPassed ? 'PASS' : 'FAIL'}`);
 console.log(`  SARIF coordinates:   ${sarifCoordinatesPassed ? 'PASS' : 'FAIL'}`);
 console.log(`  Ecosystem compat:    ${ecosystemCompatPassed ? 'PASS' : 'FAIL'}`);
 console.log(`  Product proof report: ${productProofReportPassed ? 'PASS' : 'FAIL'}`);
 console.log('');
 
-if (hooksPassed && securityPassed && contractsPassed && runtimeRegistryPassed && runtimeMatrixPassed && hookEventsPassed && skillsPassed && demoPassed && telemetryPassed && telemetryIntegrityPassed && memoryBlockPassed && evidenceContractPassed && sandboxProviderPassed && skillPackagingPassed && mapSubstratePassed && deliveryPassed && deliveryPackagePassed && continueActionPassed && nextActionPassed && routePreviewPassed && loopsPassed && operatingProofPassed && usefulnessTrialPassed && operatorConsolePassed && operatorJourneyPassed && firstUseOperatorPassed && verificationPlanPassed && prReadyPassed && stackPlanPassed && deployStewardPassed && agentsMdOnlyStewardPassed && coordinationPassed && hookInstallerPassed && campaignPassed && discoveryPassed && discoveryWriterPassed && momentumPassed && momentumWatcherPassed && policyPassed && claudeRuntimePassed && codexRuntimePassed && codexNativeIntegrationPassed && codexOperationalImprovementPassed && installerPassed && projectBootstrapPassed && compatFixturePassed && backwardCompatPassed && costTrackerPassed && dashboardPassed && docSyncPassed && fleetSessionPassed && worktreeReadinessPassed && postEditTypecheckPassed && routingSyncPassed && watchDedupPassed && teammateRebalancePassed && docSurfacesPassed && telemetryOtlpPassed && stateHygienePassed && permissionAuditPassed && secretsLensPassed && dashboardWebPassed && dashboardPerfPassed && dashboardVisualPassed && noopDetectPassed && releaseIntegrityPassed && activationTelemetryPassed && githubTrafficSnapshotPassed && goldenPathPassed && goldenPathMatrixPassed && productBenchmarkPassed && sarifCoordinatesPassed && ecosystemCompatPassed && productProofReportPassed) {
+if (hooksPassed && securityPassed && contractsPassed && runtimeRegistryPassed && runtimeMatrixPassed && hookEventsPassed && skillsPassed && demoPassed && telemetryPassed && telemetryIntegrityPassed && memoryBlockPassed && evidenceContractPassed && sandboxProviderPassed && skillPackagingPassed && mapSubstratePassed && deliveryPassed && deliveryPackagePassed && continueActionPassed && nextActionPassed && routePreviewPassed && loopsPassed && operatingProofPassed && usefulnessTrialPassed && operatorConsolePassed && operatorJourneyPassed && firstUseOperatorPassed && verificationPlanPassed && prReadyPassed && stackPlanPassed && deployStewardPassed && agentsMdOnlyStewardPassed && coordinationPassed && hookInstallerPassed && campaignPassed && discoveryPassed && discoveryWriterPassed && momentumPassed && momentumWatcherPassed && policyPassed && claudeRuntimePassed && codexRuntimePassed && codexNativeIntegrationPassed && codexOperationalImprovementPassed && installerPassed && projectBootstrapPassed && compatFixturePassed && backwardCompatPassed && costTrackerPassed && dashboardPassed && docSyncPassed && fleetSessionPassed && worktreeReadinessPassed && postEditTypecheckPassed && routingSyncPassed && watchDedupPassed && teammateRebalancePassed && docSurfacesPassed && telemetryOtlpPassed && stateHygienePassed && permissionAuditPassed && secretsLensPassed && dashboardWebPassed && dashboardPerfPassed && dashboardVisualPassed && noopDetectPassed && releaseIntegrityPassed && activationTelemetryPassed && githubTrafficSnapshotPassed && goldenPathPassed && goldenPathMatrixPassed && productBenchmarkPassed && productProofCohortPassed && sarifCoordinatesPassed && ecosystemCompatPassed && productProofReportPassed) {
   console.log('All tests pass.\n');
   console.log('Next steps:');
   console.log('  node scripts/skill-bench.js --list      see benchmark scenarios');
@@ -422,6 +425,7 @@ if (!githubTrafficSnapshotPassed) console.log('GitHub traffic snapshot tests fai
 if (!goldenPathPassed) console.log('Golden path fixture tests failed. Fix installer, setup, route, handoff, resume, failure recovery, or rollback behavior before shipping.');
 if (!goldenPathMatrixPassed) console.log('Golden path matrix tests failed. Fix real-platform aggregation, completeness, percentile, or threshold behavior before shipping.');
 if (!productBenchmarkPassed) console.log('Product benchmark tests failed. Fix scenario symmetry, runner containment, evidence, or utility-gate behavior before shipping.');
+if (!productProofCohortPassed) console.log('Product-proof cohort tests failed. Fix privacy, evidence identity, timing, comprehension, or retention gates before shipping.');
 if (!sarifCoordinatesPassed) console.log('SARIF coordinate tests failed. Fix scanner diagnostic redaction before shipping.');
 if (!ecosystemCompatPassed) console.log('Ecosystem compatibility tests failed. Fix metadata drift or external-skill compatibility before shipping.');
 if (!productProofReportPassed) console.log('Product proof report tests failed. Fix scorecard completeness or evidence claims before shipping.');

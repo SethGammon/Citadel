@@ -39,7 +39,7 @@ function main() {
   }
 
   for (const evidence of [
-    '301.2 seconds',
+    '172.5 seconds',
     '15/30',
     '47.6 MB',
     '55.1-55.5 MB',
@@ -59,6 +59,7 @@ function main() {
     'GOLDEN_PATH.md',
     'DASHBOARD_SPEC.md',
     'BENCHMARK.md',
+    'PRODUCT_PROOF_TRIAL.md',
     'benchmarks/product-proof-fixture-raw.jsonl',
     'benchmarks/product-proof-fixture-report.json',
     'INTEROPERABILITY.md',

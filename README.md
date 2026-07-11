@@ -212,6 +212,7 @@ The full plan with exit criteria lives in [docs/ROADMAP.md](docs/ROADMAP.md). Th
 - [Activation and acquisition metrics](docs/ACTIVATION_METRICS.md) - local funnel privacy, GitHub traffic history, and honest interpretation
 - [Golden path verification](docs/GOLDEN_PATH.md) - deterministic runtime fixtures, cross-OS matrix rules, and human-proof boundaries
 - [Product benchmark](docs/BENCHMARK.md) - frozen methodology, raw fixture evidence, negative results, and remaining real-run gates
+- [Independent product-proof trial](docs/PRODUCT_PROOF_TRIAL.md) - privacy-minimal recruitment, cohort, benchmark-selection, and 14-day return-use protocol
 - [Interoperability](docs/INTEROPERABILITY.md) - external skill compatibility, provenance limits, and remote registry boundaries
 - [Citadel 1.1 product-proof scorecard](docs/PRODUCT_PROOF_REPORT.md) - what is locally proven, CI-proven, human-proven, and still blocked
 - [Skill and memory visibility](docs/SKILL_MEMORY_VISIBILITY.md) - inspect available skills and compiled project memory

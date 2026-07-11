@@ -18,6 +18,7 @@
     "dashboard:visual": "node scripts/test-dashboard-visual.js",
     "benchmark:validate": "node scripts/product-benchmark.js validate",
     "benchmark:test": "node scripts/test-product-benchmark.js",
+    "cohort:report": "node scripts/product-proof-cohort.js",
     "distribution:check": "node scripts/generate-distribution-metadata.js --check",
     "ecosystem:test": "node scripts/test-ecosystem-compat.js",
     "product-proof:test": "node scripts/test-product-proof-report.js",

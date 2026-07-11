@@ -30,6 +30,10 @@ Status: **engineering foundation accepted; release milestone blocked**
 - No `v1.1.0` tag or GitHub release exists; creating either before the above gates pass
   would contradict the milestone contract.
 
+The recruitment and aggregation contract is now documented in `docs/PRODUCT_PROOF_TRIAL.md` and
+enforced by `scripts/product-proof-cohort.js`; it intentionally remains negative until public,
+independent discussion-comment evidence exists.
+
 ## Merge decision
 
 Do not merge PR #181 as a completed 1.1 milestone yet. The branch is clean and technically

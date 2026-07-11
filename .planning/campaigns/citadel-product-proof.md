@@ -111,6 +111,7 @@ Direction: Convert the seven approved phases into an Archon campaign and execute
 | phase:5 | benchmark-proof | test_result | yes | product benchmark report and raw runs | pending | 3 | complete R2 |
 | phase:5 | dashboard-contract | test_result | yes | node scripts/test-dashboard-web.js; node scripts/test-dashboard-perf.js; node scripts/test-dashboard-visual.js | pass | 3 | source-health, containment, timing, <64 MB absolute RSS, <10 MB overhead, responsive, keyboard, and reduced-motion contracts pass; pixel and human gates remain |
 | phase:5 | benchmark-contract | test_result | yes | node scripts/test-product-benchmark.js; docs/benchmarks/product-proof-fixture-report.json | pass | 3 | ten frozen symmetric scenarios and 60 reproducible fixture runs pass; utility result is honestly open and negative |
+| phase:5 | cohort-contract | test_result | yes | node scripts/test-product-proof-cohort.js; docs/PRODUCT_PROOF_TRIAL.md | pass | 3 | privacy-minimal GitHub-comment evidence, external selection ordering, timing, comprehension, and 14-day retention gates fail closed |
 | phase:6 | interoperability | test_result | yes | node scripts/test-ecosystem-compat.js | pending | 3 | run external skill fixture |
 | phase:7 | milestone-report | doc_update | yes | docs/PRODUCT_PROOF_REPORT.md | pass | 3 | tested scorecard records CI-proven foundations and blocks release claims while external gates remain |
 | phase:6 | ecosystem-contract | test_result | yes | node scripts/test-ecosystem-compat.js; node scripts/generate-distribution-metadata.js --check | pass | 3 | 7/7 local compatibility checks and canonical metadata pass; immutable Anthropic commit and byte digest verified; remote scanners and publisher profiles remain |
@@ -151,6 +152,9 @@ Direction: Convert the seven approved phases into an Archon campaign and execute
 
 - 2026-07-11T14:08:00.000Z: SethGammon claimed the ClaudePluginHub listing and the obsolete HOL profile requirement was removed.
   Reason: ClaudePluginHub now states “You own this plugin” for the personal repository and exposes management controls. HOL's old plugin URL now returns 404 because its current registry covers agents and skills; Citadel retains the passing hosted HOL plugin-scanner gate instead of claiming a nonexistent publisher surface.
+
+- 2026-07-11T14:25:00.000Z: Add a fail-closed independent cohort and benchmark-selection evidence contract before recruitment.
+  Reason: public GitHub comment URLs establish auditable independent evidence while exact-field validation prohibits prompts, paths, repository names, and personal data. Ten-user timing/comprehension and 24-hour-to-14-day return gates remain blocked until real records exist. The integrated strict suite passes in 172.5 seconds.
 
 - 2026-07-10T14:25:12.420Z: Bound the campaign to seven phases by combining dashboard and benchmark into one parallel R1/R2 phase.
   Reason: matches the approved seven-step milestone while retaining independent workstreams and gates.
