@@ -3105,17 +3105,9 @@
     // ─── Stats count-up on first screen-2 visit ────────────────────────────
     function animateStats() {
       const rows = document.querySelectorAll('.stat-num');
-      const targets = [33, 4, 14, 0]; // 0 = ~0 (special case)
+      const targets = [49, 4, 29, 2];
       rows.forEach((el, i) => {
         const target = targets[i];
-        if (target === 0) {
-          el.style.opacity = '0';
-          setTimeout(() => {
-            el.style.transition = 'opacity 0.6s';
-            el.style.opacity = '1';
-          }, i * 160 + 200);
-          return;
-        }
         el.textContent = '0';
         const delay = i * 160;
         const duration = 900;
