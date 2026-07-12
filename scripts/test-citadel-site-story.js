@@ -15,6 +15,12 @@ const checks = [
   ['fleet scenario exists', html.includes('data-story-scenario="fleet"')],
   ['evidence challenge exists', html.includes('data-story-scenario="evidence"') && html.includes('expected source absent')],
   ['deploy replay exists', html.includes('data-story-scenario="deploy"') && html.includes('waitingEvents: 59')],
+  ['proof gallery contains bounded receipts', (html.match(/class="proof-card"/g) || []).length === 6 && (html.match(/Boundary:/g) || []).length >= 6],
+  ['proof gallery links resolve from docs root', html.includes('href="GOLDEN_PATH.md"') && html.includes('href="DASHBOARD_SPEC.md"') && !html.includes('href="docs/GOLDEN_PATH.md"')],
+  ['runtime tabs treat Claude and Codex equally', html.includes('data-runtime="claude"') && html.includes('data-runtime="codex"') && html.includes('--runtime claude') && html.includes('--runtime codex')],
+  ['first verified success is explicit', html.includes('/do review README.md') && html.includes('/do next')],
+  ['keyboard arrow navigation covers tablists', html.includes("['ArrowLeft', 'ArrowRight']")],
+  ['copy controls have visible feedback', html.includes("button.textContent = 'Copied'")],
   ['repository inspector exists', html.includes('aria-label="Repository state inspector"')],
   ['playback controls exist', ['story-prev', 'story-play', 'story-next', 'story-reset'].every(id => html.includes(`id="${id}"`))],
   ['fresh session step exists', html.includes('fresh process restored')],
@@ -24,6 +30,8 @@ const checks = [
   ['mobile story layout exists', html.includes('.story-layout { grid-template-columns: 1fr; }')],
   ['experience contract names all acceptance questions', (contract.match(/^\d+\. /gm) || []).length >= 7],
   ['public story copy contains no em dash', !html.slice(html.indexOf('<section class="story-section"'), html.indexOf('<!-- Vertical tier cascade -->')).includes('—')]
+  ,['public proof and install copy contains no em dash', !html.slice(html.indexOf('<section class="proof-section"'), html.indexOf('<!-- Final CTA')).includes('—')]
+  ,['site remains under declared 250KB source budget', Buffer.byteLength(html, 'utf8') < 250 * 1024]
 ];
 
 for (const [name, pass] of checks) {

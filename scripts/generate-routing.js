@@ -117,7 +117,8 @@ function renderDemoData(table) {
     const pattern = `/\\b(${skill.keywords.map(escapeRegExp).join('|')})\\b/i`;
     const icon = DEMO_ICONS[skill.name] || DEMO_DEFAULT_ICON;
     lines.push(`  { re: ${pattern}, skill: '/${skill.name}',`);
-    lines.push(`    desc: ${JSON.stringify(skill.description)}, icon: '${icon}' },`);
+    const publicDescription = skill.description.replace(/\u2014/g, ' - ');
+    lines.push(`    desc: ${JSON.stringify(publicDescription)}, icon: '${icon}' },`);
   }
   lines.push('];');
   return lines;

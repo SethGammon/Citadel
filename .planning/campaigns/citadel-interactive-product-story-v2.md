@@ -2,7 +2,7 @@
 slug: citadel-interactive-product-story-v2
 status: active
 phase_count: 6
-current_phase: 1
+current_phase: 6
 created: 2026-07-12
 ---
 
@@ -18,8 +18,8 @@ Direction: Transform Seth Gammon's GitHub profile and the Citadel public site in
 | 2 | complete | plan | Interactive story architecture | experience contract defines the full journey, content hierarchy, state model, responsive behavior, and motion grammar | 3 |
 | 3 | complete | build | Operating journey and repository memory | a visitor can route a scenario, inspect persisted state, close a session, and restore the next action | 3 |
 | 4 | complete | build | Fleet, evidence challenge, and deploy replay | interactive fleet, missing-source challenge, and 15-PR replay run from deterministic source data | 3 |
-| 5 | in-progress | build | Proof gallery, installation, branding, and accessibility | proof receipts, Claude/Codex paths, mobile layout, keyboard operation, and reduced motion all render correctly | 3 |
-| 6 | pending | verify | Regression, visual QA, delivery, and deployment | strict suite passes, desktop/mobile screenshots pass review, protected PR merges, and live Pages matches the verified build | 3 |
+| 5 | complete | build | Proof gallery, installation, branding, and accessibility | proof receipts, Claude/Codex paths, mobile layout, keyboard operation, and reduced motion all render correctly | 3 |
+| 6 | in-progress | verify | Regression, visual QA, delivery, and deployment | strict suite passes, desktop/mobile screenshots pass review, protected PR merges, and live Pages matches the verified build | 3 |
 
 ## Phase End Conditions
 
@@ -60,16 +60,18 @@ Direction: Transform Seth Gammon's GitHub profile and the Citadel public site in
 
 ## Active Context
 
-Phase 5 is active. GitHub's explicit Share to Profile control was activated and the visual creator README, evidence table, bio, website, LinkedIn, X, and Reddit all render on the Overview page. The site now has campaign, review, fleet, evidence challenge, and 15-PR landing scenarios using one deterministic state engine. Desktop, mobile viewport, routing-sync, contract, and browser interaction checks pass.
+Phase 6 is active. GitHub's explicit Share to Profile control was activated and the visual creator README, evidence table, bio, website, LinkedIn, X, and Reddit all render on the Overview page. The site now has campaign, review, fleet, evidence challenge, and 15-PR landing scenarios using one deterministic state engine, plus six bounded proof receipts and equal Claude Code and Codex installation paths. Desktop, mobile, keyboard, reduced-motion, routing-sync, contract, and browser interaction checks pass.
 
 ## Continuation State
 
-- current: phase 5, proof gallery, installation, branding, and accessibility
-- next: connect the proof gallery and runtime-specific install flow to the story engine, verify keyboard and reduced-motion states, then run the strict regression gate
-- verified: `npm run site:story:test` 15/15; `node scripts/test-routing-sync.js`; desktop, mobile, and deploy captures; campaign, fleet, evidence, and deploy browser interaction checks
+- current: phase 6, regression, visual QA, delivery, and deployment
+- next: run the strict regression and reproducible release gates, deliver through a protected PR, then verify GitHub Pages
+- verified: `npm run site:story:test` 23/23; `node scripts/test-routing-sync.js`; desktop and mobile proof/install captures; keyboard, reduced-motion, campaign, fleet, evidence, and deploy browser interaction checks
 - profile: visual README, evidence table, LinkedIn, X, Reddit, bio, and website visibly mounted on the public Overview page
 - protected local state: `.planning/campaigns/citadel-product-proof.md`, `assets/social/`, and `dist/` remain outside campaign scope
 
 <!-- session-end: 2026-07-12T19:51:17.547Z -->
 
 <!-- session-end: 2026-07-12T20:19:15.162Z -->
+
+<!-- session-end: 2026-07-12T20:20:25.755Z -->

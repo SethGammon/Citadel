@@ -1053,6 +1053,22 @@
     }
     .campaign-cta a:hover { border-color: var(--cyan); }
 
+    /* Proof receipt gallery */
+    .proof-section { width: 100%; padding: 64px 32px; background: color-mix(in srgb, var(--surface) 68%, var(--bg)); border-top: 1px solid var(--border); }
+    .proof-inner { max-width: 1080px; margin: 0 auto; }
+    .proof-heading { display: flex; justify-content: space-between; align-items: end; gap: 32px; margin-bottom: 28px; }
+    .proof-heading h2 { font-size: 28px; margin-bottom: 8px; }
+    .proof-heading p { color: var(--muted); max-width: 620px; line-height: 1.65; }
+    .proof-rule { color: var(--green); font: 700 11px 'SF Mono', Consolas, monospace; white-space: nowrap; }
+    .proof-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+    .proof-card { display: flex; flex-direction: column; min-height: 252px; padding: 20px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); }
+    .proof-card-kind { color: var(--dim); font: 700 10px 'SF Mono', Consolas, monospace; letter-spacing: 1.5px; text-transform: uppercase; }
+    .proof-card-result { margin: 18px 0 10px; color: var(--text); font-size: 25px; font-weight: 750; letter-spacing: -.4px; }
+    .proof-card-claim { color: var(--muted); font-size: 13px; line-height: 1.6; }
+    .proof-card-boundary { margin-top: auto; padding-top: 18px; color: var(--dim); font: 10px/1.55 'SF Mono', Consolas, monospace; }
+    .proof-card a { display: inline-block; margin-top: 13px; color: var(--cyan); font-size: 12px; text-decoration: none; }
+    .proof-card a:hover { text-decoration: underline; }
+
     /* ─── Inline install section ─── */
     .install-section {
       width: 100%; background: var(--bg);
@@ -1082,7 +1098,8 @@
     .install-code {
       font-family: 'SF Mono', monospace; font-size: 12px;
       background: var(--surface); border: 1px solid var(--border);
-      border-radius: 8px; padding: 10px 14px; color: var(--cyan); word-break: break-all;
+      border-radius: 8px; padding: 10px 14px; color: var(--cyan);
+      overflow-x: auto; white-space: nowrap; scrollbar-width: thin;
     }
     .install-guide-link {
       display: block; text-align: right;
@@ -1090,6 +1107,14 @@
       margin-top: 16px; transition: color 0.15s;
     }
     .install-guide-link:hover { color: var(--cyan); }
+    .runtime-tabs { display: flex; gap: 8px; margin-bottom: 18px; }
+    .runtime-tab { min-height: 44px; flex: 1; padding: 10px 14px; border: 1px solid var(--border); border-radius: 6px; background: var(--surface); color: var(--muted); font: 700 12px 'SF Mono', Consolas, monospace; cursor: pointer; }
+    .runtime-tab[aria-selected="true"] { color: var(--cyan); border-color: var(--cyan); background: color-mix(in srgb, var(--cyan) 7%, var(--surface)); }
+    .runtime-path[hidden] { display: none; }
+    .install-code-row { display: grid; grid-template-columns: 1fr auto; gap: 8px; }
+    .install-copy { min-width: 68px; border: 1px solid var(--border); border-radius: 6px; background: var(--surface-2); color: var(--muted); font: 700 11px 'SF Mono', Consolas, monospace; cursor: pointer; }
+    .install-copy:hover { border-color: var(--cyan); color: var(--cyan); }
+    .install-success { margin-top: 20px; padding: 14px 16px; border-left: 2px solid var(--green); background: color-mix(in srgb, var(--green) 6%, var(--surface)); color: var(--muted); font-size: 12px; line-height: 1.65; }
 
     /* ─── Screen 2 scrollable ─── */
     .screen-2 { overflow-y: auto; scrollbar-width: none; }
@@ -1201,6 +1226,10 @@
       .story-inspector { border-left: 0; border-top: 1px solid var(--border); }
       .story-file-tabs { flex-direction: row; overflow-x: auto; }
       .story-file-tab { width: auto; }
+      .proof-section { padding: 44px 14px; }
+      .proof-heading { display: block; }
+      .proof-rule { display: block; margin-top: 12px; }
+      .proof-grid { grid-template-columns: 1fr; }
       nav { padding: 12px 20px; gap: 12px; }
       .hero { padding: 40px 20px 16px; }
       .hero h1 { font-size: 32px; }
@@ -1320,6 +1349,8 @@
       .gen-btn { animation: none !important; }
       .live-dot { animation: none !important; }
       .cascade-connector-line, .cascade-connector-chevron { animation: none !important; opacity: 0.5 !important; }
+      .story-progress-bar, .story-scenario, .story-control, .story-file-tab,
+      .runtime-tab, .proof-card, .install-copy { animation: none !important; transition: none !important; }
     }
   </style>
 </head>
@@ -1786,6 +1817,62 @@
     </div>
   </div>
 
+  <section class="proof-section" id="proof">
+    <div class="proof-inner">
+      <div class="proof-heading">
+        <div>
+          <h2>Proof receipts, not confidence theater</h2>
+          <p>Every result names what happened, where to inspect it, and what the evidence does not prove.</p>
+        </div>
+        <span class="proof-rule">missing source → unknown</span>
+      </div>
+      <div class="proof-grid">
+        <article class="proof-card">
+          <div class="proof-card-kind">Mainline coordination</div>
+          <div class="proof-card-result">15 / 15 landed</div>
+          <p class="proof-card-claim">Fifteen PRs merged and deployed through one serialized steward lane.</p>
+          <div class="proof-card-boundary">Boundary: controlled public stress test, not a customer production deployment.</div>
+          <a href="https://github.com/SethGammon/agents-md-deploy-steward-proof">Inspect public repository →</a>
+        </article>
+        <article class="proof-card">
+          <div class="proof-card-kind">Operating journey</div>
+          <div class="proof-card-result">30 / 30 passed</div>
+          <p class="proof-card-claim">Claude Code and Codex completed install, route, verify, handoff, resume, and rollback across three operating systems.</p>
+          <div class="proof-card-boundary">Boundary: deterministic fixtures, not thirty human sessions.</div>
+          <a href="GOLDEN_PATH.md">Inspect matrix contract →</a>
+        </article>
+        <article class="proof-card">
+          <div class="proof-card-kind">Evidence integrity</div>
+          <div class="proof-card-result">UNKNOWN stays visible</div>
+          <p class="proof-card-claim">Removing an expected telemetry source changes the status instead of manufacturing a pass.</p>
+          <div class="proof-card-boundary">Boundary: controlled source-health demonstration.</div>
+          <a href="DASHBOARD_SPEC.md">Inspect evidence contract →</a>
+        </article>
+        <article class="proof-card">
+          <div class="proof-card-kind">Fresh-process continuity</div>
+          <div class="proof-card-result">State survives chat</div>
+          <p class="proof-card-claim">Campaign direction, evidence, decisions, and next action reload from repository files.</p>
+          <div class="proof-card-boundary">Boundary: file-backed state cannot replace missing project-specific judgment.</div>
+          <a href="CAMPAIGNS.md">Inspect campaign contract →</a>
+        </article>
+        <article class="proof-card">
+          <div class="proof-card-kind">Release integrity</div>
+          <div class="proof-card-result">v1.1.0 reproducible</div>
+          <p class="proof-card-claim">The release includes an archive, file manifest, SHA-256 sidecar, update plan, and rollback path.</p>
+          <div class="proof-card-boundary">Boundary: integrity proves artifact identity, not universal compatibility.</div>
+          <a href="https://github.com/SethGammon/Citadel/releases/tag/v1.1.0">Inspect release →</a>
+        </article>
+        <article class="proof-card">
+          <div class="proof-card-kind">Acquisition</div>
+          <div class="proof-card-result">107 unique cloners</div>
+          <p class="proof-card-claim">GitHub recorded 107 unique cloners during the July 11 surge.</p>
+          <div class="proof-card-boundary">Boundary: clone activity is not installation, successful setup, or retention.</div>
+          <a href="ACTIVATION_METRICS.md">Inspect measurement rules →</a>
+        </article>
+      </div>
+    </div>
+  </section>
+
   <!-- Stats bar -->
   <div class="stat-bar">
     <div class="stat">
@@ -1804,9 +1891,9 @@
       <div class="stat-caption">automatic quality gates without agent intervention</div>
     </div>
     <div class="stat">
-      <div class="stat-num">~0</div>
-      <div class="stat-label">Config Required</div>
-      <div class="stat-caption">works on any repo, any language</div>
+      <div class="stat-num">2</div>
+      <div class="stat-label">Runtime Surfaces</div>
+      <div class="stat-caption">the same operating journey for Claude Code and OpenAI Codex</div>
     </div>
   </div>
 
@@ -1818,29 +1905,23 @@
         <p>Install for Claude Code or OpenAI Codex.<br>Citadel detects the runtime and prepares the current git repository.</p>
       </div>
       <div class="install-right">
-        <div class="install-steps">
-          <div class="install-step">
-            <div class="install-step-num">1</div>
-            <div class="install-step-body">
-              <div class="install-step-label">Choose your runtime</div>
-              <div class="install-code">Claude Code or OpenAI Codex</div>
-            </div>
-          </div>
-          <div class="install-step">
-            <div class="install-step-num">2</div>
-            <div class="install-step-body">
-              <div class="install-step-label">Install Citadel from the repository</div>
-              <div class="install-code">Use the runtime-specific installer in INSTALL.md</div>
-            </div>
-          </div>
-          <div class="install-step">
-            <div class="install-step-num">3</div>
-            <div class="install-step-body">
-              <div class="install-step-label">Prepare the current project</div>
-              <div class="install-code">/do setup --express</div>
-            </div>
+        <div class="runtime-tabs" role="tablist" aria-label="Choose your coding agent runtime">
+          <button class="runtime-tab" role="tab" aria-selected="true" data-runtime="claude">Claude Code</button>
+          <button class="runtime-tab" role="tab" aria-selected="false" data-runtime="codex">OpenAI Codex</button>
+        </div>
+        <div class="runtime-path" data-runtime-path="claude">
+          <div class="install-steps">
+            <div class="install-step"><div class="install-step-num">1</div><div class="install-step-body"><div class="install-step-label">From the target project root</div><div class="install-code-row"><div class="install-code">node ~/Citadel/scripts/install.js --runtime claude --install --scope local</div><button class="install-copy" data-copy="node ~/Citadel/scripts/install.js --runtime claude --install --scope local">Copy</button></div></div></div>
+            <div class="install-step"><div class="install-step-num">2</div><div class="install-step-body"><div class="install-step-label">Start the fresh session requested by the installer</div><div class="install-code">/do setup --express</div></div></div>
           </div>
         </div>
+        <div class="runtime-path" data-runtime-path="codex" hidden>
+          <div class="install-steps">
+            <div class="install-step"><div class="install-step-num">1</div><div class="install-step-body"><div class="install-step-label">From the target project root</div><div class="install-code-row"><div class="install-code">node ~/Citadel/scripts/install.js --runtime codex --add-marketplace</div><button class="install-copy" data-copy="node ~/Citadel/scripts/install.js --runtime codex --add-marketplace">Copy</button></div></div></div>
+            <div class="install-step"><div class="install-step-num">2</div><div class="install-step-body"><div class="install-step-label">Enable the plugin, start a fresh task, then prepare the project</div><div class="install-code">/do setup --express</div></div></div>
+          </div>
+        </div>
+        <div class="install-success"><strong>First verified success:</strong> run <code>/do review README.md</code>, inspect the route and handoff, then close the session and run <code>/do next</code> in a fresh one.</div>
         <a class="install-guide-link" href="#" onclick="openPanel('install'); return false;">Full install guide →</a>
       </div>
     </div>
@@ -2156,6 +2237,26 @@
       document.getElementById('story-next').addEventListener('click', () => { storyStop(); storyIndex = Math.min(storyScenarios[storyScenario].length - 1, storyIndex + 1); storySelectedFile = null; storyRender(); });
       document.getElementById('story-reset').addEventListener('click', () => { storyStop(); storyIndex = 0; storySelectedFile = null; storyRender(); });
       document.getElementById('story-play').addEventListener('click', storyPlay);
+      document.querySelectorAll('[data-runtime]').forEach(tab => tab.addEventListener('click', () => {
+        const runtime = tab.dataset.runtime;
+        document.querySelectorAll('[data-runtime]').forEach(item => item.setAttribute('aria-selected', String(item === tab)));
+        document.querySelectorAll('[data-runtime-path]').forEach(path => { path.hidden = path.dataset.runtimePath !== runtime; });
+      }));
+      document.querySelectorAll('.runtime-tabs, .story-scenarios').forEach(tablist => tablist.addEventListener('keydown', event => {
+        if (!['ArrowLeft', 'ArrowRight'].includes(event.key)) return;
+        const tabs = Array.from(tablist.querySelectorAll('[role="tab"]'));
+        const current = Math.max(0, tabs.indexOf(document.activeElement));
+        const next = event.key === 'ArrowRight' ? (current + 1) % tabs.length : (current - 1 + tabs.length) % tabs.length;
+        event.preventDefault();
+        tabs[next].focus();
+        tabs[next].click();
+      }));
+      document.querySelectorAll('[data-copy]').forEach(button => button.addEventListener('click', async () => {
+        await navigator.clipboard.writeText(button.dataset.copy);
+        const previous = button.textContent;
+        button.textContent = 'Copied';
+        setTimeout(() => { button.textContent = previous; }, 1400);
+      }));
       storyRender();
     });
 
@@ -2177,7 +2278,7 @@
       { re: /\b(architect|architecture|design the system|file structure|plan the build)\b/i, skill: '/architect',
         desc: "Given a PRD, produces an implementation architecture: file tree, component breakdown, data model, and a phased build plan with end conditions that Archon can execute directly. Multi-candidate evaluation for key decisions.", icon: '🏗' },
       { re: /\b(ascii diagram|ascii art|box diagram|architecture diagram|flow diagram|sequence diagram|draw a diagram|text diagram)\b/i, skill: '/ascii-diagram',
-        desc: "Generate perfectly aligned ASCII diagrams — architecture, flow, sequence, box-and-arrow. Uses a programmatic character-grid approach so alignment is guaranteed by math, not token prediction. Includes post-render verification.", icon: '◇' },
+        desc: "Generate perfectly aligned ASCII diagrams  -  architecture, flow, sequence, box-and-arrow. Uses a programmatic character-grid approach so alignment is guaranteed by math, not token prediction. Includes post-render verification.", icon: '◇' },
       { re: /\b(intake|process pending|pipeline)\b/i, skill: '/autopilot',
         desc: "Intake-to-delivery pipeline. Processes pending items from .planning/intake/: briefs new ideas, executes approved work through research → plan → build → verify. Drop a file in .planning/intake/ and invoke this skill.", icon: '◇' },
       { re: /\b(cost|costs|cost breakdown|campaign cost|token usage|burn rate|model breakdown)\b/i, skill: '/cost',
@@ -2189,7 +2290,7 @@
       { re: /\b(dashboard|what's happening|what's going on|show activity|harness state|show me status)\b/i, skill: '/dashboard',
         desc: "Real-time harness observability dashboard. Reads campaigns, fleet sessions, telemetry, and pending queues to present a snapshot of harness state at a glance. Invoked by /dashboard, /do status, or phrases like \"what's happening\" and \"show activity\".", icon: '◇' },
       { re: /\b(decision map|plan this out|figure this out|investigation plan|planning map)\b/i, skill: '/decision-map',
-        desc: "Turn a loose idea into a git-tracked, session-resumable map of typed investigation tickets, then drive them to resolution one at a time. The planning-loop engine for work that is still being figured out — too fuzzy for a campaign, too big for a single intake item. Resolved tickets graduate into .planning/intake/ for the autopilot to build.", icon: '◇' },
+        desc: "Turn a loose idea into a git-tracked, session-resumable map of typed investigation tickets, then drive them to resolution one at a time. The planning-loop engine for work that is still being figured out  -  too fuzzy for a campaign, too big for a single intake item. Resolved tickets graduate into .planning/intake/ for the autopilot to build.", icon: '◇' },
       { re: /\b(deploy steward|deploy queue|merge steward|mainline steward|land prs|land PRs|deploy prs|deploy PRs|merge queue|release train)\b/i, skill: '/deploy-steward',
         desc: "Mainline deploy steward. Consumes ready PRs, owns a lease on mainline landing, refreshes PR state, updates stale branches, waits for CI and deploy gates, merges or queues one candidate at a time, and opens repair tasks for failures.", icon: '◇' },
       { re: /\b(design|style guide|design manifest|visual consistency)\b/i, skill: '/design',
@@ -2205,7 +2306,7 @@
       { re: /\b(houseclean|house clean|disk space|free space|c drive full|drive full|running out of space|clean up disk|orphaned worktrees|clean worktrees|disk audit|storage audit|move to another drive|free up space)\b/i, skill: '/houseclean',
         desc: "Cross-drive storage audit and cleanup. Surveys all drives, finds orphaned git worktrees, large AI tool caches (.ollama, .gemini, .cursor, npm, pip), and buildable artifacts (node_modules, .venv). Produces a prioritized action plan with specific migration commands. Use when disk space is low or worktrees need cleanup; do NOT use for project structure issues (use /organize instead).", icon: '◇' },
       { re: /\b(improve|improvement loop|quality loop|rubric|score against|run improvement|improve citadel)\b/i, skill: '/improve',
-        desc: "Autonomous quality improvement loop. Scores a target against a rubric, selects the highest-leverage axis, attacks it, verifies, documents, and loops. No pre-planning between iterations — each loop re-scores from scratch.", icon: '◇' },
+        desc: "Autonomous quality improvement loop. Scores a target against a rubric, selects the highest-leverage axis, attacks it, verifies, documents, and loops. No pre-planning between iterations  -  each loop re-scores from scratch.", icon: '◇' },
       { re: /\b(infra|infrastructure|what databases|what systems|docker-compose|infra audit|map infrastructure|what does this connect to)\b/i, skill: '/infra-audit',
         desc: "Reads docker-compose, env files, ORM configs, and connection strings to map current infrastructure. Flags missing layers (cache, queue, analytics) based on observed access patterns. Outputs a structured infrastructure manifest.", icon: '◇' },
       { re: /\b(learn|extract patterns|learn from that|save what worked|patterns from campaign)\b/i, skill: '/learn',
@@ -2233,7 +2334,7 @@
       { re: /\b(research|investigate|look into|find out|research fleet|parallel research|multi-angle research|compare options)\b/i, skill: '/research',
         desc: "Focused research investigations. Converts questions into structured findings with confidence levels and source citations. Single agent by default; with --parallel (or when the question decomposes into 3+ independent angles) it spawns scout agents whose findings are compressed into a unified brief. Does not make decisions; produces information that informs the next step.", icon: '⌕' },
       { re: /\b(\/review|code review|review this|review PR|review)\b/i, skill: '/review',
-        desc: "5-pass structured code review — correctness, security, performance, readability, consistency", icon: '◆' },
+        desc: "5-pass structured code review  -  correctness, security, performance, readability, consistency", icon: '◆' },
       { re: /\b(scaffold|generate component|generate module|generate service|new component|new module|new route|new service|create component|stub out|bootstrap)\b/i, skill: '/scaffold',
         desc: "Project-aware file generation. Reads existing codebase conventions (naming, structure, imports, exports, test patterns) then generates new files that match exactly. Wires generated files into the project's registration points.", icon: '⬡' },
       { re: /\b(schedule|recurring|every N minutes|cron|set a reminder|run periodically)\b/i, skill: '/schedule',
@@ -2247,7 +2348,7 @@
       { re: /\b(telemetry|what did this cost|session cost|how much did that cost|how much have I spent|what hooks fired|trust level|show me telemetry|spending|session stats|what telemetry|verify audit|audit integrity|check audit|tampered records)\b/i, skill: '/telemetry',
         desc: "Unified telemetry hub. Shows current session cost, today's spend, all-time totals, hook activity, trust level, and a directory of every telemetry command available. Also the control surface to toggle telemetry on/off and tune thresholds. Single entry point for anyone asking \"what does this cost\" or \"what telemetry does Citadel have\".", icon: '◇' },
       { re: /\b(\/test-gen|generate tests|write tests|add tests|test)\b/i, skill: '/test-gen',
-        desc: "Generate and verify tests — happy path, edge cases, error paths — using the project's own framework and patterns", icon: '⚗' },
+        desc: "Generate and verify tests  -  happy path, edge cases, error paths  -  using the project's own framework and patterns", icon: '⚗' },
       { re: /\b(triage|open issues|unlabeled issues|review pr|review prs|investigate issue)\b/i, skill: '/triage',
         desc: "GitHub issue and PR investigator. Pulls open issues/PRs, classifies them, searches the codebase for root cause or reviews contributed code, proposes fixes with file:line references, and optionally implements fixes. Use for investigating GitHub issues and reviewing PRs; do NOT use for general code review unrelated to GitHub issues.", icon: '📌' },
       { re: /\b(unharness|remove citadel|uninstall citadel|clean up citadel|remove harness|uninstall harness)\b/i, skill: '/unharness',
@@ -3063,7 +3164,7 @@
 
     // ─── Copy-to-clipboard for code blocks ────────────────────────────────
     (function initCopyButtons() {
-      document.querySelectorAll('.install-code, .panel-code').forEach(block => {
+      document.querySelectorAll('.install-code:not(.install-code-row .install-code), .panel-code').forEach(block => {
         const wrap = document.createElement('div');
         wrap.style.cssText = 'position:relative;display:block';
         block.parentNode.insertBefore(wrap, block);
