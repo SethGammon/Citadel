@@ -867,6 +867,48 @@
       max-width: 160px; margin-left: auto; margin-right: auto;
     }
 
+    /* Interactive operating journey */
+    .story-section { max-width: 1180px; margin: 0 auto; padding: 54px 32px 26px; }
+    .story-heading { display: flex; align-items: end; justify-content: space-between; gap: 24px; margin-bottom: 24px; }
+    .story-heading h2 { font-size: 30px; letter-spacing: -0.6px; }
+    .story-heading p { max-width: 610px; color: var(--muted); line-height: 1.65; }
+    .story-shell { border: 1px solid var(--border); border-radius: 16px; overflow: hidden; background: var(--surface); box-shadow: 0 24px 80px rgba(0,0,0,.24); }
+    .story-toolbar { display: flex; align-items: center; gap: 10px; padding: 14px 16px; border-bottom: 1px solid var(--border); background: var(--surface-2); }
+    .story-scenarios { display: flex; gap: 7px; min-width: 0; overflow-x: auto; scrollbar-width: none; }
+    .story-scenario, .story-control, .story-file-tab { min-height: 40px; border: 1px solid var(--border); border-radius: 6px; padding: 9px 12px; background: var(--surface); color: var(--muted); font: 700 11px 'SF Mono', Consolas, monospace; cursor: pointer; white-space: nowrap; transition: border-color .16s, color .16s, background .16s; }
+    .story-scenario:hover, .story-control:hover, .story-file-tab:hover { border-color: var(--cyan); color: var(--text); }
+    .story-scenario[aria-selected="true"] { border-color: var(--cyan); color: var(--cyan); background: color-mix(in srgb, var(--cyan) 8%, var(--surface)); }
+    .story-controls { margin-left: auto; display: flex; gap: 6px; }
+    .story-control { width: 40px; padding: 0; font-size: 15px; }
+    .story-control.primary { width: auto; padding: 0 14px; color: var(--cyan); border-color: color-mix(in srgb, var(--cyan) 50%, var(--border)); }
+    .story-layout { display: grid; grid-template-columns: 230px minmax(0,1fr) 330px; min-height: 470px; }
+    .story-timeline { border-right: 1px solid var(--border); padding: 22px 16px; background: color-mix(in srgb, var(--surface-2) 60%, var(--surface)); }
+    .story-timeline-label, .story-inspector-label { color: var(--dim); font: 700 10px 'SF Mono', Consolas, monospace; letter-spacing: 1.8px; text-transform: uppercase; margin-bottom: 14px; }
+    .story-step { display: grid; grid-template-columns: 22px 1fr; gap: 9px; position: relative; padding: 8px 0; color: var(--dim); }
+    .story-step::after { content: ''; position: absolute; left: 10px; top: 31px; bottom: -7px; width: 1px; background: var(--border); }
+    .story-step:last-child::after { display: none; }
+    .story-step-dot { width: 21px; height: 21px; border: 1px solid var(--border); border-radius: 50%; display: grid; place-items: center; font: 700 9px 'SF Mono', monospace; background: var(--surface); z-index: 1; }
+    .story-step-name { font-size: 12px; font-weight: 650; line-height: 1.45; padding-top: 2px; }
+    .story-step.complete { color: var(--muted); }
+    .story-step.complete .story-step-dot { border-color: var(--green); color: var(--green); }
+    .story-step.active { color: var(--text); }
+    .story-step.active .story-step-dot { border-color: var(--cyan); color: var(--cyan); box-shadow: 0 0 18px color-mix(in srgb, var(--cyan) 30%, transparent); }
+    .story-stage { padding: 34px 36px; display: flex; flex-direction: column; min-width: 0; }
+    .story-status { display: inline-flex; align-items: center; gap: 8px; width: fit-content; padding: 5px 10px; border: 1px solid var(--border); border-radius: 20px; color: var(--cyan); font: 700 10px 'SF Mono', Consolas, monospace; letter-spacing: 1px; text-transform: uppercase; }
+    .story-status::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+    .story-stage h3 { font-size: 29px; line-height: 1.2; margin: 22px 0 12px; letter-spacing: -.4px; }
+    .story-stage-copy { color: var(--muted); line-height: 1.7; max-width: 620px; }
+    .story-command { margin-top: 26px; border: 1px solid var(--border); border-radius: 8px; background: var(--bg); padding: 18px 20px; color: var(--text); font: 14px/1.65 'SF Mono', Consolas, monospace; min-height: 118px; white-space: pre-wrap; }
+    .story-source { margin-top: auto; padding-top: 22px; color: var(--dim); font: 11px/1.5 'SF Mono', Consolas, monospace; }
+    .story-source a { color: var(--cyan); text-decoration: none; }
+    .story-inspector { border-left: 1px solid var(--border); padding: 22px 18px; min-width: 0; background: var(--bg); }
+    .story-file-tabs { display: flex; flex-direction: column; gap: 6px; }
+    .story-file-tab { width: 100%; text-align: left; overflow: hidden; text-overflow: ellipsis; }
+    .story-file-tab[aria-selected="true"] { color: var(--green); border-color: color-mix(in srgb, var(--green) 45%, var(--border)); }
+    .story-file { margin-top: 16px; padding: 16px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); min-height: 220px; color: var(--muted); font: 11px/1.65 'SF Mono', Consolas, monospace; white-space: pre-wrap; overflow: hidden; }
+    .story-progress { height: 3px; background: var(--border); }
+    .story-progress-bar { height: 100%; width: 0; background: var(--cyan); transition: width .28s ease; }
+
     /* ─── Cascade section (replaces how-section 2×2 grid) ─── */
     .cascade-section {
       width: 100%; max-width: 700px;
@@ -1142,6 +1184,23 @@
 
     /* ─── Responsive ─── */
     @media (max-width: 760px) {
+      .story-section { padding: 34px 14px 18px; }
+      .story-heading { display: block; }
+      .story-heading p { margin-top: 10px; }
+      .story-toolbar { align-items: stretch; flex-direction: column; }
+      .story-scenarios { padding-right: 34px; scroll-snap-type: x proximity; mask-image: linear-gradient(90deg, #000 0, #000 calc(100% - 34px), transparent 100%); }
+      .story-scenario { scroll-snap-align: start; }
+      .story-controls { margin-left: 0; }
+      .story-layout { grid-template-columns: 1fr; }
+      .story-timeline { border-right: 0; border-bottom: 1px solid var(--border); display: flex; gap: 12px; overflow-x: auto; padding-right: 42px; scroll-snap-type: x proximity; mask-image: linear-gradient(90deg, #000 0, #000 calc(100% - 38px), transparent 100%); }
+      .story-timeline-label { display: none; }
+      .story-step { min-width: 118px; grid-template-columns: 20px 1fr; scroll-snap-align: start; }
+      .story-step::after { display: none; }
+      .story-stage { padding: 26px 20px; min-height: 390px; }
+      .story-stage h3 { font-size: 24px; }
+      .story-inspector { border-left: 0; border-top: 1px solid var(--border); }
+      .story-file-tabs { flex-direction: row; overflow-x: auto; }
+      .story-file-tab { width: auto; }
       nav { padding: 12px 20px; gap: 12px; }
       .hero { padding: 40px 20px 16px; }
       .hero h1 { font-size: 32px; }
@@ -1470,6 +1529,46 @@
   </div><!-- /screen-1 -->
 
   <div class="screen-2" id="screen-2">
+
+  <section class="story-section" id="product-story" aria-labelledby="story-title">
+    <div class="story-heading">
+      <div><h2 id="story-title">Operate a real Citadel journey</h2></div>
+      <p>Choose a task, step through the operating loop, and inspect the repository state that survives after the conversation ends.</p>
+    </div>
+    <div class="story-shell">
+      <div class="story-toolbar">
+        <div class="story-scenarios" role="tablist" aria-label="Citadel journey scenarios">
+          <button class="story-scenario" role="tab" aria-selected="true" data-story-scenario="campaign">Persistent feature</button>
+          <button class="story-scenario" role="tab" aria-selected="false" data-story-scenario="review">Focused review</button>
+          <button class="story-scenario" role="tab" aria-selected="false" data-story-scenario="fleet">Fleet migration</button>
+          <button class="story-scenario" role="tab" aria-selected="false" data-story-scenario="evidence">Evidence challenge</button>
+          <button class="story-scenario" role="tab" aria-selected="false" data-story-scenario="deploy">15-PR landing</button>
+        </div>
+        <div class="story-controls" aria-label="Journey playback controls">
+          <button class="story-control" id="story-prev" aria-label="Previous step">←</button>
+          <button class="story-control primary" id="story-play">Play</button>
+          <button class="story-control" id="story-next" aria-label="Next step">→</button>
+          <button class="story-control" id="story-reset" aria-label="Reset journey">↺</button>
+        </div>
+      </div>
+      <div class="story-progress"><div class="story-progress-bar" id="story-progress-bar"></div></div>
+      <div class="story-layout">
+        <aside class="story-timeline" id="story-timeline" aria-label="Journey steps"></aside>
+        <div class="story-stage" aria-live="polite">
+          <div class="story-status" id="story-status">Ready</div>
+          <h3 id="story-stage-title">A persistent feature enters through one command</h3>
+          <p class="story-stage-copy" id="story-stage-copy">Citadel begins with the request, not a manually selected orchestrator.</p>
+          <div class="story-command" id="story-command">/do rework authentication across the application</div>
+          <div class="story-source" id="story-source"></div>
+        </div>
+        <aside class="story-inspector" aria-label="Repository state inspector">
+          <div class="story-inspector-label">Repository state</div>
+          <div class="story-file-tabs" id="story-file-tabs" role="tablist" aria-label="Repository files"></div>
+          <div class="story-file" id="story-file" role="tabpanel"></div>
+        </aside>
+      </div>
+    </div>
+  </section>
 
   <!-- Vertical tier cascade -->
   <div class="cascade-section">
@@ -1959,6 +2058,107 @@
   </button>
 
   <script>
+    const storyScenarios = {
+      campaign: [
+        ['Request','request received','A persistent feature enters through one command','Citadel begins with the request, not a manually selected orchestrator.','/do rework authentication across the application','Input is local to this deterministic demo.',{'request.txt':'rework authentication across the application'}],
+        ['Route','tier 3 selected','Cheap routes miss, so complexity earns a campaign','Pattern, active-state, and keyword checks do not resolve the request. Tier 3 selects Archon because the work spans files and sessions.','Tier 0  no pattern match\nTier 1  no active campaign\nTier 2  no registered skill match\nTier 3  → Archon','The route mirrors Citadel’s published tier contract.',{'routing.json':'{\n  "scope": "application",\n  "complexity": 4,\n  "persistence": true,\n  "route": "archon"\n}'}],
+        ['Contract','state written','The work becomes a repository contract','Direction, phases, end conditions, decisions, and the next action are written before long-running work advances.','Created .planning/campaigns/auth-overhaul.md\nPhase 1: map boundary\nPhase 2: implement rotation\nPhase 3: verify security\nPhase 4: package handoff','Campaign contract: docs/CAMPAIGNS.md', {'.planning/campaigns/auth-overhaul.md':'status: active\ncurrent_phase: 2\n\n✓ map current auth boundary\n→ implement token rotation\n○ verify security\n○ package handoff','.planning/discoveries/auth-boundary.md':'Decision: keep the old session path available until verification passes.'}],
+        ['Verify','evidence recorded','Completion requires evidence, not confidence','Tests and source health update the contract. A missing source remains unknown instead of becoming a pass.','rotation-tests     PASS\nboundary-map       PASS\nexternal-review    BLOCKED\nproduction-source  UNKNOWN','Evidence contract: docs/DASHBOARD_SPEC.md',{'.planning/campaigns/auth-overhaul.md':'rotation-tests: pass\nboundary-map: pass\nexternal-review: blocked\nproduction-telemetry: unknown'}],
+        ['Close','conversation closed','The conversation ends. The contract remains.','Chat context disappears. Campaign state, decisions, evidence, and the next action remain in repository files.','SESSION A CLOSED\n\nChat context: discarded\nRepository state: preserved','Deterministic representation of file-backed campaign state.',{'.planning/handoffs/latest.md':'Completed: token rotation implementation\nNext: independent security verification\nRisk: old session path must remain available'}],
+        ['Resume','fresh process restored','A fresh session knows what comes next','The next agent reads the active campaign and restores the next useful action without relying on the previous conversation.','FRESH SESSION\n\n/do next\n→ Resume auth-overhaul\n→ Next: independent security verification','Operating-loop proof: docs/OPERATING_LOOP_PROOF.md',{'.planning/campaigns/auth-overhaul.md':'status: active\ncurrent_phase: 3\nnext_action: independent security verification','.planning/handoffs/latest.md':'The next session continues from this file-backed handoff.'}]
+      ],
+      review: [
+        ['Request','request received','A focused review stays focused','The request names a known workflow and does not need campaign machinery.','/do review the authentication module','Local deterministic route preview.',{'request.txt':'review the authentication module'}],
+        ['Route','tier 2 selected','Known language routes without model classification','The registered review keyword resolves at Tier 2 for zero classifier tokens.','Tier 0  no pattern match\nTier 1  no active work\nTier 2  review → /review','routing-table.json',{'routing.json':'{ "keyword": "review", "route": "/review", "classifier_tokens": 0 }'}],
+        ['Inspect','five passes running','The workflow applies a bounded review contract','Correctness, security, performance, readability, and consistency run against the named scope.','correctness   PASS\nsecurity      1 issue\nperformance   PASS\nreadability   2 notes\nconsistency   PASS','skills/review/SKILL.md',{'.planning/handoffs/review.md':'Scope: src/auth/\nBlocking: token expiry unchecked\nNotes: 2 style findings'}],
+        ['Verify','evidence recorded','Findings point to files and verification','The handoff distinguishes blocking findings from notes and records whether tests regressed.','3 findings\n1 blocking security issue\n0 test regressions','skills/review/SKILL.md',{'.planning/handoffs/review.md':'Blocking: verify token expiry before merge\nTests: no regressions detected'}]
+      ],
+      fleet: [
+        ['Request','request received','Platform-wide work earns parallel coordination','The objective spans independent areas and can benefit from isolated work.','/do migrate the platform to TypeScript strict mode','Local deterministic route preview.',{'request.txt':'migrate the platform to TypeScript strict mode'}],
+        ['Route','fleet selected','Scope and parallelism select Fleet','Citadel chooses coordinated waves instead of asking the operator to manage several terminals.','scope: platform\ncomplexity: 5\nparallel: true\nroute: fleet','docs/FLEET.md',{'.planning/fleet/session.json':'{ "objective": "strict mode", "wave": 1, "agents": 3 }'}],
+        ['Isolate','three worktrees ready','Each agent owns an isolated worktree','API, components, and utilities advance independently without sharing one branch.','Agent A  wt-fleet-api\nAgent B  wt-fleet-components\nAgent C  wt-fleet-utils','docs/worktree-isolation.md',{'.planning/fleet/session.json':'A: wt-fleet-api\nB: wt-fleet-components\nC: wt-fleet-utils'}],
+        ['Relay','discovery shared','One discovery changes the rest of the wave','Agent A finds shared implicit casts. Citadel relays the discovery before the next wave compounds it.','Agent A discovered 12 implicit any casts\n→ relayed to Agents B and C','docs/FLEET.md',{'.planning/discoveries/shared-types.md':'12 implicit any casts found in shared types. Apply before Wave 2.'}],
+        ['Merge','two merged, one blocked','Conflict remains visible instead of becoming green','Two worktrees merge. One conflict stays pending for reconciliation.','Agent A  MERGED\nAgent B  MERGED\nAgent C  BLOCKED: shared type conflict','docs/FLEET.md',{'.planning/fleet/session.json':'A: merged\nB: merged\nC: blocked\nreason: shared type conflict'}]
+      ],
+      evidence: [
+        ['Healthy','sources present','Evidence begins with named sources','Citadel can show a passing state because the expected verification and telemetry sources are present.','tests             PASS\nhandoff           PRESENT\ntelemetry source  HEALTHY\nstatus            VERIFIED','docs/DASHBOARD_SPEC.md',{'.planning/evidence/receipt.json':'{\n  "tests": "pass",\n  "handoff": "present",\n  "telemetry": "healthy",\n  "status": "verified"\n}'}],
+        ['Remove','source removed','Now remove the telemetry source','The challenge changes the source state itself. It does not toggle a decorative warning.','REMOVE .planning/telemetry/agent-runs.jsonl','Controlled deterministic challenge. No local file is actually deleted.',{'.planning/evidence/receipt.json':'expected_source: .planning/telemetry/agent-runs.jsonl\nobserved: absent'}],
+        ['Unknown','certainty refused','Missing evidence becomes unknown','Citadel refuses to infer success from silence. The missing source is named and the status remains unresolved.','tests             PASS\nhandoff           PRESENT\ntelemetry source  ABSENT\nstatus            UNKNOWN','docs/DASHBOARD_SPEC.md',{'.planning/evidence/receipt.json':'{\n  "telemetry": "unknown",\n  "reason": "expected source absent",\n  "status": "unknown"\n}'}],
+        ['Restore','source restored','Restore the source and verify again','The status can advance only after the source returns and the evidence is evaluated.','RESTORE telemetry source\nVERIFY schema and latest event\nstatus  VERIFIED','Controlled deterministic challenge.',{'.planning/telemetry/agent-runs.jsonl':'{"event":"verification","status":"pass","schema":1}','.planning/evidence/receipt.json':'status: verified\nsource: healthy'}]
+      ],
+      deploy: [
+        ['Queue','15 PRs ready','Fifteen PRs enter one protected landing lane','Other agents can keep producing, but one steward owns the serialized path through main, CI, and deployment.','queued: 15\nlanded: 0\nmainline lease: steward','public deploy-steward proof repository',{'.agent-steward/queue.json':'queued: pr-1 through pr-15\npolicy: one landing candidate at a time'}],
+        ['Update','branches refreshed','Fourteen stale branches update against moving main','After the first merge, each remaining branch must absorb the new mainline before its checks can be trusted.','branch updates  14\nrepair tasks     0','retained steward receipt',{'.planning/live-proof/receipt.json':'updatedBranchEvents: 14\nrepairEvents: 0'}],
+        ['Wait','CI remains the gate','The steward waits instead of guessing','Fifty-nine waits represent real mergeability and CI polling. Waiting is visible operating work, not a hidden delay.','CI waits  59\nforced merges  0\nbypasses       0','retained steward receipt',{'.planning/live-proof/receipt.json':'waitingEvents: 59\npolicyBypasses: 0'}],
+        ['Land','15 merged and deployed','Every PR clears the serialized lane','All fifteen PRs merge and deploy. The final receipt records the result without rewriting the waits or branch updates as failures.','PRs       15 / 15 merged\ndeploys   15 / 15 complete\nupdates   14\nCI waits  59\nrepairs   0','github.com/SethGammon/agents-md-deploy-steward-proof',{'.planning/live-proof/receipt.json':'mergedPrs: 15\ndeploys: 15\nupdatedBranchEvents: 14\nwaitingEvents: 59\nrepairEvents: 0'}]
+      ]
+    };
+
+    let storyScenario = 'campaign';
+    let storyIndex = 0;
+    let storyTimer = null;
+    let storySelectedFile = null;
+
+    function storyRender() {
+      const steps = storyScenarios[storyScenario];
+      const step = steps[storyIndex];
+      const timeline = document.getElementById('story-timeline');
+      if (!timeline) return;
+      timeline.innerHTML = '<div class="story-timeline-label">Operating journey</div>' + steps.map((item, index) => {
+        const state = index < storyIndex ? 'complete' : index === storyIndex ? 'active' : '';
+        const marker = index < storyIndex ? '✓' : String(index + 1);
+        return `<div class="story-step ${state}"><div class="story-step-dot">${marker}</div><div class="story-step-name">${item[0]}</div></div>`;
+      }).join('');
+      document.getElementById('story-status').textContent = step[1];
+      document.getElementById('story-stage-title').textContent = step[2];
+      document.getElementById('story-stage-copy').textContent = step[3];
+      document.getElementById('story-command').textContent = step[4];
+      document.getElementById('story-source').textContent = `Source: ${step[5]}`;
+      document.getElementById('story-progress-bar').style.width = `${((storyIndex + 1) / steps.length) * 100}%`;
+      const files = Object.keys(step[6]);
+      if (!storySelectedFile || !step[6][storySelectedFile]) storySelectedFile = files[0];
+      document.getElementById('story-file-tabs').innerHTML = files.map(file => `<button class="story-file-tab" role="tab" aria-selected="${file === storySelectedFile}" data-story-file="${file}">${file}</button>`).join('');
+      document.getElementById('story-file').textContent = step[6][storySelectedFile];
+      document.querySelectorAll('[data-story-file]').forEach(button => button.addEventListener('click', () => { storySelectedFile = button.dataset.storyFile; storyRender(); }));
+      document.getElementById('story-prev').disabled = storyIndex === 0;
+      document.getElementById('story-next').disabled = storyIndex === steps.length - 1;
+    }
+
+    function storyStop() {
+      if (storyTimer) clearInterval(storyTimer);
+      storyTimer = null;
+      const play = document.getElementById('story-play');
+      if (play) play.textContent = 'Play';
+    }
+
+    function storyPlay() {
+      if (storyTimer) { storyStop(); return; }
+      document.getElementById('story-play').textContent = 'Pause';
+      storyTimer = setInterval(() => {
+        const last = storyScenarios[storyScenario].length - 1;
+        if (storyIndex >= last) { storyStop(); return; }
+        storyIndex += 1;
+        storySelectedFile = null;
+        storyRender();
+      }, window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 400 : 1200);
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      document.querySelectorAll('[data-story-scenario]').forEach(button => button.addEventListener('click', () => {
+        storyStop();
+        storyScenario = button.dataset.storyScenario;
+        storyIndex = 0;
+        storySelectedFile = null;
+        document.querySelectorAll('[data-story-scenario]').forEach(item => item.setAttribute('aria-selected', String(item === button)));
+        storyRender();
+      }));
+      document.getElementById('story-prev').addEventListener('click', () => { storyStop(); storyIndex = Math.max(0, storyIndex - 1); storySelectedFile = null; storyRender(); });
+      document.getElementById('story-next').addEventListener('click', () => { storyStop(); storyIndex = Math.min(storyScenarios[storyScenario].length - 1, storyIndex + 1); storySelectedFile = null; storyRender(); });
+      document.getElementById('story-reset').addEventListener('click', () => { storyStop(); storyIndex = 0; storySelectedFile = null; storyRender(); });
+      document.getElementById('story-play').addEventListener('click', storyPlay);
+      storyRender();
+    });
+
     // ─── Routing logic ─────────────────────────────────────────────────────
     const TIER0 = [
       { re: /\b(fix|correct)\s+(the\s+)?typo\b/i,    label: 'pattern: "fix typo"',     color: 'var(--green)' },

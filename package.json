@@ -36,6 +36,7 @@
     "golden:path": "node scripts/golden-path.js",
     "golden:path:matrix": "node scripts/golden-path-matrix.js",
     "route:preview": "node scripts/route-preview.js",
+    "site:story:test": "node scripts/test-citadel-site-story.js",
     "loops": "node scripts/loops.js",
     "loop:run": "node scripts/loop-runner.js",
     "stack:plan": "node scripts/stack-plan.js",
