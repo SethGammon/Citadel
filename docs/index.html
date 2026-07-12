@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Citadel · Claude Code Agent Harness</title>
+  <title>Citadel | The operating layer for Claude Code and Codex</title>
   <style>
     :root {
       --bg: #0d1117;
@@ -140,6 +140,14 @@
       max-height: 120px; overflow: hidden;
       transition: max-height 0.55s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.35s ease;
     }
+
+    .hero-proof {
+      display: flex; justify-content: center; flex-wrap: wrap; gap: 10px 22px;
+      margin: 20px auto 0; color: var(--muted); font-size: 12px;
+      font-family: 'SF Mono', Consolas, monospace;
+    }
+    .hero-proof span { padding-left: 12px; border-left: 2px solid var(--border); }
+    .hero-proof strong { color: var(--green); font-size: 15px; }
 
     /* ─── Search bar ─── */
     .search-wrap {
@@ -292,7 +300,7 @@
       .gen-btn { flex: calc(50% - 6px); min-width: 0; }
     }
 
-    /* ─── Result panel — folds out downward from search bar ─── */
+    /* ─── Result panel  -  folds out downward from search bar ─── */
     .result-panel {
       display: none;
       background: var(--surface); border: 1.5px solid var(--border);
@@ -498,7 +506,7 @@
       display: flex; flex-direction: column; justify-content: center; gap: 6px;
     }
 
-    /* Tier 0 — scanning regex highlight */
+    /* Tier 0  -  scanning regex highlight */
     .t0-code { color: var(--dim); }
     @keyframes t0-scan {
       0%,15%  { background: transparent; color: var(--dim); border-radius: 3px; }
@@ -508,7 +516,7 @@
     .t0-word { padding: 1px 3px; animation: t0-scan 3.2s ease-in-out infinite; }
     .t0-tag  { font-size: 10px; color: var(--green); opacity: 0.7; letter-spacing: 1px; }
 
-    /* Tier 2 — keyword lookup table cycling */
+    /* Tier 2  -  keyword lookup table cycling */
     .t2-table { display: flex; flex-direction: column; gap: 2px; }
     .t2-row {
       padding: 2px 6px; border-radius: 4px; color: var(--dim);
@@ -529,7 +537,7 @@
     .t2-r3 { animation: t2-on 4.5s ease-in-out 3s infinite; }
     .t2-r1 span, .t2-r2 span, .t2-r3 span { transition: opacity 0.3s; }
 
-    /* Tier 3 — classification chips appearing */
+    /* Tier 3  -  classification chips appearing */
     .t3-chips { display: flex; flex-wrap: wrap; gap: 5px; }
     .t3-chip {
       font-size: 10px; padding: 2px 8px; border-radius: 20px;
@@ -550,7 +558,7 @@
     .t3-c6 { animation-delay: 0.75s; }
     .t3-route { font-size: 10px; color: var(--orange); opacity: 0.65; letter-spacing: 1px; margin-top: 2px; }
 
-    /* Fleet — parallel progress tracks */
+    /* Fleet  -  parallel progress tracks */
     .tf-tracks { display: flex; flex-direction: column; gap: 5px; }
     .tf-track { display: flex; align-items: center; gap: 8px; }
     .tf-label { font-size: 10px; color: var(--dim); min-width: 80px; }
@@ -758,7 +766,7 @@
       background: var(--bg); padding: 1px 5px; border-radius: 3px; font-size: 11px;
     }
 
-    /* ─── Mode: result — hero compresses, generators fold, tiers collapse ─── */
+    /* ─── Mode: result  -  hero compresses, generators fold, tiers collapse ─── */
     body.mode-result .hero {
       padding: 10px 40px 4px;
     }
@@ -1266,7 +1274,7 @@
     <button class="nav-link" onclick="openPanel('hooks')">Hooks</button>
     <button class="nav-link" onclick="openPanel('campaigns')">Campaigns</button>
     <div class="nav-right">
-      <span class="nav-badge">v3</span>
+      <span class="nav-badge">v1.1</span>
       <a class="nav-star" id="nav-star" href="https://github.com/SethGammon/Citadel">★ Star on GitHub</a>
       <a class="nav-cta" href="#install-section" onclick="scrollToInstall(); return false;">Get Started</a>
     </div>
@@ -1279,12 +1287,18 @@
   <!-- Hero -->
   <div class="hero">
     <div class="hero-eyebrow">
-      <span>Agent orchestration for Claude Code</span>
+      <span>The operating layer for Claude Code and Codex</span>
       <span class="eyebrow-sep">·</span>
-      <span class="live-agents"><span class="live-dot"></span><span id="live-agent-count">3</span> agents active</span>
+      <span>Local · repo-native · inspectable</span>
     </div>
-    <h1>One command.<br><span class="h1-sub">The right agent, every time.</span></h1>
-    <p>Four routing tiers — pattern match to full LLM. Stops at the first match. Most commands cost nothing.</p>
+    <h1>Route the work.<br><span class="h1-sub">Keep what the agents learn.</span></h1>
+    <p>Citadel chooses the lightest capable workflow, verifies what happened, and preserves the next action in your repository.</p>
+    <div class="hero-proof" aria-label="Citadel product proof">
+      <span><strong>15/15</strong> PRs landed</span>
+      <span><strong>30/30</strong> hosted journeys</span>
+      <span><strong>2</strong> runtime surfaces</span>
+      <span><strong>3</strong> operating systems</span>
+    </div>
   </div>
 
   <!-- Search bar -->
@@ -1312,14 +1326,14 @@
         <span class="gen-icon">⚡</span>
         <div class="gen-name">Instant</div>
         <div class="gen-meta">~0 tokens · &lt;1ms</div>
-        <div class="gen-desc">regex match — no model call</div>
+        <div class="gen-desc">regex match  -  no model call</div>
         <div class="gen-again">try another →</div>
       </button>
       <button class="gen-btn" style="--gc:var(--cyan)" onclick="generate('skill')">
         <span class="gen-icon">◆</span>
         <div class="gen-name">Skill</div>
         <div class="gen-meta">~0 tokens · &lt;10ms</div>
-        <div class="gen-desc">keyword match — skill dispatched directly</div>
+        <div class="gen-desc">keyword match  -  skill dispatched directly</div>
         <div class="gen-again">try another →</div>
       </button>
       <button class="gen-btn" style="--gc:var(--orange)" onclick="generate('campaign')">
@@ -1345,7 +1359,7 @@
         <span class="result-command" id="result-command"></span>
         <div class="result-meta">
           <span class="result-timer" id="result-timer"></span>
-          <button class="reset-btn" onclick="resetDemo()" title="Reset — Esc">↺ new</button>
+          <button class="reset-btn" onclick="resetDemo()" title="Reset  -  Esc">↺ new</button>
         </div>
       </div>
 
@@ -1357,7 +1371,7 @@
           </div>
           <div class="tier-center">
             <div class="tier-name">Pattern Match</div>
-            <div class="tier-desc">Regex on raw input — fix typo, rename, commit, build, status</div>
+            <div class="tier-desc">Regex on raw input  -  fix typo, rename, commit, build, status</div>
           </div>
           <span class="tier-status" id="tier0-status"></span>
         </div>
@@ -1381,7 +1395,7 @@
           </div>
           <div class="tier-center">
             <div class="tier-name">Keyword Match</div>
-            <div class="tier-desc">Matched against the installed skill keyword table — review, test, debug, scaffold…</div>
+            <div class="tier-desc">Matched against the installed skill keyword table  -  review, test, debug, scaffold…</div>
           </div>
           <span class="tier-status" id="tier2-status"></span>
         </div>
@@ -1479,13 +1493,13 @@
           <div class="t0-code"><span class="t0-pre">/do </span><span class="t0-word">fix typo</span><span class="t0-pre"> on line 42</span></div>
           <div class="t0-tag">✓ REGEX HIT · &lt;1ms · 0 TOKENS</div>
         </div>
-        <p class="how-card-desc">Pure regex against the raw input string. No model call, no skill load. Catches exact-intent commands that need no classification — typos, renames, commits, status checks. If it matches here, Claude executes it directly and stops.</p>
+        <p class="how-card-desc">Pure regex against the raw input string. No model call, no skill load. Catches exact-intent commands that need no classification  -  typos, renames, commits, status checks. If it matches here, Claude executes it directly and stops.</p>
         <div class="how-examples">
           <div class="how-example" style="--ex-color:var(--green)" data-cmd="fix the typo on line 42">/do fix the typo on line 42</div>
           <div class="how-example" style="--ex-color:var(--green)" data-cmd="rename AuthService to AuthHandler">/do rename AuthService to AuthHandler</div>
           <div class="how-example" style="--ex-color:var(--green)" data-cmd="commit my changes">/do commit my changes</div>
         </div>
-        <p class="cascade-footnote">Tier 1 (active session context) is evaluated in live Claude Code sessions — skipped in this demo.</p>
+        <p class="cascade-footnote">Tier 1 (active session context) is evaluated in live Claude Code sessions  -  skipped in this demo.</p>
       </div>
     </details>
 
@@ -1529,7 +1543,7 @@
       <div class="cascade-connector-chevron">↓</div>
     </div>
 
-    <!-- Tier 3 — single card, forked output -->
+    <!-- Tier 3  -  single card, forked output -->
     <details class="cascade-card" style="--card-color:var(--orange)">
       <summary class="cascade-summary">
         <span class="how-tier-badge" style="color:var(--orange)">TIER 3</span>
@@ -1552,7 +1566,7 @@
           </div>
           <div class="t3-route">→ /classifier dispatched</div>
         </div>
-        <p class="how-card-desc">Classifies 6 dimensions: scope, complexity (1–5), intent, multi-session persistence, parallel execution, and taste. The result determines the dispatch — Archon for contained work, Fleet for platform-wide scope.</p>
+        <p class="how-card-desc">Classifies 6 dimensions: scope, complexity (1–5), intent, multi-session persistence, parallel execution, and taste. The result determines the dispatch  -  Archon for contained work, Fleet for platform-wide scope.</p>
         <div class="tier3-fork">
           <div class="fork-stem"></div>
           <div class="fork-branches">
@@ -1579,7 +1593,7 @@
     </details>
   </div><!-- /cascade-section -->
 
-  <!-- Output previews — real Citadel output, not wireframes -->
+  <!-- Output previews  -  real Citadel output, not wireframes -->
   <div class="previews-section">
     <div class="previews-heading">
       <h2>What you actually get</h2>
@@ -1599,7 +1613,7 @@
 <span class="pv-green">--- HANDOFF ---</span>
 <span class="pv-label">- 5-pass review complete</span>: auth module (src/auth/)
 - <span class="pv-orange">3 issues found</span>: 1 security (token expiry unchecked), 2 style
-- Security issue is blocking — fix before merge
+- Security issue is blocking  -  fix before merge
 - No test regressions detected
 <span class="pv-green">---</span></div>
     </div>
@@ -1609,16 +1623,16 @@
       <div class="preview-card-header">
         <div class="preview-card-dot"></div>
         <div class="preview-card-label">CAMPAIGN</div>
-        <div class="preview-card-context">/archon — Phase 3 of 4</div>
+        <div class="preview-card-context">/archon  -  Phase 3 of 4</div>
       </div>
       <div class="preview-card-body"><span class="pv-dim">Phase 3: Build · auth-overhaul campaign</span>
 
 <span class="pv-orange">--- HANDOFF ---</span>
 <span class="pv-label">- Built OAuth2 integration</span> with PKCE flow (src/auth/oauth.ts)
-- Session middleware rewritten — JWT with refresh rotation
+- Session middleware rewritten  -  JWT with refresh rotation
 - <span class="pv-green">typecheck: clean</span> · <span class="pv-green">tests: 47 pass, 0 fail</span> · <span class="pv-green">build: success</span>
-- Next: Phase 4 (verify) — security audit + integration test
-- Session resumes automatically — campaign state preserved to disk
+- Next: Phase 4 (verify)  -  security audit + integration test
+- Session resumes automatically  -  campaign state preserved to disk
 <span class="pv-orange">---</span></div>
     </div>
 
@@ -1627,13 +1641,13 @@
       <div class="preview-card-header">
         <div class="preview-card-dot"></div>
         <div class="preview-card-label">FLEET</div>
-        <div class="preview-card-context">/fleet — Wave 2 of 3</div>
+        <div class="preview-card-context">/fleet  -  Wave 2 of 3</div>
       </div>
       <div class="preview-card-body"><span class="pv-dim">Wave 2 complete · 3 agents · isolated worktrees</span>
 
 <span class="pv-purple">Agent A</span> <span class="pv-dim">(wt-fleet-a)</span>: migrated api/ to strict TypeScript <span class="pv-green">✓</span>
 <span class="pv-purple">Agent B</span> <span class="pv-dim">(wt-fleet-b)</span>: migrated components/ to strict TypeScript <span class="pv-green">✓</span>
-<span class="pv-purple">Agent C</span> <span class="pv-dim">(wt-fleet-c)</span>: migrated utils/ — <span class="pv-orange">1 conflict</span> with Agent A
+<span class="pv-purple">Agent C</span> <span class="pv-dim">(wt-fleet-c)</span>: migrated utils/  -  <span class="pv-orange">1 conflict</span> with Agent A
 
 <span class="pv-label">Discovery relay</span>: Agent A found 12 implicit <span class="pv-cmd">any</span> casts in shared types
   → relayed to Agents B and C before Wave 3
@@ -1649,7 +1663,7 @@
       <div class="campaign-depth-header">
         <h2>Work that spans sessions. Automatically.</h2>
       </div>
-      <p class="campaign-depth-setup">Complex tasks run across sessions without losing direction — or your confidence.</p>
+      <p class="campaign-depth-setup">Complex tasks run across sessions without losing direction  -  or your confidence.</p>
       <div class="feature-grid">
         <div class="feature-point">
           <div class="feature-icon">⧫</div>
@@ -1676,7 +1690,7 @@
   <!-- Stats bar -->
   <div class="stat-bar">
     <div class="stat">
-      <div class="stat-num">45</div>
+      <div class="stat-num">49</div>
       <div class="stat-label">Skills</div>
       <div class="stat-caption">covering code quality, debugging, research, orchestration, and more</div>
     </div>
@@ -1702,29 +1716,29 @@
     <div class="install-inner">
       <div class="install-left">
         <h2>Try it now.</h2>
-        <p>Works on any Claude Code project.<br>No config required — Citadel detects your stack on first run.</p>
+        <p>Install for Claude Code or OpenAI Codex.<br>Citadel detects the runtime and prepares the current git repository.</p>
       </div>
       <div class="install-right">
         <div class="install-steps">
           <div class="install-step">
             <div class="install-step-num">1</div>
             <div class="install-step-body">
-              <div class="install-step-label">Install Claude Code</div>
-              <div class="install-code">npm install -g @anthropic-ai/claude-code</div>
+              <div class="install-step-label">Choose your runtime</div>
+              <div class="install-code">Claude Code or OpenAI Codex</div>
             </div>
           </div>
           <div class="install-step">
             <div class="install-step-num">2</div>
             <div class="install-step-body">
-              <div class="install-step-label">Add Citadel as a plugin</div>
-              <div class="install-code">claude plugin marketplace add SethGammon/Citadel</div>
+              <div class="install-step-label">Install Citadel from the repository</div>
+              <div class="install-code">Use the runtime-specific installer in INSTALL.md</div>
             </div>
           </div>
           <div class="install-step">
             <div class="install-step-num">3</div>
             <div class="install-step-body">
-              <div class="install-step-label">Install the Citadel plugin</div>
-              <div class="install-code">/plugin install citadel@citadel-local</div>
+              <div class="install-step-label">Prepare the current project</div>
+              <div class="install-code">/do setup --express</div>
             </div>
           </div>
         </div>
@@ -1733,11 +1747,11 @@
     </div>
   </div>
 
-  <!-- Final CTA — single copy-pasteable command -->
+  <!-- Final CTA  -  single copy-pasteable command -->
   <div class="final-cta">
-    <div class="final-cta-label">One command. Any project.</div>
-    <div class="final-cta-cmd" onclick="navigator.clipboard.writeText('claude plugin marketplace add SethGammon/Citadel').then(()=>{this.querySelector('.final-cta-copy').textContent='copied!';setTimeout(()=>{this.querySelector('.final-cta-copy').textContent='copy'},1500)})" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}">
-      claude plugin marketplace add SethGammon/Citadel
+    <div class="final-cta-label">One operating command after installation.</div>
+    <div class="final-cta-cmd" onclick="navigator.clipboard.writeText('/do setup --express').then(()=>{this.querySelector('.final-cta-copy').textContent='copied!';setTimeout(()=>{this.querySelector('.final-cta-copy').textContent='copy'},1500)})" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}">
+      /do setup --express
       <button class="final-cta-copy">copy</button>
     </div>
   </div>
@@ -1749,7 +1763,7 @@
   </button>
 
   <footer>
-    <span>Citadel — Agent Orchestration for Claude Code &nbsp;·&nbsp; <a href="https://repo-explainer.com/SethGammon/Citadel/">Architecture overview</a></span>
+    <span>Citadel | The operating layer for Claude Code and Codex &nbsp;·&nbsp; <a href="https://repo-explainer.com/SethGammon/Citadel/">Architecture overview</a></span>
     <span>
       <a id="footer-star" href="https://github.com/SethGammon/Citadel">★ Star on GitHub</a>
       &nbsp;·&nbsp;
@@ -1760,7 +1774,7 @@
   </div><!-- /screens-inner -->
   </div><!-- /page-wrap -->
 
-  <!-- Panels — outside #screens-inner so position:fixed is viewport-relative -->
+  <!-- Panels  -  outside #screens-inner so position:fixed is viewport-relative -->
   <!-- Panel backdrop -->
   <div class="panel-backdrop" id="panel-backdrop" onclick="closePanel()"></div>
 
@@ -1798,7 +1812,7 @@
       <div class="panel-section-label">Optional: per-project config</div>
       <div class="campaign-block">
         <div class="campaign-block-title">Generate harness.json</div>
-        <div class="campaign-block-body">Run <code>/do setup</code> to create <code>.claude/harness.json</code> with project-specific settings — hook toggles, agent timeouts, doc sync, quality rules. All settings have working defaults so this step is optional.</div>
+        <div class="campaign-block-body">Run <code>/do setup</code> to create <code>.claude/harness.json</code> with project-specific settings  -  hook toggles, agent timeouts, doc sync, quality rules. All settings have working defaults so this step is optional.</div>
       </div>
     </div>
   </div>
@@ -1806,14 +1820,14 @@
   <!-- Skills panel -->
   <div class="side-panel" id="panel-skills">
     <div class="panel-header">
-      <span class="panel-title">Skills — 45 installed</span>
+      <span class="panel-title">Skills  -  45 installed</span>
       <button class="panel-close" onclick="closePanel()">✕</button>
     </div>
     <div class="panel-body">
       <div class="panel-note" style="margin-bottom:20px">Invoke any skill directly with <code style="font-family:'SF Mono',monospace;color:var(--cyan);font-size:11px">/skill-name</code>, or let <code style="font-family:'SF Mono',monospace;color:var(--cyan);font-size:11px">/do</code> route to the right one automatically.</div>
       <div class="panel-section-label">Routing</div>
       <div class="skill-list">
-        <div class="skill-row"><span class="skill-name">/do</span><span class="skill-desc">Universal intent router. Dispatches to the cheapest capable tool — no configuration needed.</span></div>
+        <div class="skill-row"><span class="skill-name">/do</span><span class="skill-desc">Universal intent router. Dispatches to the cheapest capable tool  -  no configuration needed.</span></div>
       </div>
       <div class="panel-section-label">Orchestration</div>
       <div class="skill-list">
@@ -1863,27 +1877,27 @@
   <!-- Hooks panel -->
   <div class="side-panel" id="panel-hooks">
     <div class="panel-header">
-      <span class="panel-title">Hooks — 13 events</span>
+      <span class="panel-title">Hooks  -  13 events</span>
       <button class="panel-close" onclick="closePanel()">✕</button>
     </div>
     <div class="panel-body">
-      <div class="panel-note" style="margin-bottom:20px">Hooks fire automatically on Claude Code lifecycle events — no agent intervention needed.</div>
+      <div class="panel-note" style="margin-bottom:20px">Hooks fire automatically on Claude Code lifecycle events  -  no agent intervention needed.</div>
       <table class="hook-table">
         <thead><tr><th style="width:145px">Event</th><th>What it does</th></tr></thead>
         <tbody>
           <tr><td class="hook-event">SessionStart</td><td class="hook-desc">Scans .planning/intake/, restores compressed context, scaffolds .planning/ on first run.</td></tr>
           <tr><td class="hook-event">PreCompact</td><td class="hook-desc">Detects unwritten work before context compression. Auto-saves a handoff to disk.</td></tr>
           <tr><td class="hook-event">PostCompact</td><td class="hook-desc">Re-injects the saved handoff into the new compressed context so nothing is lost.</td></tr>
-          <tr><td class="hook-event">PreToolUse</td><td class="hook-desc">Campaign scope enforcement — blocks edits outside a campaign's declared scope.</td></tr>
+          <tr><td class="hook-event">PreToolUse</td><td class="hook-desc">Campaign scope enforcement  -  blocks edits outside a campaign's declared scope.</td></tr>
           <tr><td class="hook-event">PostToolUse</td><td class="hook-desc">Runs a project-scope incremental typecheck on every TypeScript edit. Failures surface immediately; if the check cannot run, it says so instead of passing silently.</td></tr>
           <tr><td class="hook-event">Stop</td><td class="hook-desc">Quality gate before session ends. Checks for uncommitted work and open campaign phases.</td></tr>
-          <tr><td class="hook-event">StopFailure</td><td class="hook-desc">API failure telemetry — logs to .planning/telemetry/ and triggers recovery if configured.</td></tr>
+          <tr><td class="hook-event">StopFailure</td><td class="hook-desc">API failure telemetry  -  logs to .planning/telemetry/ and triggers recovery if configured.</td></tr>
           <tr><td class="hook-event">TaskCreated</td><td class="hook-desc">Logs agent task boundary start events to the audit trail.</td></tr>
           <tr><td class="hook-event">TaskCompleted</td><td class="hook-desc">Logs task completion with duration and outcome to agent-runs.jsonl.</td></tr>
           <tr><td class="hook-event">SubagentStop</td><td class="hook-desc">Ensures sub-agents write a HANDOFF block and release scope claims before exiting.</td></tr>
           <tr><td class="hook-event">SessionEnd</td><td class="hook-desc">Campaign cleanup, triggers the doc sync queue.</td></tr>
           <tr><td class="hook-event">WorktreeCreate</td><td class="hook-desc">Installs hooks and scaffolds .planning/ in isolated Fleet worktrees.</td></tr>
-          <tr><td class="hook-event">WorktreeRemove</td><td class="hook-desc">Fleet cleanup — triggers merge conflict check and logs worktree metrics.</td></tr>
+          <tr><td class="hook-event">WorktreeRemove</td><td class="hook-desc">Fleet cleanup  -  triggers merge conflict check and logs worktree metrics.</td></tr>
         </tbody>
       </table>
       <div class="panel-section-label" style="margin-top:24px">Configuration</div>
@@ -1904,19 +1918,19 @@
       <div class="panel-note" style="margin-bottom:20px">A <strong style="color:var(--text)">campaign</strong> is work that spans multiple sessions. State is persisted to disk and resumed exactly where it left off.</div>
       <div class="campaign-block">
         <div class="campaign-block-title">Starting a campaign</div>
-        <div class="campaign-block-body"><code>/archon build a real-time notifications system</code> — or let <code>/do</code> route there automatically. Archon creates a file at <code>.planning/campaigns/{slug}.md</code> before executing anything.</div>
+        <div class="campaign-block-body"><code>/archon build a real-time notifications system</code>  -  or let <code>/do</code> route there automatically. Archon creates a file at <code>.planning/campaigns/{slug}.md</code> before executing anything.</div>
       </div>
       <div class="campaign-block">
         <div class="campaign-block-title">Phase types</div>
-        <div class="campaign-block-body">Campaigns break into 3–8 ordered phases: <strong style="color:var(--text)">research</strong> → <strong style="color:var(--text)">plan</strong> → <strong style="color:var(--text)">build</strong> → <strong style="color:var(--text)">wire</strong> → <strong style="color:var(--text)">verify</strong> → <strong style="color:var(--text)">prune</strong>. Each has machine-verifiable end conditions (file exists, command passes, metric threshold) — a phase isn't marked complete until they pass.</div>
+        <div class="campaign-block-body">Campaigns break into 3–8 ordered phases: <strong style="color:var(--text)">research</strong> → <strong style="color:var(--text)">plan</strong> → <strong style="color:var(--text)">build</strong> → <strong style="color:var(--text)">wire</strong> → <strong style="color:var(--text)">verify</strong> → <strong style="color:var(--text)">prune</strong>. Each has machine-verifiable end conditions (file exists, command passes, metric threshold)  -  a phase isn't marked complete until they pass.</div>
       </div>
       <div class="campaign-block">
         <div class="campaign-block-title">Self-correction (automatic)</div>
         <div class="campaign-block-body">
-          · <strong style="color:var(--text)">Direction alignment</strong> every 2 phases — catches scope drift before it compounds<br>
-          · <strong style="color:var(--text)">Quality spot-check</strong> every phase — reads the most significant output, verifies it meets the project's bar<br>
-          · <strong style="color:var(--text)">Regression guard</strong> after build phases — runs typecheck, escalates on 5+ new errors<br>
-          · <strong style="color:var(--text)">Anti-pattern scan</strong> — catches transition-all, confirm(), missing Escape handlers
+          · <strong style="color:var(--text)">Direction alignment</strong> every 2 phases  -  catches scope drift before it compounds<br>
+          · <strong style="color:var(--text)">Quality spot-check</strong> every phase  -  reads the most significant output, verifies it meets the project's bar<br>
+          · <strong style="color:var(--text)">Regression guard</strong> after build phases  -  runs typecheck, escalates on 5+ new errors<br>
+          · <strong style="color:var(--text)">Anti-pattern scan</strong>  -  catches transition-all, confirm(), missing Escape handlers
         </div>
       </div>
       <div class="campaign-block">
@@ -1925,7 +1939,7 @@
       </div>
       <div class="campaign-block">
         <div class="campaign-block-title">Archon vs Fleet</div>
-        <div class="campaign-block-body"><strong style="color:var(--orange)">Archon</strong> — sequential phases, one agent per phase. Best for complex single-domain work.<br><br><strong style="color:var(--purple)">Fleet</strong> — parallel agents in isolated worktrees, 2–3 per wave. Best for platform-wide work where phases are independent. <code>/do</code> routes to Fleet automatically when it detects platform-wide scope.</div>
+        <div class="campaign-block-body"><strong style="color:var(--orange)">Archon</strong>  -  sequential phases, one agent per phase. Best for complex single-domain work.<br><br><strong style="color:var(--purple)">Fleet</strong>  -  parallel agents in isolated worktrees, 2–3 per wave. Best for platform-wide work where phases are independent. <code>/do</code> routes to Fleet automatically when it detects platform-wide scope.</div>
       </div>
       <div class="campaign-block">
         <div class="campaign-block-title">Circuit breakers</div>
@@ -2077,7 +2091,7 @@
         if (p.re.test(cmd)) return {
           tier: 0, label: p.label, color: p.color,
           tool: 'Direct Edit', icon: '✎',
-          desc: 'Claude performs the change inline — no skill loaded, no orchestrator spawned. Fastest possible path.',
+          desc: 'Claude performs the change inline  -  no skill loaded, no orchestrator spawned. Fastest possible path.',
           tokens: '0', latency: '<1ms'
         };
       }
@@ -2168,7 +2182,7 @@
         if (i === 1) {
           await sleep(200);
           tierEl.classList.add('skipped');
-          statusEl.textContent = '— no active session';
+          statusEl.textContent = ' -  no active session';
           statusEl.style.color = 'var(--muted)';
           continue;
         }
@@ -2189,13 +2203,13 @@
           for (let j = i + 1; j <= 3; j++) {
             document.getElementById(`tier${j}`).classList.add('skipped');
             const s = document.getElementById(`tier${j}-status`);
-            s.textContent = '— skipped'; s.style.color = 'var(--muted)';
+            s.textContent = ' -  skipped'; s.style.color = 'var(--muted)';
           }
           break;
         } else {
           tierEl.classList.remove('checking');
           tierEl.classList.add('skipped');
-          statusEl.textContent = '— no match';
+          statusEl.textContent = ' -  no match';
           statusEl.style.color = 'var(--muted)';
         }
       }
@@ -2261,7 +2275,7 @@
       // Scroll output card into view within screen-1
       setTimeout(() => outSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 80);
 
-      // Tier-colored pulse — blast radius maps to cost
+      // Tier-colored pulse  -  blast radius maps to cost
       const inputEl = document.getElementById('cmd-input');
       if (inputEl && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
         const rect = inputEl.getBoundingClientRect();
@@ -2719,7 +2733,7 @@
       };
     })();
 
-    // ─── scrollToInstall — bypasses cinematic snap ────────────────────────
+    // ─── scrollToInstall  -  bypasses cinematic snap ────────────────────────
     function scrollToInstall() {
       const screen2 = document.getElementById('screen-2');
       const installEl = document.getElementById('install-section');

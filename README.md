@@ -9,24 +9,23 @@
 [![ClaudePluginHub verified](https://img.shields.io/badge/ClaudePluginHub-verified-7c3aed.svg)](https://www.claudepluginhub.com/plugins/sethgammon-citadel)
 [![Interactive Demo](https://img.shields.io/badge/Try_the_Router-00d2ff.svg)](https://sethgammon.github.io/Citadel/)
 
-**Citadel is an open-source orchestration layer for Claude Code and OpenAI Codex.**
+**One command routes the work. The repository remembers what happened.**
 
-It gives your coding agent durable project memory, `/do` intent routing, safety hooks, cost telemetry, and parallel agents in isolated git worktrees.
+Citadel is the open-source operating layer for Claude Code and OpenAI Codex. It adds durable project memory, cheap intent routing, verification evidence, cost telemetry, and coordinated agents in isolated git worktrees.
 
 If `CLAUDE.md` and `AGENTS.md` tell the runtime **what** your project is, Citadel tells the runtime **how** to operate on it.
 
-[Install](#quick-install) · [See It Run](#see-it-run) · [How It Works](#how-it-works) · [Why It Exists](#why-citadel-exists) · [Roadmap](#roadmap) · [Help Test 1.1](https://github.com/SethGammon/Citadel/discussions/182)
+[Install](#quick-install) · [See the operating loop](#see-the-operating-loop) · [Inspect the proof](#proof-not-promises) · [How it works](#how-it-works) · [Help test 1.1](https://github.com/SethGammon/Citadel/discussions/182)
 
 </div>
 
 ---
 
-## See It Run
+## See the operating loop
 
 <img src="assets/terminal-demo.svg" width="100%" alt="Animated terminal session: /do routes an audit request through the router tiers to marshal, which reviews, fixes, tests, verifies, and writes a handoff" />
 
-> [!NOTE]
-> The session above is illustrative, but every step in it is real behavior: the tier cascade, the marshal step chain, the `.planning/` handoff, and `/cost` telemetry. Watch the router animate in the [interactive demo](https://sethgammon.github.io/Citadel/), or run the [copyable demo workflow](DEMO.md) in your own repo.
+The animation summarizes a real contract: route the request, run the lightest capable workflow, verify the result, write the handoff, and preserve the next action in the repository. Run the [copyable workflow](DEMO.md) to reproduce it in your own project.
 
 After installing, try this from your project root:
 
@@ -37,6 +36,17 @@ After installing, try this from your project root:
 /do generate tests for the changed files
 /cost
 ```
+
+## Proof, not promises
+
+| Proof | Result | Inspect it |
+|---|---:|---|
+| Serialized landing lane | 15 of 15 PRs merged and deployed, 14 branch updates, 59 CI waits, 0 repair tasks | [Public proof repository](https://github.com/SethGammon/agents-md-deploy-steward-proof) |
+| Hosted operating journey | 30 of 30 deterministic Claude Code and Codex journeys across Windows, Linux, and macOS | [Golden path](docs/GOLDEN_PATH.md) |
+| Missing evidence | Absent telemetry stays `unknown` instead of becoming a green check | [Dashboard contract](docs/DASHBOARD_SPEC.md) |
+| Fresh-process continuity | Campaign state and the next action reload from repository files | [Campaigns](docs/CAMPAIGNS.md) |
+
+These are bounded claims. Deterministic fixtures are not human adoption, clone operations are not retained users, and Citadel does not replace review.
 
 ## What Is Citadel?
 
