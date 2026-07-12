@@ -1,6 +1,6 @@
 ---
 slug: citadel-interactive-product-story-v2
-status: active
+status: completed
 phase_count: 6
 current_phase: 6
 created: 2026-07-12
@@ -19,7 +19,7 @@ Direction: Transform Seth Gammon's GitHub profile and the Citadel public site in
 | 3 | complete | build | Operating journey and repository memory | a visitor can route a scenario, inspect persisted state, close a session, and restore the next action | 3 |
 | 4 | complete | build | Fleet, evidence challenge, and deploy replay | interactive fleet, missing-source challenge, and 15-PR replay run from deterministic source data | 3 |
 | 5 | complete | build | Proof gallery, installation, branding, and accessibility | proof receipts, Claude/Codex paths, mobile layout, keyboard operation, and reduced motion all render correctly | 3 |
-| 6 | in-progress | verify | Regression, visual QA, delivery, and deployment | strict suite passes, desktop/mobile screenshots pass review, protected PR merges, and live Pages matches the verified build | 3 |
+| 6 | complete | verify | Regression, visual QA, delivery, and deployment | strict suite passes, desktop/mobile screenshots pass review, protected PR merges, and live Pages matches the verified build | 3 |
 
 ## Phase End Conditions
 
@@ -60,13 +60,13 @@ Direction: Transform Seth Gammon's GitHub profile and the Citadel public site in
 
 ## Active Context
 
-Phase 6 is active. GitHub's explicit Share to Profile control was activated and the visual creator README, evidence table, bio, website, LinkedIn, X, and Reddit all render on the Overview page. The site now has campaign, review, fleet, evidence challenge, and 15-PR landing scenarios using one deterministic state engine, plus six bounded proof receipts and equal Claude Code and Codex installation paths. Desktop, mobile, keyboard, reduced-motion, routing-sync, contract, and browser interaction checks pass.
+Campaign complete. The creator profile visibly mounts its proof-led README, bio, website, LinkedIn, X, and Reddit. The live Citadel site now runs campaign, review, fleet, evidence challenge, and 15-PR landing scenarios through one deterministic state engine, plus six bounded proof receipts and equal Claude Code and Codex installation paths. Protected PRs #186 and #188 merged with both workflows passing. Live Pages verification confirmed the evidence interaction, six proof cards, Codex runtime switch, and final animated values `49 / 4 / 29 / 2`.
 
 ## Continuation State
 
-- current: phase 6, regression, visual QA, delivery, and deployment
-- next: run the strict regression and reproducible release gates, deliver through a protected PR, then verify GitHub Pages
-- verified: `npm run site:story:test` 23/23; `node scripts/test-routing-sync.js`; desktop and mobile proof/install captures; keyboard, reduced-motion, campaign, fleet, evidence, and deploy browser interaction checks
+- current: completed
+- next: collect real visitor feedback and conversion evidence before changing the story model
+- verified: strict suite passed every check; reproducible release SHA-256 `5701e54da9464f227caf16bcf33b9a2ef85ca2acbcf5a426500249f898aaaebc`; `npm run site:story:test` 24/24; protected workflows passed on PRs #186 and #188; live desktop interaction and deployment checks passed
 - profile: visual README, evidence table, LinkedIn, X, Reddit, bio, and website visibly mounted on the public Overview page
 - protected local state: `.planning/campaigns/citadel-product-proof.md`, `assets/social/`, and `dist/` remain outside campaign scope
 
