@@ -32,6 +32,7 @@ const checks = [
   ['public story copy contains no em dash', !html.slice(html.indexOf('<section class="story-section"'), html.indexOf('<!-- Vertical tier cascade -->')).includes('—')]
   ,['public proof and install copy contains no em dash', !html.slice(html.indexOf('<section class="proof-section"'), html.indexOf('<!-- Final CTA')).includes('—')]
   ,['site remains under declared 250KB source budget', Buffer.byteLength(html, 'utf8') < 250 * 1024]
+  ,['animated stats preserve the published values', html.includes('const targets = [49, 4, 29, 2]') && !html.includes('const targets = [33, 4, 14, 0]')]
 ];
 
 for (const [name, pass] of checks) {
