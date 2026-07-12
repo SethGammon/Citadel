@@ -176,10 +176,18 @@ function run() {
 
     if (CITADEL_UI) {
       hookOutput('quality-gate', 'warned', msg, { violations });
+    } else if (config.qualityRules?.blocking) {
+      // Documented Stop-hook blocking path: the model must address the violations
+      // before it may stop. Loop-safe via the stop_hook_active guard above.
+      process.stdout.write(JSON.stringify({ decision: 'block', reason: msg }));
     } else {
-      // Inject violations directly into Claude's context window via additionalContext.
-      // This makes quality signals visible to Claude without relying on stderr display.
-      process.stdout.write(JSON.stringify({ additionalContext: msg }));
+      // Inject violations into the model's context without blocking. For Stop hooks
+      // the documented envelope is hookSpecificOutput.additionalContext — a bare
+      // top-level `additionalContext` key is not part of the hook output schema and
+      // is silently ignored, as is plain (non-JSON) stdout with exit 0.
+      process.stdout.write(JSON.stringify({
+        hookSpecificOutput: { hookEventName: 'Stop', additionalContext: msg },
+      }));
     }
   }
 
