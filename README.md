@@ -15,7 +15,7 @@ Citadel is the open-source operating layer for Claude Code and OpenAI Codex. It 
 
 If `CLAUDE.md` and `AGENTS.md` tell the runtime **what** your project is, Citadel tells the runtime **how** to operate on it.
 
-[Install](#quick-install) · [See the operating loop](#see-the-operating-loop) · [Inspect the proof](#proof-not-promises) · [How it works](#how-it-works) · [Help test 1.1](https://github.com/SethGammon/Citadel/discussions/182)
+[Install](#quick-install) · [See the operating loop](#see-the-operating-loop) · [Inspect the proof](#proof-not-promises) · [Choose the right tool](docs/CHOOSING_CITADEL.md) · [Help test 1.1](https://github.com/SethGammon/Citadel/discussions/182)
 
 </div>
 
@@ -145,7 +145,7 @@ Four tiers let Citadel scale from a one-line edit to a multi-session campaign. Y
 
 <table>
 <tr>
-<td width="50%"><img src="assets/card-skill.svg" width="100%" alt="Skill: domain expert. Loads focused expertise on demand, zero tokens when not invoked, 46 built-in" /></td>
+<td width="50%"><img src="assets/card-skill.svg" width="100%" alt="Skill: domain expert. Loads focused expertise on demand, zero tokens when not invoked, 49 built-in" /></td>
 <td width="50%"><img src="assets/card-marshal.svg" width="100%" alt="Marshal: single-session commander. Chains skills autonomously and enforces quality gates between steps" /></td>
 </tr>
 <tr>
@@ -227,6 +227,7 @@ The full plan with exit criteria lives in [docs/ROADMAP.md](docs/ROADMAP.md). Th
 - [Citadel 1.1 product-proof scorecard](docs/PRODUCT_PROOF_REPORT.md) - what is locally proven, CI-proven, human-proven, and still blocked
 - [Skill and memory visibility](docs/SKILL_MEMORY_VISIBILITY.md) - inspect available skills and compiled project memory
 - [Public positioning](docs/PUBLIC_POSITIONING.md) - how to describe Citadel without overclaiming
+- [Choosing Citadel](docs/CHOOSING_CITADEL.md) - an honest comparison with Superpowers, CrewAI, LangChain, LangGraph, and Deep Agents
 - [Security model](SECURITY.md) - path traversal, shell injection, and defensive measures
 - [Contributing](CONTRIBUTING.md) - issues, PRs, skills, and docs
 
@@ -247,6 +248,15 @@ If you use Claude Code or Codex on a real repository and keep hitting context lo
 <br>
 
 Those files describe your project. Citadel adds the operating layer around the agent: routing, memory, hooks, telemetry, and parallel coordination.
+
+</details>
+
+<details>
+<summary><strong>How is Citadel different from Superpowers, CrewAI, or LangGraph?</strong></summary>
+
+<br>
+
+Citadel operates Claude Code and Codex inside an existing repository. Superpowers supplies a disciplined development methodology and can run alongside Citadel. CrewAI, LangChain, and LangGraph are for building your own agent applications or runtimes. See [Choosing Citadel](docs/CHOOSING_CITADEL.md) for the honest boundaries and cases where another tool is the better fit.
 
 </details>
 
