@@ -5,7 +5,7 @@ const path = require('path');
 const { contentDigest, packFiles } = require('./digest');
 const { assertDependencyGraph, inspectPack, verifyPack } = require('./index');
 const { validateManifest } = require('./manifest');
-const { resolveTarget } = require('../distribution/fs-safety');
+const { realDirectory, resolveTarget } = require('../distribution/fs-safety');
 
 const INDEX_RELATIVE = '.citadel/packs/index.json';
 
@@ -61,7 +61,7 @@ function assertDestinationDependencies(projectRoot, index, pack) {
 }
 
 function installPack(packRoot, projectRoot, options = {}) {
-  const root = path.resolve(projectRoot);
+  const root = realDirectory(projectRoot);
   const verification = verifyPack(packRoot, { projectRoot: options.sourceProjectRoot, runtime: options.runtime,
     expectedDigest: options.expectedDigest });
   if (verification.status !== 'passed') throw new Error(`Pack verification failed: ${verification.errors.join('; ')}`);
@@ -99,7 +99,7 @@ function installPack(packRoot, projectRoot, options = {}) {
 }
 
 function uninstallPack(projectRoot, id, options = {}) {
-  const root = path.resolve(projectRoot);
+  const root = realDirectory(projectRoot);
   const index = readInstallIndex(root);
   const matches = index.packs.filter((entry) => entry.id === id && (!options.version || entry.version === options.version));
   if (matches.length === 0) throw new Error(`Pack is not installed: ${id}${options.version ? `@${options.version}` : ''}`);
