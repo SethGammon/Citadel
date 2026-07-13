@@ -275,7 +275,7 @@ When 2+ independent tasks detected (non-overlapping scopes, complexity >= 3, not
    `node .citadel/scripts/telemetry-log.cjs --event agent-complete --agent do-router --session routing --status success --meta '{"tier":N,"target":"[skill]","input_chars":M}'`
 
    Use `.citadel/scripts/telemetry-log.cjs` (the project-local copy). If it doesn't exist, skip logging silently — never block routing on telemetry failure.
-
+   Also run `node .citadel/scripts/activation-telemetry.js record --stage route_completed --status succeeded --runtime {claude-code|codex}` with the current runtime; skip failures silently.
 2. **Announce the routing decision**: "Routing to [target] because [one-sentence reason]"
 3. **Invoke the target** skill or orchestrator
 4. If the target fails or the user says "wrong tool", try the next tier up. If the target is already Tier 3 (marshal fails or user explicitly escalates from a failed marshal attempt): re-route to `/archon` with the original input as context.
@@ -293,14 +293,12 @@ Output a grouped skill list drawn from the system reminder's available skills. G
 - **Routed skill not found**: Report "Skill not found" and fall back to Marshal as the safe default.
 
 ## Contextual Gates
-
 **Disclosure:** "Routing to [skill]. See that skill's contextual gates for reversibility."
 **Reversibility:** depends on routed skill — check the routed skill's reversibility
 **Trust gates:**
 - Any: routing and dispatch; inherits trust gates from the routed skill.
 
 ## Quality Gates
-
 - Tier 0-2 must resolve in under 1 second
 - Tier 3 classification must be transparent (announce reasoning)
 - Never route a trivial task (complexity 1) to Archon or Fleet
@@ -311,6 +309,8 @@ Output a grouped skill list drawn from the system reminder's available skills. G
 
 After routing and execution complete:
 - If the routed skill/orchestrator produces a HANDOFF, relay it to the user
+- If a routed workflow produces a HANDOFF with successful verification evidence, record `--stage verified_handoff --status succeeded` through `.citadel/scripts/activation-telemetry.js`.
+- If Tier 1 successfully resumed an existing campaign or fleet, record `--stage resume_completed --status succeeded` through `.citadel/scripts/activation-telemetry.js`.
 - If the task was trivial (Tier 0), just show the result
 - Do not add overhead to simple tasks
 - Telemetry is fire-and-forget — never surface telemetry errors to the user

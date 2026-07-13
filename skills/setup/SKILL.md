@@ -201,6 +201,16 @@ Print the reference card using the canonical boxed layout at docs/SETUP_REFERENC
 
 ### Step 9: CLOSING LINE (all modes)
 
+Before printing the closing line, record successful setup as local activation evidence:
+
+```bash
+node .citadel/scripts/activation-telemetry.js record --stage setup_completed --status succeeded --runtime {claude-code|codex}
+```
+
+Use the current runtime. This is fire-and-forget. If the delegate is missing or recording fails,
+skip it silently and never fail setup. The next successful session start also records this milestone
+once when it finds a valid `.claude/harness.json`.
+
 ```
 Express:      Done. {N} hooks live, {N} skills registered.
               Type /do [anything] to start.
