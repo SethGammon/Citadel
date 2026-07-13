@@ -26,7 +26,7 @@ build on. Roadmap context lives in [ROADMAP.md](ROADMAP.md) R1 and R3.
 
 ```
 .planning/** + telemetry JSONL + OTLP receiver
-        │ (fs.watch, debounced — reuse scripts/local-watch.js pattern)
+        │ (fs.watch, debounced; reuse scripts/local-watch.js pattern)
         ▼
 scripts/dashboard-server.js     Node, stdlib only, no new runtime deps
   ├── normalizers (core/…)      parse-campaign, loops, fleet, telemetry readers
@@ -95,7 +95,7 @@ instruction to enable it, never zero. Provider-specific token and OTLP adapters 
 | Loops | contract cards: budget burn-down, verifier history, stop-state badge | loop JSON, review artifact |
 | Cost | tracked or estimated session and campaign spend, explicitly labeled | telemetry lines |
 | Hook feed | recent decisions, blocks first, friendly reason text | rule + target file |
-| Activation | local redacted funnel totals and acquisition source counts | activation report JSON |
+| Activation | local redacted funnel plus opt-in shared cohort status, denominators, and decision gates | activation and cohort report JSON |
 
 Multi-project switching, fortress view, and any write action are explicitly v0.2+
 (ROADMAP R3). Ship the six panels well.
@@ -125,7 +125,7 @@ switcher reserved for v0.2.
 ## Verification
 
 - Unit: normalizers against fixture `.planning/` trees (healthy, mid-campaign, corrupted,
-  empty) — corrupted files render as "unreadable: <path>" rows, never crash the panel.
+  empty). Corrupted files render as "unreadable: <path>" rows and never crash the panel.
 - Contract: every documented projection endpoint returns a schema-1 envelope and explicit source state.
 - Perf: budget script in CI per the table above.
 - Visual: screenshot pass on the fixture project (the make-frame technique from the README

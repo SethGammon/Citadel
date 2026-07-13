@@ -82,6 +82,20 @@ and `/do` workflows record route, verified handoff, and successful resume at the
 Each write remains local, optional, deduplicated where hooks may repeat, and non-blocking. Missing
 integration remains missing evidence, not a manufactured conversion.
 
+## Opt-in activation cohort
+
+Local telemetry becomes product evidence only when an operator explicitly chooses to share a redacted bundle:
+
+```sh
+node .citadel/scripts/activation-telemetry.js share
+```
+
+The command writes `.planning/product-proof/activation-share.json`, prints the exact payload, and performs no network request. Its opaque share ID is separate from the raw installation ID. The strict schema contains only version, whole-day observation age, event count, bounded journey outcomes, and aggregate consent.
+
+The [activation cohort protocol](PRODUCT_PROOF_TRIAL.md) defines the public sharing flow, privacy boundary, denominators, and six decision gates. The dashboard reads the maintainer's ignored local cohort report and distinguishes `collecting`, `observing`, `ready`, and `needs_attention`.
+
+This cohort does not turn volunteer submissions into population telemetry. In particular, installs that fail before the share command can run are underrepresented.
+
 ## GitHub acquisition history
 
 GitHub exposes repository views, clones, top referrers, and popular paths for a rolling 14-day
@@ -102,11 +116,17 @@ overwritten. These files are ignored by git by default.
 
 ### Current maintainer snapshot
 
-The authenticated snapshot captured `2026-07-11T06:21:56.082Z` records the rolling GitHub
-traffic window at 656 stars, 64 forks, 918 views from 490 unique viewers, and 873 clones from
-506 unique cloners. The leading reported referrers by unique visitor were GitHub (126), X via
-`t.co` (104), Google (79), and Reddit (51). The repository overview accounted for 463 unique
-path visitors; `INSTALL.md` accounted for 10.
+The authenticated snapshot captured `2026-07-13T17:14:26.158Z` records the rolling GitHub
+traffic window at 782 stars, 76 forks, 2,332 views from 1,420 unique viewers, and 1,319 clones
+from 585 unique cloners. The leading reported referrers by unique visitor were Google (513), X
+via `t.co` (335), GitHub (155), and Reddit (48). The repository overview accounted for 1,390
+unique path visitors. The terminal demo attracted 59, the routing flow 38, `DEMO.md` 18, and
+`INSTALL.md` 17 unique visitors.
+
+The July 12 slice was the surge: 1,254 views from 785 unique viewers and 231 clones from 92
+unique cloners. Compared with the July 11 snapshot, Citadel added 126 stars and 12 forks while
+the rolling traffic window expanded by 930 unique viewers. Those numbers show distribution and
+curiosity. They still do not establish setup, verified handoff, resume, or return use.
 
 This supports a mixed discovery explanation: GitHub-native circulation, renewed social sharing,
 search, and Reddit can each create waves even after the maintainer stops posting. GitHub omits

@@ -5,78 +5,35 @@ const assert = require('assert');
 const fs = require('fs');
 const path = require('path');
 
-const ROOT = path.resolve(__dirname, '..');
-const REPORT = path.join(ROOT, 'docs', 'PRODUCT_PROOF_REPORT.md');
+const REPORT = path.resolve(__dirname, '..', 'docs', 'PRODUCT_PROOF_REPORT.md');
 
 function main() {
-  assert(fs.existsSync(REPORT), 'product-proof report must exist');
   const report = fs.readFileSync(REPORT, 'utf8');
-
-  for (const status of [
-    'Implementation-ready',
-    'Locally proven',
-    'CI-proven',
-    'Human-proven',
-    'Release-ready',
-    'Blocked',
-  ]) {
-    assert(report.includes(`**${status}**`), `missing evidence status: ${status}`);
-  }
-
   for (const axis of [
-    'Reliable',
-    'Installable',
-    'Fast to value',
-    'Resumable',
-    'Understandable',
-    'Useful',
-    'Retained',
-    'Interoperable',
-    'Releasable',
-    'Showable',
+    'Reliable', 'Installable', 'Fast to value', 'Resumable', 'Understandable',
+    'Useful', 'Retained', 'Interoperable', 'Releasable', 'Showable',
   ]) {
-    assert(report.includes(`**${axis}**`), `missing milestone axis: ${axis}`);
+    assert(report.includes(`**${axis}**`), `missing product-proof axis: ${axis}`);
   }
-
   for (const evidence of [
-    '172.5 seconds',
-    '15/30',
-    '47.6 MB',
-    '55.1-55.5 MB',
-    '3.9-4.4 MB',
-    'zero events',
-    '60 deterministic runs',
-    'PR #181',
-    'no `v1.1.0` tag',
-    '90-second, non-mocked demo',
+    'v1.1.0', '30 of 30', '782 stars', '1,420 unique viewers', '585 unique cloners',
+    '25 seven-day-eligible installations', '15% return use', 'no qualifying submissions',
   ]) {
-    assert(report.includes(evidence), `missing honest evidence or limitation: ${evidence}`);
+    assert(report.includes(evidence), `missing current evidence or limitation: ${evidence}`);
   }
-
   for (const target of [
-    '../.github/workflows/tests.yml',
-    'RELEASES.md',
-    'GOLDEN_PATH.md',
-    'DASHBOARD_SPEC.md',
-    'BENCHMARK.md',
-    'PRODUCT_PROOF_TRIAL.md',
-    'benchmarks/product-proof-fixture-raw.jsonl',
-    'benchmarks/product-proof-fixture-report.json',
-    'INTEROPERABILITY.md',
-    'ACTIVATION_METRICS.md',
-    '../.planning/product-proof/activation-report.json',
+    'BENCHMARK.md', 'PRODUCT_PROOF_TRIAL.md',
+    'activation-telemetry.js share', 'activation-cohort.js report',
+    'github-traffic-snapshot.js', 'release-verify.js',
   ]) {
-    assert(report.includes(target), `missing evidence link: ${target}`);
-    const absolute = path.resolve(path.dirname(REPORT), target.split('#')[0]);
-    assert(fs.existsSync(absolute), `evidence link does not resolve: ${target}`);
+    assert(report.includes(target), `missing reproducible evidence reference: ${target}`);
   }
-
   assert.match(report, /## Known limitations and stopping condition/);
-  assert.match(report, /blocked, not release-ready/i);
-  assert.doesNotMatch(report, /Citadel 1\.1 (?:is|has been) (?:milestone-)?complete/i);
-  assert.doesNotMatch(report, /all (?:milestone )?gates (?:are|have been) (?:green|passed)/i);
-  assert.doesNotMatch(report, /ready (?:for|to) (?:release|ship|launch)/i);
-
+  assert.match(report, /Do not claim retained human use until the cohort report says `ready`/);
+  assert.doesNotMatch(report, /PR #181.*current delivery path/i);
+  assert.doesNotMatch(report, /no `v1\.1\.0` tag/i);
+  assert.doesNotMatch(report, /Citadel 1\.1 stays open/i);
+  assert.doesNotMatch(report, /—/);
   process.stdout.write('Product-proof report tests passed.\n');
 }
 

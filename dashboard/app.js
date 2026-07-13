@@ -454,33 +454,61 @@
 
   function renderActivation(data) {
     const frag = document.createDocumentFragment();
-    if (!data.report) {
-      frag.appendChild(emptyState(data.note || 'Activation evidence is unknown.', 'node scripts/activation-telemetry.js report'));
-      return frag;
-    }
-    const report = data.report;
-    const stats = el('div', 'stats');
-    stats.appendChild(stat(report.total_events, 'events', 'skill', 'local · redacted'));
-    stats.appendChild(stat(report.unique_installations, 'installations', 'marshal'));
-    stats.appendChild(stat(report.invalid_events, 'invalid events', report.invalid_events ? 'archon' : 'ok'));
-    stats.appendChild(stat(report.migrated_events, 'migrated events', 'fleet'));
-    frag.appendChild(stats);
-    const note = el('div', 'card');
-    note.appendChild(el('div', 'card-title', data.mode === 'empty' ? 'No activation events yet' : 'Activation evidence'));
-    note.appendChild(el('div', 'card-sub', data.note));
-    frag.appendChild(note);
-    for (const [title, values] of [['Stages', report.by_stage], ['Outcomes', report.by_status], ['Acquisition', report.by_acquisition_source]]) {
-      const block = section(title);
-      const entries = Object.entries(values || {});
-      if (!entries.length) block.appendChild(emptyState(`No ${title.toLowerCase()} recorded.`, 'activation events populate this view'));
-      for (const [label, value] of entries) {
+    const cohort = data.cohort;
+    if (cohort) {
+      const shared = section('Shared activation cohort');
+      const status = el('div', 'card');
+      status.appendChild(el('div', 'card-title', cohort.milestone_status.replace(/_/g, ' ')));
+      status.appendChild(el('div', 'card-sub', data.cohort_note));
+      shared.appendChild(status);
+      const sharedStats = el('div', 'stats');
+      sharedStats.appendChild(stat(cohort.cohort.shared_installations, 'shared installs', 'fleet', `target ${cohort.targets.shared_installations}`));
+      sharedStats.appendChild(stat(cohort.cohort.seven_day_eligible, '7-day eligible', 'marshal'));
+      sharedStats.appendChild(stat(cohort.cohort.verified_handoff_rate === null ? '?' : `${Math.round(cohort.cohort.verified_handoff_rate * 100)}%`, 'verified handoff', 'ok'));
+      sharedStats.appendChild(stat(cohort.cohort.seven_day_return_rate === null ? '?' : `${Math.round(cohort.cohort.seven_day_return_rate * 100)}%`, '7-day return', 'skill'));
+      shared.appendChild(sharedStats);
+      for (const [name, result] of Object.entries(cohort.gates || {})) {
         const row = el('div', 'row');
-        row.appendChild(el('div', 'row-main', label));
-        row.appendChild(el('span', 'row-age', value));
-        block.appendChild(row);
+        row.appendChild(badge(result.state, result.state === 'passed' ? 'ok' : result.state === 'failed' ? 'danger' : 'warn'));
+        row.appendChild(el('div', 'row-main', name.replace(/_/g, ' ')));
+        const value = typeof result.value === 'number' && result.value <= 1 ? `${Math.round(result.value * 100)}%` : (result.value ?? '?');
+        const target = typeof result.target === 'number' && result.target <= 1 ? `${Math.round(result.target * 100)}%` : result.target;
+        const progress = result.state === 'waiting' && Number.isInteger(result.eligible_count)
+          ? `${result.eligible_count} / ${result.required_eligible} eligible`
+          : `${value} / ${result.direction === 'max' ? 'max' : 'target'} ${target}`;
+        row.appendChild(el('span', 'row-age', progress));
+        shared.appendChild(row);
       }
-      frag.appendChild(block);
+      frag.appendChild(shared);
     }
+    if (data.report) {
+      const report = data.report;
+      const local = section('Local activation journey');
+      const stats = el('div', 'stats');
+      stats.appendChild(stat(report.total_events, 'events', 'skill', 'local · redacted'));
+      stats.appendChild(stat(report.unique_installations, 'installations', 'marshal'));
+      stats.appendChild(stat(report.invalid_events, 'invalid events', report.invalid_events ? 'archon' : 'ok'));
+      stats.appendChild(stat(report.migrated_events, 'migrated events', 'fleet'));
+      local.appendChild(stats);
+      const note = el('div', 'card');
+      note.appendChild(el('div', 'card-title', data.mode === 'empty' ? 'No activation events yet' : 'Activation evidence'));
+      note.appendChild(el('div', 'card-sub', data.note));
+      local.appendChild(note);
+      frag.appendChild(local);
+      for (const [title, values] of [['Stages', report.by_stage], ['Outcomes', report.by_status], ['Acquisition', report.by_acquisition_source]]) {
+        const block = section(title);
+        const entries = Object.entries(values || {});
+        if (!entries.length) block.appendChild(emptyState(`No ${title.toLowerCase()} recorded.`, 'activation events populate this view'));
+        for (const [label, value] of entries) {
+          const row = el('div', 'row');
+          row.appendChild(el('div', 'row-main', label));
+          row.appendChild(el('span', 'row-age', value));
+          block.appendChild(row);
+        }
+        frag.appendChild(block);
+      }
+    }
+    if (!data.report && !cohort) frag.appendChild(emptyState(data.note || 'Activation evidence is unknown.', 'node scripts/activation-telemetry.js report'));
     return frag;
   }
 

@@ -88,6 +88,7 @@ const DASHBOARD_VISUAL_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-dashboard-
 const NOOP_DETECT_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-noop-detect.js');
 const RELEASE_INTEGRITY_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-release-integrity.js');
 const ACTIVATION_TELEMETRY_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-activation-telemetry.js');
+const ACTIVATION_COHORT_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-activation-cohort.js');
 const GITHUB_TRAFFIC_SNAPSHOT_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-github-traffic-snapshot.js');
 const GOLDEN_PATH_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-golden-path.js');
 const GOLDEN_PATH_MATRIX_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-golden-path-matrix.js');
@@ -187,6 +188,7 @@ const dashboardVisualPassed = run('Dashboard Visual Contract Tests', DASHBOARD_V
 const noopDetectPassed = run('No-op Detector Calibration', NOOP_DETECT_TEST);
 const releaseIntegrityPassed = run('Release Integrity Tests', RELEASE_INTEGRITY_TEST);
 const activationTelemetryPassed = run('Activation Telemetry Tests', ACTIVATION_TELEMETRY_TEST);
+const activationCohortPassed = run('Activation Cohort Tests', ACTIVATION_COHORT_TEST);
 const githubTrafficSnapshotPassed = run('GitHub Traffic Snapshot Tests', GITHUB_TRAFFIC_SNAPSHOT_TEST);
 const goldenPathPassed = run('Golden Path Fixture Tests', GOLDEN_PATH_TEST);
 const goldenPathMatrixPassed = run('Golden Path Matrix Tests', GOLDEN_PATH_MATRIX_TEST);
@@ -266,6 +268,7 @@ console.log(`  Dashboard visual:   ${dashboardVisualPassed ? 'PASS' : 'FAIL'}`);
 console.log(`  No-op detector:     ${noopDetectPassed ? 'PASS' : 'FAIL'}`);
 console.log(`  Release integrity:  ${releaseIntegrityPassed ? 'PASS' : 'FAIL'}`);
 console.log(`  Activation metrics: ${activationTelemetryPassed ? 'PASS' : 'FAIL'}`);
+console.log(`  Activation cohort:  ${activationCohortPassed ? 'PASS' : 'FAIL'}`);
 console.log(`  Acquisition history: ${githubTrafficSnapshotPassed ? 'PASS' : 'FAIL'}`);
 console.log(`  Golden path fixture: ${goldenPathPassed ? 'PASS' : 'FAIL'}`);
 console.log(`  Golden path matrix:  ${goldenPathMatrixPassed ? 'PASS' : 'FAIL'}`);
@@ -276,7 +279,7 @@ console.log(`  Ecosystem compat:    ${ecosystemCompatPassed ? 'PASS' : 'FAIL'}`)
 console.log(`  Product proof report: ${productProofReportPassed ? 'PASS' : 'FAIL'}`);
 console.log('');
 
-if (hooksPassed && securityPassed && contractsPassed && runtimeRegistryPassed && runtimeMatrixPassed && hookEventsPassed && skillsPassed && demoPassed && telemetryPassed && telemetryIntegrityPassed && memoryBlockPassed && evidenceContractPassed && sandboxProviderPassed && skillPackagingPassed && mapSubstratePassed && deliveryPassed && deliveryPackagePassed && continueActionPassed && nextActionPassed && routePreviewPassed && loopsPassed && operatingProofPassed && usefulnessTrialPassed && operatorConsolePassed && operatorJourneyPassed && firstUseOperatorPassed && verificationPlanPassed && prReadyPassed && stackPlanPassed && deployStewardPassed && agentsMdOnlyStewardPassed && coordinationPassed && hookInstallerPassed && campaignPassed && discoveryPassed && discoveryWriterPassed && momentumPassed && momentumWatcherPassed && policyPassed && claudeRuntimePassed && codexRuntimePassed && codexNativeIntegrationPassed && codexOperationalImprovementPassed && installerPassed && projectBootstrapPassed && compatFixturePassed && backwardCompatPassed && costTrackerPassed && dashboardPassed && docSyncPassed && fleetSessionPassed && worktreeReadinessPassed && postEditTypecheckPassed && routingSyncPassed && watchDedupPassed && teammateRebalancePassed && docSurfacesPassed && siteStoryPassed && telemetryOtlpPassed && stateHygienePassed && permissionAuditPassed && secretsLensPassed && dashboardWebPassed && dashboardPerfPassed && dashboardVisualPassed && noopDetectPassed && releaseIntegrityPassed && activationTelemetryPassed && githubTrafficSnapshotPassed && goldenPathPassed && goldenPathMatrixPassed && productBenchmarkPassed && productProofCohortPassed && sarifCoordinatesPassed && ecosystemCompatPassed && productProofReportPassed) {
+if (hooksPassed && securityPassed && contractsPassed && runtimeRegistryPassed && runtimeMatrixPassed && hookEventsPassed && skillsPassed && demoPassed && telemetryPassed && telemetryIntegrityPassed && memoryBlockPassed && evidenceContractPassed && sandboxProviderPassed && skillPackagingPassed && mapSubstratePassed && deliveryPassed && deliveryPackagePassed && continueActionPassed && nextActionPassed && routePreviewPassed && loopsPassed && operatingProofPassed && usefulnessTrialPassed && operatorConsolePassed && operatorJourneyPassed && firstUseOperatorPassed && verificationPlanPassed && prReadyPassed && stackPlanPassed && deployStewardPassed && agentsMdOnlyStewardPassed && coordinationPassed && hookInstallerPassed && campaignPassed && discoveryPassed && discoveryWriterPassed && momentumPassed && momentumWatcherPassed && policyPassed && claudeRuntimePassed && codexRuntimePassed && codexNativeIntegrationPassed && codexOperationalImprovementPassed && installerPassed && projectBootstrapPassed && compatFixturePassed && backwardCompatPassed && costTrackerPassed && dashboardPassed && docSyncPassed && fleetSessionPassed && worktreeReadinessPassed && postEditTypecheckPassed && routingSyncPassed && watchDedupPassed && teammateRebalancePassed && docSurfacesPassed && siteStoryPassed && telemetryOtlpPassed && stateHygienePassed && permissionAuditPassed && secretsLensPassed && dashboardWebPassed && dashboardPerfPassed && dashboardVisualPassed && noopDetectPassed && releaseIntegrityPassed && activationTelemetryPassed && activationCohortPassed && githubTrafficSnapshotPassed && goldenPathPassed && goldenPathMatrixPassed && productBenchmarkPassed && productProofCohortPassed && sarifCoordinatesPassed && ecosystemCompatPassed && productProofReportPassed) {
   console.log('All tests pass.\n');
   console.log('Next steps:');
   console.log('  node scripts/skill-bench.js --list      see benchmark scenarios');
@@ -425,6 +428,7 @@ if (!dashboardWebPassed) console.log('Dashboard web tests failed. Fix scripts/da
 if (!noopDetectPassed) console.log('No-op detector calibration failed. The detector regressed against core/skills/noop-calibration.json. Fix core/skills/noop-detect.js before shipping.');
 if (!releaseIntegrityPassed) console.log('Release integrity tests failed. Fix deterministic packaging, verification, update, or rollback behavior before shipping.');
 if (!activationTelemetryPassed) console.log('Activation telemetry tests failed. Fix local-only schema, privacy, migration, opt-out, or reporting behavior before shipping.');
+if (!activationCohortPassed) console.log('Activation cohort tests failed. Fix opt-in sharing, privacy, cohort denominators, or milestone gates before shipping.');
 if (!githubTrafficSnapshotPassed) console.log('GitHub traffic snapshot tests failed. Fix API normalization, credential redaction, or append-only history behavior before shipping.');
 if (!goldenPathPassed) console.log('Golden path fixture tests failed. Fix installer, setup, route, handoff, resume, failure recovery, or rollback behavior before shipping.');
 if (!goldenPathMatrixPassed) console.log('Golden path matrix tests failed. Fix real-platform aggregation, completeness, percentile, or threshold behavior before shipping.');
