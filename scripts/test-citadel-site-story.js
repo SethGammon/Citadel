@@ -10,6 +10,8 @@ const contract = fs.readFileSync(path.join(root, 'docs', 'interactive-story-cont
 
 const checks = [
   ['story section exists', html.includes('id="product-story"')],
+  ['hero shows the first-success path', html.includes('Citadel first-success path') && html.includes('/do next')],
+  ['screen transition names its value', html.includes('See the work survive a session')],
   ['campaign scenario exists', html.includes('data-story-scenario="campaign"')],
   ['review scenario exists', html.includes('data-story-scenario="review"')],
   ['fleet scenario exists', html.includes('data-story-scenario="fleet"')],
@@ -30,6 +32,8 @@ const checks = [
   ['mobile story layout exists', html.includes('.story-layout { grid-template-columns: 1fr; }')],
   ['experience contract names all acceptance questions', (contract.match(/^\d+\. /gm) || []).length >= 7],
   ['public story copy contains no em dash', !html.slice(html.indexOf('<section class="story-section"'), html.indexOf('<!-- Vertical tier cascade -->')).includes('—')]
+  ,['fallback documentation links are real', html.includes('href="CAMPAIGNS.md"') && html.includes('href="CLAUDE_INSTALLATION_GUIDE.md"')]
+  ,['public skill count is current', html.includes('Skills  -  49 built in') && !html.includes('Skills  -  45 installed')]
   ,['public proof and install copy contains no em dash', !html.slice(html.indexOf('<section class="proof-section"'), html.indexOf('<!-- Final CTA')).includes('—')]
   ,['site remains under declared 250KB source budget', Buffer.byteLength(html, 'utf8') < 250 * 1024]
   ,['animated stats preserve the published values', html.includes('const targets = [49, 4, 29, 2]') && !html.includes('const targets = [33, 4, 14, 0]')]

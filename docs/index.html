@@ -149,6 +149,27 @@
     .hero-proof span { padding-left: 12px; border-left: 2px solid var(--border); }
     .hero-proof strong { color: var(--green); font-size: 15px; }
 
+    .hero-outcomes {
+      display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
+      max-width: 720px; margin: 20px auto 0;
+      border: 1px solid color-mix(in srgb, var(--cyan) 18%, var(--border));
+      border-radius: 8px; overflow: hidden;
+      background: color-mix(in srgb, var(--surface) 88%, transparent);
+    }
+    .hero-outcome {
+      display: grid; grid-template-columns: auto 1fr; align-items: center; gap: 10px;
+      padding: 10px 14px; text-align: left;
+      color: var(--text); font-size: 12px; font-weight: 650;
+    }
+    .hero-outcome + .hero-outcome { border-left: 1px solid var(--border); }
+    .hero-outcome-step {
+      color: var(--cyan); font: 10px/1 'SF Mono', Consolas, monospace;
+      letter-spacing: 0.08em;
+    }
+    .hero-outcome code {
+      color: var(--cyan); font: inherit; font-family: 'SF Mono', Consolas, monospace;
+    }
+
     /* ─── Search bar ─── */
     .search-wrap {
       width: 100%; max-width: 860px;
@@ -823,19 +844,23 @@
       transform: translateX(-50%);
       background: none; border: none; cursor: pointer;
       color: var(--muted);
-      display: flex; flex-direction: column; align-items: center; gap: 1px;
-      padding: 8px; border-radius: 8px;
+      display: flex; flex-direction: column; align-items: center; gap: 4px;
+      padding: 8px 14px; border-radius: 8px;
       opacity: 0; pointer-events: none;
       transition: opacity 0.5s ease, color 0.15s;
       z-index: 50;
     }
     .scroll-cue.visible { opacity: 0.45; pointer-events: all; }
     .scroll-cue:hover { opacity: 1 !important; color: var(--cyan); }
+    .scroll-cue-label {
+      color: currentColor; font: 11px/1.2 'SF Mono', Consolas, monospace;
+      letter-spacing: 0.02em;
+    }
     @keyframes cue-drift {
       0%, 100% { transform: translateX(-50%) translateY(0); }
       50%       { transform: translateX(-50%) translateY(10px); }
     }
-    .scroll-cue.visible { animation: cue-drift 2s ease-in-out infinite; }
+    .scroll-cue.visible { animation: cue-drift 2s ease-in-out 3; }
 
     /* ─── Reset button ─── */
     .reset-btn {
@@ -1266,6 +1291,8 @@
     /* ─── Narrow mobile: hide star to prevent nav overflow ─── */
     @media (max-width: 540px) {
       .nav-star { display: none; }
+      nav > .nav-link, .nav-sep { display: none; }
+      .nav-right { gap: 8px; }
     }
 
     /* ─── Copy button ─── */
@@ -1352,6 +1379,24 @@
       .story-progress-bar, .story-scenario, .story-control, .story-file-tab,
       .runtime-tab, .proof-card, .install-copy { animation: none !important; transition: none !important; }
     }
+
+    @media (max-width: 760px) {
+      .hero-outcomes { grid-template-columns: repeat(3, minmax(0, 1fr)); max-width: 420px; margin-top: 12px; }
+      .hero-outcome { grid-template-columns: 1fr; gap: 4px; padding: 8px 5px; text-align: center; font-size: 10px; }
+      .hero-outcome + .hero-outcome { border-left: 1px solid var(--border); border-top: 0; }
+      .scroll-cue-label { font-size: 10px; }
+    }
+
+    @media (max-height: 820px) and (min-width: 761px) {
+      .hero { padding-top: 22px; padding-bottom: 8px; }
+      .hero-eyebrow { margin-bottom: 10px; }
+      .hero h1 { font-size: 40px; margin-bottom: 10px; }
+      .hero p { font-size: 15px; line-height: 1.5; }
+      .hero-proof, .hero-outcomes { margin-top: 10px; }
+      .search-wrap { padding-top: 16px; }
+      .generators { margin-top: 16px; margin-bottom: 14px; }
+      .gen-btn { padding-top: 12px; padding-bottom: 12px; }
+    }
   </style>
 </head>
 <body>
@@ -1366,7 +1411,7 @@
     <div class="nav-right">
       <span class="nav-badge">v1.1</span>
       <a class="nav-star" id="nav-star" href="https://github.com/SethGammon/Citadel">★ Star on GitHub</a>
-      <a class="nav-cta" href="#install-section" onclick="scrollToInstall(); return false;">Get Started</a>
+      <a class="nav-cta" href="#install-section" onclick="scrollToInstall(); return false;">Install Citadel</a>
     </div>
   </nav>
 
@@ -1388,6 +1433,11 @@
       <span><strong>30/30</strong> hosted journeys</span>
       <span><strong>2</strong> runtime surfaces</span>
       <span><strong>3</strong> operating systems</span>
+    </div>
+    <div class="hero-outcomes" aria-label="Citadel first-success path">
+      <div class="hero-outcome"><span class="hero-outcome-step">01</span><span>Install into your repository</span></div>
+      <div class="hero-outcome"><span class="hero-outcome-step">02</span><span>Route one task with <code>/do</code></span></div>
+      <div class="hero-outcome"><span class="hero-outcome-step">03</span><span>Resume from disk with <code>/do next</code></span></div>
     </div>
   </div>
 
@@ -1812,7 +1862,7 @@
         </div>
       </div>
       <div class="campaign-cta">
-        <a href="#" onclick="openPanel('campaigns'); return false;">Read the full campaign lifecycle →</a>
+        <a href="CAMPAIGNS.md" onclick="openPanel('campaigns'); return false;">Read the full campaign lifecycle →</a>
       </div>
     </div>
   </div>
@@ -1922,7 +1972,7 @@
           </div>
         </div>
         <div class="install-success"><strong>First verified success:</strong> run <code>/do review README.md</code>, inspect the route and handoff, then close the session and run <code>/do next</code> in a fresh one.</div>
-        <a class="install-guide-link" href="#" onclick="openPanel('install'); return false;">Full install guide →</a>
+        <a class="install-guide-link" href="CLAUDE_INSTALLATION_GUIDE.md" onclick="openPanel('install'); return false;">Full install guide →</a>
       </div>
     </div>
   </div>
@@ -2000,7 +2050,7 @@
   <!-- Skills panel -->
   <div class="side-panel" id="panel-skills">
     <div class="panel-header">
-      <span class="panel-title">Skills  -  45 installed</span>
+      <span class="panel-title">Skills  -  49 built in</span>
       <button class="panel-close" onclick="closePanel()">✕</button>
     </div>
     <div class="panel-body">
@@ -2129,7 +2179,8 @@
   </div>
 
   <!-- Scroll cue (fixed, outside sliding area) -->
-  <button class="scroll-cue" id="scroll-cue" onclick="goToScreen(1)" aria-label="Scroll to learn more">
+  <button class="scroll-cue" id="scroll-cue" onclick="goToScreen(1)" aria-label="See the work survive a session">
+    <span class="scroll-cue-label">See the work survive a session</span>
     <svg width="22" height="13" viewBox="0 0 22 13" fill="none">
       <path d="M1 1.5L11 10.5L21 1.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
     </svg>
