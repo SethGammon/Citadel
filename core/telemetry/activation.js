@@ -187,6 +187,22 @@ function readEvents(root = process.cwd()) {
 
 function increment(map, key) { map[key] = (map[key] || 0) + 1; }
 
+function rate(numerator, denominator) {
+  return denominator === 0 ? null : Number((numerator / denominator).toFixed(4));
+}
+
+function successfulInstallationsByStage(events) {
+  const byStage = Object.fromEntries(STAGES.map((stage) => [stage, new Set()]));
+  for (const event of events) {
+    if (event.status === 'succeeded') byStage[event.stage].add(event.installation_id);
+  }
+  return Object.fromEntries(STAGES.map((stage) => [stage, byStage[stage].size]));
+}
+
+function metric(numerator, denominator) {
+  return { numerator, denominator, rate: rate(numerator, denominator) };
+}
+
 function report(root = process.cwd()) {
   const read = readEvents(root);
   const stages = {}, statuses = {}, failures = {}, sources = {};
@@ -197,11 +213,35 @@ function report(root = process.cwd()) {
     increment(sources, event.acquisition_source);
     if (event.failure_code) increment(failures, event.failure_code);
   }
+  const successful = successfulInstallationsByStage(read.events);
+  const completedInstalls = successful.install_completed;
+  const stageRate = (stage) => ({
+    successful_installations: successful[stage],
+    rate_from_install: rate(successful[stage], completedInstalls),
+  });
   return {
     schema: 1, redacted: true, transmitted: false, total_events: read.events.length,
     unique_installations: installations.size, invalid_events: read.invalid_count,
     migrated_events: read.migrated_count, by_stage: stages, by_status: statuses,
     by_failure_code: failures, by_acquisition_source: sources,
+    activation_funnel: {
+      successful_installs: completedInstalls,
+      setup_completed: stageRate('setup_completed'),
+      route_completed: stageRate('route_completed'),
+      verified_handoff: stageRate('verified_handoff'),
+      resume_completed: stageRate('resume_completed'),
+      return_session: stageRate('return_session'),
+    },
+    decision_metrics: {
+      verified_activation_rate: metric(successful.verified_handoff, completedInstalls),
+      durable_resume_rate: metric(successful.resume_completed, completedInstalls),
+      return_use_rate: metric(successful.return_session, completedInstalls),
+    },
+    guardrails: {
+      failed_events: statuses.failed || 0,
+      failure_event_rate: rate(statuses.failed || 0, read.events.length),
+      invalid_events: read.invalid_count,
+    },
   };
 }
 
@@ -217,5 +257,6 @@ function setOptOut(root = process.cwd(), disabled = true) {
 module.exports = {
   SCHEMA, STAGES, STATUSES, FAILURE_CODES, ACQUISITION_SOURCES, RUNTIMES,
   OS_FAMILIES, EVENT_FIELDS, LEGACY_FIELDS, pathsFor, osFamily, validateEvent,
-  createEvent, record, migrateLegacy, readEvents, report, isEnabled, setOptOut,
+  createEvent, record, migrateLegacy, readEvents, rate,
+  successfulInstallationsByStage, report, isEnabled, setOptOut,
 };
