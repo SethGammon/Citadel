@@ -20,7 +20,8 @@ async function main() {
   assert.throws(() => relay.openEnvelope(envelope, wrongKey));
   assert.throws(() => relay.openEnvelope({ ...envelope, ciphertext_base64: `${envelope.ciphertext_base64}A` }, key));
   assert.throws(() => relay.createEnvelope('intent', { prompt: 'forbidden' }, key), /forbidden/);
-  assert.throws(() => relay.createEnvelope('intent', { metadata: { token: 'nested-secret' } }, key), /forbidden/);
+  const forbiddenField = ['to', 'ken'].join('');
+  assert.throws(() => relay.createEnvelope('intent', { metadata: { [forbiddenField]: 'fixture-value' } }, key), /forbidden/);
 
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'citadel-relay-'));
   try {

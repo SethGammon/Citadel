@@ -22,7 +22,7 @@ inputs:
 
 outputs:
   status:
-    description: Honest result: passed, failed, blocked, or unknown.
+    description: "Honest result: passed, failed, blocked, or unknown."
   receipt-path:
     description: Relative path to the unsigned Operations Protocol receipt.
   summary-path:
