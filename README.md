@@ -58,6 +58,29 @@ node .citadel/scripts/activation-telemetry.js share
 
 Nothing is transmitted. The bundle contains only an opaque ID, observation age, version, bounded journey outcomes, and explicit aggregate consent. Post it only if you choose to. The public [activation cohort](docs/PRODUCT_PROOF_TRIAL.md) is targeting 25 shared installations, 40% verified handoff, 25% resume, and 15% seven-day return before Citadel claims retained human use.
 
+## From outcome Pack to verifiable proof
+
+Citadel 1.2 turns the operating loop into a portable contract. Pick an outcome Pack, create a
+durable journey, then verify the receipt without trusting a dashboard or a chat transcript.
+
+```text
+citadel pack inspect ci-recovery
+citadel journey start --run-id run-ci-recovery --pack ci-recovery --runtime codex --project .
+citadel receipt verify --input .planning/operations/run-ci-recovery/receipt.json
+```
+
+| Layer | What ships | Trust boundary |
+|---|---|---|
+| **Outcome Packs** | CI recovery, migration campaign, and release steward workflows with strict permissions and dependencies | Local inspection and certification do not pretend to be marketplace trust |
+| **Operations Protocol v0.1** | Typed specs, runs, attempts, intents, evidence, and receipts across local, Codex, and GitHub targets | Missing or incomplete evidence stays `unknown` |
+| **Mission Control** | Pause, resume, stop, and retry through immutable typed intents | Localhost, exact origin, process nonce, capability, and revision checks |
+| **Proof ledger** | Deterministic public projections of passed, failed, blocked, and unknown outcomes | Independent claims require an external pinned trust root |
+
+<img src="output/playwright/mission-control-confirmation-fixed.png" width="100%" alt="Citadel Mission Control showing a running operation, pause and stop controls, and an explicit stop confirmation with the next effect" />
+
+The package CLI and provenance workflow are release-ready in this repository. Registry publication,
+outside Pack authors, and independent adoption remain explicit external milestones.
+
 ## What Is Citadel?
 
 Citadel turns one-off coding-agent chats into repeatable engineering workflows. Claude Code and Codex are strong at local reasoning and code edits, but each session still needs project context, safe operating rules, task routing, and a way to continue work after context resets. Citadel is that harness layer.
@@ -173,8 +196,11 @@ Four tiers let Citadel scale from a one-line edit to a multi-session campaign. Y
 | **Safety hooks** | <!-- GENERATED: hook-script-count -->35<!-- /GENERATED --> Node hook scripts across <!-- GENERATED: hook-event-count -->29<!-- /GENERATED --> lifecycle events protect files, gate risky actions, and record handoffs | [Hooks](docs/HOOKS.md) |
 | **Cost telemetry** | `/cost` and `/dashboard` show real token usage and session spend instead of guesses | [Reports](docs/REPORT_ARTIFACTS.md) |
 | **Product evidence** | Local activation stages and authenticated GitHub traffic snapshots separate attention and discovery sources from verified use without hosted analytics | [Activation metrics](docs/ACTIVATION_METRICS.md) |
+| **Operations Protocol** | Six strict contracts, durable journals, recovery, receipts, and a conformance runner make work portable and inspectable | [Protocol](docs/OPERATIONS_PROTOCOL.md) |
+| **Outcome Packs** | Three first-party Packs package useful journeys with permissions, dependencies, stopping conditions, and proof | [Packs](docs/PACKS.md) |
+| **GitHub verification Action** | A narrow read-only Action runs a declared workflow and emits an honest Operations Protocol receipt | [Action](docs/ACTION.md) |
 | **Golden-path verification** | A hosted 30/30 Claude/Codex × Windows/Linux/macOS fixture grid proves install, setup, route, verification, handoff, resume, and exact rollback while labeling human evidence separately | [Golden path](docs/GOLDEN_PATH.md) |
-| **Read-only dashboard** | Nine schema-1 views expose needs-you, campaign, fleet, loop, hook, handoff, cost, and activation state; missing data stays `unknown`, never false green | [Dashboard spec](docs/DASHBOARD_SPEC.md) |
+| **Actionable Mission Control** | Nine schema-1 views plus authorized pause, resume, stop, and retry controls; missing data stays `unknown`, never false green | [Dashboard spec](docs/DASHBOARD_SPEC.md) |
 | **Product benchmark** | Ten frozen bare-versus-harnessed scenarios preserve symmetric inputs, raw runs, negative results, and an explicit open utility gate | [Benchmark](docs/BENCHMARK.md) |
 | **Skill interoperability** | A digested external `SKILL.md` fixture installs unchanged under Claude and Codex projections, routes, verifies, emits local telemetry, hands off, and rolls back | [Interoperability](docs/INTEROPERABILITY.md) |
 | **Operator console** | `/do next` is a decision-first cockpit: current state, next action, risk boundary, verification profile | [Operating loop](docs/OPERATING_LOOP_PROOF.md) |
@@ -213,9 +239,9 @@ The full plan with exit criteria lives in [docs/ROADMAP.md](docs/ROADMAP.md). Th
 
 - **See It:** the read-only local dashboard now projects nine versioned views with explicit source health. Its 1,000-file CI gate enforces <1 second cold start, <500 ms updates, <64 MB complete RSS, and <10 MB dashboard overhead. Pixel baselines and stranger comprehension remain open gates. See [docs/DASHBOARD_SPEC.md](docs/DASHBOARD_SPEC.md).
 - **Prove It:** the reproducible benchmark contract now freezes ten symmetric bare-versus-harnessed scenarios and publishes its negative fixture result. Actual runs and external scenario selection remain open. See [docs/BENCHMARK.md](docs/BENCHMARK.md).
-- **Drive It:** approvals, steering, and a loop builder in the browser, through the same file contracts the terminal uses.
-- **Harden It:** teams-native fleet GA, sandboxed execution profiles, threat model v2, release integrity.
-- **Multiply It:** team workflows, a community skill and loop registry, and a third runtime adapter.
+- **Drive It:** typed pause, resume, stop, and retry controls now use the same immutable intent contract as the MCP server. Multi-operator approvals remain an external team gate.
+- **Harden It:** durable journals, deterministic recovery, receipt signatures, team policy, and strict release provenance now ship locally. Representative real-run reliability evidence remains open.
+- **Multiply It:** the Pack alpha, three first-party Packs, conformance tooling, and local Relay seam are built. Outside authors, a hosted signed registry, a third runtime adapter, and Relay demand remain explicit external gates.
 
 ## Learn More
 
@@ -233,6 +259,11 @@ The full plan with exit criteria lives in [docs/ROADMAP.md](docs/ROADMAP.md). Th
 - [Golden path verification](docs/GOLDEN_PATH.md) - deterministic runtime fixtures, cross-OS matrix rules, and human-proof boundaries
 - [Product benchmark](docs/BENCHMARK.md) - frozen methodology, raw fixture evidence, negative results, and remaining real-run gates
 - [Activation cohort](docs/PRODUCT_PROOF_TRIAL.md) - one-command opt-in bundle, explicit denominators, decision thresholds, and seven-day return protocol
+- [Operations Protocol](docs/OPERATIONS_PROTOCOL.md) - contracts, compatibility, conformance, and privacy boundaries
+- [Outcome Packs](docs/PACKS.md) - manifests, permissions, dependency safety, journeys, and certification
+- [GitHub verification Action](docs/ACTION.md) - bounded inputs, receipts, and least-privilege usage
+- [External milestone gates](docs/EXTERNAL_MILESTONE_GATES.md) - machine-readable thresholds that cannot be satisfied by fixtures
+- [Reliability learning](docs/RELIABILITY_LEARNING.md) - consented dataset sufficiency, held-out evidence, and non-automatic recommendations
 - [Interoperability](docs/INTEROPERABILITY.md) - external skill compatibility, provenance limits, and remote registry boundaries
 - [Citadel 1.1 product-proof scorecard](docs/PRODUCT_PROOF_REPORT.md) - what is locally proven, CI-proven, human-proven, and still blocked
 - [Skill and memory visibility](docs/SKILL_MEMORY_VISIBILITY.md) - inspect available skills and compiled project memory

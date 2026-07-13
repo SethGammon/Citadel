@@ -16,6 +16,7 @@ const path = require('path');
 const { EventEmitter } = require('events');
 
 const { createServer, createDataSource, deriveViews, resolveEvidencePath, startWatcher } = require('./dashboard-server');
+const { sha256Digest } = require('../core/operations');
 
 let failures = 0;
 
@@ -41,6 +42,24 @@ function write(root, relativePath, content) {
 
 function cleanup(root) {
   try { fs.rmSync(root, { recursive: true, force: true }); } catch { /* best effort */ }
+}
+
+function operationRecord(operationId, status, capabilities, revision = 3) {
+  const now = '2026-07-13T12:00:00.000Z';
+  const spec = {
+    protocol_version: '0.1', kind: 'operation_spec', operation_id: operationId,
+    title: `Dashboard ${operationId}`, objective_digest: sha256Digest({ operationId }),
+    step_ids: ['step-dashboard'], policy_digests: [], created_at: now,
+  };
+  return {
+    control_version: '0.1', revision, capabilities, spec,
+    run: {
+      protocol_version: '0.1', kind: 'operation_run', run_id: `run-${operationId}`,
+      operation_id: operationId, spec_digest: sha256Digest(spec), status,
+      started_at: status === 'pending' ? null : now, completed_at: null,
+      intent_ids: [], step_attempt_ids: [],
+    },
+  };
 }
 
 async function main() {
@@ -230,6 +249,10 @@ async function main() {
   const httpRoot = makeFixture('http');
   const outsideRoot = makeFixture('outside');
   write(httpRoot, '.planning/handoffs/one.md', '# h\n');
+  write(httpRoot, '.planning/operations/control/operation-pause.json', JSON.stringify(
+    operationRecord('operation-pause', 'running', ['pause'])));
+  write(httpRoot, '.planning/operations/control/operation-denied.json', JSON.stringify(
+    operationRecord('operation-denied', 'running', [])));
   write(outsideRoot, 'secret.md', 'must not escape\n');
   let symlinkCreated = false;
   try {
@@ -284,10 +307,99 @@ async function main() {
 
     const method = await fetch(`${base}/api/overview`, { method: 'POST' });
     check('http: write methods rejected', method.status === 405, `got ${method.status}`);
+
+    const controlResponse = await fetch(`${base}/api/control`);
+    const control = await controlResponse.json();
+    check('http: process nonce is exposed through no-store same-origin state',
+      controlResponse.status === 200 && control.nonce.length >= 32
+      && controlResponse.headers.get('cache-control') === 'no-store');
+
+    const intent = {
+      operation_id: 'operation-pause', expected_revision: 3, idempotency_key: 'dashboard-pause',
+      actor: 'actor-dashboard', reason: 'Pause from Mission Control', capability: 'pause', action: 'pause',
+    };
+    const post = (body, headers = {}) => fetch(`${base}/api/intents`, {
+      method: 'POST',
+      headers: {
+        origin: base, 'x-citadel-nonce': control.nonce, 'content-type': 'application/json', ...headers,
+      },
+      body: typeof body === 'string' ? body : JSON.stringify(body),
+    });
+
+    const badOrigin = await post(intent, { origin: 'http://127.0.0.1:9' });
+    check('http: strict origin rejects foreign callers', badOrigin.status === 403
+      && (await badOrigin.json()).reason_code === 'ORIGIN_REJECTED');
+    const badNonce = await post(intent, { 'x-citadel-nonce': 'not-the-process-nonce' });
+    check('http: process nonce rejects forged callers', badNonce.status === 403
+      && (await badNonce.json()).reason_code === 'NONCE_REJECTED');
+    const badType = await post(intent, { 'content-type': 'text/plain' });
+    check('http: JSON content type is mandatory', badType.status === 415
+      && (await badType.json()).reason_code === 'CONTENT_TYPE_REJECTED');
+    const tooLarge = await post(JSON.stringify({ padding: 'x'.repeat(17000) }));
+    check('http: oversized intent bodies are rejected', tooLarge.status === 413
+      && (await tooLarge.json()).reason_code === 'BODY_TOO_LARGE');
+
+    const acceptedResponse = await post(intent);
+    const accepted = await acceptedResponse.json();
+    check('http: valid pause queues an immutable intent', acceptedResponse.status === 202
+      && accepted.outcome === 'accepted' && accepted.intent_id);
+    const duplicateResponse = await post(intent);
+    const duplicate = await duplicateResponse.json();
+    check('http: duplicate idempotency returns the same outcome', duplicateResponse.status === 202
+      && JSON.stringify(duplicate) === JSON.stringify(accepted));
+    const pendingFiles = fs.readdirSync(path.join(httpRoot, '.planning', 'intents', 'pending'))
+      .filter((name) => name.endsWith('.json'));
+    check('http: duplicate idempotency creates one pending file', pendingFiles.length === 1);
+    const campaignsAfterIntent = await fetch(`${base}/api/campaigns`).then((response) => response.json());
+    const pendingOperation = campaignsAfterIntent.data.operations.find((entry) => entry.operation_id === 'operation-pause');
+    check('http: canonical pending intent is projected into Mission Control',
+      pendingOperation.pending_intent.action === 'pause');
+
+    const staleResponse = await post({ ...intent, expected_revision: 2, idempotency_key: 'dashboard-stale' });
+    check('http: stale revision returns conflict', staleResponse.status === 409
+      && (await staleResponse.json()).reason_code === 'STALE_REVISION');
+    const blockedResponse = await post({
+      ...intent, operation_id: 'operation-denied', idempotency_key: 'dashboard-denied',
+    });
+    check('http: missing capability returns blocked', blockedResponse.status === 403
+      && (await blockedResponse.json()).reason_code === 'CAPABILITY_NOT_GRANTED');
+    const commandResponse = await post({ ...intent, idempotency_key: 'dashboard-command', command: 'whoami' });
+    check('http: arbitrary command fields are rejected', commandResponse.status === 400
+      && (await commandResponse.json()).reason_code === 'INVALID_ARGUMENTS');
   } finally {
     await new Promise((resolve) => server.close(resolve));
     cleanup(httpRoot);
     cleanup(outsideRoot);
+  }
+
+  const symlinkRoot = makeFixture('intent-symlink');
+  const symlinkOutside = makeFixture('intent-symlink-outside');
+  let symlinkServer;
+  try {
+    write(symlinkRoot, '.planning/operations/control/operation-pause.json', JSON.stringify(
+      operationRecord('operation-pause', 'running', ['pause'])));
+    fs.mkdirSync(path.join(symlinkOutside, 'intents-target'), { recursive: true });
+    fs.symlinkSync(path.join(symlinkOutside, 'intents-target'), path.join(symlinkRoot, '.planning', 'intents'),
+      process.platform === 'win32' ? 'junction' : 'dir');
+    symlinkServer = createServer({ projectRoot: symlinkRoot });
+    await new Promise((resolve) => symlinkServer.listen(0, '127.0.0.1', resolve));
+    const symlinkBase = `http://127.0.0.1:${symlinkServer.address().port}`;
+    const symlinkControl = await fetch(`${symlinkBase}/api/control`).then((response) => response.json());
+    const response = await fetch(`${symlinkBase}/api/intents`, {
+      method: 'POST',
+      headers: { origin: symlinkBase, 'x-citadel-nonce': symlinkControl.nonce, 'content-type': 'application/json' },
+      body: JSON.stringify({
+        operation_id: 'operation-pause', expected_revision: 3, idempotency_key: 'symlink-block',
+        actor: 'actor-dashboard', reason: 'Must remain contained', capability: 'pause', action: 'pause',
+      }),
+    });
+    check('http: symlinked intent store is blocked', response.status === 503
+      && (await response.json()).reason_code === 'INTENT_STORE_UNAVAILABLE');
+    check('http: symlink target remains untouched', fs.readdirSync(path.join(symlinkOutside, 'intents-target')).length === 0);
+  } finally {
+    if (symlinkServer) await new Promise((resolve) => symlinkServer.close(resolve));
+    cleanup(symlinkRoot);
+    cleanup(symlinkOutside);
   }
 
   if (failures > 0) {

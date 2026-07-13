@@ -1,26 +1,26 @@
-# Citadel Dashboard Specification (R1: schema 1 read-only)
+# Citadel Mission Control Specification (schema 1 views, immutable intent actions)
 
 `citadel dashboard` (also `npm run dashboard:web`) serves a local web app that renders the
 project's `.planning/` state and telemetry live. It is the visible form of the harness:
-campaigns, fleet, loops, hooks, costs, and handoffs in one glanceable surface.
+campaigns, operations, fleet, loops, hooks, costs, and handoffs in one glanceable surface.
 
-This document specifies the read-only schema-1 projection and names the contracts that v0.2+ (two-way) will
-build on. Roadmap context lives in [ROADMAP.md](ROADMAP.md) R1 and R3.
+This document specifies the schema-1 projection and the narrow Operations Protocol intent surface.
+Roadmap context lives in [ROADMAP.md](ROADMAP.md) R1 and R3.
 
 ## Principles
 
 1. **Files are canonical.** The dashboard is a view over `.planning/` markdown and JSON plus
-   telemetry JSONL. Deleting the dashboard loses nothing. It never holds state the files do
-   not.
-2. **One contract for terminal and browser.** In v0.2, browser actions write intent files
-   into `.planning/` that hooks and agents consume. The dashboard never gets a private API
+   telemetry JSONL. Deleting the dashboard loses nothing. Accepted actions are immutable intent
+   files, not private dashboard state.
+2. **One contract for terminal and browser.** Browser actions write Operations Protocol intent
+   files into `.planning/intents/pending/` that authorized executors may consume. The dashboard never gets a private API
    into the runtime; if the terminal cannot do it through files, neither can the browser.
 3. **Honesty over polish.** Unknown state renders as unknown, never green. Every cost figure
    derived from token math carries an "est." label. Every claim links to its evidence: the
    diff, the file, the telemetry line.
-4. **Local only.** Binds to `127.0.0.1`. No auth layer in v0.1 because there is no remote
-   access. Adding remote access in any form is out of scope for this spec and gated on the
-   threat model (ROADMAP R4).
+4. **Local only.** Binds to `127.0.0.1`. Mutation requests require the exact loopback origin,
+   a per-process nonce, JSON content type, and a bounded body. Remote access is out of scope and
+   gated on the threat model (ROADMAP R4).
 
 ## Architecture
 
@@ -31,6 +31,7 @@ build on. Roadmap context lives in [ROADMAP.md](ROADMAP.md) R1 and R3.
 scripts/dashboard-server.js     Node, stdlib only, no new runtime deps
   ├── normalizers (core/…)      parse-campaign, loops, fleet, telemetry readers
   ├── GET /api/*                normalized JSON snapshots
+  ├── POST /api/intents         validated immutable pause/resume/stop/retry intents
   ├── GET /api/events           SSE: push invalidation keys on file change
   └── static /                  single-bundle SPA (no CDN, works offline)
 ```
@@ -62,6 +63,33 @@ input is `unreadable`, and neither may be presented as a green zero.
 | `/api/handoffs` | `.planning/handoffs/`, campaign records | timeline of `{ at, campaign, summary, path }` |
 | `/api/cost` | OTLP receiver + transcript fallback | see Cost modes |
 | `/api/activation` | activation report or local activation JSONL | redacted totals by stage, status, failure, and acquisition source |
+| `/api/control` | process memory | same-origin process nonce and allowed intent actions |
+
+## Action contract
+
+`POST /api/intents` is the only write endpoint. It accepts exactly:
+
+```text
+operation_id, expected_revision, idempotency_key, actor, reason, capability, action
+```
+
+`action` and `capability` are limited to `pause`, `resume`, `stop`, or `retry`. The endpoint
+never accepts a command, script, path, prompt, or arbitrary metadata. It passes the request to
+`core/operations/intents.js`, which checks the current revision, capability grant, lifecycle
+transition, project containment, and idempotency decision before writing anything.
+
+Accepted calls atomically create one immutable pending intent. They do not edit an operation,
+campaign, or runtime file. Duplicate calls with the same key and request return the same result.
+Stale revisions return `conflict`; missing capabilities return `blocked`; unavailable or unsafe
+state returns `unknown`.
+
+Mission Control projects the canonical pending queue back onto operation cards. While an intent
+is pending, the duplicate controls remain unavailable and the UI states that no lifecycle change
+has been assumed.
+
+The browser first reads `/api/control`, which returns a random nonce held only for the lifetime
+of the server process. A mutation must send that nonce in `X-Citadel-Nonce`, use the exact
+`http://127.0.0.1:<port>` origin, declare JSON content, and stay within the 16 KiB body limit.
 
 `needs_you` is the product. It aggregates anything waiting on a human: campaign phase gates,
 fleet merge reviews, loops in `needs-human-review` or `blocked`, stale approvals. Sorted by
@@ -91,14 +119,14 @@ instruction to enable it, never zero. Provider-specific token and OTLP adapters 
 |---|---|---|
 | Needs You (home) | aggregated interrupts, age-sorted, count in tab title | each item links to its file/diff |
 | Campaigns | cards: phase progress, status, last handoff, evidence freshness | campaign md, handoff md |
+| Operations | state, revision, next executor effect, capability-aware controls, result feedback | operation control record, immutable pending intent |
 | Fleet | agents, scopes, worktrees, wave status, merge queue preview | worktree paths, discovery log |
 | Loops | contract cards: budget burn-down, verifier history, stop-state badge | loop JSON, review artifact |
 | Cost | tracked or estimated session and campaign spend, explicitly labeled | telemetry lines |
 | Hook feed | recent decisions, blocks first, friendly reason text | rule + target file |
 | Activation | local redacted funnel plus opt-in shared cohort status, denominators, and decision gates | activation and cohort report JSON |
 
-Multi-project switching, fortress view, and any write action are explicitly v0.2+
-(ROADMAP R3). Ship the six panels well.
+Multi-project switching, fortress view, and direct runtime mutation remain future work.
 
 ## Quality bars
 
@@ -119,8 +147,8 @@ narrates state change: 150-250 ms transitions, transforms and opacity only,
 over adjectives. Every empty state teaches (shows the command that would populate it);
 every error names the next action.
 
-**Keyboard.** `?` overlay, j/k through the needs-you queue, Enter to open evidence, cmd+K
-switcher reserved for v0.2.
+**Keyboard.** `?` overlay, j/k through the needs-you queue, Enter to open evidence, and Escape
+to cancel a stop or retry confirmation and restore focus. Native buttons remain tab accessible.
 
 ## Verification
 
@@ -147,11 +175,15 @@ switcher reserved for v0.2.
 - `node scripts/test-dashboard-visual.js`: dark/light desktop and 380 px design-token/layout
   baselines plus keyboard and reduced-motion contracts pass. This is browserless structural
   evidence, not a pixel screenshot baseline; pixel captures remain pending a browser runtime.
+- `node scripts/test-dashboard-interactions.js`: browserless state, risk confirmation, keyboard,
+  feedback, nonce submission, responsive, and reduced-motion semantics.
+- `node scripts/test-dashboard-web.js`: loopback origin, nonce, JSON content, body bound,
+  idempotency, revision, capability, arbitrary-field, and symlink containment checks.
 - Human comprehension remains external: the 8/10 first-time-user result and the under-60-second
   explanation check are not yet proven.
 
 ## Out of scope for v0.1
 
-Write actions of any kind, remote access, auth, hosted anything, fortress view,
-multi-project aggregation, Repobeats-style public embeds. Each is either R3 work or parked
-per the roadmap.
+Direct runtime mutation, arbitrary commands, remote access, hosted operation, fortress view,
+multi-project aggregation, and public embeds. Mission Control can request an action through an
+immutable intent, but only a separately authorized executor can perform it.

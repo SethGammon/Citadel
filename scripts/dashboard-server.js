@@ -3,7 +3,7 @@
 'use strict';
 
 /**
- * dashboard-server.js -- Citadel local web dashboard (v0.1, read-only).
+ * dashboard-server.js -- Citadel local Mission Control dashboard.
  *
  * Serves the project's .planning state and telemetry as normalized JSON
  * endpoints plus a static single-page UI, with SSE invalidation driven by
@@ -15,6 +15,7 @@
  */
 
 const http = require('http');
+const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
 const { spawn } = require('child_process');
@@ -22,6 +23,13 @@ const { spawn } = require('child_process');
 const { collectDashboard } = require('./dashboard');
 const { listLoops } = require('../core/loops/registry');
 const { report: activationReport } = require('../core/telemetry/activation');
+const {
+  fixedProjectRoot,
+  listOperations,
+  readOperation,
+  submitIntent,
+  validateControlResult,
+} = require('../core/operations/intents');
 
 const DEFAULT_PORT = 4180;
 const BIND_HOST = '127.0.0.1';
@@ -30,6 +38,7 @@ const WATCH_DEBOUNCE_MS = 300;
 const WATCH_POLL_FALLBACK_MS = 2000;
 const SSE_HEARTBEAT_MS = 25000;
 const RECENT_LIMIT = 25;
+const INTENT_BODY_LIMIT = 16 * 1024;
 const STATIC_DIR = path.join(__dirname, '..', 'dashboard');
 
 const MIME = {
@@ -69,7 +78,7 @@ function usage() {
   return [
     'Usage: node scripts/dashboard-server.js [--port 4180] [--project-root <path>] [--open]',
     '',
-    'Serves a read-only local dashboard over .planning/ state and telemetry.',
+    'Serves local Mission Control over canonical .planning/ state.',
     'Binds to 127.0.0.1 only. See docs/DASHBOARD_SPEC.md.',
   ].join('\n');
 }
@@ -140,6 +149,7 @@ function createDataSource(projectRoot) {
       loops,
       daemon: readDaemon(),
       handoffs: readHandoffs(),
+      operations: readOperationControls(projectRoot),
     };
     collected.sources = inspectSources(projectRoot, collected);
     collected.activation = readActivation(projectRoot, collected.sources.activation);
@@ -160,6 +170,49 @@ function createDataSource(projectRoot) {
       state.dirty = true;
     },
   };
+}
+
+function readOperationControls(projectRoot) {
+  try {
+    const pending = readPendingIntents(projectRoot);
+    const listed = listOperations(projectRoot);
+    return listed.operations.map((summary) => {
+      if (summary.status === 'unknown') return summary;
+      const state = readOperation(projectRoot, summary.operation_id);
+      return state.operation ? {
+        operation_id: state.operation.spec.operation_id,
+        title: state.operation.spec.title,
+        revision: state.operation.revision,
+        status: state.operation.run.status,
+        capabilities: [...state.operation.capabilities],
+        pending_intent: pending.get(state.operation.spec.operation_id) || null,
+      } : { ...summary, title: summary.operation_id };
+    });
+  } catch {
+    return [];
+  }
+}
+
+function readPendingIntents(projectRoot) {
+  const intents = new Map();
+  const directory = path.join(projectRoot, '.planning', 'intents', 'pending');
+  try {
+    if (!fs.existsSync(directory) || fs.lstatSync(directory).isSymbolicLink()) return intents;
+    const realRoot = fs.realpathSync(projectRoot);
+    const realDirectory = fs.realpathSync(directory);
+    if (escapesRoot(realRoot, realDirectory)) return intents;
+    for (const name of fs.readdirSync(realDirectory).filter((entry) => entry.endsWith('.json')).sort()) {
+      const file = path.join(realDirectory, name);
+      if (fs.lstatSync(file).isSymbolicLink()) continue;
+      const record = JSON.parse(fs.readFileSync(file, 'utf8'));
+      const intent = record.protocol_intent;
+      if (!intent || record.result?.outcome !== 'accepted' || typeof record.capability !== 'string') continue;
+      intents.set(intent.operation_id, { intent_id: intent.intent_id, action: record.capability });
+    }
+  } catch {
+    return new Map();
+  }
+  return intents;
 }
 
 function source(pathname, status, detail, count = null, unreadable = []) {
@@ -438,6 +491,7 @@ function deriveViews(data) {
       active: snapshot.campaigns || [],
       skipped: snapshot.skippedCampaigns || [],
       ledger: snapshot.outcomeLedger || [],
+      operations: data.operations || [],
     },
     fleet: {
       state: sources.fleet || source('.planning/fleet', 'unknown', 'source state unavailable'),
@@ -599,10 +653,12 @@ function resolveEvidencePath(projectRoot, requested, fileSystem = fs) {
 }
 
 function createServer(options) {
-  const source = createDataSource(options.projectRoot);
+  const projectRoot = fixedProjectRoot(options.projectRoot);
+  const source = createDataSource(projectRoot);
   const sseClients = new Set();
+  const processNonce = crypto.randomBytes(32).toString('base64url');
 
-  const stopWatcher = startWatcher(options.projectRoot, () => {
+  const stopWatcher = startWatcher(projectRoot, () => {
     source.invalidate();
     for (const client of sseClients) {
       client.write('data: {"changed":"planning"}\n\n');
@@ -614,9 +670,90 @@ function createServer(options) {
   }, SSE_HEARTBEAT_MS);
   heartbeat.unref();
 
+  function json(res, status, value) {
+    res.writeHead(status, {
+      'content-type': MIME['.json'],
+      'cache-control': 'no-store',
+      'x-content-type-options': 'nosniff',
+    });
+    res.end(JSON.stringify(value));
+  }
+
+  function expectedOrigin() {
+    const address = server.address();
+    return address && typeof address === 'object' ? `http://${BIND_HOST}:${address.port}` : null;
+  }
+
+  function readIntentBody(req, res, callback) {
+    let size = 0;
+    let body = '';
+    let complete = false;
+    req.setEncoding('utf8');
+    req.on('data', (chunk) => {
+      if (complete) return;
+      size += Buffer.byteLength(chunk, 'utf8');
+      if (size > INTENT_BODY_LIMIT) {
+        complete = true;
+        json(res, 413, { outcome: 'rejected', reason_code: 'BODY_TOO_LARGE' });
+        req.resume();
+        return;
+      }
+      body += chunk;
+    });
+    req.on('end', () => {
+      if (complete) return;
+      complete = true;
+      try { callback(JSON.parse(body)); }
+      catch { json(res, 400, { outcome: 'rejected', reason_code: 'INVALID_JSON' }); }
+    });
+  }
+
   const server = http.createServer((req, res) => {
     const url = new URL(req.url, `http://${BIND_HOST}`);
     const route = url.pathname;
+
+    if (req.method === 'POST' && route === '/api/intents') {
+      if (req.headers.origin !== expectedOrigin()) {
+        json(res, 403, { outcome: 'rejected', reason_code: 'ORIGIN_REJECTED' });
+        return;
+      }
+      const nonce = req.headers['x-citadel-nonce'];
+      if (typeof nonce !== 'string' || nonce.length !== processNonce.length
+        || !crypto.timingSafeEqual(Buffer.from(nonce), Buffer.from(processNonce))) {
+        json(res, 403, { outcome: 'rejected', reason_code: 'NONCE_REJECTED' });
+        return;
+      }
+      const contentType = String(req.headers['content-type'] || '').toLowerCase();
+      if (!/^application\/json(?:\s*;\s*charset=utf-8)?$/.test(contentType)) {
+        json(res, 415, { outcome: 'rejected', reason_code: 'CONTENT_TYPE_REJECTED' });
+        return;
+      }
+      readIntentBody(req, res, (body) => {
+        let result;
+        try {
+          result = submitIntent(projectRoot, body);
+        } catch {
+          result = {
+            outcome: 'unknown', operation_id: typeof body?.operation_id === 'string' ? body.operation_id : 'invalid-operation',
+            action: ['pause', 'resume', 'stop', 'retry'].includes(body?.action) ? body.action : 'pause',
+            intent_id: null,
+            expected_revision: Number.isInteger(body?.expected_revision) && body.expected_revision >= 0 ? body.expected_revision : 0,
+            current_revision: null, reason_code: 'INTENT_STORE_UNAVAILABLE',
+          };
+        }
+        if (validateControlResult(result).length) {
+          json(res, 500, { outcome: 'unknown', reason_code: 'INVALID_CONTROL_RESULT' });
+          return;
+        }
+        source.invalidate();
+        const status = result.outcome === 'accepted' ? 202
+          : result.outcome === 'conflict' ? 409
+            : result.outcome === 'blocked' ? 403
+              : result.outcome === 'unknown' ? 503 : 400;
+        json(res, status, result);
+      });
+      return;
+    }
 
     if (req.method !== 'GET') {
       res.writeHead(405, { 'content-type': 'text/plain' }).end('method not allowed');
@@ -636,6 +773,15 @@ function createServer(options) {
     }
 
     if (route.startsWith('/api/')) {
+      if (route === '/api/control') {
+        json(res, 200, {
+          schema: 1,
+          nonce: processNonce,
+          actions: ['pause', 'resume', 'stop', 'retry'],
+          writes: 'immutable-intents-only',
+        });
+        return;
+      }
       const data = source.get();
       const views = deriveViews(data);
       const routes = {
@@ -664,7 +810,7 @@ function createServer(options) {
 
     if (route === '/evidence') {
       const requested = url.searchParams.get('path') || '';
-      const target = resolveEvidencePath(options.projectRoot, requested);
+      const target = resolveEvidencePath(projectRoot, requested);
       if (!target) {
         res.writeHead(404, { 'content-type': 'text/plain; charset=utf-8' }).end('evidence not found');
         return;
@@ -727,4 +873,4 @@ if (require.main === module) {
   main();
 }
 
-module.exports = { createServer, createDataSource, deriveViews, deriveNeedsYou, inspectSources, parseArgs, planningSignature, projectionState, resolveEvidencePath, startWatcher };
+module.exports = { createServer, createDataSource, deriveViews, deriveNeedsYou, inspectSources, parseArgs, planningSignature, projectionState, readOperationControls, readPendingIntents, resolveEvidencePath, startWatcher };

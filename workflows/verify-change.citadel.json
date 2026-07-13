@@ -1,0 +1,56 @@
+{
+  "schema_version": 1,
+  "operation": {
+    "protocol_version": "0.1",
+    "kind": "operation_spec",
+    "operation_id": "verify-change",
+    "title": "Verify a proposed change",
+    "objective_digest": "sha256:72db39bcb480d5cbf78694603a860ffa9d4cb5592026843bf69ca2a1c641c193",
+    "step_ids": [
+      "inspect-change",
+      "run-verifier"
+    ],
+    "policy_digests": [
+      "sha256:29a43ce9d45c5e09bed93178d2a40b2c6a3cc7875a438c72d7963a52e91932d7"
+    ],
+    "created_at": "2026-07-13T00:00:00.000Z"
+  },
+  "steps": [
+    {
+      "id": "inspect-change",
+      "name": "Inspect change integrity",
+      "argv": ["git", "diff", "--check"],
+      "evidence_type": "diff"
+    },
+    {
+      "id": "run-verifier",
+      "name": "Run project verifier",
+      "argv": ["npm", "test"],
+      "evidence_type": "test"
+    }
+  ],
+  "verifier": {
+    "step_id": "run-verifier",
+    "required_status": "passed",
+    "missing_evidence_status": "unknown"
+  },
+  "evidence": {
+    "states": ["passed", "failed", "blocked", "unknown"]
+  },
+  "outcome": {
+    "failure_status": "failed",
+    "cancellation_status": "unknown"
+  },
+  "receipt": {
+    "path": ".planning/receipts/verify-change.json",
+    "issuer_id": "issuer-citadel-compiler"
+  },
+  "required_capabilities": [
+    "ordered_steps",
+    "verifier",
+    "evidence_states",
+    "failure_status",
+    "cancellation_status",
+    "receipt_path"
+  ]
+}

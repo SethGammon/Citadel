@@ -2,6 +2,41 @@
 
 All notable Citadel changes are recorded here. Citadel follows semantic versioning.
 
+## 1.2.0 - 2026-07-13
+
+### Added
+
+- A conventional `citadel` package CLI for install, doctor, update, rollback, uninstall,
+  Pack inspection, starter journeys, and offline receipt verification.
+- Operations Protocol v0.1 contracts for specs, runs, attempts, intents, evidence, and
+  receipts, plus deterministic adapter conformance and three-target workflow compilation.
+- Durable journals, checkpoint recovery, chaos verification, and Ed25519 execution receipts.
+- Three first-party outcome Packs with strict manifests, permissions, certification,
+  dependency enforcement, and proof-producing journeys.
+- A read-only GitHub verification Action, provenance-ready trusted publishing workflow, and
+  a classified proof ledger that preserves passed, failed, blocked, and unknown outcomes.
+- Typed MCP task control and actionable local Mission Control controls for pause, resume,
+  stop, and retry through immutable intents.
+- Hierarchical team policy, a five-operator pilot simulator, local-first encrypted Relay
+  envelopes, external milestone gates, and privacy-safe reliability analysis.
+
+### Changed
+
+- Canonical package and plugin surfaces are aligned at `1.2.0`.
+- The dashboard now presents authorized operation controls, exact next effects, confirmation
+  for destructive actions, and honest pending-intent state.
+- The strict suite now includes operation, Pack, proof, control, team, Relay, and reliability
+  contracts.
+
+### Security
+
+- GitHub workflow argv is executed without a shell, YAML values are mechanically quoted,
+  and semantic coverage is derived from generated artifacts.
+- Independent proof requires an externally pinned trust root; bundle-controlled keys cannot
+  claim independent provenance.
+- Relay rejects nested sensitive fields, traversal, and symlinked outbox entries.
+- Passed receipts require complete required-step and verifier evidence coverage.
+
 ## 1.1.0 - 2026-07-12
 
 ### Added

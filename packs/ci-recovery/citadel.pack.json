@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "id": "citadel/ci-recovery",
+  "name": "ci-recovery",
+  "version": "0.1.0",
+  "description": "Investigate a failing pull request check, repair only verified causes, rerun evidence, and leave a durable handoff.",
+  "publisher": { "id": "citadel", "name": "Citadel Maintainers" },
+  "skills": ["pr-watch", "systematic-debugging", "verify", "session-handoff"],
+  "dependencies": [],
+  "permissions": {
+    "filesystem": "workspace-write",
+    "network": "restricted",
+    "external_actions": "approval-required"
+  },
+  "capabilities": ["workspace", "git", "verification", "github-read", "campaign-state"],
+  "runtimes": ["claude-code", "codex"],
+  "entry_workflow": "workflows/ci-recovery.json",
+  "artifacts": [".planning/pack-runs/ci-recovery.json", ".planning/handoffs/ci-recovery.md"],
+  "verification": [
+    { "id": "focused-check", "command": "run the originally failing check", "required": true },
+    { "id": "regression-check", "command": "run the repository verification command", "required": true }
+  ],
+  "stopping_conditions": ["verified", "failed", "blocked", "unknown", "needs-human-review", "attempt-limit", "unsafe-to-continue"]
+}

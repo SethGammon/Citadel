@@ -1,10 +1,59 @@
-/* Citadel dashboard v0.1 — read-only client.
+/* Citadel Mission Control client.
    Fetches /api/* snapshots, re-renders the active panel on SSE invalidation.
    No framework, no build step: this file is the bundle. */
 
 'use strict';
 
-(() => {
+const OPERATION_ACTION_RULES = Object.freeze({
+  pending: Object.freeze(['stop']),
+  running: Object.freeze(['pause', 'stop']),
+  blocked: Object.freeze(['resume', 'stop', 'retry']),
+  failed: Object.freeze(['retry']),
+  unknown: Object.freeze(['retry']),
+});
+
+const OPERATION_EFFECTS = Object.freeze({
+  pause: 'Next effect: the executor pauses work at a safe checkpoint.',
+  resume: 'Next effect: the executor rechecks policy, then resumes work.',
+  stop: 'Next effect: the executor ends this run. In-flight external work may need review.',
+  retry: 'Next effect: the executor creates a new attempt. External effects are rechecked first.',
+});
+
+function availableOperationActions(operation) {
+  if (!operation || !Array.isArray(operation.capabilities)) return [];
+  if (operation.pending_intent) return [];
+  const valid = OPERATION_ACTION_RULES[operation.status] || [];
+  return valid.filter((action) => operation.capabilities.includes(action));
+}
+
+function operationActionEffect(action) {
+  return OPERATION_EFFECTS[action] || 'Next effect is unknown.';
+}
+
+function operationActionNeedsConfirmation(action) {
+  return action === 'stop' || action === 'retry';
+}
+
+function operationFeedback(outcome) {
+  const values = {
+    pending: 'Sending intent to the local queue.',
+    accepted: 'Intent accepted. Waiting for an authorized executor.',
+    conflict: 'State changed. Refresh before trying again.',
+    blocked: 'This operation did not grant that capability.',
+    rejected: 'The request was rejected. Review the current state.',
+    unknown: 'The outcome is unknown. No success is assumed.',
+  };
+  return values[outcome] || values.unknown;
+}
+
+if (typeof module !== 'undefined') module.exports = {
+  availableOperationActions,
+  operationActionEffect,
+  operationActionNeedsConfirmation,
+  operationFeedback,
+};
+
+if (typeof document !== 'undefined') (() => {
   const PANELS = {
     overview: { title: 'Needs You', endpoint: '/api/overview', render: renderOverview },
     campaigns: { title: 'Campaigns', endpoint: '/api/campaigns', render: renderCampaigns },
@@ -23,6 +72,8 @@
   let activePanel = 'overview';
   let selectedIndex = 0;
   let needsYouCount = 0;
+  let controlSession = null;
+  let activeConfirmation = null;
 
   // ── helpers ──
 
@@ -87,6 +138,128 @@
     return response.json();
   }
 
+  async function getControlSession() {
+    if (controlSession) return controlSession;
+    const response = await fetch('/api/control', { cache: 'no-store' });
+    if (!response.ok) throw new Error(`control session -> ${response.status}`);
+    controlSession = await response.json();
+    return controlSession;
+  }
+
+  function idempotencyKey(action) {
+    const random = globalThis.crypto && typeof globalThis.crypto.randomUUID === 'function'
+      ? globalThis.crypto.randomUUID().toLowerCase()
+      : `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+    return `dashboard-${action}-${random}`;
+  }
+
+  async function submitOperationIntent(operation, action, bar, trigger) {
+    const feedback = bar.querySelector('.control-feedback');
+    const buttons = bar.querySelectorAll('button');
+    buttons.forEach((button) => { button.disabled = true; });
+    feedback.className = 'control-feedback feedback-pending';
+    feedback.textContent = operationFeedback('pending');
+    feedback.setAttribute('aria-busy', 'true');
+    const key = trigger.dataset.idempotency || idempotencyKey(action);
+    trigger.dataset.idempotency = key;
+    try {
+      const session = await getControlSession();
+      const response = await fetch('/api/intents', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', 'x-citadel-nonce': session.nonce },
+        body: JSON.stringify({
+          operation_id: operation.operation_id,
+          expected_revision: operation.revision,
+          idempotency_key: key,
+          actor: 'actor-dashboard',
+          reason: `${action} requested from Mission Control`,
+          capability: action,
+          action,
+        }),
+      });
+      const result = await response.json();
+      const outcome = result.outcome || 'unknown';
+      feedback.className = `control-feedback feedback-${outcome}`;
+      feedback.textContent = operationFeedback(outcome);
+      if (result.reason_code) feedback.textContent += ` ${result.reason_code}.`;
+      if (outcome !== 'accepted') buttons.forEach((button) => { button.disabled = false; });
+    } catch (_error) {
+      feedback.className = 'control-feedback feedback-unknown';
+      feedback.textContent = operationFeedback('unknown');
+      buttons.forEach((button) => { button.disabled = false; });
+    } finally {
+      feedback.removeAttribute('aria-busy');
+    }
+  }
+
+  function closeConfirmation(restoreFocus = true) {
+    if (!activeConfirmation) return;
+    const { capsule, trigger } = activeConfirmation;
+    capsule.remove();
+    activeConfirmation = null;
+    if (restoreFocus) trigger.focus();
+  }
+
+  function showConfirmation(operation, action, bar, trigger) {
+    closeConfirmation(false);
+    const capsule = el('div', 'confirmation-capsule');
+    capsule.setAttribute('role', 'alertdialog');
+    capsule.setAttribute('aria-label', `Confirm ${action}`);
+    capsule.appendChild(el('div', 'confirmation-title', action === 'stop' ? 'Stop this run?' : 'Create another attempt?'));
+    capsule.appendChild(el('div', 'card-sub', operationActionEffect(action)));
+    const actions = el('div', 'confirmation-actions');
+    const confirm = el('button', 'control-button control-danger', `Confirm ${action}`);
+    confirm.type = 'button';
+    const cancel = el('button', 'control-button control-quiet', 'Cancel');
+    cancel.type = 'button';
+    confirm.addEventListener('click', () => {
+      closeConfirmation(false);
+      submitOperationIntent(operation, action, bar, trigger);
+    });
+    cancel.addEventListener('click', () => closeConfirmation());
+    actions.append(confirm, cancel);
+    capsule.appendChild(actions);
+    bar.appendChild(capsule);
+    activeConfirmation = { capsule, trigger };
+    confirm.focus();
+  }
+
+  function operationControlBar(operation) {
+    const bar = el('div', 'operation-control');
+    bar.dataset.operationId = operation.operation_id;
+    const state = el('div', 'control-state');
+    state.appendChild(badge(operation.status || 'unknown', ['failed', 'unknown'].includes(operation.status) ? 'danger' : 'info'));
+    state.appendChild(el('span', 'control-revision', `revision ${operation.revision ?? 'unknown'}`));
+    if (operation.pending_intent) state.appendChild(badge(`${operation.pending_intent.action} pending`, 'warn'));
+    bar.appendChild(state);
+    const actions = availableOperationActions(operation);
+    const actionRow = el('div', 'control-actions');
+    for (const action of actions) {
+      const button = el('button', `control-button${operationActionNeedsConfirmation(action) ? ' control-risk' : ''}`, action);
+      button.type = 'button';
+      button.dataset.action = action;
+      button.setAttribute('aria-label', `${action} ${operation.title || operation.operation_id}`);
+      button.addEventListener('click', () => {
+        if (operationActionNeedsConfirmation(action)) showConfirmation(operation, action, bar, button);
+        else submitOperationIntent(operation, action, bar, button);
+      });
+      actionRow.appendChild(button);
+    }
+    bar.appendChild(actionRow);
+    bar.appendChild(el('div', 'control-effect', operation.pending_intent
+      ? `Next effect: an authorized executor evaluates the ${operation.pending_intent.action} intent.`
+      : actions.length ? operationActionEffect(actions[0]) : 'No control action is currently authorized.'));
+    const feedback = el('div', 'control-feedback');
+    feedback.setAttribute('role', 'status');
+    feedback.setAttribute('aria-live', 'polite');
+    if (operation.pending_intent) {
+      feedback.className = 'control-feedback feedback-pending';
+      feedback.textContent = 'Intent pending. No state change is assumed yet.';
+    }
+    bar.appendChild(feedback);
+    return bar;
+  }
+
   // ── panels ──
 
   function renderOverview(data) {
@@ -108,7 +281,7 @@
       const hasReal = typeof data.cost.real === 'number' && data.cost.real > 0;
       const value = hasReal ? data.cost.real : data.cost.estimated;
       if (typeof value === 'number') {
-        const costStat = stat(usd(value) || '—',
+        const costStat = stat(usd(value) || 'unknown',
           hasReal ? 'recent tracked spend' : 'all-time spend',
           'skill',
           hasReal ? 'real telemetry · recent sessions' : 'estimated from tokens');
@@ -165,6 +338,7 @@
   function renderCampaigns(data) {
     const frag = document.createDocumentFragment();
     const active = section('Active');
+    const operationsById = new Map((data.operations || []).map((operation) => [operation.operation_id, operation]));
     if (!data.active.length) {
       active.appendChild(emptyState('No active campaigns.', '/do plan a campaign to <goal>'));
     } else {
@@ -185,10 +359,28 @@
           card.appendChild(bar);
         }
         if (campaign.path) card.appendChild(el('div', 'evidence', campaign.path));
+        const linkedOperation = operationsById.get(campaign.operation_id)
+          || operationsById.get(campaign.slug)
+          || operationsById.get(`operation-${campaign.slug}`);
+        if (linkedOperation) card.appendChild(operationControlBar(linkedOperation));
         active.appendChild(card);
       }
     }
     frag.appendChild(active);
+
+    if (data.operations && data.operations.length) {
+      const operations = section('Operations');
+      for (const operation of data.operations) {
+        const card = el('div', 'card operation-card');
+        const heading = el('div', 'card-title');
+        heading.appendChild(el('span', null, operation.title || operation.operation_id));
+        heading.appendChild(el('span', 'mono dimmed', operation.operation_id));
+        card.appendChild(heading);
+        card.appendChild(operationControlBar(operation));
+        operations.appendChild(card);
+      }
+      frag.appendChild(operations);
+    }
 
     if (data.ledger.length) {
       const ledger = section('Completed');
@@ -333,7 +525,7 @@
         tr.appendChild(el('td', key === '_unattached' ? 'dimmed' : null, key === '_unattached' ? 'unattached sessions' : key));
         tr.appendChild(el('td', 'num dimmed', entry.sessions ?? ''));
         const costTd = el('td', 'num');
-        costTd.textContent = usd(entry.total_cost ?? 0) || '—';
+        costTd.textContent = usd(entry.total_cost ?? 0) || 'unknown';
         estMark(costTd);
         tr.appendChild(costTd);
         table.appendChild(tr);
@@ -579,6 +771,11 @@
 
   document.addEventListener('keydown', (event) => {
     if (event.target instanceof HTMLInputElement) return;
+    if (event.key === 'Escape' && activeConfirmation) {
+      event.preventDefault();
+      closeConfirmation();
+      return;
+    }
     if (event.key === '?') {
       event.preventDefault();
       const help = document.getElementById('keyboard-help');

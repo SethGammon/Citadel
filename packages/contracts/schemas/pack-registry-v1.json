@@ -1,0 +1,108 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:citadel:pack-registry:1",
+  "title": "Citadel signed local Pack registry v1",
+  "oneOf": [
+    { "$ref": "#/$defs/envelope" },
+    { "$ref": "#/$defs/trust" }
+  ],
+  "$defs": {
+    "id": { "type": "string", "pattern": "^[a-z0-9]+(?:[-_.:][a-z0-9]+)*$" },
+    "packId": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*/[a-z0-9]+(?:-[a-z0-9]+)*$" },
+    "version": { "type": "string", "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(?:-[0-9A-Za-z.-]+)?$" },
+    "digest": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" },
+    "base64": { "type": "string", "pattern": "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$" },
+    "entry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["pack_id", "version", "publisher_id", "content_digest", "publisher_key_id", "publisher_signature_base64"],
+      "properties": {
+        "pack_id": { "$ref": "#/$defs/packId" },
+        "version": { "$ref": "#/$defs/version" },
+        "publisher_id": { "$ref": "#/$defs/id" },
+        "content_digest": { "$ref": "#/$defs/digest" },
+        "publisher_key_id": { "$ref": "#/$defs/id" },
+        "publisher_signature_base64": { "$ref": "#/$defs/base64" }
+      }
+    },
+    "revocation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["scope", "publisher_id", "pack_id", "version", "reason_code", "revoked_at"],
+      "properties": {
+        "scope": { "enum": ["publisher", "pack", "version"] },
+        "publisher_id": { "$ref": "#/$defs/id" },
+        "pack_id": { "oneOf": [{ "$ref": "#/$defs/packId" }, { "type": "null" }] },
+        "version": { "oneOf": [{ "$ref": "#/$defs/version" }, { "type": "null" }] },
+        "reason_code": { "type": "string", "pattern": "^[A-Z][A-Z0-9_]{1,63}$" },
+        "revoked_at": { "type": "string", "format": "date-time" }
+      }
+    },
+    "index": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema_version", "kind", "registry_id", "generated_at", "entries", "revocations"],
+      "properties": {
+        "schema_version": { "const": 1 },
+        "kind": { "const": "pack_registry_index" },
+        "registry_id": { "$ref": "#/$defs/id" },
+        "generated_at": { "type": "string", "format": "date-time" },
+        "entries": { "type": "array", "items": { "$ref": "#/$defs/entry" } },
+        "revocations": { "type": "array", "items": { "$ref": "#/$defs/revocation" } }
+      }
+    },
+    "signature": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["algorithm", "key_id", "signature_base64"],
+      "properties": {
+        "algorithm": { "const": "ed25519" },
+        "key_id": { "$ref": "#/$defs/id" },
+        "signature_base64": { "$ref": "#/$defs/base64" }
+      }
+    },
+    "envelope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema_version", "kind", "index", "index_digest", "signature"],
+      "properties": {
+        "schema_version": { "const": 1 },
+        "kind": { "const": "signed_pack_registry" },
+        "index": { "$ref": "#/$defs/index" },
+        "index_digest": { "$ref": "#/$defs/digest" },
+        "signature": { "$ref": "#/$defs/signature" }
+      }
+    },
+    "trustKey": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["key_id", "public_key_path"],
+      "properties": {
+        "key_id": { "$ref": "#/$defs/id" },
+        "public_key_path": { "type": "string", "minLength": 1 }
+      }
+    },
+    "publisherTrust": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["publisher_id", "key_id", "public_key_path", "pack_ids"],
+      "properties": {
+        "publisher_id": { "$ref": "#/$defs/id" },
+        "key_id": { "$ref": "#/$defs/id" },
+        "public_key_path": { "type": "string", "minLength": 1 },
+        "pack_ids": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "#/$defs/packId" } }
+      }
+    },
+    "trust": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema_version", "kind", "registry", "publishers"],
+      "properties": {
+        "schema_version": { "const": 1 },
+        "kind": { "const": "pack_registry_trust" },
+        "registry": { "$ref": "#/$defs/trustKey" },
+        "publishers": { "type": "array", "items": { "$ref": "#/$defs/publisherTrust" } }
+      }
+    }
+  }
+}

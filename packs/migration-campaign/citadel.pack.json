@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "id": "citadel/migration-campaign",
+  "name": "migration-campaign",
+  "version": "0.1.0",
+  "description": "Plan and execute a bounded multi-file migration with checkpoints, generated coverage, verification, and durable continuation state.",
+  "publisher": { "id": "citadel", "name": "Citadel Maintainers" },
+  "skills": ["archon", "refactor", "test-gen", "verify", "session-handoff"],
+  "dependencies": [],
+  "permissions": {
+    "filesystem": "workspace-write",
+    "network": "none",
+    "external_actions": "none"
+  },
+  "capabilities": ["workspace", "git", "worktrees", "verification", "campaign-state", "parallel-agents"],
+  "runtimes": ["claude-code", "codex"],
+  "entry_workflow": "workflows/migration-campaign.json",
+  "artifacts": [".planning/campaigns/migration-campaign.md", ".planning/handoffs/migration-campaign.md"],
+  "verification": [
+    { "id": "focused-tests", "command": "run tests covering the migrated boundary", "required": true },
+    { "id": "repository-gate", "command": "run the repository verification command", "required": true }
+  ],
+  "stopping_conditions": ["verified", "failed", "blocked", "unknown", "needs-human-review", "budget-exhausted", "attempt-limit", "unsafe-to-continue"]
+}

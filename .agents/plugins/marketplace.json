@@ -18,7 +18,7 @@
       "interface": {
         "displayName": "Citadel Harness"
       },
-      "version": "1.1.0",
+      "version": "1.2.0",
       "description": "Codex-native agent orchestration harness for durable campaigns, skills, hooks, telemetry, and parallel work.",
       "repository": "https://github.com/SethGammon/Citadel",
       "metadata": "../../citadel-metadata.json"

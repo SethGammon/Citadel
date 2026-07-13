@@ -94,6 +94,23 @@ The command writes `.planning/product-proof/activation-share.json`, prints the e
 
 The [activation cohort protocol](PRODUCT_PROOF_TRIAL.md) defines the public sharing flow, privacy boundary, denominators, and six decision gates. The dashboard reads the maintainer's ignored local cohort report and distinguishes `collecting`, `observing`, `ready`, and `needs_attention`.
 
+Maintainers can reconcile the current public Discussion without copying comments by hand:
+
+```sh
+node scripts/activation-cohort-collect.js --dry-run --json
+node scripts/activation-cohort-collect.js --json
+```
+
+Collection is read-only and paginated through the existing authenticated `gh` session. Only `json` fenced blocks that pass the exact activation submission schema qualify. Prose, malformed JSON, extra fields, and untagged code fences remain non-evidence. Opaque submission IDs control deduplication; edited comments are revalidated and deleted comments are removed on the next complete snapshot. Source comment URLs remain in the ignored local evidence store and are excluded from the aggregate report.
+
+Fixture mode is network-free and exists for deterministic validation:
+
+```sh
+node scripts/activation-cohort-collect.js --fixture scripts/fixtures/activation-discussion/initial-pages.json --dry-run --json
+```
+
+The collector never posts or updates Discussion content, never infers stages from prose, and never persists GitHub credentials. A rate limit or invalid response leaves the existing cohort unchanged.
+
 This cohort does not turn volunteer submissions into population telemetry. In particular, installs that fail before the share command can run are underrepresented.
 
 ## GitHub acquisition history

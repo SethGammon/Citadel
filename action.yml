@@ -1,0 +1,37 @@
+name: Citadel verify
+description: Run a bounded Citadel verification workflow and emit an honest local receipt.
+author: Seth Gammon
+
+inputs:
+  workflow:
+    description: Checked-in Citadel workflow identifier.
+    required: false
+    default: verify-change
+  evidence-path:
+    description: Relative directory for the receipt and summary.
+    required: false
+    default: .planning/action-evidence
+  strict:
+    description: Fail the action unless verification passes.
+    required: false
+    default: "true"
+  working-directory:
+    description: Relative repository directory to verify.
+    required: false
+    default: "."
+
+outputs:
+  status:
+    description: Honest result: passed, failed, blocked, or unknown.
+  receipt-path:
+    description: Relative path to the unsigned Operations Protocol receipt.
+  summary-path:
+    description: Relative path to the verification summary.
+
+runs:
+  using: node20
+  main: scripts/action-verify.js
+
+branding:
+  icon: shield
+  color: gray-dark

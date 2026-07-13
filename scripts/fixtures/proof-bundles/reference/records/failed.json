@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "kind": "proof_record",
+  "record_id": "proof-fixture-failed",
+  "title": "Fixture failed operation",
+  "classification": "fixture",
+  "provenance": { "kind": "fixture", "reference": "fixture:failed-operation" },
+  "receipt_path": "receipts/failed.json",
+  "receipt_digest": "sha256:48ab2dd4f4aef49afe1b3d3512d1ed0ee4269a362e3af4a10d1286fd7885c7ca",
+  "observed_at": "2026-07-13T12:05:00.000Z"
+}
