@@ -1,134 +1,102 @@
-# Citadel Roadmap: Mission Control for Coding Agents
+# Citadel Roadmap: From Harness to Operations Platform
 
-Citadel's thesis: the agent companies compete on the agent; nobody owns the operations layer
-above the agents. Memory, routing, guardrails, spend, parallel coordination, and visibility
-are naturally runtime-agnostic, and that layer is what Citadel is becoming.
+Citadel now has the local platform spine that the previous twelve-month roadmap described:
+typed operations, outcome Packs, durable recovery, verifiable receipts, actionable Mission
+Control, team policy, a Relay seam, and privacy-safe reliability analysis. The next milestones
+are no longer feature-count milestones. They are adoption, interoperability, and trust milestones.
 
-This plan supersedes the June 2026 milestone ladder (M0-M7). The shipped milestones are
-recorded below; the unshipped ones are absorbed into the release tracks rather than dropped.
-Sequencing principle is unchanged: reliability over novelty, and every phase has binary exit
-criteria.
+## What ships locally in 1.2
 
-## North Star Metrics
+- A conventional `citadel` CLI with packaged install, doctor, update, rollback, and uninstall.
+- Operations Protocol v0.1 with six strict contracts and deterministic conformance reports.
+- One workflow compiled across local, Codex, and GitHub targets with artifact-derived semantic proof.
+- Three first-party outcome Packs with permissions, dependencies, certification, journeys, and receipts.
+- Durable journals, idempotent recovery, fault injection, and Ed25519 execution receipts.
+- A narrow read-only GitHub verification Action and provenance-ready package publishing workflow.
+- Typed MCP controls and local Mission Control actions for pause, resume, stop, and retry.
+- Hierarchical team policy, a five-operator and ten-repository pilot simulator, encrypted local Relay
+  envelopes, external milestone gates, and held-out reliability analysis.
 
-| Metric | Definition | Target |
-|---|---|---|
-| Install success rate | Fresh installs that reach a working `/do` without manual repair | > 95% |
-| Time to first routed task | Install start to first successful `/do` dispatch | < 10 minutes |
-| Campaign resume rate | Interrupted campaigns that resume correctly in a fresh session | > 95% |
-| Time to comprehension | A stranger opens the dashboard and can say what Citadel is doing | < 60 seconds |
-| Safety net honesty | Gates that report "did not run" instead of silently passing | 100% |
-| Doc drift | Counts, lists, and tables that can disagree with the code | 0 (generated) |
+These capabilities are verified locally. They do not manufacture human adoption, outside authors,
+independent adapters, hosted demand, or representative production evidence.
 
-## Shipped Foundations (June 2026)
+## Milestone A: Prove retained use
 
-- **M0 Trust the Safety Net:** honest cross-platform typecheck outcomes, single source of
-  truth for routing, symmetric secrets protection, watch dedup, fleet teams pilot scaffolding.
-- **M1 One Source of Truth:** generated skill/hook counts across README and docs with a CI
-  drift check.
-- **M2 Native Platform Spine (core):** AskUserQuestion at approval gates, structured outputs
-  for judge agents, checkpoint-aware recovery.
-- **M5 Skill Platform Hygiene:** lint-enforced line budgets, benchmark coverage for
-  destructive skills, skill lifecycle policy.
+Collect the first mature opt-in activation cohort through the read-only Discussion collector.
 
-## R1: See It (now to ~6 weeks)
+| Gate | Target |
+|---|---:|
+| Mature shared installations | 25 |
+| Verified handoff rate | at least 40% |
+| Resume rate | at least 25% |
+| Seven-day return rate | at least 15% |
+| Installer interviews | enough to explain failures, not just count them |
 
-Convert the invisible parts of the harness (memory, gates, telemetry, loops) into the thing
-people screenshot. Full design in [DASHBOARD_SPEC.md](DASHBOARD_SPEC.md).
+The report remains `awaiting_external_evidence` until independent submissions satisfy the exact
+schema and maturity window. Fixtures cannot promote this milestone.
 
-- **Local dashboard v0.1, read-only.** `citadel dashboard` serves a localhost web app over
-  `.planning/` and telemetry: needs-you inbox, campaigns with phase progress, fleet agents
-  and worktrees, hook activity feed, handoff timeline. Live updates via file watching. The
-  files stay canonical; the dashboard is a view, never a second source of truth.
-- **Loops panel.** Every loop contract record rendered as a card: status, budget burn-down,
-  verifier history, stop-state badge, last review artifact. Loops are already first-class in
-  [LOOP_CONTRACT.md](LOOP_CONTRACT.md); this makes them visible.
-- **Dual-mode cost.** API-key users see estimated dollars (always labeled as estimates),
-  burn rate, and projected cost-to-finish. Subscription users see plan-window consumption
-  and per-skill attribution instead of dollars, mirroring how `/usage` treats them. Sourced
-  from a local OTLP receiver (`claude_code.cost.usage`, `claude_code.token.usage`) with
-  transcript parsing as fallback; Codex via adapter.
-- **Campaign recovery hardening** (carried from the old plan; it is load-bearing for the
-  dashboard story): rollback, resume, and repair for interrupted long-running work.
+## Milestone B: Open the Pack ecosystem
 
-**Exit criteria:** a stranger installs Citadel, runs `/do` and `citadel dashboard`, and
-understands what it does in under 60 seconds without reading docs; campaign resume rate
-measured above 95% on the regression suite; dashboard cold start under 1 second and live
-update under 500 ms on a real project.
+Publish the signed registry contract, contributor ownership rules, and three first-party Packs as
+the reference bar. Recruit outside authors only after the local registry verifier, revocation path,
+dependency safety, and certification receipts all pass.
 
-## R2: Prove It (~6 weeks to 3 months)
+Exit criteria:
 
-Manufacture the reason to care: honest, reproducible numbers nobody else publishes.
+- At least three Packs authored outside the maintainer account.
+- At least two Packs show repeated installation or journey evidence.
+- Ownership, key rotation, revocation, incident response, and transfer rules have named maintainers.
+- Registry publication never upgrades unexecuted verification or missing evidence to passed.
 
-- **Public benchmark page** built from the usefulness-trial harness: completion rate and
-  cost on long tasks, bare agent vs harnessed, with methodology and scripts public.
-- **The 90-second demo video** (problem, learning, solution) and a Show HN built around the
-  dashboard plus benchmark page.
-- **Contribution pipeline** (absorbed from M7): good-first-skill issues, a submission
-  checklist, CI running full lint and bench on PRs.
+## Milestone C: Earn Operations Protocol 1.0
 
-**Exit criteria:** a benchmark page we would defend in a comment thread, regenerated by
-script; at least one external contributor lands a skill through the pipeline.
+Protocol 1.0 is a compatibility promise, not a version-number exercise. Promote v0.1 only after:
 
-## R3: Drive It (~3 to 5 months)
+- A documented compatibility window and migration policy exist.
+- Migration fixtures cover every supported contract version.
+- At least one independent adapter passes the six-contract conformance suite.
+- Local, Codex, and GitHub projections retain at least 90% of the shared semantic contract.
+- Receipt, cancellation, failure, and unknown behavior are verified from generated artifacts.
 
-The dashboard becomes two-way. Browser actions write intent files into `.planning/` that
-hooks and agents consume, the same contract the terminal uses.
+Until then, the public protocol remains v0.1 even when Citadel itself releases 1.2.
 
-- **Approvals in the browser:** phase gates and risky-action requests with full context
-  (diff, risk note, what happens next), keyboard-first.
-- **Steer, pause, and stop** per agent and per campaign, honoring safe boundaries.
-- **Loop Builder:** a guided flow (trigger, scope, budget, verifier, stop conditions) that
-  refuses to create a loop without a working verifier and a budget. `/do create a loop
-  that...` routes here.
-- **Fortress view:** the same state rendered as a keep; campaigns as banners, agents as
-  units, hook blocks as arrows off the walls, spend as treasury. One-click shareable image.
+## Milestone D: Prove team operations
 
-**Exit criteria:** an operator runs a full campaign without touching the terminal after
-launch; a loop authored in the builder runs overnight and stops on its declared conditions.
+Run the real five-person, ten-repository, thirty-day pilot using the shipped simulator schema and
+policy contracts. Measure discovery loss, reassignment latency, conflict rate, resume success,
+approval latency, and policy denials. Publish negative results and operator friction.
 
-## R4: Harden It (~5 to 8 months)
+The simulator proves contract behavior only. It is not evidence that a real team adopted Citadel.
 
-Depth work that makes the two-way surface safe to trust (absorbs M3 and M6).
+## Milestone E: Decide whether Relay should exist
 
-- **Teams-native fleet GA:** run the pilot on a real multi-scope campaign, measure discovery
-  loss, reassignment latency, and merge conflict rate; default on supporting runtimes with
-  classic fallback; publish the pilot report.
-- **Security hardening v2:** sandboxed bash profiles for risky phases, threat model refresh
-  covering teams mode and remote triggers, permission audit reports from real session data,
-  secrets-scanning in the quality gate.
-- **Release integrity:** versioned releases with checksums and migration notes.
+The local encrypted envelope and outage-safe outbox are complete. A hosted Relay remains gated on
+either ten recurring team requests or two hundred qualified waitlist entries. If demand clears the
+gate, start with encrypted state transport and push notifications. Do not add remote execution.
 
-**Exit criteria:** pilot report committed with measured numbers; THREAT_MODEL.md v2
-reviewed; a permission audit report renders from real session data.
+## Milestone F: Turn evidence into reliability intelligence
 
-## R5: Multiply It (~8 to 12 months)
+The analyzer requires at least one hundred consented runs, twenty opaque repositories, two runtimes,
+and twenty held-out runs. Below that threshold it returns `unknown` and no recommendation. Above it,
+recommendations remain explainable and never auto-apply.
 
-- **Team workflows** (absorbed from M7): multi-operator campaign visibility, policy
-  templates per repository class, managed-settings guidance for organizations.
-- **Skill and loop registry:** community-contributed skills and loop templates with the
-  existing lint and bench suites as the quality bar, discoverable from the project site.
-- **Runtime expansion:** evaluate a third adapter (Gemini CLI or OpenCode) to make
-  runtime-agnostic undeniable. Adapter work must not regress the two supported runtimes.
+Exit criteria:
 
-**Exit criteria:** a team of 5+ runs Citadel as shared infrastructure; a skill or loop the
-maintainer did not write reaches meaningful installs through the registry.
+- Representative data clears every sufficiency gate.
+- Held-out evidence supports the recommendation with explicit counts and confidence.
+- Privacy review confirms no prompts, source, repository identity, paths, credentials, or URLs leave
+  the allowed schema.
+- A maintainer explicitly approves every resulting configuration change.
 
-## Parked: Relay
+## Sequencing
 
-A hosted sync plane (cross-machine state, mobile status, push approvals) is deliberately
-not scheduled. It only makes sense after the dashboard is excellent and demand is
-demonstrated (waitlist signal, recurring requests). Nothing in R1-R5 may take a dependency
-on a hosted service; the local-first contract is the product.
+1. Ship and verify 1.2 locally.
+2. Collect retained-use evidence while recruiting Pack authors.
+3. Use outside Pack and adapter experience to stabilize Protocol 1.0.
+4. Run the real team pilot.
+5. Start hosted Relay only if the demand gate clears.
+6. Enable reliability recommendations only after the representative-data gate clears.
 
-## Sequencing Notes
-
-- R1 blocks everything: R2's video and Show HN are built around the dashboard, and R3 is
-  the dashboard's second act. Do not start R3 before R1's exit criteria are measured.
-- R2 can overlap late R1; the benchmark harness already exists.
-- R4's security work should land before R3's two-way surface is promoted as a default
-  workflow; intent files change the threat surface and the threat model must keep up.
-- The project site lives on GitHub Pages for now. A custom domain is a deferred decision
-  and nothing on the site may depend on one.
-- Reliability over novelty, always: a smaller harness that never lies beats a larger one
-  that sometimes does.
+The project site stays on GitHub Pages for now. Reliability remains the product principle: missing
+evidence is unknown, simulations are labeled, and external milestones stay open until external
+people create the evidence.

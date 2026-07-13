@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "kind": "proof_record",
+  "record_id": "proof-fixture-passed",
+  "title": "Fixture passed operation",
+  "classification": "fixture",
+  "provenance": { "kind": "fixture", "reference": "fixture:passed-operation" },
+  "receipt_path": "receipts/passed.json",
+  "receipt_digest": "sha256:23710b3244654241de3dd7febd846c8ba88ff34c58c8e49a7a7b48d0943a7367",
+  "observed_at": "2026-07-13T12:05:00.000Z"
+}

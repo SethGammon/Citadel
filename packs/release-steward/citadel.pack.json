@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "id": "citadel/release-steward",
+  "name": "release-steward",
+  "version": "0.1.0",
+  "description": "Review, verify, serialize, and document a safe mainline landing and deployment operation.",
+  "publisher": { "id": "citadel", "name": "Citadel Maintainers" },
+  "skills": ["merge-review", "verify", "deploy-steward", "session-handoff"],
+  "dependencies": [],
+  "permissions": {
+    "filesystem": "workspace-write",
+    "network": "restricted",
+    "external_actions": "approval-required"
+  },
+  "capabilities": ["workspace", "git", "verification", "github-read", "github-write", "campaign-state", "deployment"],
+  "runtimes": ["claude-code", "codex"],
+  "entry_workflow": "workflows/release-steward.json",
+  "artifacts": [".planning/deploy-steward/receipt.json", ".planning/handoffs/release-steward.md"],
+  "verification": [
+    { "id": "merge-readiness", "command": "verify required checks and review state", "required": true },
+    { "id": "deployment-receipt", "command": "verify the deployment receipt or report unknown", "required": true }
+  ],
+  "stopping_conditions": ["verified", "failed", "blocked", "unknown", "needs-human-review", "budget-exhausted", "attempt-limit", "unsafe-to-continue"]
+}

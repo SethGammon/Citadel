@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "id": "ci-recovery",
+  "description": "Trace a CI failure to evidence, repair its cause, verify the result, and preserve the handoff.",
+  "steps": [
+    { "id": "inspect", "skill": "pr-watch", "purpose": "Collect the current check and review evidence.", "depends_on": [] },
+    { "id": "diagnose", "skill": "systematic-debugging", "purpose": "Prove the failure cause before editing.", "depends_on": ["inspect"] },
+    { "id": "verify", "skill": "verify", "purpose": "Run focused and regression verification with honest status.", "depends_on": ["diagnose"] },
+    { "id": "handoff", "skill": "session-handoff", "purpose": "Record changes, evidence, and any unresolved state.", "depends_on": ["verify"] }
+  ]
+}

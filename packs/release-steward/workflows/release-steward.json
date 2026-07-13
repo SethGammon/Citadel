@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "id": "release-steward",
+  "description": "Review a landing set, verify readiness, serialize deployment, and preserve its receipt.",
+  "steps": [
+    { "id": "review", "skill": "merge-review", "purpose": "Inspect merge conflicts and cross-branch risks.", "depends_on": [] },
+    { "id": "verify", "skill": "verify", "purpose": "Confirm required checks and declared release evidence.", "depends_on": ["review"] },
+    { "id": "land", "skill": "deploy-steward", "purpose": "Own the serialized mainline landing and deployment lane.", "depends_on": ["verify"] },
+    { "id": "handoff", "skill": "session-handoff", "purpose": "Record receipts, final state, and unresolved unknowns.", "depends_on": ["land"] }
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "kind": "proof_bundle",
+  "bundle_id": "bundle-fixture-reference",
+  "title": "Citadel Proof Ledger Fixture",
+  "records": [
+    "records/passed.json",
+    "records/failed.json",
+    "records/blocked.json",
+    "records/unknown.json"
+  ],
+  "trust_roots": [
+    {
+      "key_id": "key-55cd28a9f1f7852b4dcaf40b",
+      "public_key_path": "trust/fixture-public.pem",
+      "classification": "fixture"
+    }
+  ]
+}

@@ -2,3 +2,10 @@
 # Pin them to LF so core.autocrlf checkouts cannot create false drift.
 core/skills/routing-table.json text eol=lf
 scripts/fixtures/ecosystem/anthropics-template-skill/SKILL.md text eol=lf
+workflows/*.json text eol=lf
+scripts/fixtures/workflow-compiler/*.json text eol=lf
+scripts/fixtures/workflow-compiler/*.yml text eol=lf
+docs/proof-ledger.json text eol=lf
+docs/PROOF_LEDGER.md text eol=lf
+action.yml text eol=lf
+.github/workflows/*.yml text eol=lf

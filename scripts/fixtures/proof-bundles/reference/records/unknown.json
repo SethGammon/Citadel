@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "kind": "proof_record",
+  "record_id": "proof-fixture-unknown",
+  "title": "Fixture unknown operation",
+  "classification": "fixture",
+  "provenance": { "kind": "fixture", "reference": "fixture:unknown-operation" },
+  "receipt_path": "receipts/unknown.json",
+  "receipt_digest": "sha256:d9759c5892facd9587eaedf194b2efb22d58216f050471f7d7beafbb2dc2c455",
+  "observed_at": "2026-07-13T12:05:00.000Z"
+}

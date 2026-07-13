@@ -1,0 +1,85 @@
+{
+  "schema_version": 1,
+  "kind": "proof_ledger",
+  "bundle_id": "bundle-fixture-reference",
+  "title": "Citadel Proof Ledger Fixture",
+  "records": [
+    {
+      "record_id": "proof-fixture-blocked",
+      "title": "Fixture blocked operation",
+      "classification": "fixture",
+      "observed_at": "2026-07-13T12:05:00.000Z",
+      "receipt_digest": "sha256:fc1a29aacf6dabee6a10d8287517882af9bb53f1719dac7924301c14d3c092cb",
+      "trust_state": "verified",
+      "outcome": "blocked",
+      "reason_code": "SIGNATURE_VERIFIED"
+    },
+    {
+      "record_id": "proof-fixture-failed",
+      "title": "Fixture failed operation",
+      "classification": "fixture",
+      "observed_at": "2026-07-13T12:05:00.000Z",
+      "receipt_digest": "sha256:48ab2dd4f4aef49afe1b3d3512d1ed0ee4269a362e3af4a10d1286fd7885c7ca",
+      "trust_state": "verified",
+      "outcome": "failed",
+      "reason_code": "SIGNATURE_VERIFIED"
+    },
+    {
+      "record_id": "proof-fixture-passed",
+      "title": "Fixture passed operation",
+      "classification": "fixture",
+      "observed_at": "2026-07-13T12:05:00.000Z",
+      "receipt_digest": "sha256:23710b3244654241de3dd7febd846c8ba88ff34c58c8e49a7a7b48d0943a7367",
+      "trust_state": "verified",
+      "outcome": "passed",
+      "reason_code": "SIGNATURE_VERIFIED"
+    },
+    {
+      "record_id": "proof-fixture-unknown",
+      "title": "Fixture unknown operation",
+      "classification": "fixture",
+      "observed_at": "2026-07-13T12:05:00.000Z",
+      "receipt_digest": "sha256:d9759c5892facd9587eaedf194b2efb22d58216f050471f7d7beafbb2dc2c455",
+      "trust_state": "verified",
+      "outcome": "unknown",
+      "reason_code": "SIGNATURE_VERIFIED"
+    }
+  ],
+  "denominators": {
+    "all_records": 4,
+    "verified_receipts": 4,
+    "classifications": {
+      "fixture": 4,
+      "maintainer": 0,
+      "independent": 0
+    },
+    "outcomes": {
+      "passed": {
+        "numerator": 1,
+        "denominator": 4,
+        "rate": 0.25
+      },
+      "failed": {
+        "numerator": 1,
+        "denominator": 4,
+        "rate": 0.25
+      },
+      "blocked": {
+        "numerator": 1,
+        "denominator": 4,
+        "rate": 0.25
+      },
+      "unknown": {
+        "numerator": 1,
+        "denominator": 4,
+        "rate": 0.25
+      }
+    }
+  },
+  "limitations": [
+    "Fixture, maintainer, and independent evidence are separate origin-bound classifications.",
+    "Unknown includes missing, altered, unsafe, or untrusted receipts and is never counted as passed.",
+    "A verified receipt proves integrity against a declared offline trust root, not product usefulness by itself.",
+    "Independent records require a trust-root file pinned outside the proof bundle. Bundle-controlled keys cannot declare independent trust."
+  ]
+}

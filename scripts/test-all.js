@@ -25,6 +25,7 @@ const SKILL_LINT = path.join(PLUGIN_ROOT, 'scripts', 'skill-lint.js');
 const DEMO_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-demo.js');
 const SECURITY_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-security.js');
 const RUNTIME_CONTRACT_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-runtime-contracts.js');
+const OPERATIONS_PROTOCOL_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-operations-protocol.js');
 const HOOK_EVENT_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-hook-events.js');
 const RUNTIME_REGISTRY_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-runtime-registry.js');
 const RUNTIME_MATRIX_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-runtime-matrix.js');
@@ -64,6 +65,7 @@ const CODEX_RUNTIME_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-codex-runtime
 const CODEX_NATIVE_INTEGRATION_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-codex-native-integrations.js');
 const CODEX_OPERATIONAL_IMPROVEMENT_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-codex-operational-improvements.js');
 const INSTALLER_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-installers.js');
+const CLI_PACKAGE_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-cli-package.js');
 const PROJECT_BOOTSTRAP_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-project-bootstrap.js');
 const COMPAT_FIXTURE_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-compat-fixtures.js');
 const BACKWARD_COMPAT_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-backward-compat.js');
@@ -97,6 +99,25 @@ const PRODUCT_PROOF_COHORT_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-produc
 const SARIF_COORDINATES_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-sarif-coordinates.js');
 const ECOSYSTEM_COMPAT_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-ecosystem-compat.js');
 const PRODUCT_PROOF_REPORT_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-product-proof-report.js');
+const UNLOCK_TESTS = Object.freeze([
+  ['Operations conformance', 'test-operations-conformance.js'],
+  ['Operation recovery', 'test-operation-recovery.js'],
+  ['Operation receipts', 'test-operation-receipts.js'],
+  ['Operation chaos', 'test-operation-chaos.js'],
+  ['Workflow compiler', 'test-workflow-compiler.js'],
+  ['Pack platform', 'test-packs.js'],
+  ['Signed Pack registry', 'test-pack-registry.js'],
+  ['Pack journey', 'test-pack-journey.js'],
+  ['GitHub verification Action', 'test-github-action.js'],
+  ['External milestone gates', 'test-milestone-readiness.js'],
+  ['Activation Discussion collector', 'test-activation-cohort-collect.js'],
+  ['Typed state MCP', 'test-citadel-state-mcp.js'],
+  ['Mission Control interactions', 'test-dashboard-interactions.js'],
+  ['Team platform', 'test-team-platform.js'],
+  ['Relay contract', 'test-relay-contract.js'],
+  ['Reliability learning', 'test-reliability-learning.js'],
+  ['Proof bundle', 'test-proof-bundle.js'],
+].map(([label, file]) => Object.freeze([label, path.join(PLUGIN_ROOT, 'scripts', file)])));
 
 const STRICT = process.argv.includes('--strict');
 
@@ -122,6 +143,7 @@ function run(label, scriptPath, extraArgs = []) {
 const hooksPassed = run('Hook Smoke Test', SMOKE_TEST);
 const securityPassed = run('Security Tests', SECURITY_TEST);
 const contractsPassed = run('Runtime Contract Tests', RUNTIME_CONTRACT_TEST);
+const operationsProtocolPassed = run('Operations Protocol Tests', OPERATIONS_PROTOCOL_TEST);
 const runtimeRegistryPassed = run('Runtime Registry Tests', RUNTIME_REGISTRY_TEST);
 const runtimeMatrixPassed = run('Runtime Matrix Tests', RUNTIME_MATRIX_TEST);
 const hookEventsPassed = run('Hook Event Tests', HOOK_EVENT_TEST);
@@ -164,6 +186,7 @@ const codexRuntimePassed = run('Codex Runtime Check', CODEX_RUNTIME_TEST);
 const codexNativeIntegrationPassed = run('Codex Native Integration Check', CODEX_NATIVE_INTEGRATION_TEST);
 const codexOperationalImprovementPassed = run('Codex Operational Improvement Check', CODEX_OPERATIONAL_IMPROVEMENT_TEST);
 const installerPassed = run('Installer Check', INSTALLER_TEST);
+const cliPackagePassed = run('CLI Package Check', CLI_PACKAGE_TEST);
 const projectBootstrapPassed = run('Project Bootstrap Check', PROJECT_BOOTSTRAP_TEST);
 const compatFixturePassed = STRICT ? run('Compatibility Fixtures', COMPAT_FIXTURE_TEST) : true;
 const backwardCompatPassed = run('Backward Compatibility', BACKWARD_COMPAT_TEST);
@@ -197,12 +220,15 @@ const productProofCohortPassed = run('Product Proof Cohort Tests', PRODUCT_PROOF
 const sarifCoordinatesPassed = run('SARIF Coordinate Tests', SARIF_COORDINATES_TEST);
 const ecosystemCompatPassed = run('Ecosystem Compatibility Tests', ECOSYSTEM_COMPAT_TEST);
 const productProofReportPassed = run('Product Proof Report Tests', PRODUCT_PROOF_REPORT_TEST);
+const unlockResults = UNLOCK_TESTS.map(([label, script]) => [label, run(label, script)]);
+const unlockSuitePassed = unlockResults.every(([, passed]) => passed);
 
 console.log('\n' + '='.repeat(40));
 console.log('SUMMARY');
 console.log(`  Hook smoke test:    ${hooksPassed ? 'PASS' : 'FAIL'}`);
 console.log(`  Security tests:     ${securityPassed ? 'PASS' : 'FAIL'}`);
 console.log(`  Runtime contracts:  ${contractsPassed ? 'PASS' : 'FAIL'}`);
+console.log(`  Operations protocol: ${operationsProtocolPassed ? 'PASS' : 'FAIL'}`);
 console.log(`  Runtime registry:   ${runtimeRegistryPassed ? 'PASS' : 'FAIL'}`);
 console.log(`  Runtime matrix:     ${runtimeMatrixPassed ? 'PASS' : 'FAIL'}`);
 console.log(`  Hook events:        ${hookEventsPassed ? 'PASS' : 'FAIL'}`);
@@ -244,6 +270,7 @@ console.log(`  Codex runtime:      ${codexRuntimePassed ? 'PASS' : 'FAIL'}`);
 console.log(`  Codex native:       ${codexNativeIntegrationPassed ? 'PASS' : 'FAIL'}`);
 console.log(`  Codex operational:  ${codexOperationalImprovementPassed ? 'PASS' : 'FAIL'}`);
 console.log(`  Installers:         ${installerPassed ? 'PASS' : 'FAIL'}`);
+console.log(`  Package CLI:        ${cliPackagePassed ? 'PASS' : 'FAIL'}`);
 console.log(`  Project bootstrap:  ${projectBootstrapPassed ? 'PASS' : 'FAIL'}`);
 if (STRICT) console.log(`  Compat fixtures:    ${compatFixturePassed ? 'PASS' : 'FAIL'}`);
 console.log(`  Backward compat:    ${backwardCompatPassed ? 'PASS' : 'FAIL'}`);
@@ -277,9 +304,12 @@ console.log(`  Product proof cohort: ${productProofCohortPassed ? 'PASS' : 'FAIL
 console.log(`  SARIF coordinates:   ${sarifCoordinatesPassed ? 'PASS' : 'FAIL'}`);
 console.log(`  Ecosystem compat:    ${ecosystemCompatPassed ? 'PASS' : 'FAIL'}`);
 console.log(`  Product proof report: ${productProofReportPassed ? 'PASS' : 'FAIL'}`);
+for (const [label, passed] of unlockResults) {
+  console.log(`  ${label}: ${passed ? 'PASS' : 'FAIL'}`);
+}
 console.log('');
 
-if (hooksPassed && securityPassed && contractsPassed && runtimeRegistryPassed && runtimeMatrixPassed && hookEventsPassed && skillsPassed && demoPassed && telemetryPassed && telemetryIntegrityPassed && memoryBlockPassed && evidenceContractPassed && sandboxProviderPassed && skillPackagingPassed && mapSubstratePassed && deliveryPassed && deliveryPackagePassed && continueActionPassed && nextActionPassed && routePreviewPassed && loopsPassed && operatingProofPassed && usefulnessTrialPassed && operatorConsolePassed && operatorJourneyPassed && firstUseOperatorPassed && verificationPlanPassed && prReadyPassed && stackPlanPassed && deployStewardPassed && agentsMdOnlyStewardPassed && coordinationPassed && hookInstallerPassed && campaignPassed && discoveryPassed && discoveryWriterPassed && momentumPassed && momentumWatcherPassed && policyPassed && claudeRuntimePassed && codexRuntimePassed && codexNativeIntegrationPassed && codexOperationalImprovementPassed && installerPassed && projectBootstrapPassed && compatFixturePassed && backwardCompatPassed && costTrackerPassed && dashboardPassed && docSyncPassed && fleetSessionPassed && worktreeReadinessPassed && postEditTypecheckPassed && routingSyncPassed && watchDedupPassed && teammateRebalancePassed && docSurfacesPassed && siteStoryPassed && telemetryOtlpPassed && stateHygienePassed && permissionAuditPassed && secretsLensPassed && dashboardWebPassed && dashboardPerfPassed && dashboardVisualPassed && noopDetectPassed && releaseIntegrityPassed && activationTelemetryPassed && activationCohortPassed && githubTrafficSnapshotPassed && goldenPathPassed && goldenPathMatrixPassed && productBenchmarkPassed && productProofCohortPassed && sarifCoordinatesPassed && ecosystemCompatPassed && productProofReportPassed) {
+if (hooksPassed && securityPassed && contractsPassed && operationsProtocolPassed && runtimeRegistryPassed && runtimeMatrixPassed && hookEventsPassed && skillsPassed && demoPassed && telemetryPassed && telemetryIntegrityPassed && memoryBlockPassed && evidenceContractPassed && sandboxProviderPassed && skillPackagingPassed && mapSubstratePassed && deliveryPassed && deliveryPackagePassed && continueActionPassed && nextActionPassed && routePreviewPassed && loopsPassed && operatingProofPassed && usefulnessTrialPassed && operatorConsolePassed && operatorJourneyPassed && firstUseOperatorPassed && verificationPlanPassed && prReadyPassed && stackPlanPassed && deployStewardPassed && agentsMdOnlyStewardPassed && coordinationPassed && hookInstallerPassed && campaignPassed && discoveryPassed && discoveryWriterPassed && momentumPassed && momentumWatcherPassed && policyPassed && claudeRuntimePassed && codexRuntimePassed && codexNativeIntegrationPassed && codexOperationalImprovementPassed && installerPassed && cliPackagePassed && projectBootstrapPassed && compatFixturePassed && backwardCompatPassed && costTrackerPassed && dashboardPassed && docSyncPassed && fleetSessionPassed && worktreeReadinessPassed && postEditTypecheckPassed && routingSyncPassed && watchDedupPassed && teammateRebalancePassed && docSurfacesPassed && siteStoryPassed && telemetryOtlpPassed && stateHygienePassed && permissionAuditPassed && secretsLensPassed && dashboardWebPassed && dashboardPerfPassed && dashboardVisualPassed && noopDetectPassed && releaseIntegrityPassed && activationTelemetryPassed && activationCohortPassed && githubTrafficSnapshotPassed && goldenPathPassed && goldenPathMatrixPassed && productBenchmarkPassed && productProofCohortPassed && sarifCoordinatesPassed && ecosystemCompatPassed && productProofReportPassed && unlockSuitePassed) {
   console.log('All tests pass.\n');
   console.log('Next steps:');
   console.log('  node scripts/skill-bench.js --list      see benchmark scenarios');
@@ -292,6 +322,7 @@ if (hooksPassed && securityPassed && contractsPassed && runtimeRegistryPassed &&
 const hookFail = !hooksPassed ? 1 : 0;
 const securityFail = !securityPassed ? 2 : 0;
 const contractFail = !contractsPassed ? 4 : 0;
+const operationsProtocolFail = !operationsProtocolPassed ? 4 : 0;
 const runtimeRegistryFail = !runtimeRegistryPassed ? 8 : 0;
 const runtimeMatrixFail = !runtimeMatrixPassed ? 8 : 0;
 const hookEventFail = !hookEventsPassed ? 16 : 0;
@@ -333,6 +364,7 @@ const codexRuntimeFail = !codexRuntimePassed ? 131072 : 0;
 const codexNativeIntegrationFail = !codexNativeIntegrationPassed ? 262144 : 0;
 const codexOperationalImprovementFail = !codexOperationalImprovementPassed ? 524288 : 0;
 const installerFail = !installerPassed ? 1048576 : 0;
+const cliPackageFail = !cliPackagePassed ? 1048576 : 0;
 const projectBootstrapFail = !projectBootstrapPassed ? 2097152 : 0;
 const compatFixtureFail = !compatFixturePassed ? 4194304 : 0;
 const backwardCompatFail = !backwardCompatPassed ? 8388608 : 0;
@@ -365,6 +397,7 @@ const goldenPathMatrixFail = !goldenPathMatrixPassed ? 128 : 0;
 if (!hooksPassed) console.log('Hook smoke test failed. Fix hook issues before proceeding.');
 if (!securityPassed) console.log('Security tests failed. DO NOT SHIP - critical vulnerabilities present.');
 if (!contractsPassed) console.log('Runtime contract tests failed. Fix the contract skeleton before proceeding.');
+if (!operationsProtocolPassed) console.log('Operations protocol tests failed. Fix schemas, validation, transitions, or canonical identity before proceeding.');
 if (!runtimeRegistryPassed) console.log('Runtime registry tests failed. Fix runtime metadata and detection before proceeding.');
 if (!runtimeMatrixPassed) console.log('Runtime matrix tests failed. Fix adapter levels or runtime tradeoff metadata before proceeding.');
 if (!hookEventsPassed) console.log('Hook event tests failed. Fix event normalization before proceeding.');
@@ -406,6 +439,7 @@ if (!codexRuntimePassed) console.log('Codex runtime check failed. Fix runtime ad
 if (!codexNativeIntegrationPassed) console.log('Codex native integration check failed. Fix Codex bridge scripts, MCP, plugin, or docs before shipping.');
 if (!codexOperationalImprovementPassed) console.log('Codex operational improvement check failed. Fix readiness, review ingestion, artifacts, or app-server event summarization before shipping.');
 if (!installerPassed) console.log('Installer check failed. Fix Claude/Codex installer regressions before shipping.');
+if (!cliPackagePassed) console.log('CLI package check failed. Fix command routing, package contents, or executable packaging before shipping.');
 if (!projectBootstrapPassed) console.log('Project bootstrap check failed. Fix canonical guidance bootstrap before shipping.');
 if (!compatFixturePassed) console.log('Compatibility fixture check failed. Run: node scripts/generate-fixtures.js --write');
 if (!backwardCompatPassed) console.log('Backward compatibility check failed. Legacy data formats may be broken.');
@@ -437,5 +471,6 @@ if (!productProofCohortPassed) console.log('Product-proof cohort tests failed. F
 if (!sarifCoordinatesPassed) console.log('SARIF coordinate tests failed. Fix scanner diagnostic redaction before shipping.');
 if (!ecosystemCompatPassed) console.log('Ecosystem compatibility tests failed. Fix metadata drift or external-skill compatibility before shipping.');
 if (!productProofReportPassed) console.log('Product proof report tests failed. Fix scorecard completeness or evidence claims before shipping.');
+if (!unlockSuitePassed) console.log('Twelve-month unlock suite failed. Fix the named operation, Pack, proof, control, team, Relay, or reliability check before shipping.');
 console.log('');
 process.exit(1);

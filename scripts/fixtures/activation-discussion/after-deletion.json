@@ -1,0 +1,18 @@
+[
+  [
+    {
+      "id": 104,
+      "html_url": "https://github.com/SethGammon/Citadel/discussions/182#discussioncomment-104",
+      "created_at": "2026-07-17T10:00:00.000Z",
+      "updated_at": "2026-07-18T10:00:00.000Z",
+      "body": "Edited observation\n```json\n{\"schema\":1,\"kind\":\"activation_cohort_submission\",\"submission_id\":\"activation-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"consent_aggregate\":true,\"observation_day\":8,\"citadel_version\":\"1.1.0\",\"journey\":{\"event_count\":10,\"install_attempted\":true,\"install_completed\":true,\"setup_completed\":true,\"route_completed\":true,\"verified_handoff\":true,\"resume_completed\":true,\"return_session\":true,\"install_failed\":false,\"route_failed\":false}}\n```"
+    },
+    {
+      "id": 108,
+      "html_url": "https://github.com/SethGammon/Citadel/discussions/182#discussioncomment-108",
+      "created_at": "2026-07-18T11:00:00.000Z",
+      "updated_at": "2026-07-18T11:00:00.000Z",
+      "body": "This says activation-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa but has no fenced JSON."
+    }
+  ]
+]

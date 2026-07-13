@@ -1,0 +1,56 @@
+[
+  [
+    {
+      "id": 101,
+      "html_url": "https://github.com/SethGammon/Citadel/discussions/182#discussioncomment-101",
+      "created_at": "2026-07-10T10:00:00.000Z",
+      "updated_at": "2026-07-10T10:00:00.000Z",
+      "body": "I installed it. {\"schema\":1,\"kind\":\"activation_cohort_submission\"}"
+    },
+    {
+      "id": 102,
+      "html_url": "https://github.com/SethGammon/Citadel/discussions/182#discussioncomment-102",
+      "created_at": "2026-07-10T10:01:00.000Z",
+      "updated_at": "2026-07-10T10:01:00.000Z",
+      "body": "```json\n{not valid json}\n```"
+    },
+    {
+      "id": 103,
+      "html_url": "https://github.com/SethGammon/Citadel/discussions/182#discussioncomment-103",
+      "created_at": "2026-07-10T10:02:00.000Z",
+      "updated_at": "2026-07-10T10:02:00.000Z",
+      "body": "First observation\n```json\n{\"schema\":1,\"kind\":\"activation_cohort_submission\",\"submission_id\":\"activation-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"consent_aggregate\":true,\"observation_day\":1,\"citadel_version\":\"1.1.0\",\"journey\":{\"event_count\":5,\"install_attempted\":true,\"install_completed\":true,\"setup_completed\":true,\"route_completed\":true,\"verified_handoff\":true,\"resume_completed\":false,\"return_session\":false,\"install_failed\":false,\"route_failed\":false}}\n```"
+    }
+  ],
+  [
+    {
+      "id": 104,
+      "html_url": "https://github.com/SethGammon/Citadel/discussions/182#discussioncomment-104",
+      "created_at": "2026-07-17T10:00:00.000Z",
+      "updated_at": "2026-07-17T10:00:00.000Z",
+      "body": "Seven-day update\n```json\n{\"schema\":1,\"kind\":\"activation_cohort_submission\",\"submission_id\":\"activation-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"consent_aggregate\":true,\"observation_day\":7,\"citadel_version\":\"1.1.0\",\"journey\":{\"event_count\":9,\"install_attempted\":true,\"install_completed\":true,\"setup_completed\":true,\"route_completed\":true,\"verified_handoff\":true,\"resume_completed\":true,\"return_session\":true,\"install_failed\":false,\"route_failed\":false}}\n```"
+    },
+    {
+      "id": 105,
+      "html_url": "https://github.com/SethGammon/Citadel/discussions/182#discussioncomment-105",
+      "created_at": "2026-07-12T10:00:00.000Z",
+      "updated_at": "2026-07-12T10:00:00.000Z",
+      "body": "```json\n{\"schema\":1,\"kind\":\"activation_cohort_submission\",\"submission_id\":\"activation-bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"consent_aggregate\":true,\"observation_day\":0,\"citadel_version\":\"1.1.0\",\"journey\":{\"event_count\":2,\"install_attempted\":true,\"install_completed\":false,\"setup_completed\":false,\"route_completed\":false,\"verified_handoff\":false,\"resume_completed\":false,\"return_session\":false,\"install_failed\":true,\"route_failed\":false}}\n```"
+    },
+    {
+      "id": 106,
+      "html_url": "https://github.com/SethGammon/Citadel/discussions/182#discussioncomment-106",
+      "created_at": "2026-07-12T11:00:00.000Z",
+      "updated_at": "2026-07-12T11:00:00.000Z",
+      "body": "```json\n{\"schema\":1,\"kind\":\"activation_cohort_submission\",\"submission_id\":\"activation-cccccccccccccccccccccccccccccccc\",\"consent_aggregate\":true,\"observation_day\":0,\"citadel_version\":\"1.1.0\",\"journey\":{},\"extra\":\"not allowed\"}\n```"
+    },
+    {
+      "id": 107,
+      "html_url": "https://github.com/SethGammon/Citadel/discussions/182#discussioncomment-107",
+      "created_at": "2026-07-12T12:00:00.000Z",
+      "updated_at": "2026-07-12T12:00:00.000Z",
+      "body": null,
+      "deleted": true
+    }
+  ]
+]

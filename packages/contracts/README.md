@@ -12,6 +12,7 @@ Initial scope:
 - runtime capability contracts
 - skill and agent manifest contracts
 - project spec contracts
+- operations protocol v0.1 contracts and canonical digests
 
 ## Source of Truth
 
@@ -23,6 +24,11 @@ Initial implementations should be adapted from:
 - `core/contracts/skill-manifest.js`
 - `core/contracts/project-spec.js`
 - `core/contracts/agent-role.js`
+- `core/operations/index.js`
+
+The machine-readable operations declaration is
+`schemas/operations-v0.1.json`. The executable CommonJS validators are exported
+as `require('@citadel/contracts').operations`.
 
 ## Boundary Rule
 

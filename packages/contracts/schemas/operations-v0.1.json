@@ -1,0 +1,121 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:citadel:operations:0.1",
+  "title": "Citadel Operations Protocol v0.1",
+  "oneOf": [
+    { "$ref": "#/$defs/OperationSpec" },
+    { "$ref": "#/$defs/OperationRun" },
+    { "$ref": "#/$defs/StepAttempt" },
+    { "$ref": "#/$defs/Intent" },
+    { "$ref": "#/$defs/EvidenceEnvelope" },
+    { "$ref": "#/$defs/ExecutionReceipt" }
+  ],
+  "$defs": {
+    "identifier": { "type": "string", "maxLength": 128, "pattern": "^[a-z][a-z0-9]*(?:[-_.:][a-z0-9]+)*$" },
+    "digest": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" },
+    "timestamp": { "type": "string", "format": "date-time" },
+    "executionStatus": { "enum": ["pending", "running", "passed", "failed", "blocked", "unknown"] },
+    "terminalStatus": { "enum": ["passed", "failed", "blocked", "unknown"] },
+    "OperationSpec": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["protocol_version", "kind", "operation_id", "title", "objective_digest", "step_ids", "policy_digests", "created_at"],
+      "properties": {
+        "protocol_version": { "const": "0.1" },
+        "kind": { "const": "operation_spec" },
+        "operation_id": { "$ref": "#/$defs/identifier" },
+        "title": { "type": "string", "minLength": 1, "maxLength": 160, "pattern": "^[^\\r\\n]+$" },
+        "objective_digest": { "$ref": "#/$defs/digest" },
+        "step_ids": { "type": "array", "minItems": 1, "maxItems": 256, "uniqueItems": true, "items": { "$ref": "#/$defs/identifier" } },
+        "policy_digests": { "type": "array", "maxItems": 64, "uniqueItems": true, "items": { "$ref": "#/$defs/digest" } },
+        "created_at": { "$ref": "#/$defs/timestamp" }
+      }
+    },
+    "OperationRun": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["protocol_version", "kind", "run_id", "operation_id", "spec_digest", "status", "started_at", "completed_at", "intent_ids", "step_attempt_ids"],
+      "properties": {
+        "protocol_version": { "const": "0.1" },
+        "kind": { "const": "operation_run" },
+        "run_id": { "$ref": "#/$defs/identifier" },
+        "operation_id": { "$ref": "#/$defs/identifier" },
+        "spec_digest": { "$ref": "#/$defs/digest" },
+        "status": { "$ref": "#/$defs/executionStatus" },
+        "started_at": { "oneOf": [{ "$ref": "#/$defs/timestamp" }, { "type": "null" }] },
+        "completed_at": { "oneOf": [{ "$ref": "#/$defs/timestamp" }, { "type": "null" }] },
+        "intent_ids": { "type": "array", "maxItems": 256, "uniqueItems": true, "items": { "$ref": "#/$defs/identifier" } },
+        "step_attempt_ids": { "type": "array", "maxItems": 1024, "uniqueItems": true, "items": { "$ref": "#/$defs/identifier" } }
+      }
+    },
+    "StepAttempt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["protocol_version", "kind", "attempt_id", "run_id", "step_id", "attempt_number", "status", "started_at", "completed_at", "evidence_ids", "failure_code"],
+      "properties": {
+        "protocol_version": { "const": "0.1" },
+        "kind": { "const": "step_attempt" },
+        "attempt_id": { "$ref": "#/$defs/identifier" },
+        "run_id": { "$ref": "#/$defs/identifier" },
+        "step_id": { "$ref": "#/$defs/identifier" },
+        "attempt_number": { "type": "integer", "minimum": 1, "maximum": 10000 },
+        "status": { "$ref": "#/$defs/executionStatus" },
+        "started_at": { "oneOf": [{ "$ref": "#/$defs/timestamp" }, { "type": "null" }] },
+        "completed_at": { "oneOf": [{ "$ref": "#/$defs/timestamp" }, { "type": "null" }] },
+        "evidence_ids": { "type": "array", "maxItems": 1024, "uniqueItems": true, "items": { "$ref": "#/$defs/identifier" } },
+        "failure_code": { "oneOf": [{ "type": "string", "pattern": "^[A-Z][A-Z0-9_]{0,63}$" }, { "type": "null" }] }
+      }
+    },
+    "Intent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["protocol_version", "kind", "intent_id", "operation_id", "action", "actor_id", "scope_digest", "created_at", "expires_at"],
+      "properties": {
+        "protocol_version": { "const": "0.1" },
+        "kind": { "const": "intent" },
+        "intent_id": { "$ref": "#/$defs/identifier" },
+        "operation_id": { "$ref": "#/$defs/identifier" },
+        "action": { "enum": ["start", "pause", "resume", "cancel", "approve", "reject", "retry"] },
+        "actor_id": { "$ref": "#/$defs/identifier" },
+        "scope_digest": { "$ref": "#/$defs/digest" },
+        "created_at": { "$ref": "#/$defs/timestamp" },
+        "expires_at": { "oneOf": [{ "$ref": "#/$defs/timestamp" }, { "type": "null" }] }
+      }
+    },
+    "EvidenceEnvelope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["protocol_version", "kind", "evidence_id", "run_id", "step_attempt_id", "evidence_type", "status", "subject_digest", "artifact_digest", "recorded_at", "redacted"],
+      "properties": {
+        "protocol_version": { "const": "0.1" },
+        "kind": { "const": "evidence_envelope" },
+        "evidence_id": { "$ref": "#/$defs/identifier" },
+        "run_id": { "$ref": "#/$defs/identifier" },
+        "step_attempt_id": { "oneOf": [{ "$ref": "#/$defs/identifier" }, { "type": "null" }] },
+        "evidence_type": { "enum": ["artifact", "command", "deployment", "diff", "policy", "review", "test", "other"] },
+        "status": { "$ref": "#/$defs/terminalStatus" },
+        "subject_digest": { "$ref": "#/$defs/digest" },
+        "artifact_digest": { "oneOf": [{ "$ref": "#/$defs/digest" }, { "type": "null" }] },
+        "recorded_at": { "$ref": "#/$defs/timestamp" },
+        "redacted": { "type": "boolean" }
+      }
+    },
+    "ExecutionReceipt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["protocol_version", "kind", "receipt_id", "run_id", "operation_digest", "run_digest", "status", "evidence_digests", "issued_at", "issuer_id"],
+      "properties": {
+        "protocol_version": { "const": "0.1" },
+        "kind": { "const": "execution_receipt" },
+        "receipt_id": { "$ref": "#/$defs/identifier" },
+        "run_id": { "$ref": "#/$defs/identifier" },
+        "operation_digest": { "$ref": "#/$defs/digest" },
+        "run_digest": { "$ref": "#/$defs/digest" },
+        "status": { "$ref": "#/$defs/terminalStatus" },
+        "evidence_digests": { "type": "array", "maxItems": 2048, "uniqueItems": true, "items": { "$ref": "#/$defs/digest" } },
+        "issued_at": { "$ref": "#/$defs/timestamp" },
+        "issuer_id": { "$ref": "#/$defs/identifier" }
+      }
+    }
+  }
+}

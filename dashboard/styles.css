@@ -1,4 +1,4 @@
-/* Citadel dashboard v0.1 — design contract in docs/DASHBOARD_SPEC.md.
+/* Citadel Mission Control design contract in docs/DASHBOARD_SPEC.md.
    Tier colors are semantic everywhere: cyan skill, blue marshal,
    orange archon, purple fleet. Color is never decoration. */
 
@@ -340,6 +340,80 @@ kbd {
 .state-unreadable { border-color: var(--danger); }
 .state-unknown { border-color: var(--warn); }
 
+/* Mission Control */
+
+.operation-card { border-color: var(--border-strong); }
+
+.operation-control {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(150px, auto) 1fr;
+  gap: 9px 14px;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+.control-state,
+.control-actions,
+.confirmation-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.control-revision,
+.control-effect,
+.control-feedback {
+  font-family: var(--mono);
+  font-size: 11.5px;
+  color: var(--dim);
+}
+
+.control-actions { justify-content: flex-end; }
+.control-effect,
+.control-feedback { grid-column: 1 / -1; }
+.control-feedback:empty { display: none; }
+
+.control-button {
+  min-height: 34px;
+  border: 1px solid var(--border-strong);
+  border-radius: 7px;
+  padding: 6px 12px;
+  background: var(--panel-2);
+  color: var(--text);
+  font: 600 12px var(--mono);
+  text-transform: capitalize;
+  cursor: pointer;
+  transition: border-color 150ms, background-color 150ms, transform 150ms;
+}
+
+.control-button:hover:not(:disabled) { border-color: var(--skill); transform: translateY(-1px); }
+.control-button:focus-visible { outline: 2px solid var(--skill); outline-offset: 2px; }
+.control-button:disabled { cursor: wait; opacity: 0.55; }
+.control-risk { border-color: color-mix(in srgb, var(--warn) 55%, var(--border)); }
+.control-danger { border-color: var(--danger); color: var(--danger); }
+.control-quiet { color: var(--muted); }
+
+.confirmation-capsule {
+  grid-column: 1 / -1;
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid var(--warn);
+  border-radius: 9px;
+  background: color-mix(in srgb, var(--warn) 7%, var(--panel-2));
+}
+
+.confirmation-title { font-weight: 700; }
+.feedback-pending { color: var(--skill); }
+.feedback-accepted { color: var(--ok); }
+.feedback-conflict,
+.feedback-blocked { color: var(--warn); }
+.feedback-rejected,
+.feedback-unknown { color: var(--danger); }
+
 .help {
   position: fixed;
   inset: 0;
@@ -363,6 +437,8 @@ kbd {
   .sidebar { flex-direction: row; flex-wrap: wrap; align-items: center; padding: 8px; }
   .sidebar-foot { display: none; }
   .nav { flex-direction: row; flex-wrap: wrap; }
+  .operation-control { grid-template-columns: 1fr; }
+  .control-actions { justify-content: flex-start; }
 }
 
 @media (max-width: 460px) {

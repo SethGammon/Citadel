@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "kind": "proof_record",
+  "record_id": "proof-fixture-blocked",
+  "title": "Fixture blocked operation",
+  "classification": "fixture",
+  "provenance": { "kind": "fixture", "reference": "fixture:blocked-operation" },
+  "receipt_path": "receipts/blocked.json",
+  "receipt_digest": "sha256:fc1a29aacf6dabee6a10d8287517882af9bb53f1719dac7924301c14d3c092cb",
+  "observed_at": "2026-07-13T12:05:00.000Z"
+}

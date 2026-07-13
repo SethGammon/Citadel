@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "id": "migration-campaign",
+  "description": "Decompose, execute, cover, verify, and hand off a repository migration.",
+  "steps": [
+    { "id": "plan", "skill": "archon", "purpose": "Create bounded phases and explicit exit evidence.", "depends_on": [] },
+    { "id": "migrate", "skill": "refactor", "purpose": "Apply the migration with rollback-aware checkpoints.", "depends_on": ["plan"] },
+    { "id": "cover", "skill": "test-gen", "purpose": "Add coverage for changed behavior and negative paths.", "depends_on": ["migrate"] },
+    { "id": "verify", "skill": "verify", "purpose": "Run focused and repository-level gates.", "depends_on": ["cover"] },
+    { "id": "handoff", "skill": "session-handoff", "purpose": "Preserve continuation state and evidence.", "depends_on": ["verify"] }
+  ]
+}
