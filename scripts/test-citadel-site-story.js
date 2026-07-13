@@ -12,6 +12,7 @@ const checks = [
   ['story section exists', html.includes('id="product-story"')],
   ['hero shows the first-success path', html.includes('Citadel first-success path') && html.includes('/do next')],
   ['screen transition names its value', html.includes('See the work survive a session')],
+  ['short screens remove the duplicate cue chevron', html.includes('.scroll-cue svg:last-child { display: none; }')],
   ['campaign scenario exists', html.includes('data-story-scenario="campaign"')],
   ['review scenario exists', html.includes('data-story-scenario="review"')],
   ['fleet scenario exists', html.includes('data-story-scenario="fleet"')],
