@@ -31,6 +31,7 @@ const checks = [
   ['fleet worktrees exist', html.includes('wt-fleet-api') && html.includes('wt-fleet-components') && html.includes('wt-fleet-utils')],
   ['reduced motion participates in playback', html.includes("prefers-reduced-motion: reduce")],
   ['mobile story layout exists', html.includes('.story-layout { grid-template-columns: 1fr; }')],
+  ['mobile router choices use a horizontal rail', html.includes('scroll-snap-type: x proximity') && html.includes('.gen-btn { flex: 0 0 150px;')],
   ['experience contract names all acceptance questions', (contract.match(/^\d+\. /gm) || []).length >= 7],
   ['public story copy contains no em dash', !html.slice(html.indexOf('<section class="story-section"'), html.indexOf('<!-- Vertical tier cascade -->')).includes('—')]
   ,['fallback documentation links are real', html.includes('href="CAMPAIGNS.md"') && html.includes('href="CLAUDE_INSTALLATION_GUIDE.md"')]
