@@ -11,6 +11,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const activation = require('../core/telemetry/activation');
 
 const PLUGIN_ROOT = path.resolve(__dirname, '..');
 const PROJECT_ROOT = process.env.CLAUDE_PROJECT_DIR || process.cwd();
@@ -191,6 +192,10 @@ function main() {
       PLUGIN_ROOT
     );
 
+    // 6b. Record proof-backed activation milestones. This is local-only,
+    // deduplicated, and can never block session initialization.
+    recordActivationMilestones();
+
     // 7. Watchdog — check for stale command results from a previous session
     checkStaleCommandResult();
 
@@ -204,6 +209,27 @@ function main() {
     // Non-fatal — don't block session start
     process.exit(0);
   }
+}
+
+function activationRuntime() {
+  const declared = String(process.env.CITADEL_RUNTIME || '').toLowerCase();
+  if (declared === 'codex') return 'codex';
+  if (declared === 'claude' || declared === 'claude-code') return 'claude-code';
+  return 'unknown';
+}
+
+function recordActivationMilestones() {
+  try {
+    const config = path.join(PROJECT_ROOT, '.claude', 'harness.json');
+    if (!fs.existsSync(config)) return;
+    JSON.parse(fs.readFileSync(config, 'utf8'));
+    const input = { status: 'succeeded', runtime: activationRuntime() };
+    activation.recordOnce({ ...input, stage: 'setup_completed' }, { root: PROJECT_ROOT });
+    activation.recordOnce({ ...input, stage: 'return_session' }, {
+      root: PROJECT_ROOT,
+      minimum_day_since_install: 1,
+    });
+  } catch { /* activation evidence is best-effort and never blocks startup */ }
 }
 
 /**

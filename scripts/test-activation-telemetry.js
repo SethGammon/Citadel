@@ -5,6 +5,7 @@ const assert = require('assert');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
+const { execFileSync } = require('child_process');
 const activation = require('../core/telemetry/activation');
 const cli = require('./activation-telemetry');
 
@@ -178,6 +179,43 @@ test('rates are null when no successful installation denominator exists', () => 
   assert.equal(result.decision_metrics.durable_resume_rate.rate, null);
   assert.equal(result.decision_metrics.return_use_rate.rate, null);
   assert.equal(result.guardrails.failure_event_rate, null);
+});
+
+test('recordOnce deduplicates milestones and enforces return age', () => {
+  const root = tempRoot();
+  const now = new Date('2026-01-03T00:00:00.000Z');
+  const options = { root, identity, version: '1.1.0', os_family: 'linux', now };
+  assert.equal(activation.recordOnce({ stage: 'setup_completed', status: 'succeeded' }, options).recorded, true);
+  assert.equal(activation.recordOnce({ stage: 'setup_completed', status: 'succeeded' }, options).reason, 'already_recorded');
+  const freshIdentity = { ...identity, installation_id: '22222222-2222-4222-8222-222222222222', created_at: now.toISOString() };
+  const early = activation.recordOnce({ stage: 'return_session', status: 'succeeded' }, {
+    ...options, identity: freshIdentity, minimum_day_since_install: 1,
+  });
+  assert.equal(early.reason, 'too_early');
+  assert.equal(activation.readEvents(root).events.length, 1);
+});
+
+test('session start records configured setup and a later return once', () => {
+  const root = tempRoot();
+  fs.mkdirSync(path.join(root, '.claude'), { recursive: true });
+  fs.writeFileSync(path.join(root, '.claude', 'harness.json'), '{}\n');
+  const files = activation.pathsFor(root);
+  fs.mkdirSync(files.dir, { recursive: true });
+  fs.writeFileSync(files.identity, JSON.stringify({
+    schema: 1,
+    installation_id: identity.installation_id,
+    created_at: new Date(Date.now() - 2 * 86400000).toISOString(),
+  }, null, 2) + '\n');
+  const run = () => execFileSync(process.execPath, [path.join(__dirname, '..', 'hooks_src', 'init-project.js')], {
+    cwd: root,
+    env: { ...process.env, CLAUDE_PROJECT_DIR: root, CITADEL_RUNTIME: 'codex' },
+    stdio: 'pipe',
+  });
+  run();
+  run();
+  const events = activation.readEvents(root).events;
+  assert.deepEqual(events.map((event) => event.stage).sort(), ['return_session', 'setup_completed']);
+  assert(events.every((event) => event.runtime === 'codex'));
 });
 
 test('reader migrates legacy lines and counts invalid lines without exposing them', () => {

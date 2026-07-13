@@ -153,6 +153,29 @@ function record(input, options = {}) {
   return { recorded: true, file, event };
 }
 
+function recordOnce(input, options = {}) {
+  const root = options.root || process.cwd();
+  if (!isEnabled(root, options.env || process.env)) return { recorded: false, reason: 'opted_out' };
+  const now = options.now || new Date();
+  const identity = options.identity || readOrCreateIdentity(root, now);
+  const duplicate = readEvents(root).events.some((event) => (
+    event.installation_id === identity.installation_id
+    && event.stage === input.stage
+    && event.status === input.status
+  ));
+  if (duplicate) return { recorded: false, reason: 'already_recorded' };
+
+  const event = createEvent(input, { ...options, root, now, identity });
+  const minimumDay = options.minimum_day_since_install || 0;
+  if (event.day_since_install < minimumDay) {
+    return { recorded: false, reason: 'too_early', day_since_install: event.day_since_install };
+  }
+  const file = pathsFor(root).events;
+  fs.mkdirSync(pathsFor(root).dir, { recursive: true });
+  fs.appendFileSync(file, JSON.stringify(event) + '\n');
+  return { recorded: true, file, event };
+}
+
 function migrateLegacy(event) {
   assertObject(event, 'legacy event');
   assertFields(event, LEGACY_FIELDS, 'legacy event');
@@ -257,6 +280,6 @@ function setOptOut(root = process.cwd(), disabled = true) {
 module.exports = {
   SCHEMA, STAGES, STATUSES, FAILURE_CODES, ACQUISITION_SOURCES, RUNTIMES,
   OS_FAMILIES, EVENT_FIELDS, LEGACY_FIELDS, pathsFor, osFamily, validateEvent,
-  createEvent, record, migrateLegacy, readEvents, rate,
+  createEvent, record, recordOnce, migrateLegacy, readEvents, rate,
   successfulInstallationsByStage, report, isEnabled, setOptOut,
 };

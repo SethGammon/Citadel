@@ -76,9 +76,11 @@ Setup and route completion are diagnostic funnel steps. Failed event rate and in
 are guardrails. Each installation counts at most once per successful stage, so retries cannot
 inflate conversion. A rate is `null` until at least one successful install supplies a denominator.
 
-Only the install boundary is automatic in this release. Setup, route, handoff, resume, and return
-must be recorded by the workflow that can prove each milestone. Missing integration remains missing
-evidence, not a manufactured conversion.
+The unified installer records the install boundary. A configured session start records setup once,
+and the first configured session at least one day later records return use once. Standard `/do setup`
+and `/do` workflows record route, verified handoff, and successful resume at their proving seams.
+Each write remains local, optional, deduplicated where hooks may repeat, and non-blocking. Missing
+integration remains missing evidence, not a manufactured conversion.
 
 ## GitHub acquisition history
 
