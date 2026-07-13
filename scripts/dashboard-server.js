@@ -254,6 +254,9 @@ function inspectSources(projectRoot, data) {
       : source('.planning/telemetry/session-costs.jsonl', 'unknown', 'no cost telemetry is available');
   let activationState = inspectFile(projectRoot, '.planning/product-proof/activation-report.json', { json: true, schema: 1 });
   if (activationState.status === 'unknown') {
+    activationState = inspectFile(projectRoot, '.planning/product-proof/activation-cohort-report.json', { json: true, schema: 1 });
+  }
+  if (activationState.status === 'unknown') {
     activationState = inspectDirectory(projectRoot, '.planning/telemetry', {
       filter: (name) => name === 'activation.jsonl', jsonl: true,
     });
@@ -263,19 +266,31 @@ function inspectSources(projectRoot, data) {
 }
 
 function readActivation(projectRoot, state) {
-  if (!state || state.status === 'unknown') return { mode: 'unknown', note: 'No activation report has been recorded.', report: null };
-  if (state.status === 'unreadable') return { mode: 'unreadable', note: state.detail, report: null };
+  let cohort = null;
+  let cohortNote = 'No shared cohort has been ingested yet.';
+  const cohortPath = path.join(projectRoot, '.planning', 'product-proof', 'activation-cohort-report.json');
+  if (fs.existsSync(cohortPath)) {
+    try {
+      cohort = JSON.parse(fs.readFileSync(cohortPath, 'utf8'));
+      if (cohort.schema !== 1 || cohort.kind !== 'activation_cohort_report') throw new Error('cohort report is not schema 1');
+      cohortNote = 'Explicit, redacted submissions from the public product-proof cohort.';
+    } catch (error) {
+      cohortNote = `Shared cohort report is unreadable: ${error.message}`;
+    }
+  }
+  if (!state || state.status === 'unknown') return { mode: cohort ? 'cohort_only' : 'unknown', note: 'No local activation report has been recorded.', report: null, cohort, cohort_note: cohortNote };
+  if (state.status === 'unreadable') return { mode: 'unreadable', note: state.detail, report: null, cohort, cohort_note: cohortNote };
   try {
     const reportPath = path.join(projectRoot, '.planning', 'product-proof', 'activation-report.json');
     const value = fs.existsSync(reportPath)
       ? JSON.parse(fs.readFileSync(reportPath, 'utf8'))
       : activationReport(projectRoot);
     if (value.schema !== 1) throw new Error('activation report is not schema 1');
-    return { mode: value.total_events > 0 ? 'healthy' : 'empty', note: value.total_events > 0 ? 'local, redacted activation evidence' : 'Activation telemetry is enabled but no events are recorded.', report: value };
+    return { mode: value.total_events > 0 ? 'healthy' : 'empty', note: value.total_events > 0 ? 'local, redacted activation evidence' : 'Activation telemetry is enabled but no events are recorded.', report: value, cohort, cohort_note: cohortNote };
   } catch (error) {
     state.status = 'unreadable';
     state.detail = error.message;
-    return { mode: 'unreadable', note: error.message, report: null };
+    return { mode: 'unreadable', note: error.message, report: null, cohort, cohort_note: cohortNote };
   }
 }
 

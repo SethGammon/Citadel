@@ -4,10 +4,12 @@
 const fs = require('fs');
 const path = require('path');
 const activation = require('../core/telemetry/activation');
+const cohort = require('../core/telemetry/activation-cohort');
 
 const COMMAND_FLAGS = {
   record: ['root', 'stage', 'status', 'runtime', 'duration-ms', 'failure-code', 'source'],
   report: ['root', 'output'],
+  share: ['root', 'output'],
   status: ['root'],
   'opt-out': ['root'],
   'opt-in': ['root'],
@@ -20,6 +22,7 @@ function usage() {
     '  record  --stage <stage> --status <status> [--runtime codex] [--duration-ms 10]',
     '          [--failure-code <code>] [--source <category>] [--root <project>]',
     '  report  [--output <redacted.json>] [--root <project>]',
+    '  share   [--output <activation-share.json>] [--root <project>]',
     '  status  [--root <project>]',
     '  opt-out [--root <project>]',
     '  opt-in  [--root <project>]',
@@ -90,6 +93,21 @@ function run(argv = process.argv.slice(2)) {
       fs.writeFileSync(output, JSON.stringify(result, null, 2) + '\n');
     }
     return plan(command, root, { outcome: output ? 'redacted_report_written' : 'redacted_report_printed', output, report: result });
+  }
+
+  if (command === 'share') {
+    const submission = cohort.buildSubmission(root);
+    const output = path.resolve(values.output || cohort.sharePaths(root).bundle);
+    fs.mkdirSync(path.dirname(output), { recursive: true });
+    fs.writeFileSync(output, JSON.stringify(submission, null, 2) + '\n');
+    return plan(command, root, {
+      outcome: 'opt_in_bundle_written',
+      output,
+      discussion_url: cohort.DISCUSSION_URL,
+      transmitted: false,
+      privacy_notice: 'The bundle excludes prompts, paths, repository names, commands, and personal identity. Posting it publicly reveals your GitHub account.',
+      submission,
+    });
   }
 
   if (command === 'status') {

@@ -166,6 +166,12 @@ async function main() {
       by_stage: { setup_completed: 1 }, by_status: { succeeded: 2 },
       by_failure_code: {}, by_acquisition_source: { github_search: 1 },
     }));
+    write(healthyRoot, '.planning/product-proof/activation-cohort-report.json', JSON.stringify({
+      schema: 1, kind: 'activation_cohort_report', milestone_status: 'collecting',
+      privacy: 'opt-in aggregate',
+      cohort: { shared_installations: 3, successful_installs: 3, attempted_installs: 3, seven_day_eligible: 1, setup_rate: 1, verified_handoff_rate: 0.67, resume_rate: 0.33, seven_day_return_rate: 1, install_or_route_failure_rate: 0 },
+      targets: { shared_installations: 25 }, gates: {}, limitations: [],
+    }));
 
     const source = createDataSource(healthyRoot);
     const views = deriveViews(source.get());
@@ -179,6 +185,7 @@ async function main() {
     check('healthy hook source is explicit', views.hooks.state.status === 'healthy', views.hooks.state.status);
     check('healthy cost source is explicit', views.cost.state.status === 'healthy' && views.cost.session_count === 1);
     check('healthy activation source is explicit', views.activation.state.status === 'healthy' && views.activation.report.total_events === 2);
+    check('healthy shared cohort is projected', views.activation.cohort && views.activation.cohort.cohort.shared_installations === 3);
 
     // Invalidation: new handoff appears after invalidate().
     write(healthyRoot, '.planning/handoffs/2026-06-12-second.md', '# Handoff 2\n');

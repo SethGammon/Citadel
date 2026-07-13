@@ -15,7 +15,7 @@ Citadel is the open-source operating layer for Claude Code and OpenAI Codex. It 
 
 If `CLAUDE.md` and `AGENTS.md` tell the runtime **what** your project is, Citadel tells the runtime **how** to operate on it.
 
-[Install](#quick-install) · [See the operating loop](#see-the-operating-loop) · [Inspect the proof](#proof-not-promises) · [Choose the right tool](docs/CHOOSING_CITADEL.md) · [Help test 1.1](https://github.com/SethGammon/Citadel/discussions/182)
+[Install](#quick-install) · [See the operating loop](#see-the-operating-loop) · [Inspect the proof](#proof-not-promises) · [Choose the right tool](docs/CHOOSING_CITADEL.md) · [Share activation proof](https://github.com/SethGammon/Citadel/discussions/182)
 
 </div>
 
@@ -47,6 +47,16 @@ After installing, try this from your project root:
 | Fresh-process continuity | Campaign state and the next action reload from repository files | [Campaigns](docs/CAMPAIGNS.md) |
 
 These are bounded claims. Deterministic fixtures are not human adoption, clone operations are not retained users, and Citadel does not replace review.
+
+### Help measure real use
+
+If Citadel has run a real task in your repository, one local command creates a reviewable, redacted cohort bundle:
+
+```sh
+node .citadel/scripts/activation-telemetry.js share
+```
+
+Nothing is transmitted. The bundle contains only an opaque ID, observation age, version, bounded journey outcomes, and explicit aggregate consent. Post it only if you choose to. The public [activation cohort](docs/PRODUCT_PROOF_TRIAL.md) is targeting 25 shared installations, 40% verified handoff, 25% resume, and 15% seven-day return before Citadel claims retained human use.
 
 ## What Is Citadel?
 
@@ -222,7 +232,7 @@ The full plan with exit criteria lives in [docs/ROADMAP.md](docs/ROADMAP.md). Th
 - [Activation and acquisition metrics](docs/ACTIVATION_METRICS.md) - local funnel privacy, GitHub traffic history, and honest interpretation
 - [Golden path verification](docs/GOLDEN_PATH.md) - deterministic runtime fixtures, cross-OS matrix rules, and human-proof boundaries
 - [Product benchmark](docs/BENCHMARK.md) - frozen methodology, raw fixture evidence, negative results, and remaining real-run gates
-- [Independent product-proof trial](docs/PRODUCT_PROOF_TRIAL.md) - privacy-minimal recruitment, cohort, benchmark-selection, and 14-day return-use protocol
+- [Activation cohort](docs/PRODUCT_PROOF_TRIAL.md) - one-command opt-in bundle, explicit denominators, decision thresholds, and seven-day return protocol
 - [Interoperability](docs/INTEROPERABILITY.md) - external skill compatibility, provenance limits, and remote registry boundaries
 - [Citadel 1.1 product-proof scorecard](docs/PRODUCT_PROOF_REPORT.md) - what is locally proven, CI-proven, human-proven, and still blocked
 - [Skill and memory visibility](docs/SKILL_MEMORY_VISIBILITY.md) - inspect available skills and compiled project memory

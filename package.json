@@ -32,6 +32,8 @@
     "usefulness:trial": "node scripts/usefulness-trial.js",
     "activation:status": "node scripts/activation-telemetry.js status",
     "activation:report": "node scripts/activation-telemetry.js report",
+    "activation:share": "node scripts/activation-telemetry.js share",
+    "activation:cohort": "node scripts/activation-cohort.js report",
     "acquisition:snapshot": "node scripts/github-traffic-snapshot.js",
     "golden:path": "node scripts/golden-path.js",
     "golden:path:matrix": "node scripts/golden-path-matrix.js",
