@@ -317,8 +317,14 @@
     }
     .gen-btn:hover .gen-again { opacity: 0.65; }
     @media (max-width: 760px) {
-      .generators { flex-wrap: wrap; }
-      .gen-btn { flex: calc(50% - 6px); min-width: 0; }
+      .generators {
+        flex-wrap: nowrap; overflow-x: auto; max-height: 138px;
+        margin-top: 16px; margin-bottom: 20px; padding-bottom: 4px;
+        scroll-snap-type: x proximity;
+      }
+      .gen-btn { flex: 0 0 150px; min-width: 150px; padding: 12px 14px; scroll-snap-align: start; }
+      .gen-icon { margin-bottom: 6px; }
+      .gen-again { display: none; }
     }
 
     /* ─── Result panel  -  folds out downward from search bar ─── */
@@ -1385,6 +1391,8 @@
       .hero-outcome { grid-template-columns: 1fr; gap: 4px; padding: 8px 5px; text-align: center; font-size: 10px; }
       .hero-outcome + .hero-outcome { border-left: 1px solid var(--border); border-top: 0; }
       .scroll-cue-label { font-size: 10px; }
+      .scroll-cue { bottom: 2px; }
+      .scroll-cue svg:last-child { display: none; }
     }
 
     @media (max-height: 820px) and (min-width: 761px) {
