@@ -38,7 +38,11 @@ The schema is versioned and accepts only declared fields. Its stages are:
 7. `return_session`
 
 This preserves the important distinction between an installed harness and one that is actually
-configured and useful. Record a stage explicitly:
+configured and useful. The unified installer records `install_started` and `install_completed`
+automatically for real installations. Dry runs and plugin-only operations do not count as installs.
+The same local opt-out contract applies, and telemetry failure can never fail an installation.
+
+Downstream workflow integrations can record a stage explicitly:
 
 ```sh
 node scripts/activation-telemetry.js record --stage install_completed --status succeeded --runtime codex
@@ -59,6 +63,22 @@ node scripts/activation-telemetry.js report --output .planning/product-proof/act
 ```
 
 No report is uploaded automatically.
+
+### Decision metrics
+
+The redacted report calculates three primary rates against successful installations:
+
+- `verified_activation_rate`: installations that reached a successful verified handoff
+- `durable_resume_rate`: installations that successfully resumed durable work
+- `return_use_rate`: installations that recorded a later return session
+
+Setup and route completion are diagnostic funnel steps. Failed event rate and invalid event count
+are guardrails. Each installation counts at most once per successful stage, so retries cannot
+inflate conversion. A rate is `null` until at least one successful install supplies a denominator.
+
+Only the install boundary is automatic in this release. Setup, route, handoff, resume, and return
+must be recorded by the workflow that can prove each milestone. Missing integration remains missing
+evidence, not a manufactured conversion.
 
 ## GitHub acquisition history
 

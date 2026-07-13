@@ -142,10 +142,42 @@ test('fixture journey records install through return and reports redacted aggreg
   assert.equal(result.by_stage.return_session, 1);
   assert.equal(result.by_status.started, 1);
   assert.equal(result.by_status.succeeded, 6);
+  assert.equal(result.activation_funnel.successful_installs, 1);
+  assert.equal(result.activation_funnel.setup_completed.rate_from_install, 1);
+  assert.deepEqual(result.decision_metrics.verified_activation_rate, { numerator: 1, denominator: 1, rate: 1 });
+  assert.deepEqual(result.decision_metrics.durable_resume_rate, { numerator: 1, denominator: 1, rate: 1 });
+  assert.deepEqual(result.decision_metrics.return_use_rate, { numerator: 1, denominator: 1, rate: 1 });
+  assert.deepEqual(result.guardrails, { failed_events: 0, failure_event_rate: 0, invalid_events: 0 });
   assert.equal(result.redacted, true);
   assert.equal(result.transmitted, false);
   assert.equal(JSON.stringify(result).includes(localId), false);
   assert.equal(JSON.stringify(result).includes('timestamp'), false);
+});
+
+test('funnel counts installations once and excludes failed milestones', () => {
+  const root = tempRoot();
+  const record = (stage, status = 'succeeded') => activation.record({
+    stage, status, runtime: 'codex',
+    failure_code: status === 'failed' ? 'verification_failed' : null,
+  }, { root });
+  record('install_completed');
+  record('install_completed');
+  record('route_completed');
+  record('verified_handoff', 'failed');
+  const result = activation.report(root);
+  assert.equal(result.activation_funnel.successful_installs, 1);
+  assert.equal(result.activation_funnel.route_completed.rate_from_install, 1);
+  assert.equal(result.decision_metrics.verified_activation_rate.rate, 0);
+  assert.equal(result.guardrails.failed_events, 1);
+  assert.equal(result.guardrails.failure_event_rate, 0.25);
+});
+
+test('rates are null when no successful installation denominator exists', () => {
+  const result = activation.report(tempRoot());
+  assert.equal(result.decision_metrics.verified_activation_rate.rate, null);
+  assert.equal(result.decision_metrics.durable_resume_rate.rate, null);
+  assert.equal(result.decision_metrics.return_use_rate.rate, null);
+  assert.equal(result.guardrails.failure_event_rate, null);
 });
 
 test('reader migrates legacy lines and counts invalid lines without exposing them', () => {
