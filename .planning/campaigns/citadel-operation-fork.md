@@ -1,6 +1,6 @@
 ---
 slug: citadel-operation-fork
-status: active
+status: complete
 orchestrator: archon
 created: 2026-07-13
 updated: 2026-07-13
@@ -29,7 +29,7 @@ Direction: Ship one objective through comparable isolated Claude Code and Codex 
 | 3 | Evidence comparison, selection, landing, and replay | build | complete | 3 |
 | 4 | CLI journey and Mission Control experience | build | complete | 3 |
 | 5 | Adversarial, recovery, security, and visual verification | verify | complete | 3 |
-| 6 | Documentation, package integrity, and protected delivery | verify | in-progress | 3 |
+| 6 | Documentation, package integrity, and protected delivery | verify | complete | 3 |
 
 ## Phase End Conditions
 
@@ -56,6 +56,7 @@ Direction: Ship one objective through comparable isolated Claude Code and Codex 
 - 2026-07-13: Selection and landing are separate. Selection records operator intent; landing requires a fresh revision, containment, clean target, and explicit confirmation.
 - 2026-07-13: The original checkout is dirty and remains untouched. Work starts from `origin/main` commit `c813983` in `C:\tmp\citadel-operation-fork`.
 - 2026-07-13: No hosted Relay, remote execution service, npm publication, tag, or release is part of this campaign.
+- 2026-07-13: macOS CI exposed a lexical `/var` versus canonical `/private/var` containment gap. Operation Fork now rejects unsafe worktree roots against both project forms before filesystem creation.
 
 ## Feature Ledger
 
@@ -74,16 +75,16 @@ Direction: Ship one objective through comparable isolated Claude Code and Codex 
 | phase:3 | decision | test_result | yes | `node scripts/test-operation-fork-decision.js` | passed | 3 | complete |
 | phase:4 | experience | screenshot | yes | `output/playwright/operation-fork-comparison.png`; `output/playwright/operation-fork-mission-control.png` | passed | 3 | complete |
 | phase:5 | strict | command_result | yes | `node scripts/test-all.js --strict` | passed | 3 | complete |
-| phase:6 | delivery | pr | yes | protected pull request to `main` | pending | 3 | review, push, verify CI, and merge |
+| phase:6 | delivery | pr | yes | [PR #200](https://github.com/SethGammon/Citadel/pull/200); 13 hosted checks passed on repaired implementation head `7af0989`; final campaign-only head revalidated before merge | passed | 3 | complete |
 
 ## Active Context
 
-Phase 6 is active. The implementation, documentation, focused suites, strict suite, and browser QA pass. Next action: review the final diff, commit, open the protected pull request, verify CI on the exact head, and merge to `main`.
+All six phases are complete. Operation Fork, its documentation, focused suites, strict suite, browser proof, cross-platform containment repair, and protected PR evidence are recorded. PR #200 is the delivery artifact; its final campaign-only head must pass protected checks before merge.
 
 ## Continuation State
 
 - current_phase: 6
-- current_substep: protected delivery
+- current_substep: complete
 - worktree: `C:\tmp\citadel-operation-fork`
 - branch: `codex/citadel-operation-fork`
 - baseline_commit: `c813983f5213919bed77e3eb84e1ebf357450c1f`
@@ -94,4 +95,4 @@ Phase 6 is active. The implementation, documentation, focused suites, strict sui
 - checkpoint-phase-5: focused security and full strict suites passed
 - files_modified: Operation Fork core, CLI, dashboard, site, documentation, metadata, proof assets, and tests
 - blockers: none
-- next_actions: review diff; commit; push; open PR; verify exact-head CI; merge to main
+- next_actions: verify final campaign-only PR head; merge PR #200 to main; confirm main contains the merge
