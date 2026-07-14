@@ -65,6 +65,7 @@ Direction: Turn Operation Fork from a dual-runtime primitive into a reproducible
 - 2026-07-13: The fresh live fork receives one bounded product objective: implement a deterministic `fork proof` report over the already redacted replay and freshly verified executor evidence. The frozen acceptance test requires exact fields, honest evidence counts, deterministic digests, CLI export, and no local path disclosure.
 - 2026-07-14: The external dual-vendor run remains permission-gated because it sends the isolated worktree and relevant code context to authenticated Claude and OpenAI services. The rejected launch created no process or fork state. Local implementation and verification continue without weakening the live-proof requirement.
 - 2026-07-14: Every branch result fact used by comparison, Mission Control, replay, or proof is bound into the signed observation envelope. Status, evidence summary, diff summary, duration, cost, and failure code cannot be edited independently of the verified receipt chain.
+- 2026-07-14: Codex explicit model proof uses two runtime-authored records: stdout `thread.started` binds the thread ID, and that exact rollout's `turn_context.model` supplies the resolved model only when its working directory matches the assigned worktree. Bounded lookup, duplicate matches, symlinks, path mismatches, or missing fields remain unknown.
 
 ## Feature Ledger
 
@@ -78,6 +79,7 @@ Direction: Turn Operation Fork from a dual-runtime primitive into a reproducible
 - Local recovery implementation: `fork proof` now produces a deterministic redacted report with exact branch, comparable, verified-receipt, and model-proof denominators. The frozen acceptance test passes.
 - Evidence hardening: operation digest, run ID, receipt status, telemetry, and the complete branch result are rechecked against signed bindings before comparison or display. Adversarial receipt, telemetry, signer, and manifest edits fail closed.
 - Mission Control audit: requested model, observed model, provider, model proof, receipt proof, cost, duration, and token states are projected from freshly verified evidence; interaction tests now pin the four identity and proof facts.
+- Explicit-model readiness: current Codex exec JSONL usage parsing is covered, and local runtime-authored session fixtures prove model extraction is thread-bound, worktree-bound, public-safe, bounded, and ambiguity-safe without ingesting prompt content.
 
 ## Exit Evidence
 

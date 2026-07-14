@@ -201,8 +201,12 @@ instead of crossing a command-interpreter boundary.
 
 Model, token, and cost evidence is read only from a runtime's own declared
 machine-readable output: the Claude JSON result object and the Codex JSONL event
-stream. Anything missing, untrusted, or unparsable stays `unknown`. It is never
-inferred from the requested profile and never converted to zero.
+stream. When Codex stdout omits its resolved model, Citadel binds the emitted
+thread ID to the exact Codex rollout, requires the recorded working directory to
+match the assigned worktree, and reads only its public-safe model field. The
+lookup is bounded and fails closed. Anything missing, untrusted, or unparsable
+stays `unknown`. It is never inferred from the requested profile and never
+converted to zero.
 
 ## Non-goals
 

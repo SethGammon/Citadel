@@ -220,6 +220,14 @@ Missing cost, duration, token, or model telemetry also remains `unknown`.
 Mission Control must not infer observations from requested values or convert
 missing data to zero.
 
+Claude model identity comes from the CLI JSON result. Codex exec stdout provides
+the thread ID and token usage but may omit the resolved model. In that case the
+adapter may read only the exact runtime-authored rollout matching the emitted
+thread ID, require its `turn_context.cwd` to equal the assigned worktree, and
+extract its public-safe `turn_context.model`. The search and read are bounded,
+symlinks and mismatches fail closed, and no prompt or session content enters
+telemetry or replay.
+
 ## Public replay
 
 Public replay may include profile ID, runtime, provider, requested model,

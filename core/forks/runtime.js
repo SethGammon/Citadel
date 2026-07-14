@@ -6,7 +6,13 @@ const path = require('path');
 const { spawnSync } = require('child_process');
 const operations = require('../operations');
 const { platformInvocation } = require('./launcher');
-const { CLAUDE_ALLOWED_TOOLS, runtimeInvocationForProfile, synthesizeLegacyExecutors } = require('./executor-profiles');
+const {
+  CLAUDE_ALLOWED_TOOLS, MODEL_ID_PATTERN, runtimeInvocationForProfile, synthesizeLegacyExecutors,
+} = require('./executor-profiles');
+
+const CODEX_THREAD_ID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const CODEX_SESSION_SCAN_LIMIT = 20000;
+const CODEX_SESSION_READ_LIMIT = 2 * 1024 * 1024;
 
 function runtimeInvocation(runtime) {
   if (runtime === 'claude') return { command: 'claude', args: ['--print', '--output-format', 'json', '--permission-mode', 'acceptEdits', '--allowedTools', CLAUDE_ALLOWED_TOOLS] };
@@ -66,24 +72,115 @@ function claudeObservation(stdout) {
   };
 }
 
-function codexObservation(stdout) {
+function containedRealFile(root, candidate) {
+  try {
+    if (fs.lstatSync(candidate).isSymbolicLink()) return null;
+    const realRoot = fs.realpathSync(root);
+    const realCandidate = fs.realpathSync(candidate);
+    const relative = path.relative(realRoot, realCandidate);
+    if (!relative || relative.startsWith('..') || path.isAbsolute(relative)) return null;
+    return realCandidate;
+  } catch (_error) {
+    return null;
+  }
+}
+
+function findCodexSessionFile(threadId, env = process.env) {
+  if (typeof threadId !== 'string' || !CODEX_THREAD_ID_PATTERN.test(threadId)) return null;
+  const home = env.CODEX_HOME || ((env.USERPROFILE || env.HOME) ? path.join(env.USERPROFILE || env.HOME, '.codex') : null);
+  if (!home) return null;
+  const sessions = path.resolve(home, 'sessions');
+  try {
+    if (!fs.statSync(sessions).isDirectory() || fs.lstatSync(sessions).isSymbolicLink()) return null;
+  } catch (_error) {
+    return null;
+  }
+  const suffix = `-${threadId}.jsonl`.toLowerCase();
+  const stack = [sessions];
+  let scanned = 0;
+  let match = null;
+  while (stack.length) {
+    const directory = stack.pop();
+    let entries;
+    try { entries = fs.readdirSync(directory, { withFileTypes: true }); } catch (_error) { return null; }
+    for (const entry of entries) {
+      scanned += 1;
+      if (scanned > CODEX_SESSION_SCAN_LIMIT) return null;
+      if (entry.isSymbolicLink()) continue;
+      const candidate = path.join(directory, entry.name);
+      if (entry.isDirectory()) stack.push(candidate);
+      else if (entry.isFile() && entry.name.toLowerCase().endsWith(suffix)) {
+        const contained = containedRealFile(sessions, candidate);
+        if (!contained || match !== null) return null;
+        match = contained;
+      }
+    }
+  }
+  return match;
+}
+
+function codexSessionModel(threadId, options = {}) {
+  const file = findCodexSessionFile(threadId, options.env || process.env);
+  if (!file || typeof options.cwd !== 'string') return null;
+  let expectedCwd;
+  try { expectedCwd = fs.realpathSync(path.resolve(options.cwd)); } catch (_error) { return null; }
+  let descriptor;
+  try {
+    descriptor = fs.openSync(file, 'r');
+    const size = Math.min(fs.fstatSync(descriptor).size, CODEX_SESSION_READ_LIMIT);
+    const buffer = Buffer.alloc(size);
+    const bytes = fs.readSync(descriptor, buffer, 0, size, 0);
+    const lines = buffer.subarray(0, bytes).toString('utf8').split(/\r?\n/);
+    let observed = null;
+    for (const line of lines) {
+      if (!line.trim()) continue;
+      let event;
+      try { event = JSON.parse(line); } catch (_error) { continue; }
+      if (!event || event.type !== 'turn_context' || !event.payload || typeof event.payload !== 'object') continue;
+      if (typeof event.payload.cwd !== 'string' || typeof event.payload.model !== 'string') continue;
+      let eventCwd;
+      try { eventCwd = fs.realpathSync(path.resolve(event.payload.cwd)); } catch (_error) { continue; }
+      if (eventCwd !== expectedCwd || !MODEL_ID_PATTERN.test(event.payload.model)) continue;
+      observed = event.payload.model;
+    }
+    return observed;
+  } catch (_error) {
+    return null;
+  } finally {
+    if (descriptor !== undefined) fs.closeSync(descriptor);
+  }
+}
+
+function codexObservation(stdout, options = {}) {
   let model = null;
   let tokens = null;
+  let threadId = null;
   for (const line of String(stdout || '').split(/\r?\n/)) {
     if (!line.trim()) continue;
     let event;
     try { event = JSON.parse(line); } catch (_error) { continue; }
     if (!event || typeof event !== 'object') continue;
     const body = event.msg && typeof event.msg === 'object' ? event.msg : event;
+    if (event.type === 'thread.started' && typeof event.thread_id === 'string'
+      && CODEX_THREAD_ID_PATTERN.test(event.thread_id)) threadId = event.thread_id;
     if (typeof body.model === 'string' && body.model) model = body.model;
+    if (event.type === 'turn.completed' && event.usage && typeof event.usage === 'object') {
+      const total = positiveNumber(Number(event.usage.input_tokens) + Number(event.usage.output_tokens));
+      if (total !== null) tokens = total;
+    }
     const usage = body.info && typeof body.info === 'object' ? body.info.total_token_usage : null;
     if (usage && typeof usage === 'object') {
       const total = positiveNumber(Number(usage.total_tokens));
       if (total !== null) tokens = total;
     }
   }
+  let source = 'codex-jsonl';
+  if (model === null && threadId !== null) {
+    model = codexSessionModel(threadId, options);
+    if (model !== null) source = 'codex-session-jsonl';
+  }
   if (model === null && tokens === null) return null;
-  return { model, cost: null, duration_ms: null, tokens, source: 'codex-jsonl' };
+  return { model, cost: null, duration_ms: null, tokens, source };
 }
 
 /**
@@ -91,10 +188,10 @@ function codexObservation(stdout) {
  * machine-readable output. Anything else stays unknown, never inferred from the
  * request and never coerced to zero.
  */
-function observeRuntime(runtime, agent) {
+function observeRuntime(runtime, agent, options = {}) {
   if (!agent || agent.error || agent.status !== 0) return null;
   const parsed = runtime === 'claude' ? claudeObservation(agent.stdout || '')
-    : runtime === 'codex' ? codexObservation(agent.stdout || '') : null;
+    : runtime === 'codex' ? codexObservation(agent.stdout || '', options) : null;
   if (!parsed) return null;
   return { ...parsed, trusted: true };
 }
@@ -190,7 +287,7 @@ function runRuntimeBranch(options) {
   } catch (_error) {
     diffSummary = { files_changed: 0, insertions: 0, deletions: 0, digest: operations.sha256Digest([]) };
   }
-  const observation = observeRuntime(profile.runtime, agent);
+  const observation = observeRuntime(profile.runtime, agent, { cwd: options.worktree, env: options.env || process.env });
   const result = receiptFor({
     fork: options.fork,
     branch: options.branch,
@@ -242,10 +339,12 @@ function loadVerifier(workflowPath) {
 
 module.exports = Object.freeze({
   generateSigningKey,
+  findCodexSessionFile,
   instructionFor,
   legacyProfileFor,
   loadVerifier,
   observeRuntime,
+  codexSessionModel,
   receiptFor,
   runRuntimeBranch,
   runtimeInvocation,

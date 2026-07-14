@@ -94,8 +94,9 @@ function validObservation(value, branchId, profile) {
   if (typeof value.trusted !== 'boolean') return null;
   if (typeof value.branch_result_digest !== 'string'
     || !operations.DIGEST_PATTERN.test(value.branch_result_digest)) return null;
-  const expectedSource = profile.runtime === 'claude' ? 'claude-json' : 'codex-jsonl';
-  if (value.trusted && value.source !== expectedSource) return null;
+  const expectedSources = profile.runtime === 'claude'
+    ? ['claude-json'] : ['codex-jsonl', 'codex-session-jsonl'];
+  if (value.trusted && !expectedSources.includes(value.source)) return null;
   if (!value.trusted && value.source !== 'adapter-silent') return null;
   return value;
 }

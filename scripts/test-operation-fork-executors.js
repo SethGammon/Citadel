@@ -56,6 +56,42 @@ const OBSERVATIONS = {
   'branch-codex-local-qwen': null,
 };
 
+// Current Codex exec JSONL exposes the thread ID and usage, while the resolved
+// model is persisted in that exact thread's turn_context record. The adapter
+// may read only the matching runtime-authored session and matching worktree.
+const codexHome = path.join(sandbox, 'codex-home');
+const codexSessions = path.join(codexHome, 'sessions', '2026', '07', '13');
+const codexThreadId = '019f5e9b-f6e6-7031-a377-7aeb4de3daea';
+fs.mkdirSync(codexSessions, { recursive: true });
+fs.writeFileSync(path.join(codexSessions, `rollout-proof-${codexThreadId}.jsonl`), [
+  JSON.stringify({ type: 'session_meta', payload: { id: codexThreadId } }),
+  JSON.stringify({ type: 'turn_context', payload: { cwd: project, model: 'gpt-5.6-sol' } }),
+].join('\n') + '\n');
+const codexStdout = [
+  JSON.stringify({ type: 'thread.started', thread_id: codexThreadId }),
+  JSON.stringify({ type: 'turn.started' }),
+  JSON.stringify({ type: 'turn.completed', usage: { input_tokens: 100, cached_input_tokens: 80, output_tokens: 7 } }),
+].join('\n');
+const codexObserved = forks.observeRuntime('codex', { status: 0, stdout: codexStdout },
+  { cwd: project, env: { CODEX_HOME: codexHome } });
+assert.equal(codexObserved.model, 'gpt-5.6-sol');
+assert.equal(codexObserved.tokens, 107);
+assert.equal(codexObserved.source, 'codex-session-jsonl');
+assert.equal(codexObserved.trusted, true);
+const otherCwd = path.join(sandbox, 'other-worktree');
+fs.mkdirSync(otherCwd);
+const codexWrongWorktree = forks.observeRuntime('codex', { status: 0, stdout: codexStdout },
+  { cwd: otherCwd, env: { CODEX_HOME: codexHome } });
+assert.equal(codexWrongWorktree.model, null);
+assert.equal(codexWrongWorktree.tokens, 107);
+assert.equal(codexWrongWorktree.source, 'codex-jsonl');
+const duplicateSession = path.join(codexHome, 'sessions', '2026', '07', '14');
+fs.mkdirSync(duplicateSession, { recursive: true });
+fs.writeFileSync(path.join(duplicateSession, `rollout-duplicate-${codexThreadId}.jsonl`),
+  JSON.stringify({ type: 'turn_context', payload: { cwd: project, model: 'gpt-5.6-sol' } }) + '\n');
+assert.equal(forks.findCodexSessionFile(codexThreadId, { CODEX_HOME: codexHome }), null,
+  'duplicate runtime sessions must fail closed');
+
 const provider = forks.createGitWorktreeProvider();
 function fakeRun(options) {
   fs.writeFileSync(path.join(options.worktree, `${options.profile.profile_id}.txt`), 'work\n');
