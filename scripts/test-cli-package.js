@@ -64,7 +64,7 @@ assert.deepEqual(cli.detectRuntime(['--project-root', markerRoot], { env: {}, pr
 
 const help = invoke(['--help']);
 assert.equal(help.status, 0, help.stderr);
-for (const command of ['install', 'doctor', 'update', 'rollback', 'uninstall', 'pack', 'journey', 'receipt']) {
+for (const command of ['install', 'doctor', 'update', 'rollback', 'uninstall', 'pack', 'journey', 'receipt', 'fork']) {
   assert(help.stdout.includes(command), `root help missing ${command}`);
 }
 
@@ -73,6 +73,7 @@ assert.equal(packList.status, 0, packList.stderr);
 assert.equal(JSON.parse(packList.stdout).packs.length, 3);
 assert.equal(invoke(['receipt', '--help']).status, 0);
 assert.equal(invoke(['journey', '--help']).status, 0);
+assert.equal(invoke(['fork', '--help']).status, 0);
 
 const installRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'citadel-cli-install & literal-'));
 const install = invoke(['install', '--runtime', 'codex', '--project-root', installRoot, '--plugin-only', '--dry-run', '--json']);
@@ -120,6 +121,7 @@ const entries = tarEntries(zlib.gunzipSync(fs.readFileSync(archive)));
 const names = new Set(entries.map((entry) => entry.name));
 for (const required of [
   'package/bin/citadel.js', 'package/core/cli/package-cli.js', 'package/scripts/install.js',
+  'package/core/forks/index.js', 'package/scripts/operation-fork.js',
   'package/skills/do/SKILL.md', 'package/.planning/_templates/campaign.md',
 ]) assert(names.has(required), `packed archive missing ${required}`);
 for (const forbidden of [

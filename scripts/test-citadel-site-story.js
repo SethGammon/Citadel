@@ -10,6 +10,10 @@ const contract = fs.readFileSync(path.join(root, 'docs', 'interactive-story-cont
 
 const checks = [
   ['story section exists', html.includes('id="product-story"')],
+  ['Operation Fork section exists', html.includes('id="operation-fork"') && html.includes('One objective. Two runtimes. One proof standard.')],
+  ['Operation Fork demonstrates verified and missing evidence', html.includes('data-fork-mode="verified"') && html.includes('data-fork-mode="missing"') && html.includes('Insufficient evidence')],
+  ['Operation Fork refuses manufactured winners', html.includes('Speed and cost do not manufacture a winner') && html.includes('refuses to recommend or select a winner')],
+  ['Operation Fork mobile comparison stacks', html.includes('.operation-fork-runtimes { grid-template-columns: 1fr; }')],
   ['hero shows the first-success path', html.includes('Citadel first-success path') && html.includes('/do next')],
   ['screen transition names its value', html.includes('See the work survive a session')],
   ['short screens remove the duplicate cue chevron', html.includes('.scroll-cue svg:last-child { display: none; }')],

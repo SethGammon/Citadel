@@ -1084,6 +1084,41 @@
     }
     .campaign-cta a:hover { border-color: var(--cyan); }
 
+    /* Operation Fork */
+    .operation-fork-section { width: 100%; padding: 62px 32px; scroll-margin-top: 72px; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); background: color-mix(in srgb, var(--surface) 74%, var(--bg)); }
+    .operation-fork-inner { max-width: 1080px; margin: 0 auto; }
+    .operation-fork-heading { display: flex; justify-content: space-between; align-items: end; gap: 28px; margin-bottom: 24px; }
+    .operation-fork-heading h2 { font-size: 30px; letter-spacing: -0.6px; }
+    .operation-fork-heading p { max-width: 590px; color: var(--muted); line-height: 1.65; }
+    .operation-fork-shell { overflow: hidden; border: 1px solid var(--border); border-radius: 14px; background: var(--bg); box-shadow: 0 22px 70px rgba(0,0,0,.24); }
+    .operation-fork-contract { display: grid; grid-template-columns: 1fr auto; gap: 18px; align-items: center; padding: 18px 20px; border-bottom: 1px solid var(--border); background: var(--surface-2); }
+    .operation-fork-command { color: var(--cyan); font: 13px/1.5 'SF Mono', Consolas, monospace; overflow-wrap: anywhere; }
+    .operation-fork-contract-meta { margin-top: 5px; color: var(--dim); font: 10px 'SF Mono', Consolas, monospace; letter-spacing: .7px; text-transform: uppercase; }
+    .operation-fork-controls { display: flex; gap: 7px; }
+    .operation-fork-control { border: 1px solid var(--border); border-radius: 6px; padding: 7px 10px; background: var(--surface); color: var(--muted); font: 11px 'SF Mono', Consolas, monospace; cursor: pointer; }
+    .operation-fork-control[aria-pressed="true"] { border-color: var(--cyan); color: var(--cyan); }
+    .operation-fork-lineage { position: relative; height: 42px; }
+    .operation-fork-lineage::before { content: ''; position: absolute; left: 50%; top: 0; width: 1px; height: 18px; background: var(--cyan); }
+    .operation-fork-lineage::after { content: ''; position: absolute; left: 25%; right: 25%; top: 18px; height: 23px; border: 1px solid var(--cyan); border-bottom: 0; border-radius: 8px 8px 0 0; }
+    .operation-fork-runtimes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; padding: 0 20px 20px; }
+    .operation-fork-runtime { position: relative; padding: 17px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); transition: border-color .2s, transform .2s, opacity .2s; }
+    .operation-fork-runtime.is-unknown { border-color: var(--orange); }
+    .operation-fork-runtime-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 14px; }
+    .operation-fork-runtime-name { font-size: 15px; font-weight: 650; }
+    .operation-fork-runtime-state { padding: 3px 8px; border: 1px solid var(--green); border-radius: 999px; color: var(--green); font: 10px 'SF Mono', Consolas, monospace; text-transform: uppercase; }
+    .is-unknown .operation-fork-runtime-state { border-color: var(--orange); color: var(--orange); }
+    .operation-fork-metrics { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 7px; }
+    .operation-fork-metric { padding: 9px 7px; border: 1px solid var(--border); border-radius: 6px; background: var(--bg); text-align: center; }
+    .operation-fork-value { display: block; color: var(--text); font: 13px 'SF Mono', Consolas, monospace; }
+    .operation-fork-label { display: block; margin-top: 4px; color: var(--dim); font: 9px 'SF Mono', Consolas, monospace; text-transform: uppercase; letter-spacing: .6px; }
+    .operation-fork-reason { display: none; margin-top: 11px; padding: 8px 10px; border-left: 2px solid var(--orange); color: var(--orange); font: 11px 'SF Mono', Consolas, monospace; }
+    .is-unknown .operation-fork-reason { display: block; }
+    .operation-fork-verdict { display: flex; justify-content: space-between; align-items: center; gap: 18px; padding: 16px 20px; border-top: 1px solid var(--border); background: var(--surface-2); }
+    .operation-fork-verdict strong { color: var(--green); }
+    .operation-fork-verdict.is-unknown strong { color: var(--orange); }
+    .operation-fork-verdict span { color: var(--muted); font-size: 12px; }
+    .operation-fork-proof { margin-top: 12px; color: var(--dim); font: 10px 'SF Mono', Consolas, monospace; text-align: right; }
+
     /* Proof receipt gallery */
     .proof-section { width: 100%; padding: 64px 32px; background: color-mix(in srgb, var(--surface) 68%, var(--bg)); border-top: 1px solid var(--border); }
     .proof-inner { max-width: 1080px; margin: 0 auto; }
@@ -1258,6 +1293,14 @@
       .story-file-tabs { flex-direction: row; overflow-x: auto; }
       .story-file-tab { width: auto; }
       .proof-section { padding: 44px 14px; }
+      .operation-fork-section { padding: 44px 14px; }
+      .operation-fork-heading { display: block; }
+      .operation-fork-heading p { margin-top: 10px; }
+      .operation-fork-contract { grid-template-columns: 1fr; }
+      .operation-fork-controls { overflow-x: auto; }
+      .operation-fork-runtimes { grid-template-columns: 1fr; }
+      .operation-fork-lineage { display: none; }
+      .operation-fork-verdict { align-items: flex-start; flex-direction: column; }
       .proof-heading { display: block; }
       .proof-rule { display: block; margin-top: 12px; }
       .proof-grid { grid-template-columns: 1fr; }
@@ -1383,7 +1426,7 @@
       .live-dot { animation: none !important; }
       .cascade-connector-line, .cascade-connector-chevron { animation: none !important; opacity: 0.5 !important; }
       .story-progress-bar, .story-scenario, .story-control, .story-file-tab,
-      .runtime-tab, .proof-card, .install-copy { animation: none !important; transition: none !important; }
+      .runtime-tab, .proof-card, .install-copy, .operation-fork-runtime { animation: none !important; transition: none !important; }
     }
 
     @media (max-width: 760px) {
@@ -1419,7 +1462,7 @@
     <button class="nav-link" onclick="openPanel('hooks')">Hooks</button>
     <button class="nav-link" onclick="openPanel('campaigns')">Campaigns</button>
     <div class="nav-right">
-      <span class="nav-badge">v1.1</span>
+      <span class="nav-badge">v1.3</span>
       <a class="nav-star" id="nav-star" href="https://github.com/SethGammon/Citadel">★ Star on GitHub</a>
       <a class="nav-cta" href="#install-section" onclick="scrollToInstall(); return false;">Install Citadel</a>
     </div>
@@ -1658,6 +1701,54 @@
           <div class="story-file" id="story-file" role="tabpanel"></div>
         </aside>
       </div>
+    </div>
+  </section>
+
+  <section class="operation-fork-section" id="operation-fork" aria-labelledby="operation-fork-title">
+    <div class="operation-fork-inner">
+      <div class="operation-fork-heading">
+        <div><h2 id="operation-fork-title">One objective. Two runtimes. One proof standard.</h2></div>
+        <p>Operation Fork runs Claude Code and Codex from the same commit, under the same workflow and verifier, then compares receipts instead of personalities.</p>
+      </div>
+      <div class="operation-fork-shell">
+        <div class="operation-fork-contract">
+          <div>
+            <div class="operation-fork-command">citadel fork start "Find and eliminate the authentication race"</div>
+            <div class="operation-fork-contract-meta">same objective · scope · policy · budget · workflow · verifier</div>
+          </div>
+          <div class="operation-fork-controls" aria-label="Comparison evidence modes">
+            <button class="operation-fork-control" data-fork-mode="verified" aria-pressed="true">Verified fixture</button>
+            <button class="operation-fork-control" data-fork-mode="missing" aria-pressed="false">Missing receipt</button>
+          </div>
+        </div>
+        <div class="operation-fork-lineage" aria-hidden="true"></div>
+        <div class="operation-fork-runtimes">
+          <article class="operation-fork-runtime" data-fork-runtime="claude">
+            <div class="operation-fork-runtime-head"><span class="operation-fork-runtime-name">Claude Code</span><span class="operation-fork-runtime-state">verified</span></div>
+            <div class="operation-fork-metrics">
+              <div class="operation-fork-metric"><span class="operation-fork-value">2/2</span><span class="operation-fork-label">evidence</span></div>
+              <div class="operation-fork-metric"><span class="operation-fork-value">1</span><span class="operation-fork-label">file</span></div>
+              <div class="operation-fork-metric"><span class="operation-fork-value">1.0s</span><span class="operation-fork-label">fixture</span></div>
+              <div class="operation-fork-metric"><span class="operation-fork-value">unknown</span><span class="operation-fork-label">cost</span></div>
+            </div>
+          </article>
+          <article class="operation-fork-runtime" data-fork-runtime="codex">
+            <div class="operation-fork-runtime-head"><span class="operation-fork-runtime-name">Codex</span><span class="operation-fork-runtime-state">verified</span></div>
+            <div class="operation-fork-metrics">
+              <div class="operation-fork-metric"><span class="operation-fork-value" data-fork-evidence>2/2</span><span class="operation-fork-label">evidence</span></div>
+              <div class="operation-fork-metric"><span class="operation-fork-value">1</span><span class="operation-fork-label">file</span></div>
+              <div class="operation-fork-metric"><span class="operation-fork-value">1.0s</span><span class="operation-fork-label">fixture</span></div>
+              <div class="operation-fork-metric"><span class="operation-fork-value">unknown</span><span class="operation-fork-label">cost</span></div>
+            </div>
+            <div class="operation-fork-reason">receipt-missing · no success assumed</div>
+          </article>
+        </div>
+        <div class="operation-fork-verdict" id="operation-fork-verdict" aria-live="polite">
+          <strong>Verified tie</strong>
+          <span>Both branches satisfy the shared verifier. Speed and cost do not manufacture a winner.</span>
+        </div>
+      </div>
+      <div class="operation-fork-proof">Deterministic local contract fixture · real worktree, receipt, recovery, and redaction tests ship in the repository</div>
     </div>
   </section>
 
@@ -2285,6 +2376,24 @@
       }, window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 400 : 1200);
     }
 
+    function renderOperationFork(mode) {
+      const codex = document.querySelector('[data-fork-runtime="codex"]');
+      const verdict = document.getElementById('operation-fork-verdict');
+      if (!codex || !verdict) return;
+      const missing = mode === 'missing';
+      codex.classList.toggle('is-unknown', missing);
+      codex.querySelector('.operation-fork-runtime-state').textContent = missing ? 'unknown' : 'verified';
+      codex.querySelector('[data-fork-evidence]').textContent = missing ? '0/2' : '2/2';
+      verdict.classList.toggle('is-unknown', missing);
+      verdict.querySelector('strong').textContent = missing ? 'Insufficient evidence' : 'Verified tie';
+      verdict.querySelector('span').textContent = missing
+        ? 'Only one branch is comparable. Citadel refuses to recommend or select a winner.'
+        : 'Both branches satisfy the shared verifier. Speed and cost do not manufacture a winner.';
+      document.querySelectorAll('[data-fork-mode]').forEach(button => {
+        button.setAttribute('aria-pressed', String(button.dataset.forkMode === mode));
+      });
+    }
+
     document.addEventListener('DOMContentLoaded', () => {
       document.querySelectorAll('[data-story-scenario]').forEach(button => button.addEventListener('click', () => {
         storyStop();
@@ -2317,6 +2426,9 @@
         const previous = button.textContent;
         button.textContent = 'Copied';
         setTimeout(() => { button.textContent = previous; }, 1400);
+      }));
+      document.querySelectorAll('[data-fork-mode]').forEach(button => button.addEventListener('click', () => {
+        renderOperationFork(button.dataset.forkMode);
       }));
       storyRender();
     });

@@ -2,6 +2,32 @@
 
 All notable Citadel changes are recorded here. Citadel follows semantic versioning.
 
+## 1.3.0 - Unreleased
+
+### Added
+
+- Operation Fork runs one objective through isolated Claude Code and Codex worktrees
+  under one immutable objective, scope, policy, budget, workflow, and verifier contract.
+- Signed per-branch receipts, evidence coverage, duration, cost, and diff metadata feed
+  an honest comparison that preserves ties and insufficient evidence.
+- Revision-bound selection is separate from a confirmed, clean-target landing action.
+  Ambiguous landing effects block recovery instead of repeating a merge.
+- `citadel fork start`, `resume`, `status`, `compare`, `select`, `land`, and `replay`
+  provide the complete local journey with a safe default verifier.
+- Mission Control adds a responsive side-by-side Forks view and typed same-origin
+  selection endpoint. Browser selection never lands code.
+- Deterministic public replay exports omit prompts, source, repository identity,
+  paths, credentials, raw revisions, reasons, and signer material.
+
+### Verification
+
+- Real git worktree isolation and recovery fault injection cover both runtime branches.
+- Adversarial tests cover strict schemas, path containment, shell-free spawning,
+  redaction, revision races, idempotency, and exactly-once landing boundaries.
+
+This version is prepared in the repository. No package publication, tag, or hosted
+service is created by the Operation Fork campaign.
+
 ## 1.2.0 - 2026-07-13
 
 ### Added

@@ -1,9 +1,11 @@
 # Threat Model
 
-Version 2.0 (2026-06-11). Version 1 covered the core hook, campaign, and fleet
+Version 3.0 (2026-07-13). Version 1 covered the core hook, campaign, and fleet
 surfaces. Version 2 adds Teams Mode coordination, routine and daemon
 automation, generated routing surfaces, the native memory write allowlist, and
-the accepted residuals from the June 2026 audit.
+the accepted residuals from the June 2026 audit. Version 3 adds Operation Fork,
+cross-runtime worktrees, signed comparison evidence, local selection, landing,
+and redacted replay.
 
 Citadel is an agent orchestration harness for local coding runtimes. It adds
 skills, hooks, scripts, generated configuration, and repo-local state so an AI
@@ -97,6 +99,9 @@ that conflict with user, system, runtime, or repository policy.
 | Automation overreach | A campaign continues after scope has changed | campaign files, approval capsules, operator console, and PR readiness gates |
 | Stale evidence | A readiness report refers to an old branch head | stack readiness checks and rerun requirements |
 | Unreviewed merge | Fleet worktrees are accepted blindly | merge-review queues and explicit human approval boundaries |
+| Fork comparison spoofing | A runtime claims success without equivalent proof | shared contract digests, signed receipts, required evidence coverage, and explicit unknown states |
+| Duplicate landing | Recovery repeats a merge after losing state | persist unknown before the effect, block ambiguous recovery, and require idempotency |
+| Replay leak | A public comparison exposes prompts, source, paths, or credentials | strict output allowlist, digest projection, and secret-like value rejection |
 
 ## Expanded Surfaces (v2)
 
@@ -160,6 +165,22 @@ auto-memory directory, `<home>/.claude/projects/<slug>/memory/`.
   files are prompt context, so a poisoned memory write is an injection vector
   into future sessions. Accepted as low risk: memory is plain markdown,
   reviewable, and never executed.
+
+### Operation Fork
+
+Operation Fork stores its canonical manifest, private objective and workflow, signing key,
+events, and receipts under `.planning/operation-forks/`. Runtime worktrees live under a
+separate configured root. Mission Control projects the manifest and may record selection,
+but it cannot execute landing.
+
+| Attack | Mitigation | Residual |
+|---|---|---|
+| Runtime branch escapes into the main repository or another branch | Worktree roots must resolve outside the project. IDs and refs use strict patterns. Existing path segments reject symlinks. Every process receives one contained working directory. | The agent runtime still has the operating-system permissions granted by the user. Citadel is not an OS sandbox. |
+| Malicious objective or verifier injects a shell command | Runtime prompts go through stdin. Verifiers are an executable plus literal argument array and run with `shell: false`. | A declared executable can itself be malicious, including package scripts in an untrusted repository. The repository and chosen verifier remain trusted inputs. |
+| One branch fabricates a better result | Comparison requires the shared contract digest, a locally verified signed receipt, complete required evidence, and a conclusive verifier status. Cost and speed cannot outrank missing proof. | The local signing key proves Citadel produced the receipt, not that an external auditor trusted the project or verifier. Independent trust roots remain a separate milestone. |
+| Crash after a nonrepeatable effect causes duplicate work | Citadel writes the in-progress state before runtime or merge effects. Recovery blocks an ambiguous effect and never invokes it again. Idempotency keys make completed selection and landing calls stable. | Ambiguous state needs human inspection. Citadel deliberately trades automatic recovery for avoiding a repeated merge or external effect. |
+| Browser selection becomes an unreviewed merge | The endpoint accepts six exact fields, checks origin, process nonce, JSON size, fork revision, and branch evidence, and returns `landing_effect: none`. Landing exists only in the CLI and requires a fresh confirmation token. | Any local process under the same user can potentially interact with localhost. The process nonce and strict origin reduce browser abuse but are not cross-user authentication. |
+| Public replay leaks project information | Replay is built from a fixed allowlist and digests. It excludes objective text, operation title, source, diffs, worktree and branch refs, repository identity, paths, environment, command output, reasons, raw revisions, credentials, and signer material. A secret-like scan fails closed. | Opaque IDs, timing, counts, and digests can still reveal operational shape. Operators should inspect every public artifact before sharing. |
 
 ## Accepted Residuals (June 2026 audit)
 

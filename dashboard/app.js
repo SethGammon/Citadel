@@ -46,11 +46,27 @@ function operationFeedback(outcome) {
   return values[outcome] || values.unknown;
 }
 
+function forkSelectionAllowed(fork, branchId) {
+  if (!fork || !fork.comparison || !Array.isArray(fork.comparison.branches)) return false;
+  if (fork.status === 'landed') return false;
+  const branch = fork.comparison.branches.find((entry) => entry.branch_id === branchId);
+  return Boolean(branch && branch.comparable);
+}
+
+function forkComparisonLabel(comparison) {
+  if (!comparison || comparison.outcome === 'insufficient-evidence') return 'Insufficient evidence';
+  if (comparison.outcome === 'tie') return 'Verified tie';
+  if (comparison.outcome === 'recommended') return `Recommendation: ${comparison.recommendation}`;
+  return 'Comparison unknown';
+}
+
 if (typeof module !== 'undefined') module.exports = {
   availableOperationActions,
   operationActionEffect,
   operationActionNeedsConfirmation,
   operationFeedback,
+  forkComparisonLabel,
+  forkSelectionAllowed,
 };
 
 if (typeof document !== 'undefined') (() => {
@@ -58,6 +74,7 @@ if (typeof document !== 'undefined') (() => {
     overview: { title: 'Needs You', endpoint: '/api/overview', render: renderOverview },
     campaigns: { title: 'Campaigns', endpoint: '/api/campaigns', render: renderCampaigns },
     fleet: { title: 'Fleet', endpoint: '/api/fleet', render: renderFleet },
+    forks: { title: 'Operation Forks', endpoint: '/api/forks', render: renderForks },
     loops: { title: 'Loops', endpoint: '/api/loops', render: renderLoops },
     cost: { title: 'Cost', endpoint: '/api/cost', render: renderCost },
     hooks: { title: 'Hook Feed', endpoint: '/api/hooks/feed', render: renderHooks },
@@ -187,6 +204,46 @@ if (typeof document !== 'undefined') (() => {
       feedback.className = 'control-feedback feedback-unknown';
       feedback.textContent = operationFeedback('unknown');
       buttons.forEach((button) => { button.disabled = false; });
+    } finally {
+      feedback.removeAttribute('aria-busy');
+    }
+  }
+
+  async function submitForkSelection(fork, branch, card, trigger) {
+    const feedback = card.querySelector('.fork-feedback');
+    card.querySelectorAll('button').forEach((button) => { button.disabled = true; });
+    feedback.className = 'fork-feedback feedback-pending';
+    feedback.textContent = 'Recording selection. This does not land or merge code.';
+    feedback.setAttribute('aria-busy', 'true');
+    const key = trigger.dataset.idempotency || idempotencyKey('fork-select');
+    trigger.dataset.idempotency = key;
+    try {
+      const session = await getControlSession();
+      const response = await fetch('/api/fork-selections', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', 'x-citadel-nonce': session.nonce },
+        body: JSON.stringify({
+          fork_id: fork.fork_id,
+          branch_id: branch.branch_id,
+          expected_revision: fork.revision,
+          idempotency_key: key,
+          actor: 'actor-dashboard',
+          reason: 'Selected from the verified Mission Control comparison',
+        }),
+      });
+      const result = await response.json();
+      const outcome = result.outcome || 'unknown';
+      feedback.className = `fork-feedback feedback-${outcome}`;
+      feedback.textContent = outcome === 'accepted'
+        ? 'Selection recorded. No code was landed. Run the displayed landing plan when ready.'
+        : operationFeedback(outcome);
+      if (result.reason_code) feedback.textContent += ` ${result.reason_code}.`;
+      if (outcome === 'accepted') setTimeout(loadPanel, 250);
+      else card.querySelectorAll('button').forEach((button) => { button.disabled = false; });
+    } catch (_error) {
+      feedback.className = 'fork-feedback feedback-unknown';
+      feedback.textContent = operationFeedback('unknown');
+      card.querySelectorAll('button').forEach((button) => { button.disabled = false; });
     } finally {
       feedback.removeAttribute('aria-busy');
     }
@@ -433,6 +490,80 @@ if (typeof document !== 'undefined') (() => {
     }
     trees.appendChild(table);
     frag.appendChild(trees);
+    return frag;
+  }
+
+  function renderForks(data) {
+    const frag = document.createDocumentFragment();
+    const notice = sourceNotice(data);
+    if (notice) frag.appendChild(notice);
+    if (!data.forks || !data.forks.length) {
+      frag.appendChild(emptyState('No Operation Forks yet. Run one objective through Claude Code and Codex under the same proof contract.',
+        'citadel fork start "your objective" --workflow .citadel/workflow.json'));
+      return frag;
+    }
+    for (const fork of data.forks) {
+      const wrap = section(fork.fork_id);
+      const card = el('article', 'card fork-card');
+      const heading = el('div', 'fork-heading');
+      const title = el('div', 'card-title');
+      title.appendChild(el('span', null, 'One operation, replaceable executors'));
+      title.appendChild(badge(fork.status || 'unknown', ['ready', 'selected', 'landed'].includes(fork.status) ? 'ok'
+        : ['blocked', 'failed', 'unknown'].includes(fork.status) ? 'danger' : 'info'));
+      heading.appendChild(title);
+      heading.appendChild(el('div', 'mono dimmed', `revision ${known(fork.revision)}`));
+      card.appendChild(heading);
+
+      const comparison = fork.comparison || { outcome: 'insufficient-evidence', comparable_count: 0, branches: [] };
+      const verdict = el('div', `fork-verdict verdict-${comparison.outcome || 'unknown'}`);
+      verdict.appendChild(el('strong', null, forkComparisonLabel(comparison)));
+      verdict.appendChild(el('span', 'card-sub', `${comparison.comparable_count || 0} comparable branches`));
+      card.appendChild(verdict);
+
+      const branches = el('div', 'fork-branches');
+      for (const branch of comparison.branches || []) {
+        const branchCard = el('section', `fork-branch${fork.selection?.branch_id === branch.branch_id ? ' fork-selected' : ''}`);
+        const branchTitle = el('div', 'card-title');
+        branchTitle.appendChild(el('span', 'fork-runtime', branch.runtime === 'claude' ? 'Claude Code' : 'Codex'));
+        branchTitle.appendChild(badge(branch.verified_outcome || branch.status || 'unknown',
+          branch.comparable ? 'ok' : branch.status === 'failed' ? 'danger' : 'info'));
+        if (comparison.recommendation === branch.branch_id) branchTitle.appendChild(badge('recommended', 'skill'));
+        if (fork.selection?.branch_id === branch.branch_id) branchTitle.appendChild(badge('selected', 'fleet'));
+        branchCard.appendChild(branchTitle);
+        const metrics = el('div', 'fork-metrics');
+        metrics.appendChild(stat(branch.evidence ? `${branch.evidence.present}/${branch.evidence.required}` : 'unknown', 'evidence'));
+        metrics.appendChild(stat(branch.diff ? branch.diff.files_changed : 'unknown', 'files'));
+        metrics.appendChild(stat(branch.duration_ms === null ? 'unknown' : `${(branch.duration_ms / 1000).toFixed(1)}s`, 'duration'));
+        metrics.appendChild(stat(branch.cost ? `${branch.cost.amount} ${branch.cost.unit}` : 'unknown', 'cost'));
+        branchCard.appendChild(metrics);
+        if (!branch.comparable) {
+          const missing = el('div', 'fork-unknown');
+          missing.appendChild(el('strong', null, 'Not comparable'));
+          missing.appendChild(el('span', null, (branch.reasons || ['unknown']).join(', ')));
+          branchCard.appendChild(missing);
+        }
+        const select = el('button', 'control-button', fork.selection?.branch_id === branch.branch_id ? 'Selected' : `Select ${branch.runtime}`);
+        select.type = 'button';
+        select.disabled = !forkSelectionAllowed(fork, branch.branch_id) || fork.selection?.branch_id === branch.branch_id;
+        select.addEventListener('click', () => submitForkSelection(fork, branch, card, select));
+        branchCard.appendChild(select);
+        branches.appendChild(branchCard);
+      }
+      card.appendChild(branches);
+      const feedback = el('div', 'fork-feedback');
+      feedback.setAttribute('role', 'status');
+      feedback.setAttribute('aria-live', 'polite');
+      card.appendChild(feedback);
+      if (fork.selection) {
+        const landing = el('div', 'fork-landing');
+        landing.appendChild(el('strong', null, 'Selection is recorded. Code is still untouched.'));
+        landing.appendChild(el('div', 'card-sub', 'Landing rechecks the target revision and clean state, then requires an exact confirmation token.'));
+        landing.appendChild(el('code', null, `citadel fork land plan ${fork.fork_id}`));
+        card.appendChild(landing);
+      }
+      wrap.appendChild(card);
+      frag.appendChild(wrap);
+    }
     return frag;
   }
 
@@ -715,6 +846,7 @@ if (typeof document !== 'undefined') (() => {
     countEl.classList.toggle('hot', needsYouCount > 0);
     document.getElementById('count-campaigns').textContent = overview.active.campaigns ?? '?';
     document.getElementById('count-fleet').textContent = overview.active.fleet_sessions ?? '?';
+    document.getElementById('count-forks').textContent = overview.active.forks ?? '?';
     document.getElementById('count-loops').textContent = overview.active.loops ?? '?';
 
     const dot = document.getElementById('health-dot');

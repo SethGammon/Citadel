@@ -1,0 +1,106 @@
+'use strict';
+
+const fs = require('fs');
+const path = require('path');
+const { spawnSync } = require('child_process');
+const operations = require('../operations');
+const { isWithin, realDirectory, resolveTarget } = require('../distribution/fs-safety');
+
+function git(args, options = {}) {
+  const result = (options.spawn || spawnSync)('git', args, {
+    cwd: options.cwd,
+    encoding: 'utf8',
+    shell: false,
+    stdio: ['ignore', 'pipe', 'pipe'],
+  });
+  if (result.error || result.status !== 0) {
+    const error = new Error((result.stderr || result.error?.message || 'git command failed').trim());
+    error.code = options.code || 'FORK_GIT_FAILED';
+    throw error;
+  }
+  return String(result.stdout || '').trim();
+}
+
+function defaultWorktreeRoot(projectRoot) {
+  const project = realDirectory(projectRoot, 'project root');
+  return path.join(path.dirname(project), '.citadel-worktrees');
+}
+
+function prepareWorktreeRoot(projectRoot, configuredRoot) {
+  const requested = path.resolve(configuredRoot || defaultWorktreeRoot(projectRoot));
+  const lexicalProject = path.resolve(projectRoot);
+  const project = realDirectory(projectRoot, 'project root');
+  if (isWithin(lexicalProject, requested) || isWithin(project, requested)) {
+    throw Object.assign(new Error('Operation Fork worktrees must be outside the project root'), { code: 'FORK_WORKTREE_ROOT_UNSAFE' });
+  }
+  fs.mkdirSync(requested, { recursive: true, mode: 0o700 });
+  const root = realDirectory(requested, 'operation fork worktree root');
+  if (isWithin(project, root)) throw Object.assign(new Error('Operation Fork worktrees must be outside the project root'), { code: 'FORK_WORKTREE_ROOT_UNSAFE' });
+  return root;
+}
+
+function worktreePath(projectRoot, worktreeRoot, forkId, branchId) {
+  const root = prepareWorktreeRoot(projectRoot, worktreeRoot);
+  const forkDirectory = resolveTarget(root, forkId, 'fork worktree directory');
+  fs.mkdirSync(forkDirectory, { recursive: true, mode: 0o700 });
+  const realForkDirectory = realDirectory(forkDirectory, 'fork worktree directory');
+  return resolveTarget(realForkDirectory, branchId, 'branch worktree');
+}
+
+function createGitWorktreeProvider(options = {}) {
+  const spawn = options.spawn || spawnSync;
+  return Object.freeze({
+    currentRevision(projectRoot) {
+      return git(['rev-parse', 'HEAD'], { cwd: projectRoot, spawn, code: 'FORK_REVISION_READ_FAILED' });
+    },
+    isClean(projectRoot) {
+      return git(['status', '--porcelain=v1', '--untracked-files=normal'], { cwd: projectRoot, spawn }) === '';
+    },
+    resolve(projectRoot, root, forkId, branchId) {
+      return worktreePath(projectRoot, root, forkId, branchId);
+    },
+    ensure(optionsForBranch) {
+      const target = worktreePath(optionsForBranch.projectRoot, optionsForBranch.worktreeRoot,
+        optionsForBranch.forkId, optionsForBranch.branch.branch_id);
+      const branchRef = `citadel/${optionsForBranch.forkId}/${optionsForBranch.branch.runtime}`;
+      if (fs.existsSync(target)) {
+        const targetRoot = realDirectory(target, 'branch worktree');
+        const actualBranch = git(['rev-parse', '--abbrev-ref', 'HEAD'], { cwd: targetRoot, spawn });
+        if (actualBranch !== branchRef) throw Object.assign(new Error('Existing worktree belongs to another branch'), { code: 'FORK_WORKTREE_MISMATCH' });
+        return { path: targetRoot, worktreeRef: `${optionsForBranch.forkId}/${optionsForBranch.branch.branch_id}`, branchRef, recovered: true };
+      }
+      const branchExists = (spawn('git', ['show-ref', '--verify', '--quiet', `refs/heads/${branchRef}`], {
+        cwd: optionsForBranch.projectRoot, encoding: 'utf8', shell: false, stdio: ['ignore', 'pipe', 'pipe'],
+      }).status === 0);
+      const args = branchExists
+        ? ['worktree', 'add', target, branchRef]
+        : ['worktree', 'add', '-b', branchRef, target, optionsForBranch.baseRevision];
+      git(args, { cwd: optionsForBranch.projectRoot, spawn, code: 'FORK_WORKTREE_CREATE_FAILED' });
+      return { path: realDirectory(target, 'branch worktree'),
+        worktreeRef: `${optionsForBranch.forkId}/${optionsForBranch.branch.branch_id}`, branchRef, recovered: false };
+    },
+    diffSummary(worktree, baseRevision) {
+      const output = git(['diff', '--numstat', baseRevision, '--'], { cwd: worktree, spawn });
+      const files = output ? output.split(/\r?\n/).filter(Boolean).map((line) => {
+        const [insertions, deletions, ...name] = line.split('\t');
+        return { insertions: /^\d+$/.test(insertions) ? Number(insertions) : 0,
+          deletions: /^\d+$/.test(deletions) ? Number(deletions) : 0, name_digest: operations.sha256Digest({ path: name.join('\t') }) };
+      }) : [];
+      return {
+        files_changed: files.length,
+        insertions: files.reduce((total, file) => total + file.insertions, 0),
+        deletions: files.reduce((total, file) => total + file.deletions, 0),
+        digest: operations.sha256Digest(files),
+      };
+    },
+    merge(projectRoot, branchRef, expectedRevision) {
+      const current = this.currentRevision(projectRoot);
+      if (current !== expectedRevision) throw Object.assign(new Error('Target revision changed before landing'), { code: 'FORK_TARGET_REVISION_CHANGED' });
+      if (!this.isClean(projectRoot)) throw Object.assign(new Error('Target worktree is not clean'), { code: 'FORK_TARGET_DIRTY' });
+      git(['merge', '--no-ff', '--no-edit', branchRef], { cwd: projectRoot, spawn, code: 'FORK_LANDING_MERGE_FAILED' });
+      return this.currentRevision(projectRoot);
+    },
+  });
+}
+
+module.exports = Object.freeze({ createGitWorktreeProvider, defaultWorktreeRoot, prepareWorktreeRoot, worktreePath });

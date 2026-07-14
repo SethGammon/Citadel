@@ -3,7 +3,19 @@
 Citadel now has the local platform spine that the previous twelve-month roadmap described:
 typed operations, outcome Packs, durable recovery, verifiable receipts, actionable Mission
 Control, team policy, a Relay seam, and privacy-safe reliability analysis. The next milestones
-are no longer feature-count milestones. They are adoption, interoperability, and trust milestones.
+are no longer feature-count milestones. Citadel 1.3 adds runtime-replaceable operations through
+Operation Fork. The remaining milestones are adoption, interoperability, and trust milestones.
+
+## What ships locally in 1.3
+
+- One objective can execute through isolated Claude Code and Codex worktrees under one immutable
+  objective, scope, policy, budget, workflow, and verifier contract.
+- Branch receipts, evidence coverage, diff metadata, duration, and available cost feed an honest
+  comparison. Missing evidence stays unknown and equal verified outcomes stay tied.
+- Revision-bound selection is separate from a clean-target, confirmation-bound local landing.
+- Mission Control shows the comparison and records selection but cannot land code.
+- A deterministic redacted replay exposes operation lineage without prompts, source, repository
+  identity, paths, raw revisions, credentials, reasons, or signer material.
 
 ## What ships locally in 1.2
 
@@ -58,7 +70,7 @@ Protocol 1.0 is a compatibility promise, not a version-number exercise. Promote 
 - Local, Codex, and GitHub projections retain at least 90% of the shared semantic contract.
 - Receipt, cancellation, failure, and unknown behavior are verified from generated artifacts.
 
-Until then, the public protocol remains v0.1 even when Citadel itself releases 1.2.
+Until then, the public protocol remains v0.1 even when Citadel itself releases 1.3.
 
 ## Milestone D: Prove team operations
 
@@ -90,7 +102,7 @@ Exit criteria:
 
 ## Sequencing
 
-1. Ship and verify 1.2 locally.
+1. Ship and verify 1.3 locally, including Operation Fork recovery and landing boundaries.
 2. Collect retained-use evidence while recruiting Pack authors.
 3. Use outside Pack and adapter experience to stabilize Protocol 1.0.
 4. Run the real team pilot.

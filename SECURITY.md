@@ -98,3 +98,23 @@ Before shipping changes to hooks, runtime adapters, installers, MCP surfaces, or
 - [ ] Add or update focused tests for the changed boundary.
 - [ ] Run `npm test`.
 - [ ] Update [THREAT_MODEL.md](THREAT_MODEL.md) when capabilities or boundaries change.
+
+## Operation Fork boundary
+
+Operation Fork creates runtime branches only in a configured worktree root outside the target
+repository. Fork IDs, branch IDs, git refs, and every generated path are allowlisted and checked
+for containment. Existing symlinks in path segments are rejected. Runtime and verifier processes
+receive literal argument arrays with `shell: false`.
+
+Each branch is prohibited from push, publish, deploy, and other external nonrepeatable effects.
+Citadel persists an in-progress boundary before runtime and landing effects. If recovery cannot
+prove the effect completed, the branch or landing becomes blocked or unknown and Citadel does not
+repeat it.
+
+Mission Control may record a revision-bound fork selection through the same-origin nonce gate. It
+cannot execute landing. CLI landing requires a selected branch with verified evidence, the current
+fork revision, a clean target, the expected target commit, and an exact confirmation token.
+
+Public fork replay is an allowlisted projection. It excludes prompts, source, diffs, repository
+identity, local paths, environment values, credentials, command output, raw revisions, free-form
+reasons, and signature material. Secret-like or path-like values fail export closed.
