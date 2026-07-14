@@ -127,13 +127,14 @@
     "journey": "node scripts/start-journey.js",
     "receipt": "node scripts/receipt.js",
     "fork": "node scripts/operation-fork.js",
-    "test:operation-fork": "node scripts/test-operation-fork.js && node scripts/test-operation-fork-decision.js && node scripts/test-operation-fork-security.js",
+    "test:operation-fork": "node scripts/test-operation-fork.js && node scripts/test-operation-fork-decision.js && node scripts/test-operation-fork-security.js && node scripts/test-executor-profiles.js && node scripts/test-operation-fork-executors.js",
+    "test:executor-profiles": "node scripts/test-executor-profiles.js && node scripts/test-operation-fork-executors.js",
     "proof:build": "node scripts/proof-bundle.js",
     "milestones:status": "node scripts/milestone-readiness.js",
     "activation:collect": "node scripts/activation-cohort-collect.js",
     "team:pilot": "node scripts/team-pilot.js",
     "reliability:analyze": "node scripts/reliability-analyze.js",
-    "test:unlocks": "node scripts/test-operations-conformance.js && node scripts/test-operation-recovery.js && node scripts/test-operation-receipts.js && node scripts/test-operation-chaos.js && node scripts/test-operation-fork.js && node scripts/test-operation-fork-decision.js && node scripts/test-operation-fork-security.js && node scripts/test-workflow-compiler.js && node scripts/test-packs.js && node scripts/test-pack-registry.js && node scripts/test-pack-journey.js && node scripts/test-github-action.js && node scripts/test-milestone-readiness.js && node scripts/test-activation-cohort-collect.js && node scripts/test-citadel-state-mcp.js && node scripts/test-dashboard-interactions.js && node scripts/test-team-platform.js && node scripts/test-relay-contract.js && node scripts/test-reliability-learning.js && node scripts/test-proof-bundle.js",
+    "test:unlocks": "node scripts/test-operations-conformance.js && node scripts/test-operation-recovery.js && node scripts/test-operation-receipts.js && node scripts/test-operation-chaos.js && node scripts/test-operation-fork.js && node scripts/test-operation-fork-decision.js && node scripts/test-operation-fork-security.js && node scripts/test-executor-profiles.js && node scripts/test-operation-fork-executors.js && node scripts/test-workflow-compiler.js && node scripts/test-packs.js && node scripts/test-pack-registry.js && node scripts/test-pack-journey.js && node scripts/test-github-action.js && node scripts/test-milestone-readiness.js && node scripts/test-activation-cohort-collect.js && node scripts/test-citadel-state-mcp.js && node scripts/test-dashboard-interactions.js && node scripts/test-team-platform.js && node scripts/test-relay-contract.js && node scripts/test-reliability-learning.js && node scripts/test-proof-bundle.js",
     "test": "node scripts/test-all.js"
   },
   "keywords": [

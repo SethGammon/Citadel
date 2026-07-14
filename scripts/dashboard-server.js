@@ -31,11 +31,12 @@ const {
   validateControlResult,
 } = require('../core/operations/intents');
 const {
+  applySelection,
   compareFork,
+  executorStates,
+  forkEvidence,
   listForks,
   loadFork,
-  saveFork,
-  selectBranch,
 } = require('../core/forks');
 
 const DEFAULT_PORT = 4180;
@@ -183,11 +184,20 @@ function createDataSource(projectRoot) {
 function readOperationForks(projectRoot) {
   try {
     return listForks(projectRoot).map((summary) => {
-      if (summary.status === 'unknown') return { ...summary, comparison: {
+      const unreadable = { ...summary, executors: [], comparison: {
         outcome: 'insufficient-evidence', recommendation: null, comparable_count: 0, branches: [],
       } };
-      const fork = loadFork(projectRoot, summary.fork_id);
-      return { ...summary, comparison: compareFork(fork) };
+      if (summary.status === 'unknown') return unreadable;
+      try {
+        // Mission Control never trusts the stored record: every wrapper and
+        // binding is reloaded and verified before a fact is displayed.
+        const fork = loadFork(projectRoot, summary.fork_id);
+        const evidence = forkEvidence(projectRoot, fork);
+        return { ...summary, comparison: compareFork(fork, { evidence }),
+          executors: executorStates(projectRoot, fork) };
+      } catch (error) {
+        return { ...unreadable, status: 'unknown', reason_code: error.code || 'FORK_EVIDENCE_UNVERIFIABLE' };
+      }
     });
   } catch {
     return [];
@@ -770,12 +780,9 @@ function createServer(options) {
             return;
           }
           try {
-            const current = loadFork(projectRoot, body.fork_id);
-            const selected = selectBranch(current, { branchId: body.branch_id,
-              expectedRevision: body.expected_revision, actorId: body.actor,
-              idempotencyKey: body.idempotency_key, reason: body.reason,
-              selectedAt: new Date().toISOString() });
-            if (selected !== current) saveFork(projectRoot, selected, current.revision);
+            const selected = applySelection({ projectRoot, forkId: body.fork_id,
+              branchId: body.branch_id, expectedRevision: body.expected_revision,
+              actorId: body.actor, idempotencyKey: body.idempotency_key, reason: body.reason });
             source.invalidate();
             json(res, 202, { outcome: 'accepted', reason_code: 'FORK_SELECTION_RECORDED',
               fork_id: selected.fork_id, branch_id: selected.selection.branch_id,

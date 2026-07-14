@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "executors": [
+    {
+      "profile_id": "claude-sonnet",
+      "runtime": "claude",
+      "model": "claude-sonnet-4-5",
+      "local_provider": null,
+      "adapter_options": {
+        "permission_mode": "acceptEdits",
+        "effort": "high"
+      }
+    },
+    {
+      "profile_id": "codex-hosted",
+      "runtime": "codex",
+      "model": "gpt-5-codex",
+      "local_provider": null,
+      "adapter_options": {
+        "sandbox": "workspace-write"
+      }
+    }
+  ]
+}

@@ -3,6 +3,8 @@
 const operations = require('../operations');
 
 const FORK_SCHEMA_VERSION = 1;
+const EXECUTOR_FORK_SCHEMA_VERSION = 2;
+const FORK_SCHEMA_VERSIONS = Object.freeze([FORK_SCHEMA_VERSION, EXECUTOR_FORK_SCHEMA_VERSION]);
 const RUNTIMES = Object.freeze(['claude', 'codex']);
 const FORK_STATUSES = Object.freeze([
   'pending', 'running', 'ready', 'selected', 'landed', 'blocked', 'failed', 'unknown',
@@ -16,6 +18,10 @@ const FORK_FIELDS = Object.freeze([
   'schema_version', 'fork_id', 'revision', 'operation', 'shared', 'contract_digest',
   'status', 'created_at', 'updated_at', 'branches', 'selection', 'landing',
 ]);
+// Schema 2 adds exactly one fork field and exactly one branch field. Nothing else
+// about the schema 1 record changes, so schema 1 forks stay readable as written.
+const EXECUTOR_FORK_FIELDS = Object.freeze([...FORK_FIELDS, 'executor_set_digest']);
+const EXECUTOR_BRANCH_FIELD = 'executor_profile_digest';
 const SHARED_FIELDS = Object.freeze([
   'objective_digest', 'scope_digest', 'policy_digests', 'budget_digest',
   'workflow_digest', 'verifier_digest', 'base_revision',
@@ -107,9 +113,14 @@ function validateCost(value) {
   return errors;
 }
 
-function validateBranch(branch) {
+function validateBranch(branch, schemaVersion = FORK_SCHEMA_VERSION) {
   const errors = [];
-  if (!exactFields(branch, BRANCH_FIELDS)) return ['branch fields are invalid'];
+  const fields = schemaVersion === EXECUTOR_FORK_SCHEMA_VERSION
+    ? [...BRANCH_FIELDS, EXECUTOR_BRANCH_FIELD] : BRANCH_FIELDS;
+  if (!exactFields(branch, fields)) return ['branch fields are invalid'];
+  if (schemaVersion === EXECUTOR_FORK_SCHEMA_VERSION && !isDigest(branch[EXECUTOR_BRANCH_FIELD])) {
+    errors.push('branch executor_profile_digest is invalid');
+  }
   if (!safeId(branch.branch_id)) errors.push('branch branch_id is invalid');
   if (!RUNTIMES.includes(branch.runtime)) errors.push('branch runtime is invalid');
   if (!safeId(branch.run_id)) errors.push('branch run_id is invalid');
@@ -164,8 +175,11 @@ function validateLanding(value) {
 
 function validateFork(fork) {
   const errors = [];
-  if (!exactFields(fork, FORK_FIELDS)) return ['fork fields are invalid'];
-  if (fork.schema_version !== FORK_SCHEMA_VERSION) errors.push('fork schema_version is invalid');
+  const schemaVersion = fork && fork.schema_version;
+  const executorSchema = schemaVersion === EXECUTOR_FORK_SCHEMA_VERSION;
+  if (!exactFields(fork, executorSchema ? EXECUTOR_FORK_FIELDS : FORK_FIELDS)) return ['fork fields are invalid'];
+  if (!FORK_SCHEMA_VERSIONS.includes(schemaVersion)) errors.push('fork schema_version is invalid');
+  if (executorSchema && !isDigest(fork.executor_set_digest)) errors.push('fork executor_set_digest is invalid');
   if (!safeId(fork.fork_id)) errors.push('fork fork_id is invalid');
   if (!Number.isInteger(fork.revision) || fork.revision < 0) errors.push('fork revision is invalid');
   try { operations.assertValidOperationContract(fork.operation); } catch (error) { errors.push(`fork operation is invalid: ${error.message}`); }
@@ -181,9 +195,12 @@ function validateFork(fork) {
     const ids = new Set();
     const runtimes = new Set();
     for (const branch of fork.branches) {
-      errors.push(...validateBranch(branch));
+      errors.push(...validateBranch(branch, schemaVersion));
       if (ids.has(branch.branch_id)) errors.push('fork branch_id values must be unique');
-      if (runtimes.has(branch.runtime)) errors.push('fork runtime values must be unique');
+      // Schema 2 exists so that several profiles can share one runtime. Schema 1
+      // forks keep the original one-branch-per-runtime rule.
+      if (!executorSchema && runtimes.has(branch.runtime)) errors.push('fork runtime values must be unique');
+      if (executorSchema && !branch.branch_id.startsWith('branch-')) errors.push('branch_id must be branch-<profile_id>');
       ids.add(branch.branch_id);
       runtimes.add(branch.runtime);
       if (branch.contract_digest !== fork.contract_digest) errors.push('branch contract_digest does not match fork');
@@ -203,7 +220,10 @@ function assertValidFork(fork) {
 
 module.exports = Object.freeze({
   BRANCH_STATUSES,
+  EXECUTOR_BRANCH_FIELD,
+  EXECUTOR_FORK_SCHEMA_VERSION,
   FORK_SCHEMA_VERSION,
+  FORK_SCHEMA_VERSIONS,
   FORK_STATUSES,
   RUNTIMES,
   SAFE_REF_PATTERN,

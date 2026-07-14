@@ -62,7 +62,11 @@ function createGitWorktreeProvider(options = {}) {
     ensure(optionsForBranch) {
       const target = worktreePath(optionsForBranch.projectRoot, optionsForBranch.worktreeRoot,
         optionsForBranch.forkId, optionsForBranch.branch.branch_id);
-      const branchRef = `citadel/${optionsForBranch.forkId}/${optionsForBranch.branch.runtime}`;
+      // Executor profiles, not runtimes, name the branch. Legacy profile IDs are
+      // the runtime name, so schema 1 refs are unchanged, while two profiles on
+      // one runtime can no longer collide on a single ref.
+      const profileId = optionsForBranch.branch.branch_id.replace(/^branch-/, '');
+      const branchRef = `citadel/${optionsForBranch.forkId}/${profileId}`;
       if (fs.existsSync(target)) {
         const targetRoot = realDirectory(target, 'branch worktree');
         const actualBranch = git(['rev-parse', '--abbrev-ref', 'HEAD'], { cwd: targetRoot, spawn });

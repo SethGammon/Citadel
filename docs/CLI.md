@@ -56,6 +56,19 @@ The default workflow verifies `git diff --check`. Supply `--workflow FILE` to de
 project-specific steps and a verifier as `{ "command": "npm", "args": ["test"] }`.
 Commands are always executed as literal argument arrays with `shell: false`.
 
+Compare explicit models and providers, including several profiles on one runtime,
+with an executor file:
+
+```sh
+citadel fork start "Find and eliminate the authentication race" \
+  --executors examples/executors.json
+```
+
+`--executors` and `--runtimes` are mutually exclusive. A profile may select only a
+registered runtime, a model, an allowlisted local provider, and the adapter options
+in `docs/EXECUTOR_PROFILES.md`. It can never supply an executable, arguments,
+environment values, or paths.
+
 ```sh
 citadel fork select ID --branch branch-claude --expected-revision 6 \
   --idempotency-key choose-claude-001

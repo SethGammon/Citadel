@@ -54,6 +54,25 @@ on the original command or context window.
 `citadel fork land`, and `citadel fork replay` continue the same durable fork.
 The Mission Control view exposes the same actions and state.
 
+### Executor profiles
+
+`--executors FILE` replaces `--runtimes` with strict model and provider profiles,
+including several profiles on the same runtime:
+
+```bash
+citadel fork start "Find and eliminate the authentication race" \
+  --executors examples/executors.json
+```
+
+The two flags are mutually exclusive and a conflict is rejected before any
+planning state or worktree exists. An executor file promotes the fork to schema
+2: the fork carries an `executor_set_digest`, every branch carries an
+`executor_profile_digest`, and branch IDs become `branch-<profile_id>`. Every
+branch result is additionally bound by a signed fork receipt wrapper that
+`compare`, `select`, `land`, and Mission Control re-verify from disk. Schema 1
+forks stay readable and are never rewritten. `docs/EXECUTOR_PROFILES.md` is the
+frozen contract, and `scripts/test-executor-profiles.js` is its executable form.
+
 ## Immutable parent contract
 
 Every branch receives exactly these shared digests:
@@ -156,6 +175,19 @@ injectable so deterministic tests never require vendor binaries or network
 access. An adapter receives only the contained worktree, the operation contract,
 and a runtime-local instruction artifact. It must return typed state and
 evidence, not an unstructured claim of completion.
+
+Citadel owns every executable, argument position, permission mode, and sandbox
+setting. Executors are spawned with `shell: false` and literal argument arrays.
+On Windows a vendor CLI that exists only as a `.cmd` shim cannot be started
+directly by `CreateProcess`, so Citadel launches the shim through the command
+interpreter itself with verbatim, individually quoted arguments, and only after
+every argument has been proven free of interpreter syntax. Shell mode is never
+enabled.
+
+Model, token, and cost evidence is read only from a runtime's own declared
+machine-readable output: the Claude JSON result object and the Codex JSONL event
+stream. Anything missing, untrusted, or unparsable stays `unknown`. It is never
+inferred from the requested profile and never converted to zero.
 
 ## Non-goals
 

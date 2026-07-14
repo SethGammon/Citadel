@@ -5,11 +5,17 @@ const fs = require('fs');
 const path = require('path');
 const { spawnSync } = require('child_process');
 const operations = require('../operations');
+const { platformInvocation } = require('./launcher');
+const { runtimeInvocationForProfile, synthesizeLegacyExecutors } = require('./executor-profiles');
 
 function runtimeInvocation(runtime) {
   if (runtime === 'claude') return { command: 'claude', args: ['--print', '--output-format', 'json', '--permission-mode', 'acceptEdits'] };
   if (runtime === 'codex') return { command: 'codex', args: ['exec', '--json', '--sandbox', 'workspace-write', '--ignore-user-config', '-'] };
   throw new TypeError(`Unsupported fork runtime: ${runtime}`);
+}
+
+function legacyProfileFor(runtime) {
+  return synthesizeLegacyExecutors([runtime])[0];
 }
 
 function safeSpawn(command, args, options = {}) {
@@ -24,7 +30,73 @@ function safeSpawn(command, args, options = {}) {
     timeout: options.timeoutMs || 30 * 60 * 1000,
     maxBuffer: 16 * 1024 * 1024,
     env: options.env || process.env,
+    windowsVerbatimArguments: options.windowsVerbatimArguments === true,
   });
+}
+
+/** Spawn a canonical invocation, resolving the executable per platform first. */
+function spawnInvocation(invocation, options = {}) {
+  const resolved = platformInvocation(invocation, { platform: options.platform, env: options.env });
+  return safeSpawn(resolved.command, resolved.args, {
+    ...options,
+    windowsVerbatimArguments: resolved.windowsVerbatimArguments,
+  });
+}
+
+function positiveNumber(value) {
+  return Number.isFinite(value) && value >= 0 ? value : null;
+}
+
+function claudeObservation(stdout) {
+  let payload;
+  try { payload = JSON.parse(stdout); } catch (_error) { return null; }
+  if (!payload || typeof payload !== 'object' || Array.isArray(payload)) return null;
+  const usage = payload.modelUsage && typeof payload.modelUsage === 'object' ? Object.keys(payload.modelUsage) : [];
+  const model = typeof payload.model === 'string' && payload.model ? payload.model
+    : usage.length === 1 ? usage[0] : null;
+  const cost = positiveNumber(payload.total_cost_usd);
+  const tokens = payload.usage && typeof payload.usage === 'object'
+    ? positiveNumber(Number(payload.usage.input_tokens) + Number(payload.usage.output_tokens)) : null;
+  return {
+    model,
+    cost: cost === null ? null : { amount: cost, unit: 'usd', source: 'claude-json' },
+    duration_ms: positiveNumber(payload.duration_ms),
+    tokens,
+    source: 'claude-json',
+  };
+}
+
+function codexObservation(stdout) {
+  let model = null;
+  let tokens = null;
+  for (const line of String(stdout || '').split(/\r?\n/)) {
+    if (!line.trim()) continue;
+    let event;
+    try { event = JSON.parse(line); } catch (_error) { continue; }
+    if (!event || typeof event !== 'object') continue;
+    const body = event.msg && typeof event.msg === 'object' ? event.msg : event;
+    if (typeof body.model === 'string' && body.model) model = body.model;
+    const usage = body.info && typeof body.info === 'object' ? body.info.total_token_usage : null;
+    if (usage && typeof usage === 'object') {
+      const total = positiveNumber(Number(usage.total_tokens));
+      if (total !== null) tokens = total;
+    }
+  }
+  if (model === null && tokens === null) return null;
+  return { model, cost: null, duration_ms: null, tokens, source: 'codex-jsonl' };
+}
+
+/**
+ * Observed identity and usage are only ever read from a runtime's own declared
+ * machine-readable output. Anything else stays unknown, never inferred from the
+ * request and never coerced to zero.
+ */
+function observeRuntime(runtime, agent) {
+  if (!agent || agent.error || agent.status !== 0) return null;
+  const parsed = runtime === 'claude' ? claudeObservation(agent.stdout || '')
+    : runtime === 'codex' ? codexObservation(agent.stdout || '') : null;
+  if (!parsed) return null;
+  return { ...parsed, trusted: true };
 }
 
 function instructionFor(fork, objective) {
@@ -86,9 +158,10 @@ function receiptFor(options) {
 function runRuntimeBranch(options) {
   const startedAt = options.startedAt || new Date().toISOString();
   const startedMs = Date.parse(startedAt);
-  const invocation = options.invocation || runtimeInvocation(options.branch.runtime);
+  const profile = options.profile || legacyProfileFor(options.branch.runtime);
+  const invocation = options.invocation || runtimeInvocationForProfile(profile);
   const instruction = instructionFor(options.fork, options.objective);
-  const agent = safeSpawn(invocation.command, invocation.args, { spawn: options.spawn, cwd: options.worktree,
+  const agent = spawnInvocation(invocation, { spawn: options.spawn, cwd: options.worktree,
     input: instruction, timeoutMs: options.timeoutMs, env: options.env });
   const agentPassed = !agent.error && agent.status === 0;
   let verifier = { status: 1, stdout: '', stderr: 'Agent execution failed before verification.' };
@@ -99,6 +172,7 @@ function runRuntimeBranch(options) {
   const passed = agentPassed && !verifier.error && verifier.status === 0;
   const completedAt = options.completedAt || new Date().toISOString();
   const diffSummary = options.worktreeProvider.diffSummary(options.worktree, options.branch.base_revision);
+  const observation = observeRuntime(profile.runtime, agent);
   const result = receiptFor({
     fork: options.fork,
     branch: options.branch,
@@ -126,8 +200,9 @@ function runRuntimeBranch(options) {
     },
     diff_summary: diffSummary,
     duration_ms: Math.max(0, Date.parse(completedAt) - startedMs),
-    cost: null,
+    cost: observation && observation.cost ? observation.cost : null,
     failure_code: passed ? null : agentPassed ? 'VERIFIER_FAILED' : 'RUNTIME_FAILED',
+    observation,
   };
 }
 
@@ -146,4 +221,15 @@ function loadVerifier(workflowPath) {
     timeout_ms: Number.isInteger(workflow.verifier.timeout_ms) ? workflow.verifier.timeout_ms : undefined };
 }
 
-module.exports = Object.freeze({ generateSigningKey, instructionFor, loadVerifier, receiptFor, runRuntimeBranch, runtimeInvocation, safeSpawn });
+module.exports = Object.freeze({
+  generateSigningKey,
+  instructionFor,
+  legacyProfileFor,
+  loadVerifier,
+  observeRuntime,
+  receiptFor,
+  runRuntimeBranch,
+  runtimeInvocation,
+  safeSpawn,
+  spawnInvocation,
+});

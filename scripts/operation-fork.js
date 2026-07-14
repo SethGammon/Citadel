@@ -9,7 +9,7 @@ const forks = require('../core/forks');
 const HELP = `Usage: citadel fork <command> [options]
 
 Commands:
-  start OBJECTIVE [--workflow FILE] [--id ID] [--runtimes claude,codex]
+  start OBJECTIVE [--workflow FILE] [--id ID] [--executors FILE | --runtimes claude,codex]
   resume ID
   status ID
   compare ID
@@ -18,8 +18,11 @@ Commands:
   land apply ID --expected-revision N --target-revision SHA --confirm TOKEN --idempotency-key KEY
   replay ID [--output FILE]
 
-start creates contained worktrees and executes every runtime unless --no-execute
-is passed. Selection records intent only. Landing requires a fresh plan token.
+start creates contained worktrees and executes every executor unless --no-execute
+is passed. --executors selects strict model and provider profiles (see
+docs/EXECUTOR_PROFILES.md); --runtimes remains the legacy form. The two are
+mutually exclusive. Selection records intent only. Landing requires a fresh plan
+token.
 `;
 
 function has(args, flag) { return args.includes(flag); }
@@ -31,7 +34,7 @@ function value(args, flag, fallback = null) {
 }
 function positional(args) {
   const values = [];
-  const takesValue = new Set(['--workflow', '--id', '--runtimes', '--project-root', '--worktree-root',
+  const takesValue = new Set(['--workflow', '--id', '--runtimes', '--executors', '--project-root', '--worktree-root',
     '--branch', '--expected-revision', '--idempotency-key', '--actor', '--reason', '--target-revision',
     '--confirm', '--output']);
   for (let index = 0; index < args.length; index += 1) {
@@ -61,6 +64,14 @@ function readWorkflow(file) {
     || !Array.isArray(workflow.verifier.args)) throw new TypeError('Workflow must contain steps and a verifier command with args');
   return workflow;
 }
+function readExecutors(file) {
+  if (!file) return undefined;
+  let parsed;
+  try { parsed = JSON.parse(fs.readFileSync(path.resolve(file), 'utf8')); } catch (error) {
+    throw Object.assign(new Error(`Executor file is unreadable: ${error.message}`), { code: 'FORK_EXECUTORS_UNREADABLE' });
+  }
+  return forks.assertValidExecutorFile(parsed);
+}
 
 function main(args = process.argv.slice(2)) {
   if (!args.length || has(args, '--help') || has(args, '-h')) { process.stdout.write(HELP); return 0; }
@@ -70,11 +81,20 @@ function main(args = process.argv.slice(2)) {
   if (command === 'start') {
     const objective = positional(rest)[0];
     if (!objective) throw Object.assign(new Error('start requires an objective'), { code: 'FORK_OBJECTIVE_REQUIRED' });
+    const executorFile = value(rest, '--executors');
+    const runtimeFlag = value(rest, '--runtimes');
+    if (executorFile && runtimeFlag) {
+      throw Object.assign(new TypeError('--executors and --runtimes are mutually exclusive'), {
+        code: 'FORK_EXECUTOR_SELECTION_CONFLICT',
+      });
+    }
     const workflow = readWorkflow(value(rest, '--workflow'));
     const forkId = safeId(value(rest, '--id', objective));
-    const runtimes = String(value(rest, '--runtimes', 'claude,codex')).split(',').map((item) => item.trim()).filter(Boolean);
-    const result = forks.startFork({ projectRoot: root, forkId, objective, title: objective, workflow, runtimes,
-      worktreeRoot: value(rest, '--worktree-root'), execute: !has(rest, '--no-execute') });
+    const executors = readExecutors(executorFile);
+    const runtimes = executors ? undefined
+      : String(runtimeFlag || 'claude,codex').split(',').map((item) => item.trim()).filter(Boolean);
+    const result = forks.startFork({ projectRoot: root, forkId, objective, title: objective, workflow,
+      executors, runtimes, worktreeRoot: value(rest, '--worktree-root'), execute: !has(rest, '--no-execute') });
     write({ ok: true, command: 'fork start', fork: result.fork, comparison: result.comparison });
     return 0;
   }
@@ -89,22 +109,25 @@ function main(args = process.argv.slice(2)) {
   }
   if (command === 'status') {
     const fork = forks.loadFork(root, positional(rest)[0]);
-    write({ ok: true, command: 'fork status', fork, comparison: forks.compareFork(fork) });
+    const evidence = forks.forkEvidence(root, fork);
+    write({ ok: true, command: 'fork status', fork,
+      comparison: forks.compareFork(fork, { evidence }),
+      executors: forks.executorStates(root, fork) });
     return 0;
   }
   if (command === 'compare') {
     const fork = forks.loadFork(root, positional(rest)[0]);
-    write({ ok: true, command: 'fork compare', comparison: forks.compareFork(fork) });
+    const evidence = forks.forkEvidence(root, fork);
+    write({ ok: true, command: 'fork compare',
+      comparison: forks.compareFork(fork, { evidence }),
+      executors: forks.executorStates(root, fork) });
     return 0;
   }
   if (command === 'select') {
-    const forkId = positional(rest)[0];
-    const current = forks.loadFork(root, forkId);
-    const selected = forks.selectBranch(current, { branchId: value(rest, '--branch'),
-      expectedRevision: Number(value(rest, '--expected-revision')), actorId: value(rest, '--actor', 'actor-operator'),
-      idempotencyKey: value(rest, '--idempotency-key'), reason: value(rest, '--reason', ''),
-      selectedAt: new Date().toISOString() });
-    if (selected !== current) forks.saveFork(root, selected, current.revision);
+    const selected = forks.applySelection({ projectRoot: root, forkId: positional(rest)[0],
+      branchId: value(rest, '--branch'), expectedRevision: Number(value(rest, '--expected-revision')),
+      actorId: value(rest, '--actor', 'actor-operator'), idempotencyKey: value(rest, '--idempotency-key'),
+      reason: value(rest, '--reason', '') });
     write({ ok: true, command: 'fork select', fork: selected });
     return 0;
   }
@@ -131,7 +154,9 @@ function main(args = process.argv.slice(2)) {
   }
   if (command === 'replay') {
     const forkId = positional(rest)[0];
-    const replay = forks.publicReplay(forks.loadFork(root, forkId), forks.readEvents(root, forkId));
+    const fork = forks.loadFork(root, forkId);
+    const replay = forks.publicReplay(fork, forks.readEvents(root, forkId),
+      { evidence: forks.forkEvidence(root, fork) });
     const output = value(rest, '--output');
     if (output) {
       const target = path.resolve(output);
@@ -150,4 +175,4 @@ if (require.main === module) {
   }
 }
 
-module.exports = Object.freeze({ HELP, main, readWorkflow, safeId });
+module.exports = Object.freeze({ HELP, main, readExecutors, readWorkflow, safeId });
