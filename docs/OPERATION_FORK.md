@@ -183,6 +183,11 @@ comparison or display, so changing a score, status, diff, duration, cost, or
 failure code invalidates the branch. Missing evidence remains `unknown`, contributes to the explicit
 denominator, and cannot become a verified receipt or model pass.
 
+Mission Control projects only the report digest and bounded summary. It shows
+verified receipts against total branches plus passed, failed, and unknown model
+counts. The embedded replay remains available through `citadel fork proof` and
+is never duplicated into the dashboard API response.
+
 ## Runtime adapters
 
 The built-in adapters target Claude Code and Codex. Adapter execution is

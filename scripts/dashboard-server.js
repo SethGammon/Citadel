@@ -32,11 +32,13 @@ const {
 } = require('../core/operations/intents');
 const {
   applySelection,
+  buildProofReport,
   compareFork,
   executorStates,
   forkEvidence,
   listForks,
   loadFork,
+  readEvents,
 } = require('../core/forks');
 
 const DEFAULT_PORT = 4180;
@@ -184,7 +186,7 @@ function createDataSource(projectRoot) {
 function readOperationForks(projectRoot) {
   try {
     return listForks(projectRoot).map((summary) => {
-      const unreadable = { ...summary, executors: [], comparison: {
+      const unreadable = { ...summary, executors: [], proof: null, comparison: {
         outcome: 'insufficient-evidence', recommendation: null, comparable_count: 0, branches: [],
       } };
       if (summary.status === 'unknown') return unreadable;
@@ -193,8 +195,10 @@ function readOperationForks(projectRoot) {
         // binding is reloaded and verified before a fact is displayed.
         const fork = loadFork(projectRoot, summary.fork_id);
         const evidence = forkEvidence(projectRoot, fork);
+        const proof = buildProofReport(fork, readEvents(projectRoot, fork.fork_id), { evidence });
         return { ...summary, comparison: compareFork(fork, { evidence }),
-          executors: executorStates(projectRoot, fork) };
+          executors: executorStates(projectRoot, fork),
+          proof: { digest: proof.digest, summary: proof.report.summary } };
       } catch (error) {
         return { ...unreadable, status: 'unknown', reason_code: error.code || 'FORK_EVIDENCE_UNVERIFIABLE' };
       }

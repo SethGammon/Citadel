@@ -61,6 +61,9 @@ for (const fact of [
   assert(app.includes(fact), `executor evidence fact is missing from Mission Control: ${fact}`);
 }
 assert(app.includes('executor.local_provider'), 'Mission Control must identify local providers');
+for (const proofFact of ['fork.proof', 'verified receipts', 'model passed', 'model failed', 'model unknown']) {
+  assert(app.includes(proofFact), `Mission Control proof summary is missing: ${proofFact}`);
+}
 assert(app.includes("'x-citadel-nonce': session.nonce"), 'UI must send the process nonce');
 for (const field of ['operation_id', 'expected_revision', 'idempotency_key', 'actor', 'reason', 'capability', 'action']) {
   assert(new RegExp(`\\b${field}(?:\\s*:|\\s*[,}])`).test(app), `intent body must carry ${field}`);

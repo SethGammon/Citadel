@@ -300,6 +300,15 @@ async function main() {
       check(`http: /api/${endpoint} includes projection state`, response.data && response.data.state && typeof response.data.state.status === 'string');
     }
 
+    const forkProjection = await fetch(`${base}/api/forks`).then((r) => r.json());
+    const projectedProof = forkProjection.data.forks[0].proof;
+    check('http: fork proof projection is bounded', projectedProof
+      && JSON.stringify(Object.keys(projectedProof).sort()) === JSON.stringify(['digest', 'summary'])
+      && !Object.hasOwn(projectedProof, 'replay'));
+    check('http: fork proof projection keeps exact denominators', projectedProof.summary.branch_count === 2
+      && projectedProof.summary.verified_receipt_count === 0
+      && Object.hasOwn(projectedProof.summary.model_proof_counts, 'unknown'));
+
     const handoffs = await fetch(`${base}/api/handoffs`).then((r) => r.json());
     check('http: handoffs served', handoffs.data.handoffs.length === 1);
 

@@ -363,6 +363,9 @@ kbd {
 .fork-metrics .stat { padding: 9px; }
 .fork-executor { display: grid; gap: 4px; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border); }
 .fork-executor .fork-metrics { margin: 6px 0 0; }
+.fork-proof { display: grid; gap: 8px; margin-top: 12px; padding: 12px; border: 1px solid var(--border); border-radius: 8px; background: color-mix(in srgb, var(--fleet) 7%, transparent); }
+.fork-proof .fork-metrics { margin: 0; }
+.fork-proof .mono { overflow-wrap: anywhere; }
 .fork-unknown { display: grid; gap: 3px; margin: 10px 0; padding: 9px; border-left: 3px solid var(--warn); color: var(--warn); font-size: 12px; }
 .fork-feedback { min-height: 20px; margin-top: 12px; font-size: 13px; }
 .fork-landing { display: grid; gap: 7px; margin-top: 14px; padding: 13px; border: 1px solid var(--fleet); border-radius: 8px; }
