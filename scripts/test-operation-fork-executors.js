@@ -325,6 +325,25 @@ const containmentSnapshot = provider.captureContainment({
   branch: fork.branches[0],
 });
 assert.equal(provider.assertContainment(containmentSnapshot), true);
+const projectAlias = path.join(sandbox, 'project-alias');
+fs.symlinkSync(project, projectAlias, process.platform === 'win32' ? 'junction' : 'dir');
+const aliasedListing = containmentSnapshot.expected.map((entry, index) => [
+  `worktree ${index === 0 ? projectAlias : entry.path}`,
+  `HEAD ${entry.head}`,
+  `branch ${entry.branch}`,
+].join('\n')).join('\n\n');
+const aliasProvider = forks.createGitWorktreeProvider({
+  spawn: () => ({ status: 0, stdout: aliasedListing, stderr: '' }),
+});
+const aliasedContainmentSnapshot = aliasProvider.captureContainment({
+  projectRoot: project,
+  worktreeRoot: worktrees,
+  fork,
+  branch: fork.branches[0],
+});
+assert.equal(provider.assertContainment(aliasedContainmentSnapshot), true,
+  'canonical and aliased worktree paths must describe the same registration');
+fs.rmSync(projectAlias, { force: true });
 const containedTree = provider.resolve(project, worktrees, 'fork-executors', 'branch-codex-hosted');
 const containedBranch = git(containedTree, ['rev-parse', '--abbrev-ref', 'HEAD']);
 git(containedTree, ['switch', '-c', 'rogue-containment']);

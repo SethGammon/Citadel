@@ -22,7 +22,8 @@ function git(args, options = {}) {
 }
 
 function normalizedPath(value) {
-  const resolved = path.resolve(value).replace(/\\/g, '/');
+  const resolved = (fs.existsSync(value) ? fs.realpathSync.native(value) : path.resolve(value))
+    .replace(/\\/g, '/');
   return process.platform === 'win32' ? resolved.toLowerCase() : resolved;
 }
 
