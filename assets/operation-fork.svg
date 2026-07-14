@@ -1,0 +1,93 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="520" viewBox="0 0 1200 520" role="img" aria-labelledby="of-title of-desc">
+  <title id="of-title">Citadel Operation Fork</title>
+  <desc id="of-desc">One engineering objective is bound to a shared contract, executed in isolated Claude Code and Codex worktrees, and compared from verified results before an operator selects what to land.</desc>
+  <defs>
+    <linearGradient id="of-bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0d1117"/>
+      <stop offset="100%" stop-color="#161b22"/>
+    </linearGradient>
+    <linearGradient id="of-top" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#00d2ff"/>
+      <stop offset="55%" stop-color="#3a7bd5"/>
+      <stop offset="100%" stop-color="#7b2ff7"/>
+    </linearGradient>
+    <marker id="of-arrow" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#00d2ff" fill-opacity="0.8"/>
+    </marker>
+    <style>
+      .of-sans { font-family: 'Segoe UI',system-ui,-apple-system,sans-serif; }
+      .of-mono { font-family: 'SF Mono','Cascadia Code','Consolas',monospace; }
+      .of-label { font-size: 10px; font-weight: 700; letter-spacing: 2px; fill: #5a6a85; }
+      .of-title { font-size: 17px; font-weight: 700; fill: #e6edf3; }
+      .of-copy { font-size: 12px; fill: #8b949e; }
+      .of-small { font-size: 10.5px; fill: #5a6a85; }
+    </style>
+  </defs>
+
+  <rect width="1200" height="520" rx="14" fill="url(#of-bg)"/>
+  <rect x="0.75" y="0.75" width="1198.5" height="518.5" rx="14" fill="none" stroke="#00d2ff" stroke-width="1.5" stroke-opacity="0.2"/>
+  <rect x="30" y="11" width="1140" height="2.5" rx="1.25" fill="url(#of-top)" opacity="0.7"/>
+
+  <text x="48" y="48" class="of-sans" font-size="18" font-weight="700" fill="#e6edf3" letter-spacing="4">CITADEL</text>
+  <text x="152" y="48" class="of-mono" font-size="11" fill="#00d2ff" opacity="0.72" letter-spacing="2">/ OPERATION FORK</text>
+  <text x="1152" y="48" class="of-sans" font-size="12" fill="#8b949e" text-anchor="end">One objective, isolated runtimes, comparable results.</text>
+  <line x1="30" y1="82" x2="1170" y2="82" stroke="#21262d" stroke-width="1.5"/>
+
+  <text x="154" y="112" class="of-sans of-label" text-anchor="middle">OBJECTIVE</text>
+  <text x="426" y="112" class="of-sans of-label" text-anchor="middle">SHARED CONTRACT</text>
+  <text x="744" y="112" class="of-sans of-label" text-anchor="middle">ISOLATED EXECUTION</text>
+  <text x="1032" y="112" class="of-sans of-label" text-anchor="middle">OPERATOR DECISION</text>
+
+  <path d="M264 258 H318" fill="none" stroke="#00d2ff" stroke-width="1.6" stroke-opacity="0.75" marker-end="url(#of-arrow)"/>
+  <path d="M534 258 H574 C594 258 594 185 614 185" fill="none" stroke="#58a6ff" stroke-width="1.6" stroke-opacity="0.75" marker-end="url(#of-arrow)"/>
+  <path d="M534 258 H574 C594 258 594 335 614 335" fill="none" stroke="#bc8cff" stroke-width="1.6" stroke-opacity="0.75" marker-end="url(#of-arrow)"/>
+  <path d="M864 185 H894 C914 185 914 258 934 258" fill="none" stroke="#58a6ff" stroke-width="1.6" stroke-opacity="0.75" marker-end="url(#of-arrow)"/>
+  <path d="M864 335 H894 C914 335 914 258 934 258" fill="none" stroke="#bc8cff" stroke-width="1.6" stroke-opacity="0.75" marker-end="url(#of-arrow)"/>
+
+  <rect x="44" y="188" width="220" height="140" rx="12" fill="#0d2027" stroke="#00d2ff" stroke-width="1.5" stroke-opacity="0.8"/>
+  <text x="64" y="218" class="of-sans of-title">Engineering objective</text>
+  <text x="64" y="249" class="of-mono" font-size="12" fill="#79c0ff">Find and eliminate the</text>
+  <text x="64" y="269" class="of-mono" font-size="12" fill="#79c0ff">authentication race</text>
+  <line x1="64" y1="288" x2="244" y2="288" stroke="#1e2632"/>
+  <text x="64" y="309" class="of-mono of-small">base: same commit</text>
+
+  <rect x="324" y="156" width="210" height="204" rx="12" fill="#121923" stroke="#3a7bd5" stroke-width="1.5" stroke-opacity="0.75"/>
+  <text x="344" y="188" class="of-sans of-title">Immutable inputs</text>
+  <g class="of-mono" font-size="11.5">
+    <rect x="344" y="209" width="170" height="28" rx="7" fill="#0d1b2a" stroke="#2b3a55"/>
+    <text x="359" y="228" fill="#79c0ff">scope</text>
+    <text x="499" y="228" fill="#3fb950" text-anchor="end">same</text>
+    <rect x="344" y="245" width="170" height="28" rx="7" fill="#0d1b2a" stroke="#2b3a55"/>
+    <text x="359" y="264" fill="#79c0ff">policy</text>
+    <text x="499" y="264" fill="#3fb950" text-anchor="end">same</text>
+    <rect x="344" y="281" width="170" height="28" rx="7" fill="#0d1b2a" stroke="#2b3a55"/>
+    <text x="359" y="300" fill="#79c0ff">workflow</text>
+    <text x="499" y="300" fill="#3fb950" text-anchor="end">same</text>
+    <rect x="344" y="317" width="170" height="28" rx="7" fill="#0d1b2a" stroke="#2b3a55"/>
+    <text x="359" y="336" fill="#79c0ff">verifier</text>
+    <text x="499" y="336" fill="#3fb950" text-anchor="end">same</text>
+  </g>
+
+  <rect x="614" y="130" width="250" height="112" rx="12" fill="#0e1622" stroke="#58a6ff" stroke-width="1.5" stroke-opacity="0.85"/>
+  <circle cx="638" cy="156" r="5" fill="#58a6ff"/>
+  <text x="652" y="162" class="of-sans of-title">Claude Code</text>
+  <text x="638" y="192" class="of-sans of-copy">isolated worktree and branch</text>
+  <text x="638" y="216" class="of-mono" font-size="11" fill="#58a6ff">receipt · diff · duration</text>
+
+  <rect x="614" y="278" width="250" height="112" rx="12" fill="#171121" stroke="#bc8cff" stroke-width="1.5" stroke-opacity="0.85"/>
+  <circle cx="638" cy="304" r="5" fill="#bc8cff"/>
+  <text x="652" y="310" class="of-sans of-title">OpenAI Codex</text>
+  <text x="638" y="340" class="of-sans of-copy">isolated worktree and branch</text>
+  <text x="638" y="364" class="of-mono" font-size="11" fill="#bc8cff">receipt · diff · duration</text>
+
+  <rect x="934" y="174" width="222" height="168" rx="12" fill="#101d18" stroke="#3fb950" stroke-width="1.5" stroke-opacity="0.85"/>
+  <text x="954" y="206" class="of-sans of-title">Compare evidence</text>
+  <rect x="954" y="224" width="182" height="34" rx="8" fill="#0d2515" stroke="#3fb950" stroke-opacity="0.55"/>
+  <circle cx="972" cy="241" r="4" fill="#3fb950"/>
+  <text x="986" y="246" class="of-mono" font-size="11.5" fill="#3fb950">2 comparable results</text>
+  <text x="954" y="286" class="of-sans of-copy">Select a branch after review.</text>
+  <text x="954" y="311" class="of-sans of-copy">Landing remains a separate step.</text>
+
+  <line x1="30" y1="466" x2="1170" y2="466" stroke="#21262d"/>
+  <text x="600" y="492" class="of-sans" font-size="11" fill="#5a6a85" text-anchor="middle">Selection records a decision. Landing requires a fresh target-revision check and explicit confirmation.</text>
+</svg>

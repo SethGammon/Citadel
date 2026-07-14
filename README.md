@@ -122,7 +122,7 @@ The repository remains the source of truth. Citadel adds an operating layer arou
 
 Portable operations are optional. They are for work that needs a stable contract, durable recovery, comparable executors, or a verifiable receipt. Ordinary repository work still begins with `/do`.
 
-<img src="output/playwright/operation-fork-comparison.png" width="100%" alt="Operation Fork comparing Claude Code and Codex branches under one shared contract" />
+<img src="assets/operation-fork.svg" width="100%" alt="Operation Fork binding one objective to a shared contract, isolated Claude Code and Codex worktrees, and an operator-reviewed comparison" />
 
 | If you need to... | Start here |
 |---|---|
