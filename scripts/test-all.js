@@ -109,6 +109,7 @@ const UNLOCK_TESTS = Object.freeze([
   ['Operation Fork security', 'test-operation-fork-security.js'],
   ['Executor profiles', 'test-executor-profiles.js'],
   ['Operation Fork executors', 'test-operation-fork-executors.js'],
+  ['Operation Fork proof report', 'test-operation-fork-proof.js'],
   ['Workflow compiler', 'test-workflow-compiler.js'],
   ['Pack platform', 'test-packs.js'],
   ['Signed Pack registry', 'test-pack-registry.js'],

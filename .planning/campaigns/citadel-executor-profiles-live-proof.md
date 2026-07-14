@@ -62,6 +62,7 @@ Direction: Turn Operation Fork from a dual-runtime primitive into a reproducible
 - 2026-07-13: Executor-profile trust is contract anchored. Schema 2 binds the signer public-key digest, issuer, execution receipt, signed observation digest, executor profile, and adapter contract. Mutable telemetry or a substituted fork-local key cannot manufacture trust.
 - 2026-07-13: Agent branch ownership is a runtime postcondition. Citadel snapshots every assigned worktree and fails closed if an executor removes a worktree, changes its branch, or changes its HEAD outside the allowed task result.
 - 2026-07-13: Codex CLI was upgraded to 0.144.3 so the configured `gpt-5.6-sol` model can be exercised. Legacy Codex keeps user configuration; explicit schema 2 profiles may override the model.
+- 2026-07-13: The fresh live fork receives one bounded product objective: implement a deterministic `fork proof` report over the already redacted replay and freshly verified executor evidence. The frozen acceptance test requires exact fields, honest evidence counts, deterministic digests, CLI export, and no local path disclosure.
 
 ## Feature Ledger
 
@@ -71,6 +72,7 @@ Direction: Turn Operation Fork from a dual-runtime primitive into a reproducible
 - Phase 1 validator: pass with both non-manual end conditions satisfied.
 - Phase 2 recovery: implementation candidate preserved from failed fork as commit `cdf2558`, then independently hardened against signer substitution, receipt and telemetry tampering, stale comparison, Windows npm shim execution, public replay leakage, and worktree escape.
 - Full strict repository verification passes from the hardened candidate: every suite in `node scripts/test-all.js --strict` passed in 110.8 seconds.
+- Phase 2 live-proof acceptance is frozen in `scripts/test-operation-fork-proof.js` and registered in the strict suite. It currently exits only with `OPERATION_FORK_PROOF_NOT_IMPLEMENTED`.
 
 ## Exit Evidence
 
