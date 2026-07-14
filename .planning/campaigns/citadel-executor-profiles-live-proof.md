@@ -69,6 +69,7 @@ Direction: Turn Operation Fork from a dual-runtime primitive into a reproducible
 - 2026-07-14: The operator explicitly approved sending the isolated Citadel worktrees and relevant code context to authenticated Claude Code and OpenAI Codex for the bounded live proof.
 - 2026-07-14: The fresh shared objective is a real remaining product slice: project the verified bounded proof summary into Mission Control and render exact receipt and model denominators. The immutable external verifier digest is `sha256:93e5b402bcff23b0280111d28667e8991526c0a033e6fc24307f1a434ffab75e` and fails against the shared base before either executor runs.
 - 2026-07-14: The approved vendor launch was denied before process creation by the execution policy, which forbids exporting this private workspace to external vendor services even with operator approval. No Claude, Codex, worktree, or fork state was created. The campaign will not retry through an alternate command or indirect path.
+- 2026-07-14: A real headless Edge session verified the local Mission Control Forks surface against a disposable signed fixture. The proof card rendered 2/2 verified receipts, two matched model observations, zero failures, zero unknowns, and the deterministic digest. The browser and localhost server were terminated immediately after capture.
 
 ## Feature Ledger
 
@@ -85,6 +86,7 @@ Direction: Turn Operation Fork from a dual-runtime primitive into a reproducible
 - Explicit-model readiness: current Codex exec JSONL usage parsing is covered, and local runtime-authored session fixtures prove model extraction is thread-bound, worktree-bound, public-safe, bounded, and ambiguity-safe without ingesting prompt content.
 - Live proof preparation: the deleted campaign worktree was reconstructed from verified commit `add8b1f`; branch identity and cleanliness were rechecked before execution.
 - Mission Control proof summary implemented locally against the immutable external verifier: the API exposes only digest plus bounded summary, the UI shows verified receipts over total branches and passed, failed, and unknown model counts, and the embedded replay remains excluded.
+- Visual verification passed locally in Microsoft Edge. The registered artifact is `.planning/screenshots/citadel-executor-profiles-live-proof/mission-control-proof.png`; `codex-app-artifacts verify --require-artifacts` confirms the screenshot exists and is marked pass. Generated artifact ledgers are now ignored with the rest of ephemeral `.planning` runtime evidence.
 
 ## Exit Evidence
 
@@ -93,18 +95,18 @@ Direction: Turn Operation Fork from a dual-runtime primitive into a reproducible
 | phase:1 | contract | doc_update | yes | `docs/EXECUTOR_PROFILES.md` and `scripts/test-executor-profiles.js` | passed | 3 | none |
 | phase:2 | live-build | operation_receipt | yes | first live Operation Fork record and signed branch receipts | pending | 3 | execute both authenticated runtimes |
 | phase:3 | selected-build | decision_receipt | yes | comparison, selection, landing, and review record | pending | 3 | choose and land from evidence |
-| phase:4 | integration | test_result | yes | focused suites plus Mission Control screenshots | pending | 3 | harden the selected implementation |
+| phase:4 | integration | test_result | yes | focused suites pass; local Mission Control screenshot verifies proof denominators, model identity, and zero unknowns | pending | 3 | repeat against the selected live implementation |
 | phase:5 | live-proof | proof_bundle | yes | explicit-model replay and bounded proof report | pending | 3 | run and publish the real proof artifact |
 | phase:6 | delivery | pr | yes | protected pull request to `main` | pending | 3 | verify exact head and merge |
 
 ## Active Context
 
-Phase 2 remains active because authenticated dual-vendor execution is unproven. The external execution policy denied the approved run before launch. The Mission Control proof-summary objective now passes locally. Next action: run strict verification and checkpoint the safe product work while preserving the live vendor proof as an explicit blocked exit condition.
+Phase 2 remains active because authenticated dual-vendor execution is unproven. The external execution policy denied the approved run before launch. The Mission Control proof-summary objective passes locally in focused, strict, artifact, and real-browser verification. Next action: checkpoint the safe product work while preserving the live vendor proof as an explicit blocked exit condition.
 
 ## Continuation State
 
 - current_phase: 2
-- current_substep: verify and checkpoint Mission Control proof summary after vendor policy denial
+- current_substep: checkpoint verified Mission Control proof summary after vendor policy denial
 - worktree: `C:\tmp\citadel-executor-profiles`
 - branch: `codex/citadel-executor-profiles`
 - baseline_commit: `cdf25581b45b2096d1f8b1a590cfba0836fe26af`
