@@ -1,147 +1,25 @@
-<img src="assets/citadel-hero.svg" width="100%" alt="Citadel - the operating layer for Claude Code and OpenAI Codex" />
+<img src="assets/citadel-hero.svg" width="100%" alt="Citadel - orchestration for Claude Code and OpenAI Codex" />
 
 <div align="center">
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Tests](https://github.com/SethGammon/Citadel/actions/workflows/tests.yml/badge.svg)](https://github.com/SethGammon/Citadel/actions/workflows/tests.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 ![Node.js 18+](https://img.shields.io/badge/Node.js-18%2B-green.svg)
-[![GitHub stars](https://img.shields.io/github/stars/SethGammon/Citadel?style=social)](https://github.com/SethGammon/Citadel/stargazers)
-[![ClaudePluginHub verified](https://img.shields.io/badge/ClaudePluginHub-verified-7c3aed.svg)](https://www.claudepluginhub.com/plugins/sethgammon-citadel)
-[![Interactive Demo](https://img.shields.io/badge/Try_the_Router-00d2ff.svg)](https://sethgammon.github.io/Citadel/)
+[![Interactive demo](https://img.shields.io/badge/Interactive_demo-00d2ff.svg)](https://sethgammon.github.io/Citadel/)
 
-**One command routes the work. One operation can outlive any agent.**
+**Repository-level orchestration for Claude Code and OpenAI Codex.**
 
-Citadel is the open-source, runtime-neutral operations layer for Claude Code and OpenAI Codex. It adds durable project memory, cheap intent routing, verification evidence, cost telemetry, and coordinated agents in isolated git worktrees.
+Citadel adds repeatable workflows, persistent project state, safety hooks, verification, cost reporting, and coordinated agents to an existing repository. Its operations layer can also run the same objective through isolated runtimes and compare their results under one contract.
 
-If `CLAUDE.md` and `AGENTS.md` tell the runtime **what** your project is, Citadel tells the runtime **how** to operate on it.
-
-[Install](#quick-install) · [Fork an operation](#run-one-objective-through-both-runtimes) · [See the operating loop](#see-the-operating-loop) · [Inspect the proof](#proof-not-promises) · [Choose the right tool](docs/CHOOSING_CITADEL.md)
+[Quick install](#quick-install) · [First run](#first-run) · [Operations](#portable-operations) · [How it works](#how-do-works) · [Documentation](#documentation)
 
 </div>
 
----
+## Quick install
 
-## See the operating loop
+**Requires:** Claude Code or OpenAI Codex, Node.js 18+, and a git repository.
 
-<img src="assets/terminal-demo.svg" width="100%" alt="Animated terminal session: /do routes an audit request through the router tiers to marshal, which reviews, fixes, tests, verifies, and writes a handoff" />
-
-The animation summarizes a real contract: route the request, run the lightest capable workflow, verify the result, write the handoff, and preserve the next action in the repository. Run the [copyable workflow](DEMO.md) to reproduce it in your own project.
-
-After installing, try this from your project root:
-
-```text
-/do setup --express
-/do next
-/do review README.md
-/do generate tests for the changed files
-/cost
-```
-
-## Proof, not promises
-
-| Proof | Result | Inspect it |
-|---|---:|---|
-| Serialized landing lane | 15 of 15 PRs merged and deployed, 14 branch updates, 59 CI waits, 0 repair tasks | [Public proof repository](https://github.com/SethGammon/agents-md-deploy-steward-proof) |
-| Hosted operating journey | 30 of 30 deterministic Claude Code and Codex journeys across Windows, Linux, and macOS | [Golden path](docs/GOLDEN_PATH.md) |
-| Missing evidence | Absent telemetry stays `unknown` instead of becoming a green check | [Dashboard contract](docs/DASHBOARD_SPEC.md) |
-| Fresh-process continuity | Campaign state and the next action reload from repository files | [Campaigns](docs/CAMPAIGNS.md) |
-| Runtime replacement | One immutable operation produces isolated Claude Code and Codex branches, signed receipts, and an evidence-bound comparison | [Operation Fork](docs/OPERATION_FORK.md) |
-
-These are bounded claims. Deterministic fixtures are not human adoption, clone operations are not retained users, and Citadel does not replace review.
-
-### Help measure real use
-
-If Citadel has run a real task in your repository, one local command creates a reviewable, redacted cohort bundle:
-
-```sh
-node .citadel/scripts/activation-telemetry.js share
-```
-
-Nothing is transmitted. The bundle contains only an opaque ID, observation age, version, bounded journey outcomes, and explicit aggregate consent. Post it only if you choose to. The public [activation cohort](docs/PRODUCT_PROOF_TRIAL.md) is targeting 25 shared installations, 40% verified handoff, 25% resume, and 15% seven-day return before Citadel claims retained human use.
-
-## Run one objective through both runtimes
-
-Citadel 1.3 introduces Operation Fork. Give Citadel one objective and it creates
-isolated Claude Code and Codex worktrees from the same commit, runs both under the
-same contract, verifies both, then shows what the evidence actually supports.
-
-```text
-citadel fork start "Find and eliminate the authentication race"
-citadel fork status fork-find-and-eliminate-the-authentication-race
-citadel fork compare fork-find-and-eliminate-the-authentication-race
-```
-
-The first command is enough to run the journey. Its built-in verifier uses
-`git diff --check`. Pass `--workflow FILE` when the project needs stronger steps
-and checks. If a process ends, `citadel fork resume ID` reloads the private
-objective and workflow from durable local state.
-
-<img src="output/playwright/operation-fork-comparison.png" width="100%" alt="Citadel Operation Fork showing Claude Code and Codex branches under one shared proof standard" />
-
-The comparison is intentionally conservative. Missing receipts or verifier
-evidence remain `unknown`. Equal verified outcomes remain a tie. Selection records
-an operator decision but does not touch code. Landing is a separate command that
-rechecks the fork revision, selected receipt, target commit, clean worktree, and an
-exact confirmation token before a local merge.
-
-Mission Control reads that canonical state directly and keeps the two branches,
-the evidence boundary, and the selection boundary visible at once:
-
-<img src="output/playwright/operation-fork-mission-control.png" width="100%" alt="Citadel Mission Control comparing verified Claude Code and Codex branches without manufacturing a winner" />
-
-```text
-citadel fork select ID --branch branch-codex --expected-revision 6 --idempotency-key choose-codex-001
-citadel fork land plan ID
-citadel fork land apply ID --expected-revision 7 --target-revision SHA --confirm TOKEN --idempotency-key land-codex-001
-citadel fork replay ID --output operation-fork-replay.json
-```
-
-The replay is safe to share because it contains contract and artifact digests,
-states, metrics, and the decision outcome, not prompts, source, paths, repository
-identity, credentials, reasons, raw revisions, or signing keys. See the complete
-[Operation Fork contract](docs/OPERATION_FORK.md).
-
-## From outcome Pack to verifiable proof
-
-Citadel 1.2 turned the operating loop into a portable contract. Pick an outcome Pack, create a
-durable journey, then verify the receipt without trusting a dashboard or a chat transcript.
-
-```text
-citadel pack inspect ci-recovery
-citadel journey start --run-id run-ci-recovery --pack ci-recovery --runtime codex --project .
-citadel receipt verify --input .planning/operations/run-ci-recovery/receipt.json
-```
-
-| Layer | What ships | Trust boundary |
-|---|---|---|
-| **Outcome Packs** | CI recovery, migration campaign, and release steward workflows with strict permissions and dependencies | Local inspection and certification do not pretend to be marketplace trust |
-| **Operations Protocol v0.1** | Typed specs, runs, attempts, intents, evidence, and receipts across local, Codex, and GitHub targets | Missing or incomplete evidence stays `unknown` |
-| **Mission Control** | Pause, resume, stop, retry, and compare runtime forks through typed local actions | Localhost, exact origin, process nonce, capability, and revision checks |
-| **Proof ledger** | Deterministic public projections of passed, failed, blocked, and unknown outcomes | Independent claims require an external pinned trust root |
-
-<img src="output/playwright/mission-control-confirmation-fixed.png" width="100%" alt="Citadel Mission Control showing a running operation, pause and stop controls, and an explicit stop confirmation with the next effect" />
-
-The package CLI and provenance workflow are release-ready in this repository. Registry publication,
-outside Pack authors, and independent adoption remain explicit external milestones.
-
-## What Is Citadel?
-
-Citadel turns one-off coding-agent chats into repeatable engineering workflows. Claude Code and Codex are strong at local reasoning and code edits, but each session still needs project context, safe operating rules, task routing, and a way to continue work after context resets. Citadel is that harness layer.
-
-| | Claude Code / Codex alone | With Citadel |
-|---|---|---|
-| **Project context** | Re-explained every session | Compiled memory in repo-local `.planning/` files |
-| **Choosing a workflow** | You pick review vs. debug vs. refactor | `/do` routes plain English to the lightest capable tool |
-| **Long-running work** | Dies with the context window | Campaigns persist, resume, and hand off across sessions |
-| **Parallel work** | Manual branch juggling | Fleet agents in isolated worktrees with shared discoveries |
-| **Safety rules** | Prompt discipline, re-stated by hand | Lifecycle hooks enforce file protection and quality gates |
-| **Token spend** | Guesswork | `/cost` and `/dashboard` from runtime-native telemetry |
-
-## Quick Install
-
-**Prerequisites:** Claude Code or OpenAI Codex, Node.js 18+, and a git repository you want Citadel to manage.
-
-Open your project in Claude Code or Codex and paste this install prompt:
+Open the repository you want Citadel to manage, then paste this into your coding agent:
 
 ```text
 Install Citadel in this repository.
@@ -159,11 +37,16 @@ Use the current repository as the target project. Do not require placeholder
 path edits.
 ```
 
-> [!IMPORTANT]
-> After the installer finishes, start a **fresh session** if the runtime asks for one, then run `/do setup --express`. That is the command that matters: it auto-detects the project, installs hooks, scaffolds Citadel state, and gets you to a working `/do` without a tour.
+When the installer finishes, follow any printed plugin-enable step and start a fresh session if prompted. Then run:
+
+```text
+/do setup --express
+```
+
+This initializes Citadel for the repository, installs its hooks, and creates the local state used to resume work later.
 
 <details>
-<summary><strong>Manual install</strong> (run the installer yourself)</summary>
+<summary><strong>Manual installation</strong></summary>
 
 <br>
 
@@ -173,166 +56,196 @@ Clone Citadel once:
 git clone https://github.com/SethGammon/Citadel.git ~/Citadel
 ```
 
-Then run exactly one installer from the target project root.
+From the repository you want Citadel to manage, run the installer for your runtime.
 
-For OpenAI Codex:
+**OpenAI Codex**
 
 ```bash
 node ~/Citadel/scripts/install.js --runtime codex --add-marketplace
 ```
 
-For Claude Code:
+**Claude Code**
 
 ```bash
 node ~/Citadel/scripts/install.js --runtime claude --install --scope local
 ```
 
-Then start a fresh session in the same project and run:
-
-```text
-/do setup --express
-```
+Start a fresh session in the same repository and run `/do setup --express`.
 
 </details>
 
-> [!TIP]
-> For a copyable first-run walkthrough, see [DEMO.md](DEMO.md). For runtime-specific details, dry runs, and troubleshooting, see [INSTALL.md](INSTALL.md).
+For dry runs, runtime-specific setup, generated paths, and rollback instructions, see the [installation guide](INSTALL.md).
 
-## How It Works
+## First run
 
-Say what you want. `/do` routes it to the lightest workflow that can handle it.
+<img src="assets/terminal-demo.svg" width="100%" alt="A Citadel terminal session routing a request, running checks, and writing a handoff" />
 
-<img src="assets/routing-flow.svg" width="100%" alt="Routing flow: plain-English requests match a tier (pattern, keyword, or LLM classifier) and dispatch to direct edits, skills, campaigns, or fleets" />
+You can work through `/do` without learning Citadel's individual skills first:
 
-Classification cascades through four tiers, cheapest first:
+```text
+/do next
+/do review README.md
+/do generate tests for the changed files
+/cost
+```
 
-- **Tier 0 · Pattern match** - catches trivial commands with regex. Zero tokens, under a millisecond.
-- **Tier 1 · Active state** - checks whether you are mid-campaign and resumes it.
-- **Tier 2 · Keyword table** - routes known task language to installed skills. Still zero tokens.
-- **Tier 3 · LLM classifier** - only when tiers 0-2 miss: analyzes complexity and picks Skill, Marshal, Archon, or Fleet.
+| Command | Purpose |
+|---|---|
+| `/do <request>` | Select and run the appropriate workflow |
+| `/do next` | Show current work, risks, and the next recommended action |
+| `/dashboard` | Inspect campaigns, agents, operations, hooks, handoffs, and source health |
+| `/cost` | Report token use and session cost from available telemetry |
 
-Most requests resolve before Tier 3. Whatever runs, the same loop closes around it:
+The [demo workflow](DEMO.md) provides a copyable walkthrough for a real repository.
 
-<img src="assets/loop-flow.svg" width="100%" alt="Operating loop: a /do request routes through tiers 0-3 to a skill, marshal, archon, or fleet; every path runs the same lifecycle hooks (protect, verify, record), which persist state to .planning/ memory, and the next session resumes from the router" />
+## What Citadel adds
 
-## Orchestration Ladder
+| Capability | How it helps |
+|---|---|
+| **Request routing** | `/do` maps a plain-language request to a direct action, focused skill, campaign, or parallel fleet |
+| **Continuity** | Campaigns, discoveries, operations, and handoffs are stored in repo-local `.planning/` files and can be resumed in a fresh session |
+| **Project safeguards** | <!-- GENERATED: hook-script-count -->35<!-- /GENERATED --> hook scripts across <!-- GENERATED: hook-event-count -->29<!-- /GENERATED --> lifecycle events protect configured files, gate risky actions, run checks, and record outcomes |
+| **Parallel work** | Fleet agents use isolated git worktrees and share discoveries between coordinated waves |
+| **Portable operations** | Typed contracts, durable journals, signed receipts, and deterministic recovery make a workflow inspectable across execution targets |
+| **Operational visibility** | Mission Control, `/dashboard`, and `/cost` expose current state, missing evidence, controls, token use, and session spend |
+| **Extensible workflows** | <!-- GENERATED: skill-count -->49<!-- /GENERATED --> included skills and three first-party Outcome Packs cover common engineering and project operations |
 
-Four tiers let Citadel scale from a one-line edit to a multi-session campaign. You never pick one; the router does.
+Citadel does not replace `CLAUDE.md` or `AGENTS.md`. Those files describe the project and its rules; Citadel provides the workflows and state used to carry them out consistently.
+
+## Portable operations
+
+Citadel supports longer-lived work that needs a defined contract, durable recovery, or more than one executor. These features are optional; ordinary repository work still starts with `/do`.
+
+### Compare runtimes with Operation Fork
+
+Operation Fork creates isolated Claude Code and Codex worktrees from the same commit, runs both against one objective, verifies each result, and presents an evidence-bound comparison.
+
+```text
+citadel fork start "Find and eliminate the authentication race"
+citadel fork status fork-find-and-eliminate-the-authentication-race
+citadel fork compare fork-find-and-eliminate-the-authentication-race
+```
+
+<img src="output/playwright/operation-fork-comparison.png" width="100%" alt="Operation Fork comparing Claude Code and Codex branches under one shared contract" />
+
+Missing receipts remain `unknown`; equal verified outcomes remain a tie. Selection records an operator decision but does not merge code. Landing is a separate action that rechecks the selected receipt, fork revision, target revision, clean worktree, and confirmation token.
+
+```text
+citadel fork select ID --branch branch-codex --expected-revision 6 --idempotency-key choose-codex-001
+citadel fork land plan ID
+citadel fork land apply ID --expected-revision 7 --target-revision SHA --confirm TOKEN --idempotency-key land-codex-001
+citadel fork replay ID --output operation-fork-replay.json
+```
+
+The replay excludes prompts, source, repository identity, paths, credentials, reasons, raw revisions, and signing keys. See the [Operation Fork contract](docs/OPERATION_FORK.md) for the complete lifecycle and trust boundaries.
+
+### Run a defined Outcome Pack
+
+The Operations Protocol defines typed specs, runs, attempts, intents, evidence, and receipts. Outcome Packs package that contract for a specific result, including permissions, dependencies, verification, and stopping conditions.
+
+```text
+citadel pack inspect ci-recovery
+citadel journey start --run-id run-ci-recovery --pack ci-recovery --runtime codex --project .
+citadel receipt verify --input .planning/operations/run-ci-recovery/receipt.json
+```
+
+| Layer | Current role |
+|---|---|
+| **Operations Protocol v0.1** | Six strict contracts, compatibility rules, conformance checks, journals, and recovery |
+| **Outcome Packs** | First-party CI recovery, migration campaign, and release steward workflows |
+| **Mission Control** | Typed pause, resume, stop, retry, and runtime comparison controls with revision checks |
+| **Proof ledger** | Deterministic projections of passed, failed, blocked, and unknown outcomes |
+| **GitHub verification Action** | A narrow read-only target that runs a declared workflow and emits a receipt |
+
+<img src="output/playwright/mission-control-confirmation-fixed.png" width="100%" alt="Mission Control showing a running operation and an explicit stop confirmation" />
+
+The CLI and provenance workflow are implemented in this repository. Registry publication, outside Pack authors, hosted Relay, and independent adoption remain external milestones rather than shipped claims.
+
+## How `/do` works
+
+### 1. Route the request
+
+<img src="assets/routing-flow.svg" width="100%" alt="A request moving through pattern, active-state, keyword, and classifier routing tiers" />
+
+The router checks inexpensive local signals first: direct patterns, active campaign state, and known workflow keywords. It uses an LLM classifier only when those checks cannot determine the appropriate path.
+
+### 2. Run the workflow
+
+Citadel chooses among four execution levels based on the scope of the request:
 
 <table>
 <tr>
-<td width="50%"><img src="assets/card-skill.svg" width="100%" alt="Skill: domain expert. Loads focused expertise on demand, zero tokens when not invoked, 49 built-in" /></td>
-<td width="50%"><img src="assets/card-marshal.svg" width="100%" alt="Marshal: single-session commander. Chains skills autonomously and enforces quality gates between steps" /></td>
+<td width="50%"><img src="assets/card-skill.svg" width="100%" alt="Skill - a focused workflow for one domain" /></td>
+<td width="50%"><img src="assets/card-marshal.svg" width="100%" alt="Marshal - coordinates several workflows in one session" /></td>
 </tr>
 <tr>
-<td width="50%"><img src="assets/card-archon.svg" width="100%" alt="Archon: multi-session campaign planner. Campaigns survive across sessions with state written to disk" /></td>
-<td width="50%"><img src="assets/card-fleet.svg" width="100%" alt="Fleet: parallel coordinator. Two to three agents per wave in isolated git worktrees with shared discoveries" /></td>
+<td width="50%"><img src="assets/card-archon.svg" width="100%" alt="Archon - manages work that continues across sessions" /></td>
+<td width="50%"><img src="assets/card-fleet.svg" width="100%" alt="Fleet - coordinates parallel agents in isolated worktrees" /></td>
 </tr>
 </table>
 
-## Core Features
+- **Skill:** one focused task, such as a review or refactor.
+- **Marshal:** several related tasks completed in one session.
+- **Archon:** a campaign that persists across multiple sessions.
+- **Fleet:** parallel work with explicit ownership and shared discoveries.
 
-| Capability | What you get | Docs |
-|---|---|---|
-| **Durable memory** | Campaigns, discoveries, intake, and telemetry live in `.planning/`, so work resumes after a fresh thread or context reset | [Campaigns](docs/CAMPAIGNS.md) |
-| **`/do` routing** | Describe the task once; pattern, state, and keyword tiers resolve most requests for zero tokens | [Routing preview](docs/ROUTING_PREVIEW.md) |
-| **Safety hooks** | <!-- GENERATED: hook-script-count -->35<!-- /GENERATED --> Node hook scripts across <!-- GENERATED: hook-event-count -->29<!-- /GENERATED --> lifecycle events protect files, gate risky actions, and record handoffs | [Hooks](docs/HOOKS.md) |
-| **Cost telemetry** | `/cost` and `/dashboard` show real token usage and session spend instead of guesses | [Reports](docs/REPORT_ARTIFACTS.md) |
-| **Product evidence** | Local activation stages and authenticated GitHub traffic snapshots separate attention and discovery sources from verified use without hosted analytics | [Activation metrics](docs/ACTIVATION_METRICS.md) |
-| **Operations Protocol** | Six strict contracts, durable journals, recovery, receipts, and a conformance runner make work portable and inspectable | [Protocol](docs/OPERATIONS_PROTOCOL.md) |
-| **Operation Fork** | Run one objective through Claude Code and Codex in isolated worktrees, compare signed evidence, select without merging, and export a redacted replay | [Operation Fork](docs/OPERATION_FORK.md) |
-| **Outcome Packs** | Three first-party Packs package useful journeys with permissions, dependencies, stopping conditions, and proof | [Packs](docs/PACKS.md) |
-| **GitHub verification Action** | A narrow read-only Action runs a declared workflow and emits an honest Operations Protocol receipt | [Action](docs/ACTION.md) |
-| **Golden-path verification** | A hosted 30/30 Claude/Codex × Windows/Linux/macOS fixture grid proves install, setup, route, verification, handoff, resume, and exact rollback while labeling human evidence separately | [Golden path](docs/GOLDEN_PATH.md) |
-| **Actionable Mission Control** | Ten schema-1 views plus authorized operation controls and runtime-fork selection; missing data stays `unknown`, never false green | [Dashboard spec](docs/DASHBOARD_SPEC.md) |
-| **Product benchmark** | Ten frozen bare-versus-harnessed scenarios preserve symmetric inputs, raw runs, negative results, and an explicit open utility gate | [Benchmark](docs/BENCHMARK.md) |
-| **Skill interoperability** | A digested external `SKILL.md` fixture installs unchanged under Claude and Codex projections, routes, verifies, emits local telemetry, hands off, and rolls back | [Interoperability](docs/INTEROPERABILITY.md) |
-| **Operator console** | `/do next` is a decision-first cockpit: current state, next action, risk boundary, verification profile | [Operating loop](docs/OPERATING_LOOP_PROOF.md) |
-| **Parallel fleets** | Broad work decomposes across agents in isolated worktrees, with discoveries shared between waves | [Fleet](docs/FLEET.md) |
-| **Skills** | <!-- GENERATED: skill-count -->49<!-- /GENERATED --> built-in skills covering review, refactor, tests, QA, telemetry, and setup; write your own in one file | [Skills](docs/SKILLS.md) |
-| **Repeatable setup** | Runtime-specific installers plus `/do setup --express` produce the same project state on Codex and Claude Code | [Install](INSTALL.md) |
+You can invoke these directly, but `/do` is the normal entry point.
 
-## Why Citadel Exists
+### 3. Verify and preserve the result
 
-Claude Code and Codex made local agentic development practical. The next problem is operational: making those agents reliable across real projects, repeated sessions, and larger tasks. Without a harness, you keep solving the same coordination problems by hand:
+<img src="assets/loop-flow.svg" width="100%" alt="The Citadel lifecycle: route, execute, protect, verify, record, and resume" />
 
-- Re-explaining architecture and project conventions in every session.
-- Choosing between review, debugging, refactor, test generation, or planning workflows yourself.
-- Losing decisions and discoveries when context compresses or a session ends.
-- Manually splitting large tasks across branches or worktrees.
-- Rebuilding safety rules, cost checks, and handoff discipline in prompts.
+Hooks apply the repository's safety rules, capture verification results, and write the handoff and next action to disk. A later session reads that state before deciding what to do next.
 
-Citadel adds the missing layer around the runtime: persistent state, intent routing, lifecycle enforcement, telemetry, and coordinated multi-agent execution. The priority is reliability over novelty: easier to install, easier to verify, harder to misuse.
+## Files added to a project
 
-## Built in the Open
+Citadel keeps operational state separate from application code:
 
-Everything described above ships in this repository:
+```text
+.planning/                 Campaigns, operations, fleet sessions, intake, and telemetry
+.citadel/scripts/          Project-local coordination and reporting utilities
+.claude/agent-context/     Rules supplied to delegated agents
+.claude/harness.json       Project configuration generated by setup
+```
 
-- <!-- GENERATED: skill-count -->49<!-- /GENERATED --> skills under [`skills/`](skills/), hook source under [`hooks_src/`](hooks_src/), runtime adapters under [`runtimes/`](runtimes/), installers and verification under [`scripts/`](scripts/).
-- Trust boundaries are documented in [SECURITY.md](SECURITY.md) and [THREAT_MODEL.md](THREAT_MODEL.md): local automation risk, generated state, hooks, approval gates, and public-artifact review.
-- The [loop contract](docs/LOOP_CONTRACT.md) makes repeated agent workflows inspectable, with shared budgets, verifiers, and stop conditions.
-- CI runs the full local verification suite on every push. Run it yourself from a clone:
+Runtime-specific adapters may also create Claude Code or Codex configuration files. The [installation guide](INSTALL.md) lists each generated path and the rollback procedure.
+
+## Verification and scope
+
+The automated suite covers hooks, skills, generated runtime artifacts, operation contracts, recovery, receipts, Packs, the GitHub Action, and full pre-tool/post-tool sequences. The [golden-path matrix](docs/GOLDEN_PATH.md) checks installation, setup, routing, verification, handoff, resume, and rollback for Claude Code and Codex fixtures across Windows, Linux, and macOS.
+
+Run the repository checks locally with:
 
 ```bash
 npm test
 ```
 
-## Roadmap
+Fixture results verify Citadel's contracts; they do not measure human adoption or guarantee the quality of an agent's code. Citadel operates with the permissions of the underlying runtime, and consequential changes still require review. See the [security model](SECURITY.md), [threat model](THREAT_MODEL.md), and [external milestone gates](docs/EXTERNAL_MILESTONE_GATES.md) for the boundaries.
 
-The full plan with exit criteria lives in [docs/ROADMAP.md](docs/ROADMAP.md). The arc is now to make operations portable across runtimes, prove outcomes honestly, and keep every consequential action under operator control.
+If Citadel has completed a real task in your repository, `node .citadel/scripts/activation-telemetry.js share` creates a local, reviewable cohort bundle. Nothing is transmitted automatically. See the [activation cohort protocol](docs/PRODUCT_PROOF_TRIAL.md) before choosing whether to share it.
 
-- **See It:** the read-only local dashboard now projects nine versioned views with explicit source health. Its 1,000-file CI gate enforces <1 second cold start, <500 ms updates, <64 MB complete RSS, and <10 MB dashboard overhead. Pixel baselines and stranger comprehension remain open gates. See [docs/DASHBOARD_SPEC.md](docs/DASHBOARD_SPEC.md).
-- **Prove It:** the reproducible benchmark contract now freezes ten symmetric bare-versus-harnessed scenarios and publishes its negative fixture result. Actual runs and external scenario selection remain open. See [docs/BENCHMARK.md](docs/BENCHMARK.md).
-- **Drive It:** typed pause, resume, stop, and retry controls now use the same immutable intent contract as the MCP server. Multi-operator approvals remain an external team gate.
-- **Harden It:** durable journals, deterministic recovery, receipt signatures, team policy, and strict release provenance now ship locally. Representative real-run reliability evidence remains open.
-- **Multiply It:** the Pack alpha, three first-party Packs, conformance tooling, and local Relay seam are built. Outside authors, a hosted signed registry, a third runtime adapter, and Relay demand remain explicit external gates.
+## Documentation
 
-## Learn More
+| Start here | Operate Citadel | Protocols and evaluation |
+|---|---|---|
+| [Installation](INSTALL.md) | [Campaigns](docs/CAMPAIGNS.md) | [Operation Fork](docs/OPERATION_FORK.md) |
+| [Demo workflow](DEMO.md) | [Fleet coordination](docs/FLEET.md) | [Operations Protocol](docs/OPERATIONS_PROTOCOL.md) |
+| [Interactive routing demo](https://sethgammon.github.io/Citadel/) | [Skills](docs/SKILLS.md) | [Outcome Packs](docs/PACKS.md) |
+| [Routing preview](docs/ROUTING_PREVIEW.md) | [Hooks](docs/HOOKS.md) | [GitHub verification Action](docs/ACTION.md) |
+| [Choosing Citadel](docs/CHOOSING_CITADEL.md) | [Reports and telemetry](docs/REPORT_ARTIFACTS.md) | [Golden-path verification](docs/GOLDEN_PATH.md) |
+| [CLI reference](docs/CLI.md) | [Mission Control](docs/DASHBOARD_SPEC.md) | [Product benchmark](docs/BENCHMARK.md) |
+| [FAQ below](#faq) | [Operation recovery](docs/OPERATION_RECOVERY.md) | [Roadmap](docs/ROADMAP.md) |
 
-- [Install and first run](INSTALL.md) - setup, first-run paths, and troubleshooting for both runtimes
-- [Demo workflow](DEMO.md) - copyable operating-loop demo for a real repo
-- [Interactive routing demo](https://sethgammon.github.io/Citadel/) - watch the tier cascade animate
-- [Lab report: 103 days in](docs/LAB_REPORT.md) - the real numbers, what the platforms absorbed, and what survived
-- [Routing preview guide](docs/ROUTING_PREVIEW.md) - compare Skill, Marshal, Archon, and Fleet before heavier work
-- [Skills reference](docs/SKILLS.md) - all built-in skills with invocation and examples
-- [Hooks reference](docs/HOOKS.md) - lifecycle events and enforcement behavior
-- [Campaign guide](docs/CAMPAIGNS.md) - persistent state, phases, and handoffs
-- [Fleet guide](docs/FLEET.md) - parallel agents, worktree isolation, discovery relay
-- [Operating loop proof](docs/OPERATING_LOOP_PROOF.md) - evidence checklist for demos and PRs
-- [Activation and acquisition metrics](docs/ACTIVATION_METRICS.md) - local funnel privacy, GitHub traffic history, and honest interpretation
-- [Golden path verification](docs/GOLDEN_PATH.md) - deterministic runtime fixtures, cross-OS matrix rules, and human-proof boundaries
-- [Product benchmark](docs/BENCHMARK.md) - frozen methodology, raw fixture evidence, negative results, and remaining real-run gates
-- [Activation cohort](docs/PRODUCT_PROOF_TRIAL.md) - one-command opt-in bundle, explicit denominators, decision thresholds, and seven-day return protocol
-- [Operations Protocol](docs/OPERATIONS_PROTOCOL.md) - contracts, compatibility, conformance, and privacy boundaries
-- [Outcome Packs](docs/PACKS.md) - manifests, permissions, dependency safety, journeys, and certification
-- [GitHub verification Action](docs/ACTION.md) - bounded inputs, receipts, and least-privilege usage
-- [External milestone gates](docs/EXTERNAL_MILESTONE_GATES.md) - machine-readable thresholds that cannot be satisfied by fixtures
-- [Reliability learning](docs/RELIABILITY_LEARNING.md) - consented dataset sufficiency, held-out evidence, and non-automatic recommendations
-- [Interoperability](docs/INTEROPERABILITY.md) - external skill compatibility, provenance limits, and remote registry boundaries
-- [Citadel 1.1 product-proof scorecard](docs/PRODUCT_PROOF_REPORT.md) - what is locally proven, CI-proven, human-proven, and still blocked
-- [Skill and memory visibility](docs/SKILL_MEMORY_VISIBILITY.md) - inspect available skills and compiled project memory
-- [Public positioning](docs/PUBLIC_POSITIONING.md) - how to describe Citadel without overclaiming
-- [Choosing Citadel](docs/CHOOSING_CITADEL.md) - an honest comparison with Superpowers, CrewAI, LangChain, LangGraph, and Deep Agents
-- [Security model](SECURITY.md) - path traversal, shell injection, and defensive measures
-- [Contributing](CONTRIBUTING.md) - issues, PRs, skills, and docs
+The complete documentation index is available in [`docs/`](docs/).
 
 ## FAQ
 
 <details>
-<summary><strong>Is this for me?</strong></summary>
+<summary><strong>Who is Citadel for?</strong></summary>
 
 <br>
 
-If you use Claude Code or Codex on a real repository and keep hitting context loss, repeated setup, weak handoffs, or manual coordination overhead, yes. Citadel is most useful once you have repeated workflows.
-
-</details>
-
-<details>
-<summary><strong>How is this different from <code>CLAUDE.md</code> or <code>AGENTS.md</code>?</strong></summary>
-
-<br>
-
-Those files describe your project. Citadel adds the operating layer around the agent: routing, memory, hooks, telemetry, and parallel coordination.
+Developers using Claude Code or Codex on repositories where work spans repeated tasks, multiple sessions, portable operations, or parallel changes. A single short coding task usually does not need a harness.
 
 </details>
 
@@ -341,59 +254,43 @@ Those files describe your project. Citadel adds the operating layer around the a
 
 <br>
 
-Citadel operates Claude Code and Codex inside an existing repository. Superpowers supplies a disciplined development methodology and can run alongside Citadel. CrewAI, LangChain, and LangGraph are for building your own agent applications or runtimes. See [Choosing Citadel](docs/CHOOSING_CITADEL.md) for the honest boundaries and cases where another tool is the better fit.
+Citadel operates coding agents inside an existing repository. Superpowers provides a development methodology and can run alongside Citadel. CrewAI, LangChain, and LangGraph are frameworks for building agent applications or runtimes. The [comparison guide](docs/CHOOSING_CITADEL.md) covers cases where another tool is a better fit.
 
 </details>
 
 <details>
-<summary><strong>Do I need to learn all <!-- GENERATED: skill-count -->49<!-- /GENERATED --> skills?</strong></summary>
+<summary><strong>Do I need to learn every skill or operation command?</strong></summary>
 
 <br>
 
-No. Use `/do` and describe what you want. Direct skill commands are available when you want explicit control.
+No. Start with `/do` and describe the outcome you want. Operation commands are for work that specifically needs durable contracts, receipts, or runtime comparison.
 
 </details>
 
 <details>
-<summary><strong>How much token overhead does it add?</strong></summary>
+<summary><strong>Does Citadel work on Windows?</strong></summary>
 
 <br>
 
-Skills cost zero when not loaded. Router tiers 0-2 are local checks; Tier 3 uses a small LLM classification only when needed. Use `/cost` to inspect real usage.
+Yes. The hooks and scripts run on Node.js, and the Codex installer includes Windows-specific readiness checks.
 
 </details>
 
 <details>
-<summary><strong>Does it work on Windows?</strong></summary>
+<summary><strong>How do I remove it?</strong></summary>
 
 <br>
 
-Yes. Hooks and scripts run on Node.js, and the Codex installer includes Windows readiness checks.
+Use `/unharness` to export useful state and remove Citadel-managed project files. The [installation guide](INSTALL.md) also documents exact rollback paths.
 
 </details>
 
-## Community
+## Community and contributing
 
-- [Help test Citadel 1.1](https://github.com/SethGammon/Citadel/discussions/182) - independent benchmark review, first-time-user trials, and return-use evidence
-- [GitHub Discussions](https://github.com/SethGammon/Citadel/discussions) - questions, use cases, bugs, and workflow requests
-- [X / Twitter](https://x.com/SethGammon) - project updates
-
-### Star History
-
-<a href="https://www.star-history.com/#SethGammon/Citadel&Date">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=SethGammon/Citadel&type=Date&theme=dark" />
-    <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=SethGammon/Citadel&type=Date" />
-    <img src="https://api.star-history.com/svg?repos=SethGammon/Citadel&type=Date" alt="Star history chart for SethGammon/Citadel" width="100%" />
-  </picture>
-</a>
-
-### Contributors
-
-<a href="https://github.com/SethGammon/Citadel/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=SethGammon/Citadel" alt="Contributor avatars" />
-</a>
+- [GitHub Discussions](https://github.com/SethGammon/Citadel/discussions) for questions, use cases, and workflow requests
+- [Contributing guide](CONTRIBUTING.md) for issues, pull requests, skills, and documentation
+- [Activation cohort protocol](docs/PRODUCT_PROOF_TRIAL.md) for optional, privacy-bounded real-use evidence
 
 ## License
 
-MIT
+[MIT](LICENSE)
