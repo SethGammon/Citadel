@@ -52,11 +52,12 @@ assert(manifest.files.includes('core/'));
 assert(manifest.files.includes('.planning/_templates/'));
 assert(!manifest.files.includes('.planning/'), 'operational planning state must not be published wholesale');
 
+const markerFreeFs = { existsSync: () => false };
 assert.deepEqual(cli.detectRuntime(['--runtime', 'claude']), { runtime: 'claude', source: 'argument' });
 assert.deepEqual(cli.detectRuntime([], { env: { CITADEL_RUNTIME: 'codex' } }), { runtime: 'codex', source: 'environment' });
-assert.deepEqual(cli.detectRuntime([], { env: {}, probe: (command) => command === 'claude' }), { runtime: 'claude', source: 'command' });
-assert.throws(() => cli.detectRuntime([], { env: {}, probe: () => true }), (error) => error.code === cli.CODE.RUNTIME_AMBIGUOUS);
-assert.throws(() => cli.detectRuntime([], { env: {}, probe: () => false }), (error) => error.code === cli.CODE.RUNTIME_NOT_FOUND);
+assert.deepEqual(cli.detectRuntime([], { env: {}, fsImpl: markerFreeFs, probe: (command) => command === 'claude' }), { runtime: 'claude', source: 'command' });
+assert.throws(() => cli.detectRuntime([], { env: {}, fsImpl: markerFreeFs, probe: () => true }), (error) => error.code === cli.CODE.RUNTIME_AMBIGUOUS);
+assert.throws(() => cli.detectRuntime([], { env: {}, fsImpl: markerFreeFs, probe: () => false }), (error) => error.code === cli.CODE.RUNTIME_NOT_FOUND);
 
 const markerRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'citadel-cli-marker-'));
 fs.mkdirSync(path.join(markerRoot, '.codex'));
