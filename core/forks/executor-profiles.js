@@ -175,6 +175,20 @@ function executorSetDigest(file) {
   return operations.sha256Digest(normalized.executors.map(executorProfileDigest));
 }
 
+function branchResultDigest(result) {
+  if (!result || typeof result !== 'object' || Array.isArray(result)) {
+    throw new TypeError('Branch result is required for digest binding');
+  }
+  return operations.sha256Digest({
+    status: result.status,
+    evidence_summary: result.evidence_summary,
+    diff_summary: result.diff_summary,
+    duration_ms: result.duration_ms,
+    cost: result.cost,
+    failure_code: result.failure_code,
+  });
+}
+
 function synthesizeLegacyExecutors(runtimes) {
   if (!Array.isArray(runtimes) || !runtimes.length || new Set(runtimes).size !== runtimes.length
     || runtimes.some((runtime) => !EXECUTOR_RUNTIMES.includes(runtime))) {
@@ -491,6 +505,7 @@ module.exports = Object.freeze({
   assertValidExecutorProfile,
   bindExecutorProfiles,
   branchIdForProfile,
+  branchResultDigest,
   createForkReceiptWrapper,
   evaluateModelProof,
   executorProfileDigest,

@@ -63,6 +63,8 @@ Direction: Turn Operation Fork from a dual-runtime primitive into a reproducible
 - 2026-07-13: Agent branch ownership is a runtime postcondition. Citadel snapshots every assigned worktree and fails closed if an executor removes a worktree, changes its branch, or changes its HEAD outside the allowed task result.
 - 2026-07-13: Codex CLI was upgraded to 0.144.3 so the configured `gpt-5.6-sol` model can be exercised. Legacy Codex keeps user configuration; explicit schema 2 profiles may override the model.
 - 2026-07-13: The fresh live fork receives one bounded product objective: implement a deterministic `fork proof` report over the already redacted replay and freshly verified executor evidence. The frozen acceptance test requires exact fields, honest evidence counts, deterministic digests, CLI export, and no local path disclosure.
+- 2026-07-14: The external dual-vendor run remains permission-gated because it sends the isolated worktree and relevant code context to authenticated Claude and OpenAI services. The rejected launch created no process or fork state. Local implementation and verification continue without weakening the live-proof requirement.
+- 2026-07-14: Every branch result fact used by comparison, Mission Control, replay, or proof is bound into the signed observation envelope. Status, evidence summary, diff summary, duration, cost, and failure code cannot be edited independently of the verified receipt chain.
 
 ## Feature Ledger
 
@@ -73,6 +75,9 @@ Direction: Turn Operation Fork from a dual-runtime primitive into a reproducible
 - Phase 2 recovery: implementation candidate preserved from failed fork as commit `cdf2558`, then independently hardened against signer substitution, receipt and telemetry tampering, stale comparison, Windows npm shim execution, public replay leakage, and worktree escape.
 - Full strict repository verification passes from the hardened candidate: every suite in `node scripts/test-all.js --strict` passed in 110.8 seconds.
 - Phase 2 live-proof acceptance is frozen in `scripts/test-operation-fork-proof.js` and registered in the strict suite. It currently exits only with `OPERATION_FORK_PROOF_NOT_IMPLEMENTED`.
+- Local recovery implementation: `fork proof` now produces a deterministic redacted report with exact branch, comparable, verified-receipt, and model-proof denominators. The frozen acceptance test passes.
+- Evidence hardening: operation digest, run ID, receipt status, telemetry, and the complete branch result are rechecked against signed bindings before comparison or display. Adversarial receipt, telemetry, signer, and manifest edits fail closed.
+- Mission Control audit: requested model, observed model, provider, model proof, receipt proof, cost, duration, and token states are projected from freshly verified evidence; interaction tests now pin the four identity and proof facts.
 
 ## Exit Evidence
 
@@ -87,21 +92,21 @@ Direction: Turn Operation Fork from a dual-runtime primitive into a reproducible
 
 ## Active Context
 
-Phase 2 is active. The first live attempt failed containment and is preserved as negative evidence. The recovered implementation has passed focused and repository-wide strict verification. Next action: checkpoint the hardened candidate, then execute a fresh sequential Claude Code and Codex fork from that exact revision with explicit profiles and immutable containment checks.
+Phase 2 is active. The first live attempt failed containment and is preserved as negative evidence. The recovered implementation plus local proof-report and branch-result binding passes focused verification. Next action: run the full strict gate, checkpoint the local hardening, then execute a fresh sequential Claude Code and Codex fork after explicit external disclosure approval.
 
 ## Continuation State
 
 - current_phase: 2
-- current_substep: checkpoint hardened recovery and execute fresh live implementation fork
+- current_substep: verify and checkpoint local proof implementation while live vendor execution awaits approval
 - worktree: `C:\tmp\citadel-executor-profiles`
 - branch: `codex/citadel-executor-profiles`
 - baseline_commit: `cdf25581b45b2096d1f8b1a590cfba0836fe26af`
 - checkpoint-phase-1: `d4d82d5`
 - checkpoint-bootstrap: `e7d86a2`
 - checkpoint-recovered-candidate: `cdf2558`
-- files_modified: fork runtime, contracts, store, evidence, lifecycle, launcher, worktree containment, executor-profile documentation, campaign state, and adversarial tests
-- blockers: none
-- next_actions: commit hardened recovery; create a bounded live workflow; execute Claude and Codex sequentially with explicit profiles; preserve receipts, diffs, comparison, and negative evidence
+- files_modified: proof builder, fork CLI, evidence binding, executor profiles, Mission Control contract tests, documentation, campaign state, and adversarial tests
+- blockers: explicit approval is required before sending isolated worktree context to authenticated Claude and OpenAI services
+- next_actions: run strict verification; commit local proof and evidence hardening; obtain disclosure approval; execute Claude and Codex sequentially with explicit profiles; preserve receipts, diffs, comparison, and negative evidence
 
 <!-- session-end: 2026-07-14T02:06:26.490Z -->
 

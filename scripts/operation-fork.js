@@ -17,6 +17,7 @@ Commands:
   land plan ID
   land apply ID --expected-revision N --target-revision SHA --confirm TOKEN --idempotency-key KEY
   replay ID [--output FILE]
+  proof ID [--output FILE]
 
 start creates contained worktrees and executes every executor unless --no-execute
 is passed. --executors selects strict model and provider profiles (see
@@ -163,6 +164,19 @@ function main(args = process.argv.slice(2)) {
       fs.writeFileSync(target, `${JSON.stringify(replay.replay, null, 2)}\n`);
       write({ ok: true, command: 'fork replay', output: target, digest: replay.digest });
     } else write({ ok: true, command: 'fork replay', digest: replay.digest, replay: replay.replay });
+    return 0;
+  }
+  if (command === 'proof') {
+    const forkId = positional(rest)[0];
+    const fork = forks.loadFork(root, forkId);
+    const proof = forks.buildProofReport(fork, forks.readEvents(root, forkId),
+      { evidence: forks.forkEvidence(root, fork) });
+    const output = value(rest, '--output');
+    if (output) {
+      const target = path.resolve(output);
+      fs.writeFileSync(target, `${JSON.stringify(proof.report, null, 2)}\n`);
+      write({ ok: true, command: 'fork proof', output: target, digest: proof.digest });
+    } else write({ ok: true, command: 'fork proof', digest: proof.digest, report: proof.report });
     return 0;
   }
   throw Object.assign(new Error(`Unknown fork command: ${command}`), { code: 'FORK_COMMAND_UNKNOWN' });

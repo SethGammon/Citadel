@@ -51,7 +51,7 @@ chosen workflow in private fork state so `citadel fork resume ID` does not depen
 on the original command or context window.
 
 `citadel fork status`, `citadel fork compare`, `citadel fork select`,
-`citadel fork land`, and `citadel fork replay` continue the same durable fork.
+`citadel fork land`, `citadel fork replay`, and `citadel fork proof` continue the same durable fork.
 The Mission Control view exposes the same actions and state.
 
 ### Executor profiles
@@ -167,6 +167,21 @@ Replay excludes raw prompts, source code, diffs, repository identity, local
 paths, environment values, credentials, command output, signature material, and
 free-form operator reasons. Export fails closed if a non-allowlisted field or
 secret-like value reaches the public projection.
+
+### Bounded proof report
+
+`citadel fork proof ID [--output FILE]` builds a deterministic public artifact
+from the redacted replay and the same freshly verified evidence used by compare.
+It adds exact branch, comparable, verified-receipt, and model-proof counts plus
+the comparison outcome and recommendation. The report embeds the redacted
+replay, binds it by digest, and applies the same path and secret rejection.
+
+The report never reads a stored `trusted: true` flag as proof. Receipt counts
+come only from evidence reloaded and cryptographically verified for the current
+fork contract. The same signed envelope binds every branch result field used by
+comparison or display, so changing a score, status, diff, duration, cost, or
+failure code invalidates the branch. Missing evidence remains `unknown`, contributes to the explicit
+denominator, and cannot become a verified receipt or model pass.
 
 ## Runtime adapters
 

@@ -188,8 +188,11 @@ signature is changed.
 Stored wrappers are untrusted input. `compare`, `select`, `land`, and Mission
 Control must reload the contract-bound public key, independently verify the
 underlying execution receipt, verify the wrapper, and match every binding. The
-signed observation digest binds parsed model and usage telemetry. A stored
-`receipt_verified: true` or `trusted: true` flag is never sufficient by itself.
+signed observation digest binds parsed model and usage telemetry plus a digest
+of the complete branch result used by comparison: status, evidence summary,
+diff summary, duration, cost, and failure code. Editing any comparison or
+display fact invalidates the branch. A stored `receipt_verified: true` or
+`trusted: true` flag is never sufficient by itself.
 
 Before verification, Citadel rechecks the parent and every assigned worktree.
 Their registered paths, branch refs, and HEAD revisions must match the pre-run

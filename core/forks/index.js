@@ -10,6 +10,7 @@ module.exports = Object.freeze({
   ...require('./evidence'),
   ...require('./orchestrator'),
   ...require('./replay'),
+  ...require('./proof'),
   ...require('./runtime'),
   ...require('./store'),
   ...require('./worktrees'),

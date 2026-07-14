@@ -142,6 +142,20 @@ for (const forbidden of ['signature', 'signing', 'raw_output', 'command', 'args'
 }
 assert(replay.serialized.includes('qwen3-coder:30b'), 'replay must state the requested model');
 
+// The bounded proof report summarizes only the freshly verified public replay.
+const proof = forks.buildProofReport(forks.loadFork(project, 'fork-executors'),
+  forks.readEvents(project, 'fork-executors'),
+  { evidence: forks.forkEvidence(project, forks.loadFork(project, 'fork-executors')) });
+assert.equal(proof.report.summary.branch_count, 3);
+assert.equal(proof.report.summary.comparable_count, 3);
+assert.equal(proof.report.summary.verified_receipt_count, 3);
+assert.deepEqual(proof.report.summary.model_proof_counts, { passed: 1, failed: 1, unknown: 1 });
+const repeatedProof = forks.buildProofReport(forks.loadFork(project, 'fork-executors'),
+  forks.readEvents(project, 'fork-executors'),
+  { evidence: forks.forkEvidence(project, forks.loadFork(project, 'fork-executors')) });
+assert.equal(repeatedProof.digest, proof.digest);
+assert.equal(repeatedProof.serialized, proof.serialized);
+
 // A tampered stored wrapper can never be selected, however the record looks.
 const wrapperFile = path.join(project, '.planning', 'operation-forks', 'fork-executors', 'receipts',
   'branch-claude-sonnet.fork.json');
@@ -155,6 +169,11 @@ const tamperedComparison = forks.compareFork(tamperedFork,
 const tamperedBranch = tamperedComparison.branches.find((branch) => branch.branch_id === 'branch-claude-sonnet');
 assert.equal(tamperedBranch.comparable, false);
 assert(tamperedBranch.reasons.includes('fork-receipt-unverified'));
+const tamperedProof = forks.buildProofReport(tamperedFork, forks.readEvents(project, 'fork-executors'),
+  { evidence: forks.forkEvidence(project, tamperedFork) });
+assert.equal(tamperedProof.report.summary.verified_receipt_count, 2);
+assert.equal(tamperedProof.report.summary.comparable_count, 2);
+assert.deepEqual(tamperedProof.report.summary.model_proof_counts, { passed: 0, failed: 1, unknown: 2 });
 assert.throws(() => forks.applySelection({ projectRoot: project, forkId: 'fork-executors',
   branchId: 'branch-claude-sonnet', expectedRevision: tamperedFork.revision, actorId: 'actor-test',
   idempotencyKey: 'select-tampered-001', reason: 'tampered' }), /verified/i);
@@ -194,6 +213,25 @@ fs.writeFileSync(telemetryFile, `${JSON.stringify(telemetryTampered, null, 2)}\n
 assert.notEqual(forks.forkEvidence(project, forks.loadFork(project, 'fork-executors'))
   .get('branch-claude-sonnet').verification.status, 'verified');
 fs.writeFileSync(telemetryFile, telemetryOriginal);
+
+// Comparison and display facts are digest-bound through the signed telemetry.
+// Editing the public fork record cannot preserve a verified branch.
+const manifestFile = path.join(project, '.planning', 'operation-forks', 'fork-executors', 'fork.json');
+const manifestOriginal = fs.readFileSync(manifestFile, 'utf8');
+const manifestTampered = JSON.parse(manifestOriginal);
+manifestTampered.branches.find((branch) => branch.branch_id === 'branch-claude-sonnet')
+  .evidence_summary.status = 'failed';
+fs.writeFileSync(manifestFile, `${JSON.stringify(manifestTampered, null, 2)}\n`);
+const resultTamperedFork = forks.loadFork(project, 'fork-executors');
+const resultTamperedEvidence = forks.forkEvidence(project, resultTamperedFork);
+const resultTamperedBranch = resultTamperedEvidence.get('branch-claude-sonnet');
+assert.equal(resultTamperedBranch.verification.status, 'invalid');
+assert.equal(resultTamperedBranch.verification.reason_code, 'FORK_BRANCH_RESULT_DIGEST_MISMATCH');
+const resultTamperedProof = forks.buildProofReport(resultTamperedFork,
+  forks.readEvents(project, 'fork-executors'), { evidence: resultTamperedEvidence });
+assert.equal(resultTamperedProof.report.summary.verified_receipt_count, 2);
+assert.equal(resultTamperedProof.report.summary.comparable_count, 2);
+fs.writeFileSync(manifestFile, manifestOriginal);
 
 // A verified branch selects, and landing still refuses to run without a fresh
 // verification of that same binding.

@@ -13,7 +13,9 @@ const {
 } = require('./lifecycle');
 const { compareFork } = require('./compare');
 const { EXECUTOR_FORK_SCHEMA_VERSION } = require('./contracts');
-const { createForkReceiptWrapper, executorProfileDigest, resolveExecutorSelection } = require('./executor-profiles');
+const {
+  branchResultDigest, createForkReceiptWrapper, executorProfileDigest, resolveExecutorSelection,
+} = require('./executor-profiles');
 const { forkEvidence, loadExecutorProfiles, verifyBranchEvidence } = require('./evidence');
 const { generateSigningKey, runRuntimeBranch } = require('./runtime');
 const { createGitWorktreeProvider } = require('./worktrees');
@@ -132,6 +134,7 @@ function recordBranchEvidence(projectRoot, fork, branch, profile, result, signin
     duration_ms: observation && observation.duration_ms !== undefined ? observation.duration_ms : null,
     tokens: observation && observation.tokens !== undefined ? observation.tokens : null,
     source: observation && observation.source ? observation.source : 'adapter-silent',
+    branch_result_digest: branchResultDigest(result),
   };
   writeExecutorTelemetry(projectRoot, fork.fork_id, branch.branch_id, telemetry);
   const wrapper = createForkReceiptWrapper({
