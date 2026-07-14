@@ -1,17 +1,18 @@
-# Citadel Mission Control Specification (schema 1 views, immutable intent actions)
+# Citadel Mission Control Specification (schema 1 views, typed local actions)
 
 `citadel dashboard` (also `npm run dashboard:web`) serves a local web app that renders the
 project's `.planning/` state and telemetry live. It is the visible form of the harness:
-campaigns, operations, fleet, loops, hooks, costs, and handoffs in one glanceable surface.
+campaigns, operations, runtime forks, fleet, loops, hooks, costs, and handoffs in one glanceable surface.
 
-This document specifies the schema-1 projection and the narrow Operations Protocol intent surface.
+This document specifies the schema-1 projection, the narrow Operations Protocol intent surface,
+and revision-bound Operation Fork selection.
 Roadmap context lives in [ROADMAP.md](ROADMAP.md) R1 and R3.
 
 ## Principles
 
 1. **Files are canonical.** The dashboard is a view over `.planning/` markdown and JSON plus
-   telemetry JSONL. Deleting the dashboard loses nothing. Accepted actions are immutable intent
-   files, not private dashboard state.
+   telemetry JSONL. Deleting the dashboard loses nothing. Accepted operation controls are immutable
+   intent files. Fork selection uses the same canonical fork manifest as the CLI.
 2. **One contract for terminal and browser.** Browser actions write Operations Protocol intent
    files into `.planning/intents/pending/` that authorized executors may consume. The dashboard never gets a private API
    into the runtime; if the terminal cannot do it through files, neither can the browser.
@@ -32,6 +33,7 @@ scripts/dashboard-server.js     Node, stdlib only, no new runtime deps
   ├── normalizers (core/…)      parse-campaign, loops, fleet, telemetry readers
   ├── GET /api/*                normalized JSON snapshots
   ├── POST /api/intents         validated immutable pause/resume/stop/retry intents
+  ├── POST /api/fork-selections revision-bound selection only, never landing
   ├── GET /api/events           SSE: push invalidation keys on file change
   └── static /                  single-bundle SPA (no CDN, works offline)
 ```
@@ -58,6 +60,7 @@ input is `unreadable`, and neither may be presented as a green zero.
 | `/api/overview` | all below | `{ needs_you: Item[], active: {campaigns, fleet_agents, loops}, cost_today, last_verify }` |
 | `/api/campaigns` | `.planning/campaigns/*.md` | `[{ id, title, status, phase: {n, of, title}, progress, started_at, last_handoff, evidence }]` |
 | `/api/fleet` | `.planning/fleet/` | `[{ session, agents: [{ name, scope, worktree, status, last_discovery }], wave, merge_queue }]` |
+| `/api/forks` | `.planning/operation-forks/*/fork.json` | fork revision, branch proof summaries, deterministic comparison, selection, and landing state |
 | `/api/loops` | `.planning/loops/*.json`, `daemon.json` | `[{ id, type, trigger, budget: {kind, total, spent}, verifier, last_run: {at, status}, stop_state }]` |
 | `/api/hooks/feed` | telemetry JSONL | last N hook events: `{ at, event, decision, reason, target }` (blocks first) |
 | `/api/handoffs` | `.planning/handoffs/`, campaign records | timeline of `{ at, campaign, summary, path }` |
@@ -67,7 +70,7 @@ input is `unreadable`, and neither may be presented as a green zero.
 
 ## Action contract
 
-`POST /api/intents` is the only write endpoint. It accepts exactly:
+`POST /api/intents` accepts exactly:
 
 ```text
 operation_id, expected_revision, idempotency_key, actor, reason, capability, action
@@ -82,6 +85,18 @@ Accepted calls atomically create one immutable pending intent. They do not edit 
 campaign, or runtime file. Duplicate calls with the same key and request return the same result.
 Stale revisions return `conflict`; missing capabilities return `blocked`; unavailable or unsafe
 state returns `unknown`.
+
+`POST /api/fork-selections` accepts exactly:
+
+```text
+fork_id, branch_id, expected_revision, idempotency_key, actor, reason
+```
+
+It rejects unknown fields, stale revisions, and branches without complete verified evidence.
+An accepted request updates the canonical fork manifest with one typed selection. It returns
+`landing_effect: none`. The browser cannot prepare or apply a merge. The operator must run
+`citadel fork land plan ID`, inspect the fresh target state, and supply its exact confirmation
+token to the CLI.
 
 Mission Control projects the canonical pending queue back onto operation cards. While an intent
 is pending, the duplicate controls remain unavailable and the UI states that no lifecycle change
@@ -121,6 +136,7 @@ instruction to enable it, never zero. Provider-specific token and OTLP adapters 
 | Campaigns | cards: phase progress, status, last handoff, evidence freshness | campaign md, handoff md |
 | Operations | state, revision, next executor effect, capability-aware controls, result feedback | operation control record, immutable pending intent |
 | Fleet | agents, scopes, worktrees, wave status, merge queue preview | worktree paths, discovery log |
+| Operation Forks | side-by-side runtime evidence, honest comparison, selection, and landing boundary | receipts, public replay, canonical fork state |
 | Loops | contract cards: budget burn-down, verifier history, stop-state badge | loop JSON, review artifact |
 | Cost | tracked or estimated session and campaign spend, explicitly labeled | telemetry lines |
 | Hook feed | recent decisions, blocks first, friendly reason text | rule + target file |
@@ -164,7 +180,7 @@ to cancel a stop or retry confirmation and restore focus. Native buttons remain 
 ### Current evidence (2026-07-10)
 
 - `node scripts/test-dashboard-web.js`: healthy, initialized-empty, absent, mid-run, and
-  corrupt fixtures pass; all nine API projections return schema 1 with explicit source state.
+  corrupt fixtures pass; all ten API projections return schema 1 with explicit source state.
 - `node scripts/test-dashboard-perf.js`: deterministic 1,000-file Windows focused runs after
   update-path caching measured 251.9-717.2 ms cold and 110.8-458.4 ms invalidated updates
   in isolated runs. A deliberately concurrent local stress sample reached 1,276.0 ms, so the

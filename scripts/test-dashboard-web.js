@@ -17,6 +17,8 @@ const { EventEmitter } = require('events');
 
 const { createServer, createDataSource, deriveViews, resolveEvidencePath, startWatcher } = require('./dashboard-server');
 const { sha256Digest } = require('../core/operations');
+const operations = require('../core/operations');
+const forks = require('../core/forks');
 
 let failures = 0;
 
@@ -254,6 +256,27 @@ async function main() {
   write(httpRoot, '.planning/operations/control/operation-denied.json', JSON.stringify(
     operationRecord('operation-denied', 'running', [])));
   write(outsideRoot, 'secret.md', 'must not escape\n');
+  const forkOperation = {
+    protocol_version: operations.PROTOCOL_VERSION, kind: operations.CONTRACT_KINDS.OPERATION_SPEC,
+    operation_id: 'operation-dashboard-fork', title: 'Dashboard fork',
+    objective_digest: sha256Digest({ objective: 'dashboard fork' }), step_ids: ['step-verify'],
+    policy_digests: [], created_at: '2026-07-13T12:00:00.000Z',
+  };
+  const forkShared = { objective_digest: forkOperation.objective_digest,
+    scope_digest: sha256Digest({ scope: 'repo' }), policy_digests: [],
+    budget_digest: sha256Digest({ budget: 1 }), workflow_digest: sha256Digest({ workflow: 1 }),
+    verifier_digest: sha256Digest({ verifier: 1 }), base_revision: 'a'.repeat(40) };
+  let dashboardFork = forks.createOperationFork({ forkId: 'fork-dashboard', operation: forkOperation,
+    shared: forkShared, createdAt: '2026-07-13T12:00:00.000Z' });
+  const completeBranch = (name) => ({ status: 'passed', worktree_ref: `fork-dashboard/${name}`,
+    branch_ref: `citadel/fork-dashboard/${name}`, started_at: '2026-07-13T12:00:01.000Z',
+    completed_at: '2026-07-13T12:00:02.000Z', receipt_digest: sha256Digest({ receipt: name }),
+    evidence_summary: { status: 'passed', required: 1, present: 1, receipt_verified: true, score: null, score_max: null },
+    diff_summary: { files_changed: 1, insertions: 1, deletions: 0, digest: sha256Digest({ diff: name }) },
+    duration_ms: 1000, cost: null, failure_code: null });
+  dashboardFork = forks.updateBranch(dashboardFork, 'branch-claude', completeBranch('branch-claude'), '2026-07-13T12:00:03.000Z');
+  dashboardFork = forks.updateBranch(dashboardFork, 'branch-codex', completeBranch('branch-codex'), '2026-07-13T12:00:04.000Z');
+  forks.createForkRecord(httpRoot, dashboardFork);
   let symlinkCreated = false;
   try {
     fs.symlinkSync(path.join(outsideRoot, 'secret.md'), path.join(httpRoot, '.planning', 'handoffs', 'escape.md'), 'file');
@@ -271,7 +294,7 @@ async function main() {
     check('http: envelope carries generated_at', typeof overview.generated_at === 'string');
     check('http: envelope carries source_files', Array.isArray(overview.source_files));
 
-    for (const endpoint of ['campaigns', 'fleet', 'loops', 'hooks/feed', 'cost', 'handoffs', 'activation']) {
+    for (const endpoint of ['campaigns', 'fleet', 'forks', 'loops', 'hooks/feed', 'cost', 'handoffs', 'activation']) {
       const response = await fetch(`${base}/api/${endpoint}`).then((r) => r.json());
       check(`http: /api/${endpoint} returns schema 1`, response.schema === 1);
       check(`http: /api/${endpoint} includes projection state`, response.data && response.data.state && typeof response.data.state.status === 'string');
@@ -325,6 +348,21 @@ async function main() {
       },
       body: typeof body === 'string' ? body : JSON.stringify(body),
     });
+    const postFork = (body, headers = {}) => fetch(`${base}/api/fork-selections`, {
+      method: 'POST',
+      headers: { origin: base, 'x-citadel-nonce': control.nonce, 'content-type': 'application/json', ...headers },
+      body: JSON.stringify(body),
+    });
+    const forkSelection = { fork_id: 'fork-dashboard', branch_id: 'branch-claude',
+      expected_revision: dashboardFork.revision, idempotency_key: 'dashboard-fork-selection',
+      actor: 'actor-dashboard', reason: 'Verified in fixture' };
+    const selectedResponse = await postFork(forkSelection);
+    const selectedFork = await selectedResponse.json();
+    check('http: valid fork selection records intent without landing', selectedResponse.status === 202
+      && selectedFork.landing_effect === 'none');
+    const arbitraryForkCommand = await postFork({ ...forkSelection, idempotency_key: 'dashboard-fork-command', command: 'whoami' });
+    check('http: fork selection rejects arbitrary command fields', arbitraryForkCommand.status === 400
+      && (await arbitraryForkCommand.json()).reason_code === 'INVALID_FORK_SELECTION');
 
     const badOrigin = await post(intent, { origin: 'http://127.0.0.1:9' });
     check('http: strict origin rejects foreign callers', badOrigin.status === 403

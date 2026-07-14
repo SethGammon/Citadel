@@ -27,6 +27,7 @@ Commands:
   pack         Inspect, verify, certify, install, or remove outcome Packs
   journey      Start or complete a receipt-backed Pack journey
   receipt      Verify an operation receipt offline
+  fork         Run one operation through comparable isolated runtimes
   help         Show this help
 
 Run citadel <command> --help for command-specific help.
@@ -45,6 +46,7 @@ installed Claude Code or Codex command. Ambiguous detection fails closed.
   pack: 'Usage: citadel pack <list|inspect|verify|certify|install|installed|uninstall> [options]\n',
   journey: 'Usage: citadel journey <start|complete> --run-id ID [--pack NAME --runtime RUNTIME | --evidence FILE]\n',
   receipt: 'Usage: citadel receipt verify --input FILE [--public-key FILE]\n',
+  fork: 'Usage: citadel fork <start|resume|status|compare|select|land|replay> [options]\n',
 });
 
 function has(args, flag) {
@@ -329,6 +331,7 @@ function main(argv = process.argv.slice(2), options = {}) {
   if (command === 'pack') return child('packs.js', args, { ...context, json: has(args, '--json') });
   if (command === 'journey') return child('start-journey.js', args, { ...context, json: has(args, '--json') });
   if (command === 'receipt') return child('receipt.js', args, { ...context, json: has(args, '--json') });
+  if (command === 'fork') return child('operation-fork.js', args, { ...context, json: true });
   const error = new Error(`unknown command: ${command}`);
   error.code = CODE.COMMAND_FAILED;
   error.exitCode = EXIT.USAGE;

@@ -10,6 +10,8 @@ const {
   operationActionEffect,
   operationActionNeedsConfirmation,
   operationFeedback,
+  forkComparisonLabel,
+  forkSelectionAllowed,
 } = require('../dashboard/app');
 
 const root = path.resolve(__dirname, '..');
@@ -39,9 +41,17 @@ for (const outcome of ['pending', 'accepted', 'conflict', 'blocked', 'rejected',
   assert(operationFeedback(outcome).length > 20, `${outcome} feedback must be explicit`);
 }
 assert(operationFeedback('unknown').includes('No success is assumed'));
+const forkFixture = { status: 'ready', comparison: { outcome: 'recommended', recommendation: 'branch-claude', branches: [
+  { branch_id: 'branch-claude', comparable: true }, { branch_id: 'branch-codex', comparable: false },
+] } };
+assert.equal(forkSelectionAllowed(forkFixture, 'branch-claude'), true);
+assert.equal(forkSelectionAllowed(forkFixture, 'branch-codex'), false);
+assert.equal(forkComparisonLabel(forkFixture.comparison), 'Recommendation: branch-claude');
+assert.equal(forkComparisonLabel({ outcome: 'insufficient-evidence' }), 'Insufficient evidence');
 
 assert(app.includes("fetch('/api/control'"), 'UI must acquire the process nonce from same-origin control state');
 assert(app.includes("fetch('/api/intents'"), 'UI must use the immutable intent endpoint');
+assert(app.includes("fetch('/api/fork-selections'"), 'UI must use the typed fork selection endpoint');
 assert(app.includes("'x-citadel-nonce': session.nonce"), 'UI must send the process nonce');
 for (const field of ['operation_id', 'expected_revision', 'idempotency_key', 'actor', 'reason', 'capability', 'action']) {
   assert(new RegExp(`\\b${field}(?:\\s*:|\\s*[,}])`).test(app), `intent body must carry ${field}`);
@@ -59,12 +69,16 @@ assert(app.includes("el('button', 'control-button"), 'controls must use native k
 assert(app.includes('button.disabled = true'), 'controls must expose a pending disabled state');
 
 assert(css.includes('.confirmation-capsule'));
+assert(css.includes('.fork-branches'));
+assert(css.includes('.fork-unknown'));
 assert(css.includes('.control-button:focus-visible'));
 assert(css.includes('.feedback-conflict'));
 assert(css.includes('.feedback-blocked'));
 assert(/@media\s*\(prefers-reduced-motion:\s*reduce\)/.test(css));
 assert(/@media\s*\(max-width:\s*720px\)[\s\S]*\.operation-control\s*\{\s*grid-template-columns:\s*1fr/.test(css));
+assert(/@media\s*\(max-width:\s*720px\)[\s\S]*\.fork-branches\s*\{\s*grid-template-columns:\s*1fr/.test(css));
 assert(html.includes('immutable intents only'));
+assert(html.includes('data-panel="forks"'));
 assert(html.includes('<kbd>Esc</kbd>'));
 
 process.stdout.write('Dashboard interaction semantics passed: state, risk, keyboard, feedback, and responsive contracts.\n');

@@ -1,5 +1,11 @@
 # Citadel Interactive Product Story v2
 
+Operation Fork is now a first-class product story beside routing and durable
+resume. The page must show one objective branching into Claude Code and Codex,
+the shared contract, branch evidence, and the honest comparison outcome. A user
+must be able to switch the same fixture between complete proof and a missing
+receipt, with the latter becoming `Insufficient evidence`, never a winner.
+
 ## Experience identity
 
 | Variable | Status | Decision |

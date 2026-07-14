@@ -9,13 +9,13 @@
 [![ClaudePluginHub verified](https://img.shields.io/badge/ClaudePluginHub-verified-7c3aed.svg)](https://www.claudepluginhub.com/plugins/sethgammon-citadel)
 [![Interactive Demo](https://img.shields.io/badge/Try_the_Router-00d2ff.svg)](https://sethgammon.github.io/Citadel/)
 
-**One command routes the work. The repository remembers what happened.**
+**One command routes the work. One operation can outlive any agent.**
 
-Citadel is the open-source operating layer for Claude Code and OpenAI Codex. It adds durable project memory, cheap intent routing, verification evidence, cost telemetry, and coordinated agents in isolated git worktrees.
+Citadel is the open-source, runtime-neutral operations layer for Claude Code and OpenAI Codex. It adds durable project memory, cheap intent routing, verification evidence, cost telemetry, and coordinated agents in isolated git worktrees.
 
 If `CLAUDE.md` and `AGENTS.md` tell the runtime **what** your project is, Citadel tells the runtime **how** to operate on it.
 
-[Install](#quick-install) · [See the operating loop](#see-the-operating-loop) · [Inspect the proof](#proof-not-promises) · [Choose the right tool](docs/CHOOSING_CITADEL.md) · [Share activation proof](https://github.com/SethGammon/Citadel/discussions/182)
+[Install](#quick-install) · [Fork an operation](#run-one-objective-through-both-runtimes) · [See the operating loop](#see-the-operating-loop) · [Inspect the proof](#proof-not-promises) · [Choose the right tool](docs/CHOOSING_CITADEL.md)
 
 </div>
 
@@ -45,6 +45,7 @@ After installing, try this from your project root:
 | Hosted operating journey | 30 of 30 deterministic Claude Code and Codex journeys across Windows, Linux, and macOS | [Golden path](docs/GOLDEN_PATH.md) |
 | Missing evidence | Absent telemetry stays `unknown` instead of becoming a green check | [Dashboard contract](docs/DASHBOARD_SPEC.md) |
 | Fresh-process continuity | Campaign state and the next action reload from repository files | [Campaigns](docs/CAMPAIGNS.md) |
+| Runtime replacement | One immutable operation produces isolated Claude Code and Codex branches, signed receipts, and an evidence-bound comparison | [Operation Fork](docs/OPERATION_FORK.md) |
 
 These are bounded claims. Deterministic fixtures are not human adoption, clone operations are not retained users, and Citadel does not replace review.
 
@@ -58,9 +59,51 @@ node .citadel/scripts/activation-telemetry.js share
 
 Nothing is transmitted. The bundle contains only an opaque ID, observation age, version, bounded journey outcomes, and explicit aggregate consent. Post it only if you choose to. The public [activation cohort](docs/PRODUCT_PROOF_TRIAL.md) is targeting 25 shared installations, 40% verified handoff, 25% resume, and 15% seven-day return before Citadel claims retained human use.
 
+## Run one objective through both runtimes
+
+Citadel 1.3 introduces Operation Fork. Give Citadel one objective and it creates
+isolated Claude Code and Codex worktrees from the same commit, runs both under the
+same contract, verifies both, then shows what the evidence actually supports.
+
+```text
+citadel fork start "Find and eliminate the authentication race"
+citadel fork status fork-find-and-eliminate-the-authentication-race
+citadel fork compare fork-find-and-eliminate-the-authentication-race
+```
+
+The first command is enough to run the journey. Its built-in verifier uses
+`git diff --check`. Pass `--workflow FILE` when the project needs stronger steps
+and checks. If a process ends, `citadel fork resume ID` reloads the private
+objective and workflow from durable local state.
+
+<img src="output/playwright/operation-fork-comparison.png" width="100%" alt="Citadel Operation Fork showing Claude Code and Codex branches under one shared proof standard" />
+
+The comparison is intentionally conservative. Missing receipts or verifier
+evidence remain `unknown`. Equal verified outcomes remain a tie. Selection records
+an operator decision but does not touch code. Landing is a separate command that
+rechecks the fork revision, selected receipt, target commit, clean worktree, and an
+exact confirmation token before a local merge.
+
+Mission Control reads that canonical state directly and keeps the two branches,
+the evidence boundary, and the selection boundary visible at once:
+
+<img src="output/playwright/operation-fork-mission-control.png" width="100%" alt="Citadel Mission Control comparing verified Claude Code and Codex branches without manufacturing a winner" />
+
+```text
+citadel fork select ID --branch branch-codex --expected-revision 6 --idempotency-key choose-codex-001
+citadel fork land plan ID
+citadel fork land apply ID --expected-revision 7 --target-revision SHA --confirm TOKEN --idempotency-key land-codex-001
+citadel fork replay ID --output operation-fork-replay.json
+```
+
+The replay is safe to share because it contains contract and artifact digests,
+states, metrics, and the decision outcome, not prompts, source, paths, repository
+identity, credentials, reasons, raw revisions, or signing keys. See the complete
+[Operation Fork contract](docs/OPERATION_FORK.md).
+
 ## From outcome Pack to verifiable proof
 
-Citadel 1.2 turns the operating loop into a portable contract. Pick an outcome Pack, create a
+Citadel 1.2 turned the operating loop into a portable contract. Pick an outcome Pack, create a
 durable journey, then verify the receipt without trusting a dashboard or a chat transcript.
 
 ```text
@@ -73,7 +116,7 @@ citadel receipt verify --input .planning/operations/run-ci-recovery/receipt.json
 |---|---|---|
 | **Outcome Packs** | CI recovery, migration campaign, and release steward workflows with strict permissions and dependencies | Local inspection and certification do not pretend to be marketplace trust |
 | **Operations Protocol v0.1** | Typed specs, runs, attempts, intents, evidence, and receipts across local, Codex, and GitHub targets | Missing or incomplete evidence stays `unknown` |
-| **Mission Control** | Pause, resume, stop, and retry through immutable typed intents | Localhost, exact origin, process nonce, capability, and revision checks |
+| **Mission Control** | Pause, resume, stop, retry, and compare runtime forks through typed local actions | Localhost, exact origin, process nonce, capability, and revision checks |
 | **Proof ledger** | Deterministic public projections of passed, failed, blocked, and unknown outcomes | Independent claims require an external pinned trust root |
 
 <img src="output/playwright/mission-control-confirmation-fixed.png" width="100%" alt="Citadel Mission Control showing a running operation, pause and stop controls, and an explicit stop confirmation with the next effect" />
@@ -197,10 +240,11 @@ Four tiers let Citadel scale from a one-line edit to a multi-session campaign. Y
 | **Cost telemetry** | `/cost` and `/dashboard` show real token usage and session spend instead of guesses | [Reports](docs/REPORT_ARTIFACTS.md) |
 | **Product evidence** | Local activation stages and authenticated GitHub traffic snapshots separate attention and discovery sources from verified use without hosted analytics | [Activation metrics](docs/ACTIVATION_METRICS.md) |
 | **Operations Protocol** | Six strict contracts, durable journals, recovery, receipts, and a conformance runner make work portable and inspectable | [Protocol](docs/OPERATIONS_PROTOCOL.md) |
+| **Operation Fork** | Run one objective through Claude Code and Codex in isolated worktrees, compare signed evidence, select without merging, and export a redacted replay | [Operation Fork](docs/OPERATION_FORK.md) |
 | **Outcome Packs** | Three first-party Packs package useful journeys with permissions, dependencies, stopping conditions, and proof | [Packs](docs/PACKS.md) |
 | **GitHub verification Action** | A narrow read-only Action runs a declared workflow and emits an honest Operations Protocol receipt | [Action](docs/ACTION.md) |
 | **Golden-path verification** | A hosted 30/30 Claude/Codex × Windows/Linux/macOS fixture grid proves install, setup, route, verification, handoff, resume, and exact rollback while labeling human evidence separately | [Golden path](docs/GOLDEN_PATH.md) |
-| **Actionable Mission Control** | Nine schema-1 views plus authorized pause, resume, stop, and retry controls; missing data stays `unknown`, never false green | [Dashboard spec](docs/DASHBOARD_SPEC.md) |
+| **Actionable Mission Control** | Ten schema-1 views plus authorized operation controls and runtime-fork selection; missing data stays `unknown`, never false green | [Dashboard spec](docs/DASHBOARD_SPEC.md) |
 | **Product benchmark** | Ten frozen bare-versus-harnessed scenarios preserve symmetric inputs, raw runs, negative results, and an explicit open utility gate | [Benchmark](docs/BENCHMARK.md) |
 | **Skill interoperability** | A digested external `SKILL.md` fixture installs unchanged under Claude and Codex projections, routes, verifies, emits local telemetry, hands off, and rolls back | [Interoperability](docs/INTEROPERABILITY.md) |
 | **Operator console** | `/do next` is a decision-first cockpit: current state, next action, risk boundary, verification profile | [Operating loop](docs/OPERATING_LOOP_PROOF.md) |
@@ -235,7 +279,7 @@ npm test
 
 ## Roadmap
 
-The full plan with exit criteria lives in [docs/ROADMAP.md](docs/ROADMAP.md). The arc: make the harness visible, prove it with numbers, then make it steerable.
+The full plan with exit criteria lives in [docs/ROADMAP.md](docs/ROADMAP.md). The arc is now to make operations portable across runtimes, prove outcomes honestly, and keep every consequential action under operator control.
 
 - **See It:** the read-only local dashboard now projects nine versioned views with explicit source health. Its 1,000-file CI gate enforces <1 second cold start, <500 ms updates, <64 MB complete RSS, and <10 MB dashboard overhead. Pixel baselines and stranger comprehension remain open gates. See [docs/DASHBOARD_SPEC.md](docs/DASHBOARD_SPEC.md).
 - **Prove It:** the reproducible benchmark contract now freezes ten symmetric bare-versus-harnessed scenarios and publishes its negative fixture result. Actual runs and external scenario selection remain open. See [docs/BENCHMARK.md](docs/BENCHMARK.md).

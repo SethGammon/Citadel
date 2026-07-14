@@ -30,6 +30,13 @@ const {
   submitIntent,
   validateControlResult,
 } = require('../core/operations/intents');
+const {
+  compareFork,
+  listForks,
+  loadFork,
+  saveFork,
+  selectBranch,
+} = require('../core/forks');
 
 const DEFAULT_PORT = 4180;
 const BIND_HOST = '127.0.0.1';
@@ -150,6 +157,7 @@ function createDataSource(projectRoot) {
       daemon: readDaemon(),
       handoffs: readHandoffs(),
       operations: readOperationControls(projectRoot),
+      forks: readOperationForks(projectRoot),
     };
     collected.sources = inspectSources(projectRoot, collected);
     collected.activation = readActivation(projectRoot, collected.sources.activation);
@@ -170,6 +178,20 @@ function createDataSource(projectRoot) {
       state.dirty = true;
     },
   };
+}
+
+function readOperationForks(projectRoot) {
+  try {
+    return listForks(projectRoot).map((summary) => {
+      if (summary.status === 'unknown') return { ...summary, comparison: {
+        outcome: 'insufficient-evidence', recommendation: null, comparable_count: 0, branches: [],
+      } };
+      const fork = loadFork(projectRoot, summary.fork_id);
+      return { ...summary, comparison: compareFork(fork) };
+    });
+  } catch {
+    return [];
+  }
 }
 
 function readOperationControls(projectRoot) {
@@ -272,6 +294,7 @@ function inspectSources(projectRoot, data) {
     const missing = (name, pathname) => [name, source(pathname, 'unknown', '.planning is absent')];
     return Object.fromEntries([
       missing('campaigns', '.planning/campaigns'), missing('fleet', '.planning/fleet'),
+      missing('forks', '.planning/operation-forks'),
       missing('loops', '.planning/loops'), missing('hooks', '.planning/telemetry'),
       missing('handoffs', '.planning/handoffs'), missing('cost', '.planning/telemetry'),
       missing('activation', '.planning/product-proof/activation-report.json'),
@@ -288,6 +311,9 @@ function inspectSources(projectRoot, data) {
   }
   const fleetState = inspectDirectory(projectRoot, '.planning/fleet', {
     filter: (name) => /^session-.*\.md$/i.test(name), midRun: Boolean(data.snapshot && data.snapshot.fleetSessions && data.snapshot.fleetSessions.length),
+  });
+  const forksState = inspectDirectory(projectRoot, '.planning/operation-forks', {
+    filter: (name) => !name.startsWith('.'), midRun: (data.forks || []).some((fork) => ['pending', 'running'].includes(fork.status)),
   });
   const loopsState = inspectDirectory(projectRoot, '.planning/loops', {
     filter: (name) => name.endsWith('.json'), json: true,
@@ -315,7 +341,7 @@ function inspectSources(projectRoot, data) {
     });
     if (activationState.status === 'empty') activationState = source('.planning/telemetry/activation.jsonl', 'unknown', 'source is absent');
   }
-  return { campaigns: campaignState, fleet: fleetState, loops: loopsState, hooks: hooksState, handoffs: handoffsState, cost: costState, activation: activationState };
+  return { campaigns: campaignState, fleet: fleetState, forks: forksState, loops: loopsState, hooks: hooksState, handoffs: handoffsState, cost: costState, activation: activationState };
 }
 
 function readActivation(projectRoot, state) {
@@ -476,6 +502,7 @@ function deriveViews(data) {
       active: {
         campaigns: projectedCount(sources.campaigns, (snapshot.campaigns || []).length),
         fleet_sessions: projectedCount(sources.fleet, (snapshot.fleetSessions || []).length),
+        forks: projectedCount(sources.forks, (data.forks || []).filter((fork) => !['landed', 'failed'].includes(fork.status)).length),
         loops: projectedCount(sources.loops, (data.loops || []).filter((loop) => {
           const status = loop.status || (loop.state && loop.state.status);
           return status && !['done', 'stopped', 'verifier-passed'].includes(status);
@@ -499,6 +526,10 @@ function deriveViews(data) {
       worktrees: snapshot.worktrees || [],
       coordination: snapshot.coordination || { instances: [], claims: [] },
       readiness: snapshot.worktreeReadiness || [],
+    },
+    forks: {
+      state: sources.forks || source('.planning/operation-forks', 'unknown', 'source state unavailable'),
+      forks: data.forks || [],
     },
     loops: {
       state: sources.loops || source('.planning/loops', 'unknown', 'source state unavailable'),
@@ -712,7 +743,7 @@ function createServer(options) {
     const url = new URL(req.url, `http://${BIND_HOST}`);
     const route = url.pathname;
 
-    if (req.method === 'POST' && route === '/api/intents') {
+    if (req.method === 'POST' && (route === '/api/intents' || route === '/api/fork-selections')) {
       if (req.headers.origin !== expectedOrigin()) {
         json(res, 403, { outcome: 'rejected', reason_code: 'ORIGIN_REJECTED' });
         return;
@@ -729,6 +760,33 @@ function createServer(options) {
         return;
       }
       readIntentBody(req, res, (body) => {
+        if (route === '/api/fork-selections') {
+          const fields = ['actor', 'branch_id', 'expected_revision', 'fork_id', 'idempotency_key', 'reason'];
+          if (!body || JSON.stringify(Object.keys(body).sort()) !== JSON.stringify(fields)
+            || typeof body.fork_id !== 'string' || typeof body.branch_id !== 'string'
+            || !Number.isInteger(body.expected_revision) || typeof body.idempotency_key !== 'string'
+            || typeof body.actor !== 'string' || typeof body.reason !== 'string') {
+            json(res, 400, { outcome: 'rejected', reason_code: 'INVALID_FORK_SELECTION' });
+            return;
+          }
+          try {
+            const current = loadFork(projectRoot, body.fork_id);
+            const selected = selectBranch(current, { branchId: body.branch_id,
+              expectedRevision: body.expected_revision, actorId: body.actor,
+              idempotencyKey: body.idempotency_key, reason: body.reason,
+              selectedAt: new Date().toISOString() });
+            if (selected !== current) saveFork(projectRoot, selected, current.revision);
+            source.invalidate();
+            json(res, 202, { outcome: 'accepted', reason_code: 'FORK_SELECTION_RECORDED',
+              fork_id: selected.fork_id, branch_id: selected.selection.branch_id,
+              current_revision: selected.revision, landing_effect: 'none' });
+          } catch (error) {
+            const conflict = error.code === 'FORK_REVISION_CONFLICT';
+            json(res, conflict ? 409 : 400, { outcome: conflict ? 'conflict' : 'rejected',
+              reason_code: error.code || 'FORK_SELECTION_REJECTED' });
+          }
+          return;
+        }
         let result;
         try {
           result = submitIntent(projectRoot, body);
@@ -779,6 +837,7 @@ function createServer(options) {
           nonce: processNonce,
           actions: ['pause', 'resume', 'stop', 'retry'],
           writes: 'immutable-intents-only',
+          fork_actions: ['select'],
         });
         return;
       }
@@ -788,6 +847,7 @@ function createServer(options) {
         '/api/overview': views.overview,
         '/api/campaigns': views.campaigns,
         '/api/fleet': views.fleet,
+        '/api/forks': views.forks,
         '/api/loops': views.loops,
         '/api/hooks/feed': views.hooks,
         '/api/cost': views.cost,
