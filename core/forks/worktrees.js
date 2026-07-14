@@ -28,8 +28,11 @@ function defaultWorktreeRoot(projectRoot) {
 
 function prepareWorktreeRoot(projectRoot, configuredRoot) {
   const requested = path.resolve(configuredRoot || defaultWorktreeRoot(projectRoot));
+  const lexicalProject = path.resolve(projectRoot);
   const project = realDirectory(projectRoot, 'project root');
-  if (isWithin(project, requested)) throw Object.assign(new Error('Operation Fork worktrees must be outside the project root'), { code: 'FORK_WORKTREE_ROOT_UNSAFE' });
+  if (isWithin(lexicalProject, requested) || isWithin(project, requested)) {
+    throw Object.assign(new Error('Operation Fork worktrees must be outside the project root'), { code: 'FORK_WORKTREE_ROOT_UNSAFE' });
+  }
   fs.mkdirSync(requested, { recursive: true, mode: 0o700 });
   const root = realDirectory(requested, 'operation fork worktree root');
   if (isWithin(project, root)) throw Object.assign(new Error('Operation Fork worktrees must be outside the project root'), { code: 'FORK_WORKTREE_ROOT_UNSAFE' });
