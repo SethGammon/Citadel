@@ -109,7 +109,7 @@ assert.deepEqual(profiles.runtimeInvocationForProfile(claude), {
 });
 assert.deepEqual(profiles.runtimeInvocationForProfile(local), {
   command: 'codex',
-  args: ['exec', '--json', '--sandbox', 'workspace-write', '--oss', '--local-provider', 'ollama',
+  args: ['exec', '--json', '--sandbox', 'workspace-write', '--ignore-user-config', '--oss', '--local-provider', 'ollama',
     '--model', 'qwen3-coder:30b', '-'],
 });
 let spawnOptions;

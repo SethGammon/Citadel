@@ -8,7 +8,7 @@ const operations = require('../operations');
 
 function runtimeInvocation(runtime) {
   if (runtime === 'claude') return { command: 'claude', args: ['--print', '--output-format', 'json', '--permission-mode', 'acceptEdits'] };
-  if (runtime === 'codex') return { command: 'codex', args: ['exec', '--json', '--full-auto', '-'] };
+  if (runtime === 'codex') return { command: 'codex', args: ['exec', '--json', '--sandbox', 'workspace-write', '--ignore-user-config', '-'] };
   throw new TypeError(`Unsupported fork runtime: ${runtime}`);
 }
 

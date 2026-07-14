@@ -107,11 +107,13 @@ Citadel then appends `--model <model>` when a model is present and
 Codex begins with:
 
 ```text
-codex exec --json --sandbox workspace-write
+codex exec --json --sandbox workspace-write --ignore-user-config
 ```
 
 The sandbox argument is `read-only` when requested and `workspace-write`
-otherwise. For a local provider, Citadel appends
+otherwise. `--ignore-user-config` prevents unrelated user-level model, plugin,
+MCP, and profile settings from changing the declared executor contract while
+authentication still comes from the installed Codex credential store. For a local provider, Citadel appends
 `--oss --local-provider <provider>`. It then appends `--model <model>` when
 present and the final stdin marker `-`.
 
