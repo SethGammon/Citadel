@@ -1,8 +1,9 @@
 'use strict';
 
 const operations = require('../operations');
-const { assertValidFork, RUNTIMES } = require('./contracts');
+const { assertValidFork, EXECUTOR_FORK_SCHEMA_VERSION, RUNTIMES } = require('./contracts');
 const { compareFork, comparableBranch } = require('./compare');
+const { bindExecutorProfiles, resolveExecutorSelection } = require('./executor-profiles');
 
 function canonicalTime(value) {
   const time = value || new Date().toISOString();
@@ -11,10 +12,12 @@ function canonicalTime(value) {
 }
 
 function createOperationFork(options) {
-  const runtimes = options.runtimes || RUNTIMES;
-  if (!Array.isArray(runtimes) || runtimes.length < 2 || new Set(runtimes).size !== runtimes.length
-    || runtimes.some((runtime) => !RUNTIMES.includes(runtime))) {
-    throw new TypeError('Operation Fork requires at least two unique supported runtimes');
+  const selection = resolveExecutorSelection({
+    executors: options.executors,
+    runtimes: options.runtimes || (options.executors ? undefined : RUNTIMES),
+  });
+  if (selection.profiles.length < 2) {
+    throw new TypeError('Operation Fork requires at least two executors');
   }
   operations.assertValidOperationContract(options.operation);
   const createdAt = canonicalTime(options.createdAt);
@@ -29,10 +32,10 @@ function createOperationFork(options) {
     status: 'pending',
     created_at: createdAt,
     updated_at: createdAt,
-    branches: runtimes.map((runtime) => ({
-      branch_id: `branch-${runtime}`,
-      runtime,
-      run_id: `run-${options.forkId}-${runtime}`,
+    branches: selection.profiles.map((profile) => ({
+      branch_id: `branch-${profile.profile_id}`,
+      runtime: profile.runtime,
+      run_id: `run-${options.forkId}-${profile.profile_id}`,
       status: 'pending',
       base_revision: options.shared.base_revision,
       worktree_ref: null,
@@ -50,7 +53,10 @@ function createOperationFork(options) {
     selection: null,
     landing: null,
   };
-  return assertValidFork(fork);
+  // Legacy --runtimes input stays a schema 1 record. Only an executor file
+  // promotes the fork to schema 2 with executor digests bound to every branch.
+  if (selection.source !== 'executors') return assertValidFork(fork);
+  return assertValidFork(bindExecutorProfiles(fork, selection.executor_file));
 }
 
 function nextFork(fork, changes, now) {
@@ -72,10 +78,26 @@ function updateBranch(fork, branchId, changes, now) {
   else if (fork.selection) status = 'selected';
   else {
     const preview = assertValidFork({ ...fork, branches });
-    status = compareFork(preview).comparable_count >= 2 ? 'ready'
+    status = preview.schema_version !== EXECUTOR_FORK_SCHEMA_VERSION && compareFork(preview).comparable_count >= 2 ? 'ready'
       : branches.every((branch) => ['passed', 'failed', 'blocked', 'unknown'].includes(branch.status)) ? 'unknown' : status;
   }
   return nextFork(fork, { branches, status }, now);
+}
+
+/**
+ * Schema 2 decisions are fail-closed: the caller must hand in the result of a
+ * fresh cryptographic verification of the stored fork receipt wrapper. Omitting
+ * it rejects the decision instead of trusting the record.
+ */
+function assertVerifiedReceipt(fork, branchId, verification) {
+  if (fork.schema_version !== EXECUTOR_FORK_SCHEMA_VERSION) return;
+  if (!verification || verification.status !== 'verified') {
+    throw Object.assign(new Error('Branch executor receipt is not cryptographically verified'), {
+      code: 'FORK_RECEIPT_UNVERIFIED',
+      branch_id: branchId,
+      reason_code: verification ? verification.reason_code : 'FORK_RECEIPT_MISSING',
+    });
+  }
 }
 
 function selectBranch(fork, options) {
@@ -87,7 +109,8 @@ function selectBranch(fork, options) {
   if (fork.revision !== options.expectedRevision) throw Object.assign(new Error('Fork revision changed before selection'), { code: 'FORK_REVISION_CONFLICT' });
   const branch = fork.branches.find((entry) => entry.branch_id === options.branchId);
   if (!branch) throw Object.assign(new Error(`Branch not found: ${options.branchId}`), { code: 'FORK_BRANCH_NOT_FOUND' });
-  if (!comparableBranch(branch, fork).comparable) throw Object.assign(new Error('Branch cannot be selected without complete verified evidence'), { code: 'FORK_BRANCH_INCOMPARABLE' });
+  assertVerifiedReceipt(fork, branch.branch_id, options.receiptVerification);
+  if (!comparableBranch(branch, fork, options.receiptVerification).comparable) throw Object.assign(new Error('Branch cannot be selected without complete verified evidence'), { code: 'FORK_BRANCH_INCOMPARABLE' });
   const selectedAt = canonicalTime(options.selectedAt);
   const selection = {
     selection_id: `selection-${operations.sha256Digest({ fork: fork.fork_id, branch: branch.branch_id,
@@ -115,7 +138,9 @@ function prepareLanding(fork, options) {
   if (fork.revision !== options.expectedRevision) throw Object.assign(new Error('Fork revision changed before landing'), { code: 'FORK_REVISION_CONFLICT' });
   if (!fork.selection) throw Object.assign(new Error('Select a branch before landing'), { code: 'FORK_SELECTION_REQUIRED' });
   const selected = fork.branches.find((branch) => branch.branch_id === fork.selection.branch_id);
-  if (!selected || !comparableBranch(selected, fork).comparable) throw Object.assign(new Error('Selected branch is no longer comparable'), { code: 'FORK_BRANCH_INCOMPARABLE' });
+  if (!selected) throw Object.assign(new Error('Selected branch is missing'), { code: 'FORK_BRANCH_INCOMPARABLE' });
+  assertVerifiedReceipt(fork, selected.branch_id, options.receiptVerification);
+  if (!comparableBranch(selected, fork, options.receiptVerification).comparable) throw Object.assign(new Error('Selected branch is no longer comparable'), { code: 'FORK_BRANCH_INCOMPARABLE' });
   const expectedToken = landingConfirmation(fork, options.targetRevision);
   if (options.confirmation !== expectedToken) throw Object.assign(new Error('Landing confirmation is missing or stale'), { code: 'FORK_CONFIRMATION_REQUIRED', confirmation: expectedToken });
   const confirmedAt = canonicalTime(options.confirmedAt);
@@ -152,6 +177,7 @@ function completeLanding(fork, options) {
 }
 
 module.exports = Object.freeze({
+  assertVerifiedReceipt,
   completeLanding,
   createOperationFork,
   landingConfirmation,

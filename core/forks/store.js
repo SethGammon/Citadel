@@ -63,6 +63,9 @@ function createForkRecord(projectRoot, fork, privateState = {}) {
     fs.mkdirSync(privateDir, { recursive: true, mode: 0o700 });
     atomicWrite(path.join(privateDir, 'signing-key.pem'), privateState.signingKey);
   }
+  if (typeof privateState.signingPublicKey === 'string') {
+    atomicWrite(path.join(directory, 'signer-public-key.pem'), privateState.signingPublicKey);
+  }
   if (privateState.workflow && typeof privateState.workflow === 'object') {
     const privateDir = resolveTarget(directory, 'private', 'fork private state');
     fs.mkdirSync(privateDir, { recursive: true, mode: 0o700 });
@@ -125,6 +128,97 @@ function writeReceipt(projectRoot, forkId, branchId, envelope) {
   return file;
 }
 
+function readReceipt(projectRoot, forkId, branchId) {
+  safeForkId(branchId);
+  const directory = forkDirectory(projectRoot, forkId, false);
+  if (!directory) return null;
+  const candidate = path.join(directory, 'receipts', `${branchId}.json`);
+  if (!fs.existsSync(candidate)) return null;
+  const file = resolveExistingFile(directory, `receipts/${branchId}.json`, 'execution receipt');
+  try { return JSON.parse(fs.readFileSync(file, 'utf8')); } catch (_error) { return null; }
+}
+
+function readSignerPublicKey(projectRoot, forkId) {
+  const directory = forkDirectory(projectRoot, forkId, false);
+  if (!directory) return null;
+  const candidate = path.join(directory, 'signer-public-key.pem');
+  if (!fs.existsSync(candidate)) return null;
+  const file = resolveExistingFile(directory, 'signer-public-key.pem', 'fork signer public key');
+  return fs.readFileSync(file, 'utf8');
+}
+
+function executorFilePath(projectRoot, forkId, create = false) {
+  const directory = forkDirectory(projectRoot, forkId, create);
+  if (!directory) throw Object.assign(new Error(`Fork not found: ${forkId}`), { code: 'FORK_NOT_FOUND' });
+  return resolveTarget(directory, 'executors.json', 'fork executor file');
+}
+
+function writeExecutorFile(projectRoot, forkId, file) {
+  const target = executorFilePath(projectRoot, forkId, true);
+  atomicWrite(target, `${JSON.stringify(file, null, 2)}\n`);
+  return target;
+}
+
+function readExecutorFile(projectRoot, forkId) {
+  const directory = forkDirectory(projectRoot, forkId, false);
+  if (!directory || !fs.existsSync(path.join(directory, 'executors.json'))) return null;
+  const file = resolveExistingFile(directory, 'executors.json', 'fork executor file');
+  try { return JSON.parse(fs.readFileSync(file, 'utf8')); } catch (_error) {
+    throw Object.assign(new Error(`Fork executor file is unreadable: ${forkId}`), { code: 'FORK_EXECUTORS_UNREADABLE' });
+  }
+}
+
+function writeForkReceiptWrapper(projectRoot, forkId, branchId, wrapper) {
+  safeForkId(branchId);
+  const directory = receiptDirectory(projectRoot, forkId);
+  const file = resolveTarget(directory, `${branchId}.fork.json`, 'fork receipt wrapper');
+  atomicWrite(file, `${JSON.stringify(wrapper, null, 2)}\n`);
+  return file;
+}
+
+function readForkReceiptWrapper(projectRoot, forkId, branchId) {
+  safeForkId(branchId);
+  const directory = forkDirectory(projectRoot, forkId, false);
+  if (!directory) return null;
+  const candidate = path.join(directory, 'receipts', `${branchId}.fork.json`);
+  if (!fs.existsSync(candidate)) return null;
+  const file = resolveExistingFile(directory, `receipts/${branchId}.fork.json`, 'fork receipt wrapper');
+  try { return JSON.parse(fs.readFileSync(file, 'utf8')); } catch (_error) {
+    // A stored wrapper is untrusted input. Unreadable is treated as absent and
+    // never as verified.
+    return null;
+  }
+}
+
+function telemetryDirectory(projectRoot, forkId) {
+  const directory = forkDirectory(projectRoot, forkId, false);
+  if (!directory) throw Object.assign(new Error(`Fork not found: ${forkId}`), { code: 'FORK_NOT_FOUND' });
+  const target = resolveTarget(directory, 'telemetry', 'fork telemetry directory');
+  fs.mkdirSync(target, { recursive: true, mode: 0o700 });
+  return realDirectory(target, 'fork telemetry directory');
+}
+
+function writeExecutorTelemetry(projectRoot, forkId, branchId, observation) {
+  safeForkId(branchId);
+  const directory = telemetryDirectory(projectRoot, forkId);
+  const file = resolveTarget(directory, `${branchId}.json`, 'fork telemetry');
+  atomicWrite(file, `${JSON.stringify(observation, null, 2)}\n`);
+  return file;
+}
+
+function readExecutorTelemetry(projectRoot, forkId, branchId) {
+  safeForkId(branchId);
+  const directory = forkDirectory(projectRoot, forkId, false);
+  if (!directory) return null;
+  const candidate = path.join(directory, 'telemetry', `${branchId}.json`);
+  if (!fs.existsSync(candidate)) return null;
+  const file = resolveExistingFile(directory, `telemetry/${branchId}.json`, 'fork telemetry');
+  try { return JSON.parse(fs.readFileSync(file, 'utf8')); } catch (_error) {
+    // Unparsable telemetry stays unknown rather than becoming a fabricated zero.
+    return null;
+  }
+}
+
 function appendEvent(projectRoot, forkId, event) {
   const directory = forkDirectory(projectRoot, forkId, false);
   if (!directory) throw Object.assign(new Error(`Fork not found: ${forkId}`), { code: 'FORK_NOT_FOUND' });
@@ -177,7 +271,15 @@ module.exports = Object.freeze({
   listForks,
   loadFork,
   readEvents,
+  readExecutorFile,
+  readExecutorTelemetry,
+  readForkReceiptWrapper,
   readPrivate,
+  readReceipt,
+  readSignerPublicKey,
   saveFork,
+  writeExecutorFile,
+  writeExecutorTelemetry,
+  writeForkReceiptWrapper,
   writeReceipt,
 });

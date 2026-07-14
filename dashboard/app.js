@@ -530,6 +530,19 @@ if (typeof document !== 'undefined') (() => {
         if (comparison.recommendation === branch.branch_id) branchTitle.appendChild(badge('recommended', 'skill'));
         if (fork.selection?.branch_id === branch.branch_id) branchTitle.appendChild(badge('selected', 'fleet'));
         branchCard.appendChild(branchTitle);
+        const executor = branch.executor || null;
+        if (executor) {
+          const identity = el('div', 'fork-executor');
+          identity.appendChild(el('div', 'mono dimmed', executor.profile_id
+            + (executor.local_provider ? ` via ${executor.local_provider}` : '')));
+          const facts = el('div', 'fork-metrics');
+          facts.appendChild(stat(executor.requested_model, 'requested'));
+          facts.appendChild(stat(executor.observed_model === null ? 'unknown' : executor.observed_model, 'observed'));
+          facts.appendChild(stat(executor.model_status, 'model proof'));
+          facts.appendChild(stat(executor.receipt_status, 'receipt'));
+          identity.appendChild(facts);
+          branchCard.appendChild(identity);
+        }
         const metrics = el('div', 'fork-metrics');
         metrics.appendChild(stat(branch.evidence ? `${branch.evidence.present}/${branch.evidence.required}` : 'unknown', 'evidence'));
         metrics.appendChild(stat(branch.diff ? branch.diff.files_changed : 'unknown', 'files'));

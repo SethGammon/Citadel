@@ -51,8 +51,27 @@ chosen workflow in private fork state so `citadel fork resume ID` does not depen
 on the original command or context window.
 
 `citadel fork status`, `citadel fork compare`, `citadel fork select`,
-`citadel fork land`, and `citadel fork replay` continue the same durable fork.
+`citadel fork land`, `citadel fork replay`, and `citadel fork proof` continue the same durable fork.
 The Mission Control view exposes the same actions and state.
+
+### Executor profiles
+
+`--executors FILE` replaces `--runtimes` with strict model and provider profiles,
+including several profiles on the same runtime:
+
+```bash
+citadel fork start "Find and eliminate the authentication race" \
+  --executors examples/executors.json
+```
+
+The two flags are mutually exclusive and a conflict is rejected before any
+planning state or worktree exists. An executor file promotes the fork to schema
+2: the fork carries an `executor_set_digest`, every branch carries an
+`executor_profile_digest`, and branch IDs become `branch-<profile_id>`. Every
+branch result is additionally bound by a signed fork receipt wrapper that
+`compare`, `select`, `land`, and Mission Control re-verify from disk. Schema 1
+forks stay readable and are never rewritten. `docs/EXECUTOR_PROFILES.md` is the
+frozen contract, and `scripts/test-executor-profiles.js` is its executable form.
 
 ## Immutable parent contract
 
@@ -149,6 +168,21 @@ paths, environment values, credentials, command output, signature material, and
 free-form operator reasons. Export fails closed if a non-allowlisted field or
 secret-like value reaches the public projection.
 
+### Bounded proof report
+
+`citadel fork proof ID [--output FILE]` builds a deterministic public artifact
+from the redacted replay and the same freshly verified evidence used by compare.
+It adds exact branch, comparable, verified-receipt, and model-proof counts plus
+the comparison outcome and recommendation. The report embeds the redacted
+replay, binds it by digest, and applies the same path and secret rejection.
+
+The report never reads a stored `trusted: true` flag as proof. Receipt counts
+come only from evidence reloaded and cryptographically verified for the current
+fork contract. The same signed envelope binds every branch result field used by
+comparison or display, so changing a score, status, diff, duration, cost, or
+failure code invalidates the branch. Missing evidence remains `unknown`, contributes to the explicit
+denominator, and cannot become a verified receipt or model pass.
+
 ## Runtime adapters
 
 The built-in adapters target Claude Code and Codex. Adapter execution is
@@ -156,6 +190,23 @@ injectable so deterministic tests never require vendor binaries or network
 access. An adapter receives only the contained worktree, the operation contract,
 and a runtime-local instruction artifact. It must return typed state and
 evidence, not an unstructured claim of completion.
+
+Citadel owns every executable, argument position, permission mode, and sandbox
+setting. Executors are spawned with `shell: false` and literal argument arrays.
+On Windows a vendor CLI that exists only as an npm `.cmd` shim cannot be started
+directly by `CreateProcess`. Citadel resolves only the known vendor package to
+its installed JavaScript entrypoint and launches it with the current Node
+executable, literal arguments, and `shell: false`. An unknown shim fails closed
+instead of crossing a command-interpreter boundary.
+
+Model, token, and cost evidence is read only from a runtime's own declared
+machine-readable output: the Claude JSON result object and the Codex JSONL event
+stream. When Codex stdout omits its resolved model, Citadel binds the emitted
+thread ID to the exact Codex rollout, requires the recorded working directory to
+match the assigned worktree, and reads only its public-safe model field. The
+lookup is bounded and fails closed. Anything missing, untrusted, or unparsable
+stays `unknown`. It is never inferred from the requested profile and never
+converted to zero.
 
 ## Non-goals
 

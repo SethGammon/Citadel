@@ -21,6 +21,26 @@ function git(args, options = {}) {
   return String(result.stdout || '').trim();
 }
 
+function normalizedPath(value) {
+  const resolved = (fs.existsSync(value) ? fs.realpathSync.native(value) : path.resolve(value))
+    .replace(/\\/g, '/');
+  return process.platform === 'win32' ? resolved.toLowerCase() : resolved;
+}
+
+function registeredWorktrees(cwd, spawn) {
+  const output = git(['worktree', 'list', '--porcelain'], { cwd, spawn });
+  const entries = new Map();
+  let current = null;
+  for (const line of output.split(/\r?\n/)) {
+    if (line.startsWith('worktree ')) {
+      current = { path: line.slice('worktree '.length), head: null, branch: null };
+      entries.set(normalizedPath(current.path), current);
+    } else if (current && line.startsWith('HEAD ')) current.head = line.slice('HEAD '.length);
+    else if (current && line.startsWith('branch ')) current.branch = line.slice('branch '.length);
+  }
+  return entries;
+}
+
 function defaultWorktreeRoot(projectRoot) {
   const project = realDirectory(projectRoot, 'project root');
   return path.join(path.dirname(project), '.citadel-worktrees');
@@ -59,10 +79,51 @@ function createGitWorktreeProvider(options = {}) {
     resolve(projectRoot, root, forkId, branchId) {
       return worktreePath(projectRoot, root, forkId, branchId);
     },
+    captureContainment(optionsForRun) {
+      const entries = registeredWorktrees(optionsForRun.projectRoot, spawn);
+      const expectedPaths = [optionsForRun.projectRoot];
+      for (const branch of optionsForRun.fork.branches) {
+        if (branch.branch_ref) {
+          expectedPaths.push(worktreePath(optionsForRun.projectRoot, optionsForRun.worktreeRoot,
+            optionsForRun.fork.fork_id, branch.branch_id));
+        }
+      }
+      const expected = expectedPaths.map((entryPath) => {
+        const registered = entries.get(normalizedPath(entryPath));
+        if (!registered) throw Object.assign(new Error(`Required worktree is not registered: ${entryPath}`), {
+          code: 'FORK_CONTAINMENT_BASELINE_INVALID',
+        });
+        return { path: path.resolve(entryPath), head: registered.head, branch: registered.branch };
+      });
+      return Object.freeze({ expected: Object.freeze(expected) });
+    },
+    assertContainment(snapshot) {
+      const survivor = snapshot.expected.find((entry) => fs.existsSync(entry.path));
+      if (!survivor) throw Object.assign(new Error('All required worktrees were removed'), {
+        code: 'FORK_WORKTREE_CONTAINMENT_VIOLATION',
+      });
+      const entries = registeredWorktrees(survivor.path, spawn);
+      for (const expected of snapshot.expected) {
+        if (!fs.existsSync(expected.path)) throw Object.assign(new Error(`Required worktree was removed: ${expected.path}`), {
+          code: 'FORK_WORKTREE_CONTAINMENT_VIOLATION',
+        });
+        const actual = entries.get(normalizedPath(expected.path));
+        if (!actual || actual.branch !== expected.branch || actual.head !== expected.head) {
+          throw Object.assign(new Error(`Worktree ownership changed: ${expected.path}`), {
+            code: 'FORK_WORKTREE_CONTAINMENT_VIOLATION',
+          });
+        }
+      }
+      return true;
+    },
     ensure(optionsForBranch) {
       const target = worktreePath(optionsForBranch.projectRoot, optionsForBranch.worktreeRoot,
         optionsForBranch.forkId, optionsForBranch.branch.branch_id);
-      const branchRef = `citadel/${optionsForBranch.forkId}/${optionsForBranch.branch.runtime}`;
+      // Executor profiles, not runtimes, name the branch. Legacy profile IDs are
+      // the runtime name, so schema 1 refs are unchanged, while two profiles on
+      // one runtime can no longer collide on a single ref.
+      const profileId = optionsForBranch.branch.branch_id.replace(/^branch-/, '');
+      const branchRef = `citadel/${optionsForBranch.forkId}/${profileId}`;
       if (fs.existsSync(target)) {
         const targetRoot = realDirectory(target, 'branch worktree');
         const actualBranch = git(['rev-parse', '--abbrev-ref', 'HEAD'], { cwd: targetRoot, spawn });

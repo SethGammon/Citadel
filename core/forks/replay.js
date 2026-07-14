@@ -3,17 +3,36 @@
 const operations = require('../operations');
 const { assertValidFork } = require('./contracts');
 const { compareFork } = require('./compare');
+const { publicExecutorReplay } = require('./executor-profiles');
+const { SECRET_PATTERN } = require('./redaction');
 
-const SECRET_PATTERN = /(?:gh[pousr]_[A-Za-z0-9]{20,}|sk-[A-Za-z0-9_-]{20,}|-----BEGIN [A-Z ]*PRIVATE KEY-----|password\s*[=:]|authorization\s*:|[A-Za-z]:\\|\/Users\/|\/home\/)/i;
-
-function publicReplay(fork, events = []) {
+/**
+ * `options.evidence` is the verified evidence map from ./evidence. When it is
+ * present, each branch carries a redacted executor block: profile, requested and
+ * observed model, proof status, and binding digests. Never signatures, never raw
+ * adapter output, never a command or path.
+ */
+function publicReplay(fork, events = [], options = {}) {
   assertValidFork(fork);
-  const comparison = compareFork(fork);
+  const evidence = options.evidence instanceof Map ? options.evidence : null;
+  const comparison = compareFork(fork, { evidence });
+  const executorFor = (branchId) => {
+    const entry = evidence ? evidence.get(branchId) : null;
+    if (!entry || !entry.profile) return null;
+    return publicExecutorReplay({
+      profile: entry.profile,
+      observation: entry.observation,
+      wrapper: entry.wrapper,
+      verification: entry.verification,
+    });
+  };
   const replay = {
     schema_version: 1,
     kind: 'operation_fork_replay',
     fork_id: fork.fork_id,
     fork_revision: fork.revision,
+    fork_schema_version: fork.schema_version,
+    executor_set_digest: fork.executor_set_digest || null,
     operation_digest: operations.sha256Digest(fork.operation),
     contract_digest: fork.contract_digest,
     shared: {
@@ -31,6 +50,8 @@ function publicReplay(fork, events = []) {
       branch_id: branch.branch_id,
       runtime: branch.runtime,
       status: branch.status,
+      executor_profile_digest: branch.executor_profile_digest || null,
+      executor: executorFor(branch.branch_id),
       receipt_digest: branch.receipt_digest,
       evidence_summary: branch.evidence_summary,
       diff_summary: branch.diff_summary,

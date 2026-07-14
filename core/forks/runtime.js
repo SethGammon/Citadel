@@ -5,11 +5,23 @@ const fs = require('fs');
 const path = require('path');
 const { spawnSync } = require('child_process');
 const operations = require('../operations');
+const { platformInvocation } = require('./launcher');
+const {
+  CLAUDE_ALLOWED_TOOLS, MODEL_ID_PATTERN, runtimeInvocationForProfile, synthesizeLegacyExecutors,
+} = require('./executor-profiles');
+
+const CODEX_THREAD_ID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const CODEX_SESSION_SCAN_LIMIT = 20000;
+const CODEX_SESSION_READ_LIMIT = 2 * 1024 * 1024;
 
 function runtimeInvocation(runtime) {
-  if (runtime === 'claude') return { command: 'claude', args: ['--print', '--output-format', 'json', '--permission-mode', 'acceptEdits'] };
-  if (runtime === 'codex') return { command: 'codex', args: ['exec', '--json', '--full-auto', '-'] };
+  if (runtime === 'claude') return { command: 'claude', args: ['--print', '--output-format', 'json', '--permission-mode', 'acceptEdits', '--allowedTools', CLAUDE_ALLOWED_TOOLS] };
+  if (runtime === 'codex') return { command: 'codex', args: ['exec', '--json', '--sandbox', 'workspace-write', '-'] };
   throw new TypeError(`Unsupported fork runtime: ${runtime}`);
+}
+
+function legacyProfileFor(runtime) {
+  return synthesizeLegacyExecutors([runtime])[0];
 }
 
 function safeSpawn(command, args, options = {}) {
@@ -24,7 +36,164 @@ function safeSpawn(command, args, options = {}) {
     timeout: options.timeoutMs || 30 * 60 * 1000,
     maxBuffer: 16 * 1024 * 1024,
     env: options.env || process.env,
+    windowsVerbatimArguments: options.windowsVerbatimArguments === true,
   });
+}
+
+/** Spawn a canonical invocation, resolving the executable per platform first. */
+function spawnInvocation(invocation, options = {}) {
+  const resolved = platformInvocation(invocation, { platform: options.platform, env: options.env });
+  return safeSpawn(resolved.command, resolved.args, {
+    ...options,
+    windowsVerbatimArguments: resolved.windowsVerbatimArguments,
+  });
+}
+
+function positiveNumber(value) {
+  return Number.isFinite(value) && value >= 0 ? value : null;
+}
+
+function claudeObservation(stdout) {
+  let payload;
+  try { payload = JSON.parse(stdout); } catch (_error) { return null; }
+  if (!payload || typeof payload !== 'object' || Array.isArray(payload)) return null;
+  const usage = payload.modelUsage && typeof payload.modelUsage === 'object' ? Object.keys(payload.modelUsage) : [];
+  const model = typeof payload.model === 'string' && payload.model ? payload.model
+    : usage.length === 1 ? usage[0] : null;
+  const cost = positiveNumber(payload.total_cost_usd);
+  const tokens = payload.usage && typeof payload.usage === 'object'
+    ? positiveNumber(Number(payload.usage.input_tokens) + Number(payload.usage.output_tokens)) : null;
+  return {
+    model,
+    cost: cost === null ? null : { amount: cost, unit: 'usd', source: 'claude-json' },
+    duration_ms: positiveNumber(payload.duration_ms),
+    tokens,
+    source: 'claude-json',
+  };
+}
+
+function containedRealFile(root, candidate) {
+  try {
+    if (fs.lstatSync(candidate).isSymbolicLink()) return null;
+    const realRoot = fs.realpathSync(root);
+    const realCandidate = fs.realpathSync(candidate);
+    const relative = path.relative(realRoot, realCandidate);
+    if (!relative || relative.startsWith('..') || path.isAbsolute(relative)) return null;
+    return realCandidate;
+  } catch (_error) {
+    return null;
+  }
+}
+
+function findCodexSessionFile(threadId, env = process.env) {
+  if (typeof threadId !== 'string' || !CODEX_THREAD_ID_PATTERN.test(threadId)) return null;
+  const home = env.CODEX_HOME || ((env.USERPROFILE || env.HOME) ? path.join(env.USERPROFILE || env.HOME, '.codex') : null);
+  if (!home) return null;
+  const sessions = path.resolve(home, 'sessions');
+  try {
+    if (!fs.statSync(sessions).isDirectory() || fs.lstatSync(sessions).isSymbolicLink()) return null;
+  } catch (_error) {
+    return null;
+  }
+  const suffix = `-${threadId}.jsonl`.toLowerCase();
+  const stack = [sessions];
+  let scanned = 0;
+  let match = null;
+  while (stack.length) {
+    const directory = stack.pop();
+    let entries;
+    try { entries = fs.readdirSync(directory, { withFileTypes: true }); } catch (_error) { return null; }
+    for (const entry of entries) {
+      scanned += 1;
+      if (scanned > CODEX_SESSION_SCAN_LIMIT) return null;
+      if (entry.isSymbolicLink()) continue;
+      const candidate = path.join(directory, entry.name);
+      if (entry.isDirectory()) stack.push(candidate);
+      else if (entry.isFile() && entry.name.toLowerCase().endsWith(suffix)) {
+        const contained = containedRealFile(sessions, candidate);
+        if (!contained || match !== null) return null;
+        match = contained;
+      }
+    }
+  }
+  return match;
+}
+
+function codexSessionModel(threadId, options = {}) {
+  const file = findCodexSessionFile(threadId, options.env || process.env);
+  if (!file || typeof options.cwd !== 'string') return null;
+  let expectedCwd;
+  try { expectedCwd = fs.realpathSync(path.resolve(options.cwd)); } catch (_error) { return null; }
+  let descriptor;
+  try {
+    descriptor = fs.openSync(file, 'r');
+    const size = Math.min(fs.fstatSync(descriptor).size, CODEX_SESSION_READ_LIMIT);
+    const buffer = Buffer.alloc(size);
+    const bytes = fs.readSync(descriptor, buffer, 0, size, 0);
+    const lines = buffer.subarray(0, bytes).toString('utf8').split(/\r?\n/);
+    let observed = null;
+    for (const line of lines) {
+      if (!line.trim()) continue;
+      let event;
+      try { event = JSON.parse(line); } catch (_error) { continue; }
+      if (!event || event.type !== 'turn_context' || !event.payload || typeof event.payload !== 'object') continue;
+      if (typeof event.payload.cwd !== 'string' || typeof event.payload.model !== 'string') continue;
+      let eventCwd;
+      try { eventCwd = fs.realpathSync(path.resolve(event.payload.cwd)); } catch (_error) { continue; }
+      if (eventCwd !== expectedCwd || !MODEL_ID_PATTERN.test(event.payload.model)) continue;
+      observed = event.payload.model;
+    }
+    return observed;
+  } catch (_error) {
+    return null;
+  } finally {
+    if (descriptor !== undefined) fs.closeSync(descriptor);
+  }
+}
+
+function codexObservation(stdout, options = {}) {
+  let model = null;
+  let tokens = null;
+  let threadId = null;
+  for (const line of String(stdout || '').split(/\r?\n/)) {
+    if (!line.trim()) continue;
+    let event;
+    try { event = JSON.parse(line); } catch (_error) { continue; }
+    if (!event || typeof event !== 'object') continue;
+    const body = event.msg && typeof event.msg === 'object' ? event.msg : event;
+    if (event.type === 'thread.started' && typeof event.thread_id === 'string'
+      && CODEX_THREAD_ID_PATTERN.test(event.thread_id)) threadId = event.thread_id;
+    if (typeof body.model === 'string' && body.model) model = body.model;
+    if (event.type === 'turn.completed' && event.usage && typeof event.usage === 'object') {
+      const total = positiveNumber(Number(event.usage.input_tokens) + Number(event.usage.output_tokens));
+      if (total !== null) tokens = total;
+    }
+    const usage = body.info && typeof body.info === 'object' ? body.info.total_token_usage : null;
+    if (usage && typeof usage === 'object') {
+      const total = positiveNumber(Number(usage.total_tokens));
+      if (total !== null) tokens = total;
+    }
+  }
+  let source = 'codex-jsonl';
+  if (model === null && threadId !== null) {
+    model = codexSessionModel(threadId, options);
+    if (model !== null) source = 'codex-session-jsonl';
+  }
+  if (model === null && tokens === null) return null;
+  return { model, cost: null, duration_ms: null, tokens, source };
+}
+
+/**
+ * Observed identity and usage are only ever read from a runtime's own declared
+ * machine-readable output. Anything else stays unknown, never inferred from the
+ * request and never coerced to zero.
+ */
+function observeRuntime(runtime, agent, options = {}) {
+  if (!agent || agent.error || agent.status !== 0) return null;
+  const parsed = runtime === 'claude' ? claudeObservation(agent.stdout || '')
+    : runtime === 'codex' ? codexObservation(agent.stdout || '', options) : null;
+  if (!parsed) return null;
+  return { ...parsed, trusted: true };
 }
 
 function instructionFor(fork, objective) {
@@ -37,6 +206,7 @@ function instructionFor(fork, objective) {
     `Operation ID: ${fork.operation.operation_id}`,
     `Required steps: ${fork.operation.step_ids.join(', ')}`,
     'Stay within this worktree. Do not push, publish, deploy, or mutate external systems.',
+    'Do not checkout, switch, create, delete, move, reset, clean, or commit git branches or worktrees.',
     'Complete the repository work and leave all changes in this worktree for independent verification.',
   ].join('\n');
 }
@@ -86,11 +256,24 @@ function receiptFor(options) {
 function runRuntimeBranch(options) {
   const startedAt = options.startedAt || new Date().toISOString();
   const startedMs = Date.parse(startedAt);
-  const invocation = options.invocation || runtimeInvocation(options.branch.runtime);
+  const profile = options.profile || legacyProfileFor(options.branch.runtime);
+  const invocation = options.invocation || (options.fork.schema_version === 1
+    ? runtimeInvocation(profile.runtime) : runtimeInvocationForProfile(profile));
   const instruction = instructionFor(options.fork, options.objective);
-  const agent = safeSpawn(invocation.command, invocation.args, { spawn: options.spawn, cwd: options.worktree,
+  const containment = typeof options.worktreeProvider.captureContainment === 'function'
+    ? options.worktreeProvider.captureContainment({
+      projectRoot: options.projectRoot,
+      worktreeRoot: options.worktreeRoot,
+      fork: options.fork,
+      branch: options.branch,
+    }) : null;
+  const agent = spawnInvocation(invocation, { spawn: options.spawn, cwd: options.worktree,
     input: instruction, timeoutMs: options.timeoutMs, env: options.env });
-  const agentPassed = !agent.error && agent.status === 0;
+  let containmentViolation = null;
+  if (containment && typeof options.worktreeProvider.assertContainment === 'function') {
+    try { options.worktreeProvider.assertContainment(containment); } catch (error) { containmentViolation = error; }
+  }
+  const agentPassed = !agent.error && agent.status === 0 && !containmentViolation;
   let verifier = { status: 1, stdout: '', stderr: 'Agent execution failed before verification.' };
   if (agentPassed) {
     verifier = safeSpawn(options.verifier.command, options.verifier.args || [], { spawn: options.spawn,
@@ -98,7 +281,13 @@ function runRuntimeBranch(options) {
   }
   const passed = agentPassed && !verifier.error && verifier.status === 0;
   const completedAt = options.completedAt || new Date().toISOString();
-  const diffSummary = options.worktreeProvider.diffSummary(options.worktree, options.branch.base_revision);
+  let diffSummary;
+  try {
+    diffSummary = options.worktreeProvider.diffSummary(options.worktree, options.branch.base_revision);
+  } catch (_error) {
+    diffSummary = { files_changed: 0, insertions: 0, deletions: 0, digest: operations.sha256Digest([]) };
+  }
+  const observation = observeRuntime(profile.runtime, agent, { cwd: options.worktree, env: options.env || process.env });
   const result = receiptFor({
     fork: options.fork,
     branch: options.branch,
@@ -126,8 +315,10 @@ function runRuntimeBranch(options) {
     },
     diff_summary: diffSummary,
     duration_ms: Math.max(0, Date.parse(completedAt) - startedMs),
-    cost: null,
-    failure_code: passed ? null : agentPassed ? 'VERIFIER_FAILED' : 'RUNTIME_FAILED',
+    cost: observation && observation.cost ? observation.cost : null,
+    failure_code: passed ? null : containmentViolation
+      ? 'WORKTREE_CONTAINMENT_VIOLATION' : agentPassed ? 'VERIFIER_FAILED' : 'RUNTIME_FAILED',
+    observation,
   };
 }
 
@@ -146,4 +337,17 @@ function loadVerifier(workflowPath) {
     timeout_ms: Number.isInteger(workflow.verifier.timeout_ms) ? workflow.verifier.timeout_ms : undefined };
 }
 
-module.exports = Object.freeze({ generateSigningKey, instructionFor, loadVerifier, receiptFor, runRuntimeBranch, runtimeInvocation, safeSpawn });
+module.exports = Object.freeze({
+  generateSigningKey,
+  findCodexSessionFile,
+  instructionFor,
+  legacyProfileFor,
+  loadVerifier,
+  observeRuntime,
+  codexSessionModel,
+  receiptFor,
+  runRuntimeBranch,
+  runtimeInvocation,
+  safeSpawn,
+  spawnInvocation,
+});

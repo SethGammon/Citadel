@@ -1,15 +1,22 @@
 'use strict';
 
+const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
 const operations = require('../operations');
 const {
-  appendEvent, createForkRecord, loadFork, readPrivate, saveFork, writeReceipt,
+  appendEvent, createForkRecord, loadFork, readPrivate, saveFork, writeExecutorFile,
+  writeExecutorTelemetry, writeForkReceiptWrapper, writeReceipt,
 } = require('./store');
 const {
-  completeLanding, createOperationFork, markLandingInProgress, prepareLanding, updateBranch,
+  completeLanding, createOperationFork, markLandingInProgress, nextFork, prepareLanding, selectBranch, updateBranch,
 } = require('./lifecycle');
 const { compareFork } = require('./compare');
+const { EXECUTOR_FORK_SCHEMA_VERSION } = require('./contracts');
+const {
+  branchResultDigest, createForkReceiptWrapper, executorProfileDigest, resolveExecutorSelection,
+} = require('./executor-profiles');
+const { forkEvidence, loadExecutorProfiles, verifyBranchEvidence } = require('./evidence');
 const { generateSigningKey, runRuntimeBranch } = require('./runtime');
 const { createGitWorktreeProvider } = require('./worktrees');
 
@@ -49,9 +56,19 @@ function operationFrom(options, createdAt) {
 function startFork(options) {
   const projectRoot = fs.realpathSync(path.resolve(options.projectRoot));
   const provider = options.worktreeProvider || createGitWorktreeProvider({ spawn: options.spawn });
+  // Selection is resolved before any planning state or worktree exists, so a
+  // conflicting --executors/--runtimes pair fails with nothing created.
+  const selection = resolveExecutorSelection({
+    executors: options.executors,
+    runtimes: options.runtimes || (options.executors ? undefined : null),
+  });
   const baseRevision = options.baseRevision || provider.currentRevision(projectRoot);
   const createdAt = options.createdAt || new Date().toISOString();
   const operation = operationFrom(options, createdAt);
+  const signingKey = options.signingKey || generateSigningKey();
+  const signingPublicKey = crypto.createPublicKey(signingKey)
+    .export({ type: 'spki', format: 'pem' }).toString();
+  const issuerId = `issuer-${options.forkId}`;
   const shared = {
     objective_digest: operation.objective_digest,
     scope_digest: operations.sha256Digest(options.scope || { repository: 'current' }),
@@ -61,10 +78,25 @@ function startFork(options) {
     verifier_digest: operations.sha256Digest(options.workflow.verifier),
     base_revision: baseRevision,
   };
-  let fork = createOperationFork({ forkId: options.forkId, operation, shared,
-    runtimes: options.runtimes, createdAt });
-  const signingKey = options.signingKey || generateSigningKey();
-  createForkRecord(projectRoot, fork, { objective: options.objective, signingKey, workflow: options.workflow });
+  if (selection.source === 'executors') {
+    shared.signer_public_key_digest = operations.sha256Digest({ public_key: signingPublicKey });
+    shared.issuer_id = issuerId;
+  }
+  let fork = createOperationFork({
+    forkId: options.forkId,
+    operation,
+    shared,
+    createdAt,
+    executors: selection.source === 'executors' ? selection.executor_file : undefined,
+    runtimes: selection.source === 'executors' ? undefined : selection.profiles.map((profile) => profile.runtime),
+  });
+  createForkRecord(projectRoot, fork, {
+    objective: options.objective,
+    signingKey,
+    signingPublicKey: selection.source === 'executors' ? signingPublicKey : undefined,
+    workflow: options.workflow,
+  });
+  if (selection.source === 'executors') writeExecutorFile(projectRoot, fork.fork_id, selection.executor_file);
   appendEvent(projectRoot, fork.fork_id, eventFor(fork, 'fork-created', { detail: { contract_digest: fork.contract_digest } }));
 
   for (const pendingBranch of fork.branches) {
@@ -81,8 +113,45 @@ function startFork(options) {
     }));
   }
 
-  if (options.execute === false) return { fork, comparison: compareFork(fork) };
-  return resumeFork({ ...options, projectRoot, forkId: fork.fork_id, worktreeProvider: provider });
+  if (options.execute === false) {
+    return { fork, comparison: compareFork(fork, { evidence: forkEvidence(projectRoot, fork) }) };
+  }
+  return resumeFork({ ...options, projectRoot, forkId: fork.fork_id, worktreeProvider: provider,
+    signingKey, executors: undefined });
+}
+
+/** Bind one completed branch to its executor profile with a signed fork receipt. */
+function recordBranchEvidence(projectRoot, fork, branch, profile, result, signingKey) {
+  writeReceipt(projectRoot, fork.fork_id, branch.branch_id, result.receipt_envelope);
+  const observation = result.observation || null;
+  const telemetry = {
+    schema_version: 1,
+    branch_id: branch.branch_id,
+    runtime: profile.runtime,
+    model: observation && typeof observation.model === 'string' ? observation.model : null,
+    trusted: Boolean(observation && observation.trusted),
+    cost: observation && observation.cost ? observation.cost : null,
+    duration_ms: observation && observation.duration_ms !== undefined ? observation.duration_ms : null,
+    tokens: observation && observation.tokens !== undefined ? observation.tokens : null,
+    source: observation && observation.source ? observation.source : 'adapter-silent',
+    branch_result_digest: branchResultDigest(result),
+  };
+  writeExecutorTelemetry(projectRoot, fork.fork_id, branch.branch_id, telemetry);
+  const wrapper = createForkReceiptWrapper({
+    fork_id: fork.fork_id,
+    branch_id: branch.branch_id,
+    contract_digest: fork.contract_digest,
+    executor_profile_digest: fork.schema_version === EXECUTOR_FORK_SCHEMA_VERSION
+      ? branch.executor_profile_digest : executorProfileDigest(profile),
+    execution_receipt_digest: result.receipt_digest,
+    observation_digest: operations.sha256Digest(telemetry),
+    issued_at: result.completed_at,
+    issuer_id: fork.schema_version === EXECUTOR_FORK_SCHEMA_VERSION
+      ? fork.shared.issuer_id : `issuer-${fork.fork_id}`,
+    signingKey,
+  });
+  writeForkReceiptWrapper(projectRoot, fork.fork_id, branch.branch_id, wrapper);
+  return wrapper;
 }
 
 function resumeFork(options) {
@@ -92,6 +161,7 @@ function resumeFork(options) {
   const objective = options.objective || readPrivate(projectRoot, fork.fork_id, 'objective.txt').trim();
   const signingKey = options.signingKey || readPrivate(projectRoot, fork.fork_id, 'signing-key.pem');
   const workflow = options.workflow || JSON.parse(readPrivate(projectRoot, fork.fork_id, 'workflow.json'));
+  const profiles = loadExecutorProfiles(projectRoot, fork);
 
   for (const branchSnapshot of [...fork.branches]) {
     let branch = fork.branches.find((entry) => entry.branch_id === branchSnapshot.branch_id);
@@ -113,13 +183,15 @@ function resumeFork(options) {
     appendEvent(projectRoot, fork.fork_id, eventFor(fork, 'runtime-started', { branchId: branch.branch_id,
       status: 'running', detail: { runtime: branch.runtime } }));
     branch = fork.branches.find((entry) => entry.branch_id === branch.branch_id);
+    const profile = profiles.get(branch.branch_id);
     const result = (options.runBranch || runRuntimeBranch)({
-      fork, branch, objective, signingKey, worktree, worktreeProvider: provider,
+      fork, branch, profile, objective, signingKey, worktree, worktreeProvider: provider,
+      projectRoot, worktreeRoot: options.worktreeRoot,
       verifier: workflow.verifier, spawn: options.spawn, env: options.env,
       timeoutMs: options.timeoutMs, startedAt,
       completedAt: options.now ? options.now() : undefined,
     });
-    writeReceipt(projectRoot, fork.fork_id, branch.branch_id, result.receipt_envelope);
+    recordBranchEvidence(projectRoot, fork, branch, profile, result, signingKey);
     previousRevision = fork.revision;
     fork = updateBranch(fork, branch.branch_id, {
       status: result.status,
@@ -135,7 +207,44 @@ function resumeFork(options) {
     appendEvent(projectRoot, fork.fork_id, eventFor(fork, 'runtime-completed', { branchId: branch.branch_id,
       status: result.status, detail: { receipt_digest: result.receipt_digest } }));
   }
-  return { fork, comparison: compareFork(fork) };
+  let evidence = forkEvidence(projectRoot, fork);
+  let comparison = compareFork(fork, { evidence });
+  if (fork.schema_version === EXECUTOR_FORK_SCHEMA_VERSION && !fork.selection
+    && comparison.comparable_count >= 2 && fork.status !== 'ready') {
+    const previousRevision = fork.revision;
+    fork = nextFork(fork, { status: 'ready' }, options.now ? options.now() : new Date().toISOString());
+    saveFork(projectRoot, fork, previousRevision);
+    evidence = forkEvidence(projectRoot, fork);
+    comparison = compareFork(fork, { evidence });
+  }
+  return { fork, comparison };
+}
+
+/**
+ * Record a selection after reloading and verifying the branch's stored bindings.
+ * Selection remains intent only: no merge, no worktree effect.
+ */
+function applySelection(options) {
+  const projectRoot = fs.realpathSync(path.resolve(options.projectRoot));
+  const current = loadFork(projectRoot, options.forkId);
+  const branch = current.branches.find((entry) => entry.branch_id === options.branchId);
+  if (!branch) throw Object.assign(new Error(`Branch not found: ${options.branchId}`), { code: 'FORK_BRANCH_NOT_FOUND' });
+  const evidence = verifyBranchEvidence(projectRoot, current, branch);
+  const selected = selectBranch(current, {
+    branchId: options.branchId,
+    expectedRevision: options.expectedRevision,
+    actorId: options.actorId,
+    idempotencyKey: options.idempotencyKey,
+    reason: options.reason || '',
+    receiptVerification: evidence.verification,
+    selectedAt: options.now ? options.now() : new Date().toISOString(),
+  });
+  if (selected === current) return selected;
+  saveFork(projectRoot, selected, current.revision);
+  appendEvent(projectRoot, selected.fork_id, eventFor(selected, 'branch-selected', {
+    branchId: options.branchId, status: 'selected', detail: { selection_id: selected.selection.selection_id },
+  }));
+  return selected;
 }
 
 function applyLanding(options) {
@@ -144,12 +253,18 @@ function applyLanding(options) {
   let fork = loadFork(projectRoot, options.forkId);
   if (fork.landing?.status === 'landed' && fork.landing.idempotency_key === options.idempotencyKey) return fork;
   if (fork.landing?.status === 'unknown') throw Object.assign(new Error('Previous landing effect is ambiguous and will not be repeated'), { code: 'FORK_LANDING_AMBIGUOUS' });
+  // The stored wrapper is reloaded and verified here, not trusted from the record.
+  const selectedBranch = fork.selection
+    ? fork.branches.find((branch) => branch.branch_id === fork.selection.branch_id) : null;
+  const receiptVerification = selectedBranch
+    ? verifyBranchEvidence(projectRoot, fork, selectedBranch).verification : null;
   let previousRevision = fork.revision;
   fork = prepareLanding(fork, {
     expectedRevision: options.expectedRevision,
     targetRevision: options.targetRevision,
     confirmation: options.confirmation,
     idempotencyKey: options.idempotencyKey,
+    receiptVerification,
     confirmedAt: options.now ? options.now() : new Date().toISOString(),
   });
   saveFork(projectRoot, fork, previousRevision);
@@ -178,4 +293,6 @@ function applyLanding(options) {
   }
 }
 
-module.exports = Object.freeze({ applyLanding, eventFor, operationFrom, resumeFork, startFork });
+module.exports = Object.freeze({
+  applyLanding, applySelection, eventFor, operationFrom, recordBranchEvidence, resumeFork, startFork,
+});

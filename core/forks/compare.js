@@ -1,8 +1,14 @@
 'use strict';
 
-const { assertValidFork } = require('./contracts');
+const { assertValidFork, EXECUTOR_FORK_SCHEMA_VERSION } = require('./contracts');
+const { missionControlExecutorState } = require('./executor-profiles');
 
-function comparableBranch(branch, fork) {
+/**
+ * `verification` is the result of freshly verifying the stored fork receipt
+ * wrapper and execution receipt for this branch. Schema 2 fails closed when
+ * fresh verification is absent.
+ */
+function comparableBranch(branch, fork, verification) {
   const evidence = branch.evidence_summary;
   const reasons = [];
   if (branch.contract_digest !== fork.contract_digest) reasons.push('contract-mismatch');
@@ -13,6 +19,10 @@ function comparableBranch(branch, fork) {
     if (!['passed', 'failed'].includes(evidence.status)) reasons.push('outcome-inconclusive');
   }
   if (!branch.receipt_digest) reasons.push('receipt-missing');
+  if (fork.schema_version === EXECUTOR_FORK_SCHEMA_VERSION
+    && (!verification || verification.status !== 'verified')) {
+    reasons.push('fork-receipt-unverified');
+  }
   return { comparable: reasons.length === 0, reasons };
 }
 
@@ -23,10 +33,22 @@ function normalizedScore(branch) {
   return 1;
 }
 
-function compareFork(fork) {
+function executorFacts(entry) {
+  if (!entry || !entry.profile) return null;
+  return missionControlExecutorState({
+    profile: entry.profile,
+    observation: entry.observation,
+    wrapper: entry.wrapper,
+    verification: entry.verification,
+  });
+}
+
+function compareFork(fork, options = {}) {
   assertValidFork(fork);
+  const evidence = options.evidence instanceof Map ? options.evidence : null;
   const branches = fork.branches.map((branch) => {
-    const eligibility = comparableBranch(branch, fork);
+    const entry = evidence ? evidence.get(branch.branch_id) : undefined;
+    const eligibility = comparableBranch(branch, fork, entry ? entry.verification : undefined);
     return {
       branch_id: branch.branch_id,
       runtime: branch.runtime,
@@ -39,6 +61,7 @@ function compareFork(fork) {
       duration_ms: branch.duration_ms,
       cost: branch.cost,
       score: eligibility.comparable ? normalizedScore(branch) : null,
+      executor: executorFacts(entry),
     };
   });
   const comparable = branches.filter((branch) => branch.comparable);
@@ -58,9 +81,11 @@ function compareFork(fork) {
     schema_version: 1,
     fork_id: fork.fork_id,
     fork_revision: fork.revision,
+    fork_schema_version: fork.schema_version,
     outcome,
     recommendation,
     comparable_count: comparable.length,
+    evidence_verified: Boolean(evidence),
     branches,
   });
 }

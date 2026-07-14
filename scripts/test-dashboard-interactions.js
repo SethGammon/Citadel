@@ -52,6 +52,15 @@ assert.equal(forkComparisonLabel({ outcome: 'insufficient-evidence' }), 'Insuffi
 assert(app.includes("fetch('/api/control'"), 'UI must acquire the process nonce from same-origin control state');
 assert(app.includes("fetch('/api/intents'"), 'UI must use the immutable intent endpoint');
 assert(app.includes("fetch('/api/fork-selections'"), 'UI must use the typed fork selection endpoint');
+for (const fact of [
+  "stat(executor.requested_model, 'requested')",
+  "stat(executor.observed_model === null ? 'unknown' : executor.observed_model, 'observed')",
+  "stat(executor.model_status, 'model proof')",
+  "stat(executor.receipt_status, 'receipt')",
+]) {
+  assert(app.includes(fact), `executor evidence fact is missing from Mission Control: ${fact}`);
+}
+assert(app.includes('executor.local_provider'), 'Mission Control must identify local providers');
 assert(app.includes("'x-citadel-nonce': session.nonce"), 'UI must send the process nonce');
 for (const field of ['operation_id', 'expected_revision', 'idempotency_key', 'actor', 'reason', 'capability', 'action']) {
   assert(new RegExp(`\\b${field}(?:\\s*:|\\s*[,}])`).test(app), `intent body must carry ${field}`);
