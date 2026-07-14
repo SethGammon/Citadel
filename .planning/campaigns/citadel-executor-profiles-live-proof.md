@@ -66,6 +66,8 @@ Direction: Turn Operation Fork from a dual-runtime primitive into a reproducible
 - 2026-07-14: The external dual-vendor run remains permission-gated because it sends the isolated worktree and relevant code context to authenticated Claude and OpenAI services. The rejected launch created no process or fork state. Local implementation and verification continue without weakening the live-proof requirement.
 - 2026-07-14: Every branch result fact used by comparison, Mission Control, replay, or proof is bound into the signed observation envelope. Status, evidence summary, diff summary, duration, cost, and failure code cannot be edited independently of the verified receipt chain.
 - 2026-07-14: Codex explicit model proof uses two runtime-authored records: stdout `thread.started` binds the thread ID, and that exact rollout's `turn_context.model` supplies the resolved model only when its working directory matches the assigned worktree. Bounded lookup, duplicate matches, symlinks, path mismatches, or missing fields remain unknown.
+- 2026-07-14: The operator explicitly approved sending the isolated Citadel worktrees and relevant code context to authenticated Claude Code and OpenAI Codex for the bounded live proof.
+- 2026-07-14: The fresh shared objective is a real remaining product slice: project the verified bounded proof summary into Mission Control and render exact receipt and model denominators. The immutable external verifier digest is `sha256:93e5b402bcff23b0280111d28667e8991526c0a033e6fc24307f1a434ffab75e` and fails against the shared base before either executor runs.
 
 ## Feature Ledger
 
@@ -80,6 +82,7 @@ Direction: Turn Operation Fork from a dual-runtime primitive into a reproducible
 - Evidence hardening: operation digest, run ID, receipt status, telemetry, and the complete branch result are rechecked against signed bindings before comparison or display. Adversarial receipt, telemetry, signer, and manifest edits fail closed.
 - Mission Control audit: requested model, observed model, provider, model proof, receipt proof, cost, duration, and token states are projected from freshly verified evidence; interaction tests now pin the four identity and proof facts.
 - Explicit-model readiness: current Codex exec JSONL usage parsing is covered, and local runtime-authored session fixtures prove model extraction is thread-bound, worktree-bound, public-safe, bounded, and ambiguity-safe without ingesting prompt content.
+- Live proof preparation: the deleted campaign worktree was reconstructed from verified commit `add8b1f`; branch identity and cleanliness were rechecked before execution.
 
 ## Exit Evidence
 
@@ -94,12 +97,12 @@ Direction: Turn Operation Fork from a dual-runtime primitive into a reproducible
 
 ## Active Context
 
-Phase 2 is active. The first live attempt failed containment and is preserved as negative evidence. The recovered implementation plus local proof-report and branch-result binding passes focused verification. Next action: run the full strict gate, checkpoint the local hardening, then execute a fresh sequential Claude Code and Codex fork after explicit external disclosure approval.
+Phase 2 is active. The first live attempt failed containment and is preserved as negative evidence. External disclosure is now approved. The clean shared base has a frozen failing Mission Control proof-summary verifier. Next action: commit this campaign checkpoint and execute the authenticated Claude Code and Codex branches sequentially from that exact revision.
 
 ## Continuation State
 
 - current_phase: 2
-- current_substep: verify and checkpoint local proof implementation while live vendor execution awaits approval
+- current_substep: commit approved live-proof base and execute both explicit executor profiles sequentially
 - worktree: `C:\tmp\citadel-executor-profiles`
 - branch: `codex/citadel-executor-profiles`
 - baseline_commit: `cdf25581b45b2096d1f8b1a590cfba0836fe26af`
@@ -107,8 +110,8 @@ Phase 2 is active. The first live attempt failed containment and is preserved as
 - checkpoint-bootstrap: `e7d86a2`
 - checkpoint-recovered-candidate: `cdf2558`
 - files_modified: proof builder, fork CLI, evidence binding, executor profiles, Mission Control contract tests, documentation, campaign state, and adversarial tests
-- blockers: explicit approval is required before sending isolated worktree context to authenticated Claude and OpenAI services
-- next_actions: run strict verification; commit local proof and evidence hardening; obtain disclosure approval; execute Claude and Codex sequentially with explicit profiles; preserve receipts, diffs, comparison, and negative evidence
+- blockers: none
+- next_actions: commit approved campaign state; execute Claude and Codex sequentially with explicit profiles; preserve receipts, diffs, comparison, and negative evidence; select only from freshly verified proof
 
 <!-- session-end: 2026-07-14T02:06:26.490Z -->
 
