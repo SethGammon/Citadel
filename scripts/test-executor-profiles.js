@@ -77,6 +77,7 @@ rejects({ ...copy(validFile), executors: [copy(claude), { ...copy(codex), adapte
 rejects({ ...copy(validFile), executors: [copy(claude), { ...copy(local), runtime: 'claude' }] }, /provider|runtime/i);
 rejects({ ...copy(validFile), executors: [copy(claude), { ...copy(local), local_provider: 'docker' }] }, /provider|allow/i);
 rejects({ ...copy(validFile), executors: [copy(claude), { ...copy(local), model: null }] }, /model/i);
+rejects({ ...copy(validFile), executors: [copy(claude), { ...copy(local), model: '../../private-model' }] }, /model|public-safe/i);
 
 const duplicateRuntime = profiles.normalizeExecutorFile({
   schema_version: 1,
@@ -105,6 +106,7 @@ assert.deepEqual(profiles.resolveExecutorSelection({ runtimes: ['claude', 'codex
 assert.deepEqual(profiles.runtimeInvocationForProfile(claude), {
   command: 'claude',
   args: ['--print', '--output-format', 'json', '--permission-mode', 'dontAsk',
+    '--allowedTools', profiles.CLAUDE_ALLOWED_TOOLS,
     '--model', 'claude-sonnet-4-5', '--effort', 'high'],
 });
 assert.deepEqual(profiles.runtimeInvocationForProfile(local), {
@@ -148,13 +150,14 @@ const wrapperInput = {
   contract_digest: forkV2.contract_digest,
   executor_profile_digest: profileDigests.get(local.profile_id),
   execution_receipt_digest: `sha256:${'b'.repeat(64)}`,
+  observation_digest: `sha256:${'d'.repeat(64)}`,
   issued_at: '2026-07-13T18:00:00.000Z',
   issuer_id: 'issuer-fork-executor-proof',
 };
 const wrapper = profiles.createForkReceiptWrapper({ ...wrapperInput, signingKey });
 const publicKey = crypto.createPublicKey(signingKey);
 assert.equal(profiles.verifyForkReceiptWrapper(wrapper, { publicKey, expected: wrapperInput }).status, 'verified');
-for (const field of ['fork_id', 'branch_id', 'contract_digest', 'executor_profile_digest', 'execution_receipt_digest']) {
+for (const field of ['fork_id', 'branch_id', 'contract_digest', 'executor_profile_digest', 'execution_receipt_digest', 'observation_digest']) {
   const tampered = copy(wrapper);
   tampered.receipt[field] = field.endsWith('digest') ? `sha256:${'c'.repeat(64)}` : `${tampered.receipt[field]}-tampered`;
   assert.notEqual(profiles.verifyForkReceiptWrapper(tampered, { publicKey, expected: wrapperInput }).status, 'verified', field);

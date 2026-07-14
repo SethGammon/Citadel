@@ -178,11 +178,11 @@ evidence, not an unstructured claim of completion.
 
 Citadel owns every executable, argument position, permission mode, and sandbox
 setting. Executors are spawned with `shell: false` and literal argument arrays.
-On Windows a vendor CLI that exists only as a `.cmd` shim cannot be started
-directly by `CreateProcess`, so Citadel launches the shim through the command
-interpreter itself with verbatim, individually quoted arguments, and only after
-every argument has been proven free of interpreter syntax. Shell mode is never
-enabled.
+On Windows a vendor CLI that exists only as an npm `.cmd` shim cannot be started
+directly by `CreateProcess`. Citadel resolves only the known vendor package to
+its installed JavaScript entrypoint and launches it with the current Node
+executable, literal arguments, and `shell: false`. An unknown shim fails closed
+instead of crossing a command-interpreter boundary.
 
 Model, token, and cost evidence is read only from a runtime's own declared
 machine-readable output: the Claude JSON result object and the Codex JSONL event

@@ -1,5 +1,6 @@
 'use strict';
 
+const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
 const operations = require('../operations');
@@ -8,7 +9,7 @@ const {
   writeExecutorTelemetry, writeForkReceiptWrapper, writeReceipt,
 } = require('./store');
 const {
-  completeLanding, createOperationFork, markLandingInProgress, prepareLanding, selectBranch, updateBranch,
+  completeLanding, createOperationFork, markLandingInProgress, nextFork, prepareLanding, selectBranch, updateBranch,
 } = require('./lifecycle');
 const { compareFork } = require('./compare');
 const { EXECUTOR_FORK_SCHEMA_VERSION } = require('./contracts');
@@ -62,6 +63,10 @@ function startFork(options) {
   const baseRevision = options.baseRevision || provider.currentRevision(projectRoot);
   const createdAt = options.createdAt || new Date().toISOString();
   const operation = operationFrom(options, createdAt);
+  const signingKey = options.signingKey || generateSigningKey();
+  const signingPublicKey = crypto.createPublicKey(signingKey)
+    .export({ type: 'spki', format: 'pem' }).toString();
+  const issuerId = `issuer-${options.forkId}`;
   const shared = {
     objective_digest: operation.objective_digest,
     scope_digest: operations.sha256Digest(options.scope || { repository: 'current' }),
@@ -71,6 +76,10 @@ function startFork(options) {
     verifier_digest: operations.sha256Digest(options.workflow.verifier),
     base_revision: baseRevision,
   };
+  if (selection.source === 'executors') {
+    shared.signer_public_key_digest = operations.sha256Digest({ public_key: signingPublicKey });
+    shared.issuer_id = issuerId;
+  }
   let fork = createOperationFork({
     forkId: options.forkId,
     operation,
@@ -79,8 +88,12 @@ function startFork(options) {
     executors: selection.source === 'executors' ? selection.executor_file : undefined,
     runtimes: selection.source === 'executors' ? undefined : selection.profiles.map((profile) => profile.runtime),
   });
-  const signingKey = options.signingKey || generateSigningKey();
-  createForkRecord(projectRoot, fork, { objective: options.objective, signingKey, workflow: options.workflow });
+  createForkRecord(projectRoot, fork, {
+    objective: options.objective,
+    signingKey,
+    signingPublicKey: selection.source === 'executors' ? signingPublicKey : undefined,
+    workflow: options.workflow,
+  });
   if (selection.source === 'executors') writeExecutorFile(projectRoot, fork.fork_id, selection.executor_file);
   appendEvent(projectRoot, fork.fork_id, eventFor(fork, 'fork-created', { detail: { contract_digest: fork.contract_digest } }));
 
@@ -108,20 +121,8 @@ function startFork(options) {
 /** Bind one completed branch to its executor profile with a signed fork receipt. */
 function recordBranchEvidence(projectRoot, fork, branch, profile, result, signingKey) {
   writeReceipt(projectRoot, fork.fork_id, branch.branch_id, result.receipt_envelope);
-  const wrapper = createForkReceiptWrapper({
-    fork_id: fork.fork_id,
-    branch_id: branch.branch_id,
-    contract_digest: fork.contract_digest,
-    executor_profile_digest: fork.schema_version === EXECUTOR_FORK_SCHEMA_VERSION
-      ? branch.executor_profile_digest : executorProfileDigest(profile),
-    execution_receipt_digest: result.receipt_digest,
-    issued_at: result.completed_at,
-    issuer_id: `issuer-${fork.fork_id}`,
-    signingKey,
-  });
-  writeForkReceiptWrapper(projectRoot, fork.fork_id, branch.branch_id, wrapper);
   const observation = result.observation || null;
-  writeExecutorTelemetry(projectRoot, fork.fork_id, branch.branch_id, {
+  const telemetry = {
     schema_version: 1,
     branch_id: branch.branch_id,
     runtime: profile.runtime,
@@ -131,7 +132,22 @@ function recordBranchEvidence(projectRoot, fork, branch, profile, result, signin
     duration_ms: observation && observation.duration_ms !== undefined ? observation.duration_ms : null,
     tokens: observation && observation.tokens !== undefined ? observation.tokens : null,
     source: observation && observation.source ? observation.source : 'adapter-silent',
+  };
+  writeExecutorTelemetry(projectRoot, fork.fork_id, branch.branch_id, telemetry);
+  const wrapper = createForkReceiptWrapper({
+    fork_id: fork.fork_id,
+    branch_id: branch.branch_id,
+    contract_digest: fork.contract_digest,
+    executor_profile_digest: fork.schema_version === EXECUTOR_FORK_SCHEMA_VERSION
+      ? branch.executor_profile_digest : executorProfileDigest(profile),
+    execution_receipt_digest: result.receipt_digest,
+    observation_digest: operations.sha256Digest(telemetry),
+    issued_at: result.completed_at,
+    issuer_id: fork.schema_version === EXECUTOR_FORK_SCHEMA_VERSION
+      ? fork.shared.issuer_id : `issuer-${fork.fork_id}`,
+    signingKey,
   });
+  writeForkReceiptWrapper(projectRoot, fork.fork_id, branch.branch_id, wrapper);
   return wrapper;
 }
 
@@ -167,6 +183,7 @@ function resumeFork(options) {
     const profile = profiles.get(branch.branch_id);
     const result = (options.runBranch || runRuntimeBranch)({
       fork, branch, profile, objective, signingKey, worktree, worktreeProvider: provider,
+      projectRoot, worktreeRoot: options.worktreeRoot,
       verifier: workflow.verifier, spawn: options.spawn, env: options.env,
       timeoutMs: options.timeoutMs, startedAt,
       completedAt: options.now ? options.now() : undefined,
@@ -187,7 +204,17 @@ function resumeFork(options) {
     appendEvent(projectRoot, fork.fork_id, eventFor(fork, 'runtime-completed', { branchId: branch.branch_id,
       status: result.status, detail: { receipt_digest: result.receipt_digest } }));
   }
-  return { fork, comparison: compareFork(fork, { evidence: forkEvidence(projectRoot, fork) }) };
+  let evidence = forkEvidence(projectRoot, fork);
+  let comparison = compareFork(fork, { evidence });
+  if (fork.schema_version === EXECUTOR_FORK_SCHEMA_VERSION && !fork.selection
+    && comparison.comparable_count >= 2 && fork.status !== 'ready') {
+    const previousRevision = fork.revision;
+    fork = nextFork(fork, { status: 'ready' }, options.now ? options.now() : new Date().toISOString());
+    saveFork(projectRoot, fork, previousRevision);
+    evidence = forkEvidence(projectRoot, fork);
+    comparison = compareFork(fork, { evidence });
+  }
+  return { fork, comparison };
 }
 
 /**

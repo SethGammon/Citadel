@@ -3,6 +3,7 @@
 'use strict';
 
 const assert = require('assert');
+const crypto = require('crypto');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
@@ -128,6 +129,9 @@ assert.equal(byId.get('branch-codex-hosted').cost_status, 'unknown');
 assert.equal(byId.get('branch-codex-local-qwen').model_status, 'unknown');
 assert.equal(byId.get('branch-codex-local-qwen').observed_model, null);
 assert.equal(byId.get('branch-codex-local-qwen').requested_model, 'qwen3-coder:30b');
+const unverifiedComparison = forks.compareFork(fork);
+assert.equal(unverifiedComparison.comparable_count, 0);
+assert(unverifiedComparison.branches.every((branch) => branch.reasons.includes('fork-receipt-unverified')));
 
 // Public replay carries the executor facts and none of the private material.
 const replay = forks.publicReplay(forks.loadFork(project, 'fork-executors'),
@@ -155,6 +159,41 @@ assert.throws(() => forks.applySelection({ projectRoot: project, forkId: 'fork-e
   branchId: 'branch-claude-sonnet', expectedRevision: tamperedFork.revision, actorId: 'actor-test',
   idempotencyKey: 'select-tampered-001', reason: 'tampered' }), /verified/i);
 fs.writeFileSync(wrapperFile, original);
+
+// The signer key is bound into the immutable shared contract. Replacing the
+// public key cannot make a newly signed wrapper trusted.
+const signerFile = path.join(project, '.planning', 'operation-forks', 'fork-executors', 'signer-public-key.pem');
+const signerOriginal = fs.readFileSync(signerFile, 'utf8');
+const replacementKey = crypto.generateKeyPairSync('ed25519').publicKey
+  .export({ type: 'spki', format: 'pem' }).toString();
+fs.writeFileSync(signerFile, replacementKey);
+const signerTampered = forks.forkEvidence(project, forks.loadFork(project, 'fork-executors'))
+  .get('branch-claude-sonnet');
+assert.notEqual(signerTampered.verification.status, 'verified');
+assert.equal(signerTampered.verification.reason_code, 'FORK_SIGNER_KEY_DIGEST_MISMATCH');
+fs.writeFileSync(signerFile, signerOriginal);
+
+// The underlying execution receipt and signed telemetry binding are both
+// reloaded. Altering either one invalidates comparison.
+const receiptFile = path.join(project, '.planning', 'operation-forks', 'fork-executors', 'receipts',
+  'branch-claude-sonnet.json');
+const receiptOriginal = fs.readFileSync(receiptFile, 'utf8');
+const receiptTampered = JSON.parse(receiptOriginal);
+receiptTampered.receipt_digest = `sha256:${'e'.repeat(64)}`;
+fs.writeFileSync(receiptFile, `${JSON.stringify(receiptTampered, null, 2)}\n`);
+assert.notEqual(forks.forkEvidence(project, forks.loadFork(project, 'fork-executors'))
+  .get('branch-claude-sonnet').verification.status, 'verified');
+fs.writeFileSync(receiptFile, receiptOriginal);
+
+const telemetryFile = path.join(project, '.planning', 'operation-forks', 'fork-executors', 'telemetry',
+  'branch-claude-sonnet.json');
+const telemetryOriginal = fs.readFileSync(telemetryFile, 'utf8');
+const telemetryTampered = JSON.parse(telemetryOriginal);
+telemetryTampered.model = 'tampered-model';
+fs.writeFileSync(telemetryFile, `${JSON.stringify(telemetryTampered, null, 2)}\n`);
+assert.notEqual(forks.forkEvidence(project, forks.loadFork(project, 'fork-executors'))
+  .get('branch-claude-sonnet').verification.status, 'verified');
+fs.writeFileSync(telemetryFile, telemetryOriginal);
 
 // A verified branch selects, and landing still refuses to run without a fresh
 // verification of that same binding.
@@ -203,28 +242,74 @@ assert.throws(() => forks.startFork({ projectRoot: project, forkId: 'fork-confli
 /mutually exclusive/i);
 assert.equal(fs.existsSync(path.join(project, '.planning', 'operation-forks', 'fork-conflict')), false);
 
-// Windows launches a .cmd shim through the interpreter without shell mode, and
-// only with arguments that carry no interpreter syntax.
+// Runtime containment detects branch ownership changes, missing parent or
+// sibling registrations, and blocks the verifier on any violation.
+const containmentSnapshot = provider.captureContainment({
+  projectRoot: project,
+  worktreeRoot: worktrees,
+  fork,
+  branch: fork.branches[0],
+});
+assert.equal(provider.assertContainment(containmentSnapshot), true);
+const containedTree = provider.resolve(project, worktrees, 'fork-executors', 'branch-codex-hosted');
+const containedBranch = git(containedTree, ['rev-parse', '--abbrev-ref', 'HEAD']);
+git(containedTree, ['switch', '-c', 'rogue-containment']);
+assert.throws(() => provider.assertContainment(containmentSnapshot), /ownership changed/i);
+git(containedTree, ['switch', containedBranch]);
+git(project, ['branch', '-D', 'rogue-containment']);
+const missingParent = {
+  expected: containmentSnapshot.expected.map((entry, index) => (index === 0
+    ? { ...entry, path: `${entry.path}-missing` } : entry)),
+};
+assert.throws(() => provider.assertContainment(missingParent), /removed|ownership/i);
+
+let verifierCalls = 0;
+const containmentResult = forks.runRuntimeBranch({
+  fork,
+  branch: fork.branches[0],
+  profile: executors.executors[0],
+  objective: 'Prove executor profiles bind identity to evidence',
+  signingKey: crypto.generateKeyPairSync('ed25519').privateKey,
+  worktree: project,
+  worktreeProvider: {
+    captureContainment: () => ({ expected: [] }),
+    assertContainment: () => { throw Object.assign(new Error('ownership changed'), { code: 'FORK_WORKTREE_CONTAINMENT_VIOLATION' }); },
+    diffSummary: () => ({ files_changed: 0, insertions: 0, deletions: 0, digest: operations.sha256Digest([]) }),
+  },
+  verifier: { command: process.execPath, args: ['-e', 'process.exit(0)'] },
+  spawn: () => { verifierCalls += 1; return { status: 0, stdout: '{}', stderr: '' }; },
+  startedAt: '2026-07-13T20:00:00.000Z',
+  completedAt: '2026-07-13T20:00:01.000Z',
+});
+assert.equal(containmentResult.failure_code, 'WORKTREE_CONTAINMENT_VIOLATION');
+assert.equal(verifierCalls, 1, 'containment violation must skip verifier spawn');
+
+// Windows launches a known npm shim through its JavaScript entrypoint without
+// a command interpreter.
 const invocation = forks.runtimeInvocationForProfile(executors.executors[2]);
 const shim = forks.platformInvocation(invocation, {
   platform: 'win32',
-  env: { ComSpec: 'C:\\Windows\\System32\\cmd.exe' },
+  env: {},
   resolve: () => 'C:\\Program Files\\nodejs\\codex.cmd',
+  resolveEntrypoint: () => 'C:\\Program Files\\nodejs\\node_modules\\@openai\\codex\\bin\\codex.js',
+  exists: () => true,
+  nodePath: 'C:\\Program Files\\nodejs\\node.exe',
 });
-assert.equal(shim.command, 'C:\\Windows\\System32\\cmd.exe');
-assert.equal(shim.windowsVerbatimArguments, true);
-assert.deepEqual(shim.args.slice(0, 3), ['/d', '/s', '/c']);
-assert.equal(shim.args[3],
-  '""C:\\Program Files\\nodejs\\codex.cmd" "exec" "--json" "--sandbox" "workspace-write" '
-  + '"--ignore-user-config" "--oss" "--local-provider" "ollama" "--model" "qwen3-coder:30b" "-""');
+assert.equal(shim.command, 'C:\\Program Files\\nodejs\\node.exe');
+assert.equal(shim.windowsVerbatimArguments, false);
+assert.deepEqual(shim.args, [
+  'C:\\Program Files\\nodejs\\node_modules\\@openai\\codex\\bin\\codex.js',
+  ...invocation.args,
+]);
 const direct = forks.platformInvocation(invocation, {
   platform: 'win32', env: {}, resolve: () => 'C:\\tools\\codex.exe',
 });
 assert.equal(direct.command, 'C:\\tools\\codex.exe');
 assert.equal(direct.windowsVerbatimArguments, false);
-assert.throws(() => forks.platformInvocation({ command: 'codex', args: ['exec', 'a & whoami'] }, {
-  platform: 'win32', env: {}, resolve: () => 'C:\\tools\\codex.cmd',
-}), /unsafe|interpreter/i);
+assert.throws(() => forks.platformInvocation({ command: 'unknown', args: ['exec'] }, {
+  platform: 'win32', env: {}, resolve: () => 'C:\\tools\\unknown.cmd',
+  resolveEntrypoint: () => null,
+}), /trusted direct entrypoint/i);
 let spawnOptions = null;
 forks.spawnInvocation(invocation, { platform: 'linux', spawn: (_command, _args, spawned) => {
   spawnOptions = spawned;

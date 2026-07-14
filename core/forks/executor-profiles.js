@@ -13,11 +13,12 @@ const PROFILE_FIELDS = Object.freeze(['profile_id', 'runtime', 'model', 'local_p
 const WRAPPER_FIELDS = Object.freeze(['receipt', 'receipt_digest', 'algorithm', 'signature']);
 const RECEIPT_FIELDS = Object.freeze([
   'schema_version', 'kind', 'fork_id', 'branch_id', 'contract_digest',
-  'executor_profile_digest', 'execution_receipt_digest', 'issued_at', 'issuer_id',
+  'executor_profile_digest', 'execution_receipt_digest', 'observation_digest',
+  'issued_at', 'issuer_id',
 ]);
 const BINDING_FIELDS = Object.freeze([
   'fork_id', 'branch_id', 'contract_digest', 'executor_profile_digest',
-  'execution_receipt_digest', 'issued_at', 'issuer_id',
+  'execution_receipt_digest', 'observation_digest', 'issued_at', 'issuer_id',
 ]);
 
 const EXECUTOR_RUNTIMES = Object.freeze(['claude', 'codex']);
@@ -25,13 +26,15 @@ const LOCAL_PROVIDERS = Object.freeze(['ollama', 'lmstudio']);
 const PROFILE_ID_PATTERN = /^[a-z][a-z0-9-]{0,47}$/;
 // Model IDs may be any control-character-free string per the contract. Observed
 // telemetry is held to a stricter shape so replay can never carry a path.
-const OBSERVED_MODEL_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._:@/-]{0,127}$/;
+const MODEL_ID_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._:@-]{0,127}$/;
+const OBSERVED_MODEL_PATTERN = MODEL_ID_PATTERN;
 
 const CLAUDE_PERMISSION_MODES = Object.freeze(['acceptEdits', 'auto', 'manual', 'dontAsk', 'plan']);
 const CLAUDE_EFFORTS = Object.freeze(['low', 'medium', 'high', 'xhigh', 'max']);
 const CODEX_SANDBOXES = Object.freeze(['read-only', 'workspace-write']);
 const DEFAULT_PERMISSION_MODE = 'acceptEdits';
 const DEFAULT_SANDBOX = 'workspace-write';
+const CLAUDE_ALLOWED_TOOLS = 'Read,Edit,Write,Glob,Grep,Bash(node *),Bash(npm *),Bash(npx *),Bash(git diff *),Bash(git status *),Bash(git rev-parse *)';
 const ADAPTER_OPTION_KEYS = Object.freeze({
   claude: Object.freeze(['permission_mode', 'effort']),
   codex: Object.freeze(['sandbox']),
@@ -90,9 +93,8 @@ function validateExecutorProfile(profile) {
   if (!EXECUTOR_RUNTIMES.includes(profile.runtime)) {
     errors.push(`executor runtime is not registered: ${String(profile.runtime)}`);
   }
-  if (profile.model !== null && (typeof profile.model !== 'string' || profile.model.length === 0
-    || profile.model.length > 128 || /[\p{Cc}\p{Cf}]/u.test(profile.model))) {
-    errors.push('executor model must be null or a nonempty model ID without control characters');
+  if (profile.model !== null && (typeof profile.model !== 'string' || !MODEL_ID_PATTERN.test(profile.model))) {
+    errors.push('executor model must be null or a public-safe model ID');
   }
   if (profile.local_provider !== null && !LOCAL_PROVIDERS.includes(profile.local_provider)) {
     errors.push(`executor local_provider must be null or an allowed provider (${LOCAL_PROVIDERS.join(', ')})`);
@@ -229,7 +231,8 @@ function runtimeInvocationForProfile(profile) {
   const options = profile.adapter_options;
   if (profile.runtime === 'claude') {
     const args = ['--print', '--output-format', 'json',
-      '--permission-mode', options.permission_mode || DEFAULT_PERMISSION_MODE];
+      '--permission-mode', options.permission_mode || DEFAULT_PERMISSION_MODE,
+      '--allowedTools', CLAUDE_ALLOWED_TOOLS];
     if (profile.model !== null) args.push('--model', profile.model);
     if (options.effort) args.push('--effort', options.effort);
     return { command: 'claude', args };
@@ -288,6 +291,7 @@ function forkReceiptFor(input) {
     contract_digest: input.contract_digest,
     executor_profile_digest: input.executor_profile_digest,
     execution_receipt_digest: input.execution_receipt_digest,
+    observation_digest: input.observation_digest,
     issued_at: input.issued_at,
     issuer_id: input.issuer_id,
   };
@@ -303,7 +307,7 @@ function validateForkReceipt(receipt) {
   if (receipt.kind !== FORK_RECEIPT_KIND) errors.push('fork receipt kind is invalid');
   if (typeof receipt.fork_id !== 'string' || !operations.ID_PATTERN.test(receipt.fork_id)) errors.push('fork receipt fork_id is invalid');
   if (typeof receipt.branch_id !== 'string' || !operations.ID_PATTERN.test(receipt.branch_id)) errors.push('fork receipt branch_id is invalid');
-  for (const field of ['contract_digest', 'executor_profile_digest', 'execution_receipt_digest']) {
+  for (const field of ['contract_digest', 'executor_profile_digest', 'execution_receipt_digest', 'observation_digest']) {
     if (!isDigest(receipt[field])) errors.push(`fork receipt ${field} is invalid`);
   }
   if (!canonicalTime(receipt.issued_at)) errors.push('fork receipt issued_at is invalid');
@@ -461,6 +465,7 @@ function publicExecutorReplay(input) {
       contract_digest: receipt ? receipt.contract_digest : null,
       executor_profile_digest: receipt ? receipt.executor_profile_digest : executorProfileDigest(input.profile),
       execution_receipt_digest: receipt ? receipt.execution_receipt_digest : null,
+      observation_digest: receipt ? receipt.observation_digest : null,
     },
   };
   assertRedacted(replay, 'FORK_EXECUTOR_REPLAY_REDACTION_FAILED');
@@ -470,6 +475,7 @@ function publicExecutorReplay(input) {
 module.exports = Object.freeze({
   ADAPTER_OPTION_KEYS,
   CLAUDE_EFFORTS,
+  CLAUDE_ALLOWED_TOOLS,
   CLAUDE_PERMISSION_MODES,
   CODEX_SANDBOXES,
   DEFAULT_PERMISSION_MODE,
@@ -478,6 +484,7 @@ module.exports = Object.freeze({
   EXECUTOR_SCHEMA_VERSION,
   FORK_RECEIPT_KIND,
   LOCAL_PROVIDERS,
+  MODEL_ID_PATTERN,
   OBSERVED_MODEL_PATTERN,
   PROFILE_ID_PATTERN,
   assertValidExecutorFile,

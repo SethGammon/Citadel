@@ -1,6 +1,7 @@
 'use strict';
 
 const crypto = require('crypto');
+const operations = require('../operations');
 const { EXECUTOR_FORK_SCHEMA_VERSION } = require('./contracts');
 const {
   branchIdForProfile,
@@ -14,6 +15,7 @@ const {
 } = require('./executor-profiles');
 const {
   readExecutorFile, readExecutorTelemetry, readForkReceiptWrapper, readPrivate,
+  readReceipt, readSignerPublicKey,
 } = require('./store');
 
 const TELEMETRY_FIELDS = [
@@ -59,20 +61,38 @@ function loadExecutorProfiles(projectRoot, fork) {
   return byBranch;
 }
 
-function trustedPublicKey(projectRoot, forkId) {
+function verification(status, reasonCode) {
+  return Object.freeze({ status, reason_code: reasonCode });
+}
+
+function trustedPublicKey(projectRoot, fork) {
   try {
-    return crypto.createPublicKey(readPrivate(projectRoot, forkId, 'signing-key.pem'));
+    if (fork.schema_version === EXECUTOR_FORK_SCHEMA_VERSION) {
+      const pem = readSignerPublicKey(projectRoot, fork.fork_id);
+      if (!pem) return { key: null, result: verification('unknown', 'FORK_SIGNER_KEY_MISSING') };
+      if (operations.sha256Digest({ public_key: pem }) !== fork.shared.signer_public_key_digest) {
+        return { key: null, result: verification('invalid', 'FORK_SIGNER_KEY_DIGEST_MISMATCH') };
+      }
+      return { key: crypto.createPublicKey(pem), result: verification('verified', 'FORK_SIGNER_KEY_VERIFIED') };
+    }
+    return {
+      key: crypto.createPublicKey(readPrivate(projectRoot, fork.fork_id, 'signing-key.pem')),
+      result: verification('verified', 'FORK_LEGACY_SIGNER_LOADED'),
+    };
   } catch (_error) {
-    // Without the fork's own signer the wrapper can never reach `verified`.
-    return null;
+    return { key: null, result: verification('invalid', 'FORK_SIGNER_KEY_INVALID') };
   }
 }
 
-function validObservation(value, branchId) {
+function validObservation(value, branchId, profile) {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
   if (JSON.stringify(Object.keys(value).sort()) !== JSON.stringify([...TELEMETRY_FIELDS].sort())) return null;
   if (value.schema_version !== 1 || value.branch_id !== branchId) return null;
+  if (!profile || value.runtime !== profile.runtime) return null;
   if (typeof value.trusted !== 'boolean') return null;
+  const expectedSource = profile.runtime === 'claude' ? 'claude-json' : 'codex-jsonl';
+  if (value.trusted && value.source !== expectedSource) return null;
+  if (!value.trusted && value.source !== 'adapter-silent') return null;
   return value;
 }
 
@@ -83,12 +103,28 @@ function validObservation(value, branchId) {
 function verifyBranchEvidence(projectRoot, fork, branch, options = {}) {
   const profile = options.profile || loadExecutorProfiles(projectRoot, fork).get(branch.branch_id);
   const wrapper = readForkReceiptWrapper(projectRoot, fork.fork_id, branch.branch_id);
-  const publicKey = options.publicKey !== undefined ? options.publicKey
-    : trustedPublicKey(projectRoot, fork.fork_id);
-  let verification = null;
-  if (wrapper) {
-    verification = verifyForkReceiptWrapper(wrapper, {
-      publicKey,
+  const anchor = options.anchor || trustedPublicKey(projectRoot, fork);
+  const executionEnvelope = readReceipt(projectRoot, fork.fork_id, branch.branch_id);
+  let executionVerification = verification('invalid', 'EXECUTION_RECEIPT_MISSING');
+  if (anchor.key && executionEnvelope) {
+    executionVerification = operations.verifyExecutionReceipt(executionEnvelope, { publicKey: anchor.key });
+    if (executionVerification.status === 'verified'
+      && executionEnvelope.receipt_digest !== branch.receipt_digest) {
+      executionVerification = verification('invalid', 'EXECUTION_RECEIPT_DIGEST_MISMATCH');
+    }
+    if (executionVerification.status === 'verified' && fork.schema_version === EXECUTOR_FORK_SCHEMA_VERSION
+      && (executionEnvelope.receipt.issuer_id !== fork.shared.issuer_id
+        || executionEnvelope.receipt.issued_at !== branch.completed_at)) {
+      executionVerification = verification('invalid', 'EXECUTION_RECEIPT_BINDING_MISMATCH');
+    }
+  }
+  const storedObservation = validObservation(
+    readExecutorTelemetry(projectRoot, fork.fork_id, branch.branch_id), branch.branch_id, profile,
+  );
+  let wrapperVerification = verification('invalid', 'FORK_RECEIPT_MISSING');
+  if (wrapper && anchor.key) {
+    wrapperVerification = verifyForkReceiptWrapper(wrapper, {
+      publicKey: anchor.key,
       expected: {
         fork_id: fork.fork_id,
         branch_id: branch.branch_id,
@@ -96,22 +132,37 @@ function verifyBranchEvidence(projectRoot, fork, branch, options = {}) {
         executor_profile_digest: fork.schema_version === EXECUTOR_FORK_SCHEMA_VERSION
           ? branch.executor_profile_digest : executorProfileDigest(profile),
         execution_receipt_digest: branch.receipt_digest,
+        observation_digest: operations.sha256Digest(storedObservation),
+        issued_at: branch.completed_at,
+        issuer_id: fork.schema_version === EXECUTOR_FORK_SCHEMA_VERSION
+          ? fork.shared.issuer_id : `issuer-${fork.fork_id}`,
       },
     });
   }
-  const observation = validObservation(
-    readExecutorTelemetry(projectRoot, fork.fork_id, branch.branch_id), branch.branch_id,
-  );
-  return { branch_id: branch.branch_id, profile, wrapper, verification, observation };
+  let combined = wrapperVerification;
+  if (anchor.result.status !== 'verified') combined = anchor.result;
+  else if (executionVerification.status !== 'verified') combined = executionVerification;
+  const observation = storedObservation
+    ? { ...storedObservation, trusted: storedObservation.trusted && combined.status === 'verified' }
+    : null;
+  return {
+    branch_id: branch.branch_id,
+    profile,
+    wrapper,
+    execution_envelope: executionEnvelope,
+    execution_verification: executionVerification,
+    verification: combined,
+    observation,
+  };
 }
 
 function forkEvidence(projectRoot, fork) {
   const profiles = loadExecutorProfiles(projectRoot, fork);
-  const publicKey = trustedPublicKey(projectRoot, fork.fork_id);
+  const anchor = trustedPublicKey(projectRoot, fork);
   const byBranch = new Map();
   for (const branch of fork.branches) {
     byBranch.set(branch.branch_id, verifyBranchEvidence(projectRoot, fork, branch, {
-      profile: profiles.get(branch.branch_id), publicKey,
+      profile: profiles.get(branch.branch_id), anchor,
     }));
   }
   return byBranch;

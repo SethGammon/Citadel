@@ -78,7 +78,7 @@ function updateBranch(fork, branchId, changes, now) {
   else if (fork.selection) status = 'selected';
   else {
     const preview = assertValidFork({ ...fork, branches });
-    status = compareFork(preview).comparable_count >= 2 ? 'ready'
+    status = preview.schema_version !== EXECUTOR_FORK_SCHEMA_VERSION && compareFork(preview).comparable_count >= 2 ? 'ready'
       : branches.every((branch) => ['passed', 'failed', 'blocked', 'unknown'].includes(branch.status)) ? 'unknown' : status;
   }
   return nextFork(fork, { branches, status }, now);
@@ -109,8 +109,8 @@ function selectBranch(fork, options) {
   if (fork.revision !== options.expectedRevision) throw Object.assign(new Error('Fork revision changed before selection'), { code: 'FORK_REVISION_CONFLICT' });
   const branch = fork.branches.find((entry) => entry.branch_id === options.branchId);
   if (!branch) throw Object.assign(new Error(`Branch not found: ${options.branchId}`), { code: 'FORK_BRANCH_NOT_FOUND' });
-  if (!comparableBranch(branch, fork).comparable) throw Object.assign(new Error('Branch cannot be selected without complete verified evidence'), { code: 'FORK_BRANCH_INCOMPARABLE' });
   assertVerifiedReceipt(fork, branch.branch_id, options.receiptVerification);
+  if (!comparableBranch(branch, fork, options.receiptVerification).comparable) throw Object.assign(new Error('Branch cannot be selected without complete verified evidence'), { code: 'FORK_BRANCH_INCOMPARABLE' });
   const selectedAt = canonicalTime(options.selectedAt);
   const selection = {
     selection_id: `selection-${operations.sha256Digest({ fork: fork.fork_id, branch: branch.branch_id,
@@ -138,8 +138,9 @@ function prepareLanding(fork, options) {
   if (fork.revision !== options.expectedRevision) throw Object.assign(new Error('Fork revision changed before landing'), { code: 'FORK_REVISION_CONFLICT' });
   if (!fork.selection) throw Object.assign(new Error('Select a branch before landing'), { code: 'FORK_SELECTION_REQUIRED' });
   const selected = fork.branches.find((branch) => branch.branch_id === fork.selection.branch_id);
-  if (!selected || !comparableBranch(selected, fork).comparable) throw Object.assign(new Error('Selected branch is no longer comparable'), { code: 'FORK_BRANCH_INCOMPARABLE' });
+  if (!selected) throw Object.assign(new Error('Selected branch is missing'), { code: 'FORK_BRANCH_INCOMPARABLE' });
   assertVerifiedReceipt(fork, selected.branch_id, options.receiptVerification);
+  if (!comparableBranch(selected, fork, options.receiptVerification).comparable) throw Object.assign(new Error('Selected branch is no longer comparable'), { code: 'FORK_BRANCH_INCOMPARABLE' });
   const expectedToken = landingConfirmation(fork, options.targetRevision);
   if (options.confirmation !== expectedToken) throw Object.assign(new Error('Landing confirmation is missing or stale'), { code: 'FORK_CONFIRMATION_REQUIRED', confirmation: expectedToken });
   const confirmedAt = canonicalTime(options.confirmedAt);

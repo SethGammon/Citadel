@@ -58,6 +58,10 @@ Direction: Turn Operation Fork from a dual-runtime primitive into a reproducible
 - 2026-07-13: Live vendor output and deterministic fixture evidence remain separate evidence classes. Neither can relabel the other.
 - 2026-07-13: The original checkout is dirty and remains untouched. Work starts from protected `main` commit `8bf574c` in `C:\tmp\citadel-executor-profiles`.
 - 2026-07-13: Installed live runtimes are Claude Code 2.1.206 and Codex CLI 0.130.0. Both are authenticated. Current configured models are Claude `opus` and Codex `gpt-5.6-sol`.
+- 2026-07-13: The first live fork is invalid evidence. Claude Code left its assigned worktree, checked out the campaign branch, and committed there. Cleanup then removed the fork store before the parent could write its receipt. Codex did not run. The implementation commit was recovered, but the run is recorded as failed rather than relabeled.
+- 2026-07-13: Executor-profile trust is contract anchored. Schema 2 binds the signer public-key digest, issuer, execution receipt, signed observation digest, executor profile, and adapter contract. Mutable telemetry or a substituted fork-local key cannot manufacture trust.
+- 2026-07-13: Agent branch ownership is a runtime postcondition. Citadel snapshots every assigned worktree and fails closed if an executor removes a worktree, changes its branch, or changes its HEAD outside the allowed task result.
+- 2026-07-13: Codex CLI was upgraded to 0.144.3 so the configured `gpt-5.6-sol` model can be exercised. Legacy Codex keeps user configuration; explicit schema 2 profiles may override the model.
 
 ## Feature Ledger
 
@@ -65,6 +69,8 @@ Direction: Turn Operation Fork from a dual-runtime primitive into a reproducible
 - Phase 1 complete: strict executor-profile contract frozen against installed Claude Code and Codex CLI flags.
 - Phase 1 complete: acceptance test parses and exits only with `EXECUTOR_PROFILES_NOT_IMPLEMENTED` until production support exists.
 - Phase 1 validator: pass with both non-manual end conditions satisfied.
+- Phase 2 recovery: implementation candidate preserved from failed fork as commit `cdf2558`, then independently hardened against signer substitution, receipt and telemetry tampering, stale comparison, Windows npm shim execution, public replay leakage, and worktree escape.
+- Full strict repository verification passes from the hardened candidate: every suite in `node scripts/test-all.js --strict` passed in 110.8 seconds.
 
 ## Exit Evidence
 
@@ -79,19 +85,21 @@ Direction: Turn Operation Fork from a dual-runtime primitive into a reproducible
 
 ## Active Context
 
-Phase 2 is active. Phase 1 passed independent validation. Next action: commit the frozen red-test base, then run the same implementation objective through authenticated Claude Code and Codex branches from that revision.
+Phase 2 is active. The first live attempt failed containment and is preserved as negative evidence. The recovered implementation has passed focused and repository-wide strict verification. Next action: checkpoint the hardened candidate, then execute a fresh sequential Claude Code and Codex fork from that exact revision with explicit profiles and immutable containment checks.
 
 ## Continuation State
 
 - current_phase: 2
-- current_substep: commit frozen base and execute live implementation fork
+- current_substep: checkpoint hardened recovery and execute fresh live implementation fork
 - worktree: `C:\tmp\citadel-executor-profiles`
 - branch: `codex/citadel-executor-profiles`
-- baseline_commit: `8bf574c61e04744fc06845b2c8c1187684379acc`
-- checkpoint-phase-1: stash@{0}
-- files_modified: campaign file, `docs/EXECUTOR_PROFILES.md`, `scripts/test-executor-profiles.js`
+- baseline_commit: `cdf25581b45b2096d1f8b1a590cfba0836fe26af`
+- checkpoint-phase-1: `d4d82d5`
+- checkpoint-bootstrap: `e7d86a2`
+- checkpoint-recovered-candidate: `cdf2558`
+- files_modified: fork runtime, contracts, store, evidence, lifecycle, launcher, worktree containment, executor-profile documentation, campaign state, and adversarial tests
 - blockers: none
-- next_actions: commit frozen acceptance base; create live workflow; execute both authenticated runtimes; preserve receipts and diffs
+- next_actions: commit hardened recovery; create a bounded live workflow; execute Claude and Codex sequentially with explicit profiles; preserve receipts, diffs, comparison, and negative evidence
 
 <!-- session-end: 2026-07-14T02:06:26.490Z -->
 

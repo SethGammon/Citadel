@@ -6,11 +6,11 @@ const path = require('path');
 const { spawnSync } = require('child_process');
 const operations = require('../operations');
 const { platformInvocation } = require('./launcher');
-const { runtimeInvocationForProfile, synthesizeLegacyExecutors } = require('./executor-profiles');
+const { CLAUDE_ALLOWED_TOOLS, runtimeInvocationForProfile, synthesizeLegacyExecutors } = require('./executor-profiles');
 
 function runtimeInvocation(runtime) {
-  if (runtime === 'claude') return { command: 'claude', args: ['--print', '--output-format', 'json', '--permission-mode', 'acceptEdits'] };
-  if (runtime === 'codex') return { command: 'codex', args: ['exec', '--json', '--sandbox', 'workspace-write', '--ignore-user-config', '-'] };
+  if (runtime === 'claude') return { command: 'claude', args: ['--print', '--output-format', 'json', '--permission-mode', 'acceptEdits', '--allowedTools', CLAUDE_ALLOWED_TOOLS] };
+  if (runtime === 'codex') return { command: 'codex', args: ['exec', '--json', '--sandbox', 'workspace-write', '-'] };
   throw new TypeError(`Unsupported fork runtime: ${runtime}`);
 }
 
@@ -109,6 +109,7 @@ function instructionFor(fork, objective) {
     `Operation ID: ${fork.operation.operation_id}`,
     `Required steps: ${fork.operation.step_ids.join(', ')}`,
     'Stay within this worktree. Do not push, publish, deploy, or mutate external systems.',
+    'Do not checkout, switch, create, delete, move, reset, clean, or commit git branches or worktrees.',
     'Complete the repository work and leave all changes in this worktree for independent verification.',
   ].join('\n');
 }
@@ -159,11 +160,23 @@ function runRuntimeBranch(options) {
   const startedAt = options.startedAt || new Date().toISOString();
   const startedMs = Date.parse(startedAt);
   const profile = options.profile || legacyProfileFor(options.branch.runtime);
-  const invocation = options.invocation || runtimeInvocationForProfile(profile);
+  const invocation = options.invocation || (options.fork.schema_version === 1
+    ? runtimeInvocation(profile.runtime) : runtimeInvocationForProfile(profile));
   const instruction = instructionFor(options.fork, options.objective);
+  const containment = typeof options.worktreeProvider.captureContainment === 'function'
+    ? options.worktreeProvider.captureContainment({
+      projectRoot: options.projectRoot,
+      worktreeRoot: options.worktreeRoot,
+      fork: options.fork,
+      branch: options.branch,
+    }) : null;
   const agent = spawnInvocation(invocation, { spawn: options.spawn, cwd: options.worktree,
     input: instruction, timeoutMs: options.timeoutMs, env: options.env });
-  const agentPassed = !agent.error && agent.status === 0;
+  let containmentViolation = null;
+  if (containment && typeof options.worktreeProvider.assertContainment === 'function') {
+    try { options.worktreeProvider.assertContainment(containment); } catch (error) { containmentViolation = error; }
+  }
+  const agentPassed = !agent.error && agent.status === 0 && !containmentViolation;
   let verifier = { status: 1, stdout: '', stderr: 'Agent execution failed before verification.' };
   if (agentPassed) {
     verifier = safeSpawn(options.verifier.command, options.verifier.args || [], { spawn: options.spawn,
@@ -171,7 +184,12 @@ function runRuntimeBranch(options) {
   }
   const passed = agentPassed && !verifier.error && verifier.status === 0;
   const completedAt = options.completedAt || new Date().toISOString();
-  const diffSummary = options.worktreeProvider.diffSummary(options.worktree, options.branch.base_revision);
+  let diffSummary;
+  try {
+    diffSummary = options.worktreeProvider.diffSummary(options.worktree, options.branch.base_revision);
+  } catch (_error) {
+    diffSummary = { files_changed: 0, insertions: 0, deletions: 0, digest: operations.sha256Digest([]) };
+  }
   const observation = observeRuntime(profile.runtime, agent);
   const result = receiptFor({
     fork: options.fork,
@@ -201,7 +219,8 @@ function runRuntimeBranch(options) {
     diff_summary: diffSummary,
     duration_ms: Math.max(0, Date.parse(completedAt) - startedMs),
     cost: observation && observation.cost ? observation.cost : null,
-    failure_code: passed ? null : agentPassed ? 'VERIFIER_FAILED' : 'RUNTIME_FAILED',
+    failure_code: passed ? null : containmentViolation
+      ? 'WORKTREE_CONTAINMENT_VIOLATION' : agentPassed ? 'VERIFIER_FAILED' : 'RUNTIME_FAILED',
     observation,
   };
 }

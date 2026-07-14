@@ -54,7 +54,7 @@ Each executor has exactly these fields:
 |---|---|
 | `profile_id` | Unique lowercase ID matching `^[a-z][a-z0-9-]{0,47}$` |
 | `runtime` | `claude` or `codex` |
-| `model` | `null` or a nonempty model ID with no control characters |
+| `model` | `null` or a public-safe ID matching `^[A-Za-z0-9][A-Za-z0-9._:@-]{0,127}$` |
 | `local_provider` | `null`, `ollama`, or `lmstudio` |
 | `adapter_options` | Exact runtime-specific object described below |
 
@@ -101,7 +101,9 @@ Claude begins with the configured permission mode, or `acceptEdits` by default:
 claude --print --output-format json --permission-mode acceptEdits
 ```
 
-Citadel then appends `--model <model>` when a model is present and
+Citadel also supplies a fixed `--allowedTools` policy that permits repository
+reads, edits, Node/npm verification, and read-only git inspection while denying
+branch, commit, reset, clean, and worktree mutation. Citadel then appends `--model <model>` when a model is present and
 `--effort <effort>` when configured.
 
 Codex begins with:
@@ -136,6 +138,10 @@ canonical profiles with `profile_id` equal to the runtime and null model and
 provider values. Those profiles retain the existing `branch-claude` and
 `branch-codex` IDs. Legacy behavior is compatibility input, not a second
 executor schema.
+Legacy Codex runs retain the user's configured default model because legacy
+runtime input does not declare a model. New executor profiles isolate user
+configuration and therefore require an explicit model when reproducibility is
+required.
 
 ## Digests and Operation Fork schema 2
 
@@ -147,6 +153,7 @@ the file does not.
 
 New executor-profile forks use fork schema 2. Schema 2 adds
 `executor_set_digest` to the fork and `executor_profile_digest` to every branch.
+Its shared contract also binds `signer_public_key_digest` and `issuer_id`.
 Branch IDs are `branch-<profile_id>`. A branch must match both the shared
 operation contract digest and its executor profile digest.
 
@@ -167,6 +174,7 @@ branch_id
 contract_digest
 executor_profile_digest
 execution_receipt_digest
+observation_digest
 issued_at
 issuer_id
 ```
@@ -178,8 +186,15 @@ profile digest, execution receipt digest, timestamp, issuer, digest, or
 signature is changed.
 
 Stored wrappers are untrusted input. `compare`, `select`, `land`, and Mission
-Control must reload and cryptographically verify the wrapper plus all five
-bindings. A stored `receipt_verified: true` flag is never sufficient by itself.
+Control must reload the contract-bound public key, independently verify the
+underlying execution receipt, verify the wrapper, and match every binding. The
+signed observation digest binds parsed model and usage telemetry. A stored
+`receipt_verified: true` or `trusted: true` flag is never sufficient by itself.
+
+Before verification, Citadel rechecks the parent and every assigned worktree.
+Their registered paths, branch refs, and HEAD revisions must match the pre-run
+snapshot. A checkout, commit, removal, or move fails closed with
+`WORKTREE_CONTAINMENT_VIOLATION` and the verifier does not run.
 
 ## Model proof and Mission Control
 
@@ -207,7 +222,8 @@ missing data to zero.
 Public replay may include profile ID, runtime, provider, requested model,
 observed model, proof status, and binding digests. It must exclude signatures,
 private receipt material, raw adapter output, environment data, command paths,
-and arbitrary process arguments. Replay output is deterministic and redacted.
+and arbitrary process arguments. Model IDs use the public-safe grammar above.
+Replay output is deterministic and redacted.
 
 ## Acceptance boundary
 

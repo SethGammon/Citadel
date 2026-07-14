@@ -5,9 +5,8 @@ const { missionControlExecutorState } = require('./executor-profiles');
 
 /**
  * `verification` is the result of freshly verifying the stored fork receipt
- * wrapper for this branch. When it is supplied, a schema 2 branch is comparable
- * only if that verification succeeded. When it is omitted the check is
- * structural, which is what the lifecycle uses to compute fork status.
+ * wrapper and execution receipt for this branch. Schema 2 fails closed when
+ * fresh verification is absent.
  */
 function comparableBranch(branch, fork, verification) {
   const evidence = branch.evidence_summary;
@@ -20,7 +19,7 @@ function comparableBranch(branch, fork, verification) {
     if (!['passed', 'failed'].includes(evidence.status)) reasons.push('outcome-inconclusive');
   }
   if (!branch.receipt_digest) reasons.push('receipt-missing');
-  if (verification !== undefined && fork.schema_version === EXECUTOR_FORK_SCHEMA_VERSION
+  if (fork.schema_version === EXECUTOR_FORK_SCHEMA_VERSION
     && (!verification || verification.status !== 'verified')) {
     reasons.push('fork-receipt-unverified');
   }

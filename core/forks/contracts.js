@@ -26,6 +26,9 @@ const SHARED_FIELDS = Object.freeze([
   'objective_digest', 'scope_digest', 'policy_digests', 'budget_digest',
   'workflow_digest', 'verifier_digest', 'base_revision',
 ]);
+const EXECUTOR_SHARED_FIELDS = Object.freeze([
+  ...SHARED_FIELDS, 'signer_public_key_digest', 'issuer_id',
+]);
 const BRANCH_FIELDS = Object.freeze([
   'branch_id', 'runtime', 'run_id', 'status', 'base_revision', 'worktree_ref',
   'branch_ref', 'contract_digest', 'started_at', 'completed_at', 'receipt_digest',
@@ -63,9 +66,10 @@ function safeId(value) {
   return typeof value === 'string' && operations.ID_PATTERN.test(value);
 }
 
-function validateShared(shared) {
+function validateShared(shared, schemaVersion = FORK_SCHEMA_VERSION) {
   const errors = [];
-  if (!exactFields(shared, SHARED_FIELDS)) return ['shared contract fields are invalid'];
+  const fields = schemaVersion === EXECUTOR_FORK_SCHEMA_VERSION ? EXECUTOR_SHARED_FIELDS : SHARED_FIELDS;
+  if (!exactFields(shared, fields)) return ['shared contract fields are invalid'];
   for (const field of ['objective_digest', 'scope_digest', 'budget_digest', 'workflow_digest', 'verifier_digest']) {
     if (!isDigest(shared[field])) errors.push(`shared ${field} is invalid`);
   }
@@ -74,6 +78,10 @@ function validateShared(shared) {
   }
   if (typeof shared.base_revision !== 'string' || !/^[0-9a-f]{40,64}$/.test(shared.base_revision)) {
     errors.push('shared base_revision is invalid');
+  }
+  if (schemaVersion === EXECUTOR_FORK_SCHEMA_VERSION) {
+    if (!isDigest(shared.signer_public_key_digest)) errors.push('shared signer_public_key_digest is invalid');
+    if (!safeId(shared.issuer_id)) errors.push('shared issuer_id is invalid');
   }
   return errors;
 }
@@ -183,7 +191,7 @@ function validateFork(fork) {
   if (!safeId(fork.fork_id)) errors.push('fork fork_id is invalid');
   if (!Number.isInteger(fork.revision) || fork.revision < 0) errors.push('fork revision is invalid');
   try { operations.assertValidOperationContract(fork.operation); } catch (error) { errors.push(`fork operation is invalid: ${error.message}`); }
-  errors.push(...validateShared(fork.shared));
+  errors.push(...validateShared(fork.shared, schemaVersion));
   if (!isDigest(fork.contract_digest)) errors.push('fork contract_digest is invalid');
   if (fork.shared && isDigest(fork.contract_digest) && fork.contract_digest !== operations.sha256Digest(fork.shared)) {
     errors.push('fork contract_digest does not match shared contract');
