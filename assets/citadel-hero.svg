@@ -200,7 +200,7 @@
     <tspan fill="#79c0ff" dx="8">/do setup --express</tspan>
   </text>
   <rect class="hx-ct" x="269" y="399" width="8" height="16" fill="#79c0ff" opacity="0.9"/>
-  <text x="70" y="434" class="hx-sans" font-size="11" fill="#4a5568">one command from install to operating</text>
+  <text x="70" y="434" class="hx-sans" font-size="11" fill="#4a5568">project setup for the active repository</text>
 
   <!-- ════════════ RIGHT: ORBITAL SYSTEM ════════════ -->
 
@@ -261,5 +261,5 @@
 
   <!-- ════════════ FOOTER ════════════ -->
   <line x1="30" y1="450" x2="1170" y2="450" stroke="#1c2330" stroke-width="1"/>
-  <text x="600" y="468" class="hx-sans" font-size="11" fill="#54678a" text-anchor="middle" letter-spacing="0.5">Simple tasks get simple tools. Complex tasks get campaigns. You never have to choose.</text>
+  <text x="600" y="468" class="hx-sans" font-size="11" fill="#54678a" text-anchor="middle" letter-spacing="0.5">Routes requests to direct actions, focused skills, persistent campaigns, or parallel fleets.</text>
 </svg>
