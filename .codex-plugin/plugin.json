@@ -22,7 +22,7 @@
   ],
   "skills": "./skills/",
   "mcpServers": "./.mcp.json",
-  "hooks": "./hooks/hooks.json",
+  "hooks": "./runtimes/codex/hooks.json",
   "interface": {
     "displayName": "Citadel Harness",
     "composerIcon": "./assets/icon.svg",
