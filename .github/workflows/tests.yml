@@ -66,7 +66,7 @@ jobs:
       - name: Collect five Claude and five Codex fixture journeys
         run: node scripts/golden-path-matrix.js --fixture scripts/fixtures/golden-path/minimal-node.json --runtime both --repeat 5 --output artifacts/golden-path-matrix-${{ matrix.slug }}.json
       - name: Upload platform evidence
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: golden-path-${{ matrix.slug }}
           path: artifacts/golden-path-matrix-${{ matrix.slug }}.json
@@ -91,7 +91,7 @@ jobs:
       - name: Enforce the complete 30-run grid
         run: node scripts/golden-path-matrix.js --merge artifacts/golden-path-matrix-windows.json,artifacts/golden-path-matrix-linux.json,artifacts/golden-path-matrix-macos.json --output artifacts/golden-path-matrix-complete.json --require-complete
       - name: Upload complete matrix
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: golden-path-complete
           path: artifacts/golden-path-matrix-complete.json
