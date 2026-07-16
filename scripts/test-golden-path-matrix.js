@@ -155,7 +155,7 @@ function main() {
     'os: macos-latest',
     'os: windows-latest',
     '--runtime both --repeat 5',
-    'actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02',
+    'actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a',
     'actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093',
     '--require-complete',
   ]) assert(workflow.includes(expected), `tests workflow must include ${expected}`);
