@@ -65,6 +65,7 @@ async function run() {
 
     // Check .codex-plugin/plugin.json exists
     const pluginPath = path.join(tmpDir, '.codex-plugin', 'plugin.json');
+    let manifest = null;
     if (!fs.existsSync(pluginPath)) {
       errors.push('plugin.json was not generated');
     } else {
@@ -72,7 +73,7 @@ async function run() {
       // Strip the comment line before parsing
       const jsonStr = raw.replace(/^\/\/.*\n/, '');
       try {
-        const manifest = JSON.parse(jsonStr);
+        manifest = JSON.parse(jsonStr);
         if (!manifest.name) errors.push('plugin.json missing name');
         if (!manifest.version) errors.push('plugin.json missing version');
         if (!manifest.description) errors.push('plugin.json missing description');
@@ -86,9 +87,9 @@ async function run() {
       }
     }
 
-    const pluginHooksPath = path.join(tmpDir, 'hooks', 'hooks.json');
-    if (!fs.existsSync(pluginHooksPath)) {
-      errors.push('plugin-bundled hooks/hooks.json was not generated');
+    const pluginHooksPath = manifest?.hooks ? path.resolve(tmpDir, manifest.hooks) : null;
+    if (!pluginHooksPath || !fs.existsSync(pluginHooksPath)) {
+      errors.push('plugin-bundled runtime Codex hooks were not generated');
     } else {
       const pluginHooks = JSON.parse(fs.readFileSync(pluginHooksPath, 'utf8'));
       if (!pluginHooks.hooks || !pluginHooks.hooks.PermissionRequest) {
@@ -101,6 +102,10 @@ async function run() {
       if (!firstHook?.commandWindows?.includes('%PLUGIN_ROOT%')) {
         errors.push('plugin hooks should include Windows PLUGIN_ROOT command');
       }
+    }
+
+    if (fs.existsSync(path.join(tmpDir, 'hooks', 'hooks.json'))) {
+      errors.push('Codex generation recreated Claude Code auto-discovery path hooks/hooks.json');
     }
 
     // Check agent TOML files were generated

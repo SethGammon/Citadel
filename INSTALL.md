@@ -99,7 +99,7 @@ node ~/Citadel/scripts/install.js --runtime codex --add-marketplace
 codex
 ```
 
-This single command refreshes Citadel's Codex plugin package, writes the local plugin marketplace entry, generates the target project's Codex fallback artifacts, and runs the readiness verifier. On Windows it also checks the Codex shell and sandbox settings. It creates Codex-facing files such as `AGENTS.md`, `.codex/config.toml`, `.codex-plugin/plugin.json`, plugin-bundled `hooks/hooks.json`, projected agents, projected skills, and Citadel MCP wiring.
+This single command refreshes Citadel's Codex plugin package, writes the local plugin marketplace entry, generates the target project's Codex fallback artifacts, and runs the readiness verifier. On Windows it also checks the Codex shell and sandbox settings. It creates Codex-facing files such as `AGENTS.md`, `.codex/config.toml`, `.codex-plugin/plugin.json`, plugin-bundled `runtimes/codex/hooks.json`, projected agents, projected skills, and Citadel MCP wiring.
 
 The `--add-marketplace` flag also runs Codex CLI marketplace registration when the CLI is installed. Omit it when you only want to prepare files and follow the printed Codex app steps.
 

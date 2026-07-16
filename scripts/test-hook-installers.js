@@ -23,6 +23,14 @@ const citadelRoot = path.resolve(__dirname, '..');
 const hooksTemplatePath = path.join(citadelRoot, 'hooks', 'hooks-template.json');
 const hooksTemplate = JSON.parse(fs.readFileSync(hooksTemplatePath, 'utf8'));
 
+function countHookHandlers(hooks) {
+  return Object.values(hooks || {}).reduce((total, entries) => total + entries.reduce(
+    (entryTotal, entry) => entryTotal + (entry.hooks || []).length,
+    0
+  ), 0);
+}
+
+
 withTempDir((projectRoot) => {
   fs.mkdirSync(path.join(projectRoot, '.claude'), { recursive: true });
   fs.writeFileSync(path.join(projectRoot, '.claude', 'settings.json'), JSON.stringify({
@@ -44,6 +52,14 @@ withTempDir((projectRoot) => {
   assert.equal(settings.env.CLAUDE_CODE_SUBPROCESS_ENV_SCRUB, '1', 'claude install should inject subprocess scrub env');
   assert.equal(settings.permissions.allow[0], 'Read', 'claude install should preserve non-hook settings');
   assert.equal(result.compatibility.hookProfile, 'latest', 'latest profile should be reported');
+  const firstInstallCount = countHookHandlers(settings.hooks);
+  installClaudeHooks({ citadelRoot, hooksTemplatePath, projectRoot, hookProfile: 'latest' });
+  const reinstalled = JSON.parse(fs.readFileSync(result.settingsPath, 'utf8'));
+  assert.equal(countHookHandlers(reinstalled.hooks), firstInstallCount,
+    'claude hook reinstall should be idempotent and must not duplicate generated hooks');
+  assert.deepEqual(reinstalled.hooks, settings.hooks,
+    'claude hook reinstall should preserve the exact merged hook registration set');
+
 });
 
 withTempDir((projectRoot) => {
