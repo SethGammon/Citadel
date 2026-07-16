@@ -79,6 +79,8 @@ Hooks live in `hooks_src/`. Before adding one:
 4. Run `node hooks_src/smoke-test.js` to confirm the smoke test picks it up.
 
 Style contract for hooks: CommonJS, Node built-ins only (no dependencies), fast (under 5s for PreToolUse, under 30s for PostToolUse), fail-closed for security hooks (exit 2 on error) and fail-open for non-critical ones (exit 0).
+Do not create `hooks/hooks.json`. Claude Code auto-discovers that path for enabled plugins, while Citadel installs resolved Claude hooks into project settings. A file at the conventional path would register a second hook set. Codex plugin hooks live at `runtimes/codex/hooks.json` and are referenced explicitly by `.codex-plugin/plugin.json`.
+
 
 ### Opt-in hooks
 
