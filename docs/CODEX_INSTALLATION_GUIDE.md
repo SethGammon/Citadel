@@ -58,10 +58,10 @@ Then use `/plugins` or the Codex app plugin directory to install **Citadel Harne
 
 - `.codex-plugin/plugin.json` describes Citadel as a Codex-native harness.
 - `skills/` provides the installed skill set.
-- `hooks/hooks.json` bundles translated Codex hook commands.
+- `runtimes/codex/hooks.json` bundles translated Codex hook commands outside Claude Code's conventional auto-discovery path.
 - `.mcp.json` exposes the `citadel-state` MCP server.
 - `.agents/plugins/marketplace.json` exposes the local marketplace Codex can browse.
-- Target-project `AGENTS.md`, `.codex/config.toml`, `.codex/agents/*.toml`, `.agents/skills/*`, `.codex-plugin/plugin.json`, and `hooks/hooks.json` are generated as a verified fallback for projects where plugin install is not available yet.
+- Target-project `AGENTS.md`, `.codex/config.toml`, `.codex/agents/*.toml`, `.agents/skills/*`, `.codex-plugin/plugin.json`, and `runtimes/codex/hooks.json` are generated as a verified fallback for projects where plugin install is not available yet.
 - `.planning/verification/codex-readiness.json` records the readiness checks.
 - On Windows, the installer runs the Codex sandbox/shell readiness check unless `--skip-windows-check` is passed.
 
@@ -108,7 +108,7 @@ This writes:
 - `.codex/agents/*.toml`
 - `.agents/skills/*`
 - `.codex-plugin/plugin.json`
-- `hooks/hooks.json`
+- `runtimes/codex/hooks.json`
 
 `scripts/install-hooks-codex.js` remains available for legacy per-project `.codex/hooks.json` installs, but plugin-bundled hooks are the preferred Codex path.
 

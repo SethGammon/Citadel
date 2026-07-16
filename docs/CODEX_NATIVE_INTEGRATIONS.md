@@ -17,7 +17,7 @@ Improvement: Codex can load Citadel as a plugin surface instead of depending onl
 
 ## 2. Modern hooks
 
-Codex hook projection now enables `[features].hooks = true`, maps `PermissionRequest`, `PreCompact`, `PostCompact`, `SubagentStart`, and `SubagentStop`, and emits plugin-bundled `hooks/hooks.json` using `PLUGIN_ROOT` on POSIX and Windows.
+Codex hook projection now enables `[features].hooks = true`, maps `PermissionRequest`, `PreCompact`, `PostCompact`, `SubagentStart`, and `SubagentStop`, and emits plugin-bundled `runtimes/codex/hooks.json` using `PLUGIN_ROOT` on POSIX and Windows.
 
 Improvement: Citadel safety, telemetry, compaction, and subagent handoff hooks run through native Codex lifecycle events where available.
 
