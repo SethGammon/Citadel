@@ -8,7 +8,7 @@
  *
  *   .codex/config.toml                     Required feature flags and agent config
  *   .codex-plugin/plugin.json              Plugin manifest for Codex marketplace
- *   hooks/hooks.json                       Plugin-bundled Codex lifecycle hooks
+ *   runtimes/codex/hooks.json              Plugin-bundled Codex lifecycle hooks
  *   .codex/agents/{name}.toml              Translated agent definitions
  *   .agents/skills/{name}/SKILL.md         Skill copies for Codex discovery
  *   .agents/skills/{name}/agents/openai.yaml   UI metadata per skill
@@ -34,6 +34,7 @@ const CITADEL_ROOT = path.resolve(__dirname, '..');
 const args = process.argv.slice(2);
 const DRY_RUN = args.includes('--dry-run');
 const PROJECT_ROOT = args.find(a => !a.startsWith('--')) || process.env.CLAUDE_PROJECT_DIR || process.cwd();
+const CODEX_PLUGIN_HOOKS_PATH = './runtimes/codex/hooks.json';
 
 // ---- Utility helpers --------------------------------------------------------
 
@@ -362,7 +363,7 @@ function generatePluginManifest() {
     keywords: ['codex', 'openai', 'agent', 'harness', 'orchestration', 'skills', 'hooks', 'mcp', 'automation'],
     skills: pluginInCitadelRoot ? './skills/' : './.agents/skills/',
     mcpServers: './.mcp.json',
-    hooks: './hooks/hooks.json',
+    hooks: CODEX_PLUGIN_HOOKS_PATH,
     interface: {
       displayName: 'Citadel Harness',
       composerIcon: './assets/icon.svg',
@@ -421,7 +422,7 @@ function generatePluginHooks() {
 
   const translated = translateCodexPluginHooks(hooksTemplate);
   const content = JSON.stringify({ hooks: translated.hooks }, null, 2) + '\n';
-  writeFile(path.join(PROJECT_ROOT, 'hooks', 'hooks.json'), content);
+  writeFile(path.resolve(PROJECT_ROOT, CODEX_PLUGIN_HOOKS_PATH), content);
 }
 
 // ---- 3. Translate agent definitions -----------------------------------------
@@ -745,7 +746,7 @@ function main() {
     console.log('Dry run complete. No files were written.');
   } else {
     console.log('Codex compatibility artifacts generated.');
-    console.log('Plugin-bundled hooks are in `hooks/hooks.json`; `scripts/install-hooks-codex.js` is only needed for legacy `.codex/hooks.json` installs.');
+    console.log(`Plugin-bundled hooks are in \`${CODEX_PLUGIN_HOOKS_PATH}\`; \`scripts/install-hooks-codex.js\` is only needed for legacy \`.codex/hooks.json\` installs.`);
   }
 }
 

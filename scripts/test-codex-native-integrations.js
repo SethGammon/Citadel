@@ -20,9 +20,28 @@ const {
 } = require('../core/codex/native-integrations');
 
 const CITADEL_ROOT = path.resolve(__dirname, '..');
+const CODEX_PLUGIN_HOOKS_PATH = './runtimes/codex/hooks.json';
 
 function readJson(filePath) {
   return JSON.parse(fs.readFileSync(filePath, 'utf8').replace(/^\/\/.*\n/, ''));
+}
+
+function testRepositoryHookPackagingBoundary() {
+  const claudeAutoDiscoveryPath = path.join(CITADEL_ROOT, 'hooks', 'hooks.json');
+  assert(!fs.existsSync(claudeAutoDiscoveryPath),
+    'hooks/hooks.json must stay absent because Claude Code auto-discovers it and project settings already install hooks');
+
+  const claudeTemplatePath = path.join(CITADEL_ROOT, 'hooks', 'hooks-template.json');
+  const claudeTemplate = fs.readFileSync(claudeTemplatePath, 'utf8');
+  assert(claudeTemplate.includes('${CLAUDE_PLUGIN_ROOT}'), 'Claude hook template must use CLAUDE_PLUGIN_ROOT');
+  assert(!claudeTemplate.includes('${PLUGIN_ROOT}'), 'Claude hook template must not use Codex PLUGIN_ROOT');
+  assert(!claudeTemplate.includes('codex-adapter.js'), 'Claude hooks must invoke their scripts directly');
+
+  const codexManifest = readJson(path.join(CITADEL_ROOT, '.codex-plugin', 'plugin.json'));
+  assert.equal(codexManifest.hooks, CODEX_PLUGIN_HOOKS_PATH,
+    'Codex manifest must keep its hook bundle outside Claude auto-discovery');
+  assert(fs.existsSync(path.resolve(CITADEL_ROOT, codexManifest.hooks)),
+    'Codex manifest hook bundle must exist at its runtime-owned path');
 }
 
 function testGeneratedCodexArtifacts() {
@@ -44,7 +63,7 @@ function testGeneratedCodexArtifacts() {
     const manifest = readJson(manifestPath);
     assert.doesNotThrow(() => JSON.parse(fs.readFileSync(manifestPath, 'utf8')), 'Codex plugin manifest must be strict JSON');
     assert.equal(manifest.skills, './.agents/skills/');
-    assert.equal(manifest.hooks, './hooks/hooks.json');
+    assert.equal(manifest.hooks, CODEX_PLUGIN_HOOKS_PATH);
     assert.equal(manifest.mcpServers, './.mcp.json');
     assert(!/claude/i.test(manifest.description), 'Codex manifest description should not be Claude-specific');
     assert(/Codex-native/.test(manifest.interface.shortDescription), 'manifest should be Codex-native');
@@ -52,7 +71,9 @@ function testGeneratedCodexArtifacts() {
     const mcp = readJson(path.join(tmp, '.mcp.json'));
     assert(mcp.mcpServers['citadel-state'], 'generated plugin MCP config must include citadel-state');
 
-    const pluginHooks = readJson(path.join(tmp, 'hooks', 'hooks.json'));
+    assert(!fs.existsSync(path.join(tmp, 'hooks', 'hooks.json')),
+      'Codex generation must not recreate Claude Code auto-discovery path');
+    const pluginHooks = readJson(path.resolve(tmp, manifest.hooks));
     for (const event of ['PermissionRequest', 'PreCompact', 'PostCompact', 'SubagentStart', 'SubagentStop']) {
       assert(pluginHooks.hooks[event], `plugin hooks missing ${event}`);
     }
@@ -178,6 +199,7 @@ function testDocsMatrix() {
 }
 
 testGeneratedCodexArtifacts();
+testRepositoryHookPackagingBoundary();
 testMcpServer();
 testBridgeUtilities();
 testDocsMatrix();
