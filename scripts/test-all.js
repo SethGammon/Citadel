@@ -103,6 +103,10 @@ const ECOSYSTEM_COMPAT_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-ecosystem-
 const PRODUCT_PROOF_REPORT_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-product-proof-report.js');
 const UNLOCK_TESTS = Object.freeze([
   ['Operations conformance', 'test-operations-conformance.js'],
+  ['Operation Graph', 'test-operation-graph.js'],
+  ['Operation Graph run', 'test-operation-graph-run.js'],
+  ['Operation Graph effects', 'test-operation-graph-effects.js'],
+  ['Operation Graph runner', 'test-operation-graph-runner.js'],
   ['Operation recovery', 'test-operation-recovery.js'],
   ['Operation receipts', 'test-operation-receipts.js'],
   ['Operation chaos', 'test-operation-chaos.js'],

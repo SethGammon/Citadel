@@ -18,7 +18,7 @@ trigger_keywords:
   - parallel research
   - multi-angle research
   - compare options
-last-updated: 2026-06-11
+last-updated: 2026-07-21
 ---
 
 # /research — Focused Investigation
@@ -140,6 +140,13 @@ Each angle must be:
 - Independent (scout doesn't need another scout's findings to do its work)
 - Specific (one clear question per scout)
 - Answerable (3-6 sources should be sufficient)
+
+#### Step P1b: INITIALIZE GRAPH (Explicit Opt-In)
+
+With explicit `--operation-graph`, assign 3-5 opaque angle IDs and initialize a graph plus bound operation:
+`node .citadel/scripts/operation-graph-runner.js research-init --project-root . --graph .planning/research/fleet-{slug}/operation-graph.json --operation .planning/research/fleet-{slug}/operation-spec.json --journal .planning/research/fleet-{slug}/graph-journal --run-id research-{slug} --angles {id1,id2,id3}`
+For each P2-P5 node, call `operation-graph-effects.js start` with the graph journal, `--effects .../effect-journal`, node ID, and payload digest before work; call `complete` with its evidence digest after verification. Keep prompts and findings outside graph state.
+On resume use effect-runner `status`; resolve blocked nonrepeatable work with reviewed evidence. After the arbiter passes, write `receipt` with the bound operation. Without the flag, create no graph state.
 
 ### Step P2: DEPLOY WAVE 1
 

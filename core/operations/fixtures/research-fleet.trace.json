@@ -1,0 +1,26 @@
+{
+  "schema": 1,
+  "graph_id": "research-fleet-proof",
+  "ready_batches": [
+    [
+      "scope"
+    ],
+    [
+      "scout-claims",
+      "scout-taxonomy",
+      "scout-fit"
+    ],
+    [
+      "reduce"
+    ],
+    [
+      "synthesize"
+    ],
+    [
+      "arbiter"
+    ]
+  ],
+  "final_transition_count": 14,
+  "final_total_attempts": 7,
+  "final_status": "passed"
+}

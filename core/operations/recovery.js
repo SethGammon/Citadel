@@ -5,6 +5,9 @@ const { EFFECT_CLASSES, JournalCorruptionError, readJournal } = require('./journ
 function decisionFor(entry) {
   if (entry.state === 'completed') return { decision: 'skip', reason_code: 'ALREADY_COMPLETED' };
   if (entry.effect_class === 'external-nonrepeatable') {
+  if (entry.state === 'retryable') {
+    return { decision: 'retry', reason_code: 'RETRY_AUTHORIZED_BY_EVIDENCE' };
+  }
     return { decision: 'block', reason_code: 'AMBIGUOUS_NONREPEATABLE_EFFECT' };
   }
   return { decision: 'retry', reason_code: entry.state === 'unknown' ? 'SAFE_RETRY_AFTER_UNKNOWN' : 'SAFE_RETRY_AFTER_PENDING' };
