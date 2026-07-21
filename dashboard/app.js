@@ -520,6 +520,21 @@ if (typeof document !== 'undefined') (() => {
       verdict.appendChild(el('span', 'card-sub', `${comparison.comparable_count || 0} comparable branches`));
       card.appendChild(verdict);
 
+      if (fork.proof && fork.proof.summary) {
+        const proof = el('section', 'fork-proof');
+        proof.appendChild(el('strong', null, 'Proof report'));
+        const summary = fork.proof.summary;
+        const models = summary.model_proof_counts || { passed: 0, failed: 0, unknown: summary.branch_count || 0 };
+        const facts = el('div', 'fork-metrics');
+        facts.appendChild(stat(`${summary.verified_receipt_count}/${summary.branch_count}`, 'verified receipts'));
+        facts.appendChild(stat(models.passed, 'model passed'));
+        facts.appendChild(stat(models.failed, 'model failed'));
+        facts.appendChild(stat(models.unknown, 'model unknown'));
+        proof.appendChild(facts);
+        proof.appendChild(el('div', 'mono dimmed', fork.proof.digest));
+        card.appendChild(proof);
+      }
+
       const branches = el('div', 'fork-branches');
       for (const branch of comparison.branches || []) {
         const branchCard = el('section', `fork-branch${fork.selection?.branch_id === branch.branch_id ? ' fork-selected' : ''}`);
