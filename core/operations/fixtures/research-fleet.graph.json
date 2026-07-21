@@ -1,0 +1,233 @@
+{
+  "graph_version": "0.1",
+  "kind": "operation_graph_spec",
+  "graph_id": "research-fleet-proof",
+  "operation_spec_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "entry_node_ids": [
+    "scope"
+  ],
+  "nodes": [
+    {
+      "node_id": "scope",
+      "step_id": "scope",
+      "node_kind": "deterministic",
+      "input_schema_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "output_schema_digest": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "executor_profile": "local-deterministic",
+      "scope_digest": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+      "timeout_ms": 300000,
+      "max_attempts": 2,
+      "max_visits": 1,
+      "effect_class": "pure",
+      "verifier": {
+        "required": true,
+        "policy": "deterministic",
+        "evidence_types": [
+          "artifact"
+        ]
+      }
+    },
+    {
+      "node_id": "scout-claims",
+      "step_id": "scout-claims",
+      "node_kind": "agent",
+      "input_schema_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "output_schema_digest": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "executor_profile": "research-scout",
+      "scope_digest": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+      "timeout_ms": 300000,
+      "max_attempts": 2,
+      "max_visits": 1,
+      "effect_class": "pure",
+      "verifier": {
+        "required": true,
+        "policy": "single",
+        "evidence_types": [
+          "review"
+        ]
+      }
+    },
+    {
+      "node_id": "scout-taxonomy",
+      "step_id": "scout-taxonomy",
+      "node_kind": "agent",
+      "input_schema_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "output_schema_digest": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "executor_profile": "research-scout",
+      "scope_digest": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+      "timeout_ms": 300000,
+      "max_attempts": 2,
+      "max_visits": 1,
+      "effect_class": "pure",
+      "verifier": {
+        "required": true,
+        "policy": "single",
+        "evidence_types": [
+          "review"
+        ]
+      }
+    },
+    {
+      "node_id": "scout-fit",
+      "step_id": "scout-fit",
+      "node_kind": "agent",
+      "input_schema_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "output_schema_digest": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "executor_profile": "research-scout",
+      "scope_digest": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+      "timeout_ms": 300000,
+      "max_attempts": 2,
+      "max_visits": 1,
+      "effect_class": "pure",
+      "verifier": {
+        "required": true,
+        "policy": "single",
+        "evidence_types": [
+          "review"
+        ]
+      }
+    },
+    {
+      "node_id": "reduce",
+      "step_id": "reduce",
+      "node_kind": "deterministic",
+      "input_schema_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "output_schema_digest": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "executor_profile": "local-deterministic",
+      "scope_digest": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+      "timeout_ms": 300000,
+      "max_attempts": 2,
+      "max_visits": 1,
+      "effect_class": "pure",
+      "verifier": {
+        "required": true,
+        "policy": "deterministic",
+        "evidence_types": [
+          "artifact"
+        ]
+      }
+    },
+    {
+      "node_id": "synthesize",
+      "step_id": "synthesize",
+      "node_kind": "agent",
+      "input_schema_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "output_schema_digest": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "executor_profile": "synthesis-agent",
+      "scope_digest": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+      "timeout_ms": 300000,
+      "max_attempts": 2,
+      "max_visits": 1,
+      "effect_class": "pure",
+      "verifier": {
+        "required": true,
+        "policy": "single",
+        "evidence_types": [
+          "artifact",
+          "review"
+        ]
+      }
+    },
+    {
+      "node_id": "arbiter",
+      "step_id": "arbiter",
+      "node_kind": "gate",
+      "input_schema_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "output_schema_digest": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "executor_profile": "arbiter",
+      "scope_digest": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+      "timeout_ms": 300000,
+      "max_attempts": 2,
+      "max_visits": 1,
+      "effect_class": "pure",
+      "verifier": {
+        "required": true,
+        "policy": "arbiter",
+        "evidence_types": [
+          "review",
+          "test"
+        ]
+      }
+    }
+  ],
+  "edges": [
+    {
+      "edge_id": "scope-to-claims",
+      "from_node_id": "scope",
+      "to_node_id": "scout-claims",
+      "edge_kind": "success",
+      "condition_digest": null,
+      "data_contract_digest": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+    },
+    {
+      "edge_id": "scope-to-taxonomy",
+      "from_node_id": "scope",
+      "to_node_id": "scout-taxonomy",
+      "edge_kind": "success",
+      "condition_digest": null,
+      "data_contract_digest": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+    },
+    {
+      "edge_id": "scope-to-fit",
+      "from_node_id": "scope",
+      "to_node_id": "scout-fit",
+      "edge_kind": "success",
+      "condition_digest": null,
+      "data_contract_digest": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+    },
+    {
+      "edge_id": "claims-to-reduce",
+      "from_node_id": "scout-claims",
+      "to_node_id": "reduce",
+      "edge_kind": "success",
+      "condition_digest": null,
+      "data_contract_digest": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+    },
+    {
+      "edge_id": "taxonomy-to-reduce",
+      "from_node_id": "scout-taxonomy",
+      "to_node_id": "reduce",
+      "edge_kind": "success",
+      "condition_digest": null,
+      "data_contract_digest": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+    },
+    {
+      "edge_id": "fit-to-reduce",
+      "from_node_id": "scout-fit",
+      "to_node_id": "reduce",
+      "edge_kind": "success",
+      "condition_digest": null,
+      "data_contract_digest": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+    },
+    {
+      "edge_id": "reduce-to-synthesize",
+      "from_node_id": "reduce",
+      "to_node_id": "synthesize",
+      "edge_kind": "success",
+      "condition_digest": null,
+      "data_contract_digest": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+    },
+    {
+      "edge_id": "synthesize-to-arbiter",
+      "from_node_id": "synthesize",
+      "to_node_id": "arbiter",
+      "edge_kind": "success",
+      "condition_digest": null,
+      "data_contract_digest": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+    }
+  ],
+  "joins": [
+    {
+      "node_id": "reduce",
+      "policy": "all",
+      "threshold": null,
+      "missing_input_status": "blocked"
+    }
+  ],
+  "limits": {
+    "max_transitions": 40,
+    "max_parallel": 3,
+    "max_total_attempts": 14
+  },
+  "created_at": "2026-07-21T00:00:00.000Z"
+}

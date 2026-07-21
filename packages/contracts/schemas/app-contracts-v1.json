@@ -1,0 +1,740 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:citadel:app-contracts:1",
+  "title": "Citadel App Contracts v1",
+  "oneOf": [
+    {
+      "$ref": "#/$defs/AgentProfile"
+    },
+    {
+      "$ref": "#/$defs/AgentInstance"
+    },
+    {
+      "$ref": "#/$defs/Team"
+    },
+    {
+      "$ref": "#/$defs/WorkspaceRef"
+    },
+    {
+      "$ref": "#/$defs/Handoff"
+    },
+    {
+      "$ref": "#/$defs/SupervisorEvent"
+    },
+    {
+      "$ref": "#/$defs/OperationDefinition"
+    }
+  ],
+  "$defs": {
+    "identifier": {
+      "type": "string",
+      "maxLength": 128,
+      "pattern": "^[a-z][a-z0-9]*(?:[-_.:][a-z0-9]+)*$"
+    },
+    "digest": {
+      "type": "string",
+      "pattern": "^sha256:[a-f0-9]{64}$"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "revision": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "opaqueRef": {
+      "type": "string",
+      "maxLength": 256,
+      "pattern": "^[a-z][a-z0-9]*(?:[-_.:/][a-z0-9]+)*$"
+    },
+    "failureCode": {
+      "type": "string",
+      "pattern": "^[A-Z][A-Z0-9_]{0,63}$"
+    },
+    "label120": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 120,
+      "pattern": "^[^\\r\\n]+$"
+    },
+    "label160": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 160,
+      "pattern": "^[^\\r\\n]+$"
+    },
+    "AgentProfile": {
+      "properties": {
+        "app_contract_version": {
+          "const": 1
+        },
+        "kind": {
+          "const": "agent_profile"
+        },
+        "revision": {
+          "$ref": "#/$defs/revision"
+        },
+        "profile_id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "name": {
+          "$ref": "#/$defs/label120"
+        },
+        "role": {
+          "$ref": "#/$defs/label160"
+        },
+        "runtime_id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "model": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/label160"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "instructions_digest": {
+          "$ref": "#/$defs/digest"
+        },
+        "skill_ids": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 128,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/identifier"
+          }
+        },
+        "memory_policy_id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "permission_policy_id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "resource_policy_id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "created_at": {
+          "$ref": "#/$defs/timestamp"
+        },
+        "updated_at": {
+          "$ref": "#/$defs/timestamp"
+        }
+      },
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "app_contract_version",
+        "kind",
+        "revision",
+        "profile_id",
+        "name",
+        "role",
+        "runtime_id",
+        "model",
+        "instructions_digest",
+        "skill_ids",
+        "memory_policy_id",
+        "permission_policy_id",
+        "resource_policy_id",
+        "created_at",
+        "updated_at"
+      ]
+    },
+    "AgentInstance": {
+      "properties": {
+        "app_contract_version": {
+          "const": 1
+        },
+        "kind": {
+          "const": "agent_instance"
+        },
+        "revision": {
+          "$ref": "#/$defs/revision"
+        },
+        "instance_id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "profile_id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "profile_revision": {
+          "$ref": "#/$defs/revision"
+        },
+        "profile_snapshot_digest": {
+          "$ref": "#/$defs/digest"
+        },
+        "operation_id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "workspace_id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "supervisor_id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "status": {
+          "enum": [
+            "queued",
+            "starting",
+            "running",
+            "pause-requested",
+            "paused",
+            "blocked",
+            "completed",
+            "failed",
+            "cancelled",
+            "lost"
+          ]
+        },
+        "process_ref": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/opaqueRef"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "terminal_ref": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/opaqueRef"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "branch_ref": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/opaqueRef"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "worktree_ref": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/opaqueRef"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "budget_digest": {
+          "$ref": "#/$defs/digest"
+        },
+        "started_at": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/timestamp"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "updated_at": {
+          "$ref": "#/$defs/timestamp"
+        },
+        "completed_at": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/timestamp"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "exit_code": {
+          "oneOf": [
+            {
+              "type": "integer",
+              "minimum": -2147483648,
+              "maximum": 2147483647
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "failure_code": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/failureCode"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "app_contract_version",
+        "kind",
+        "revision",
+        "instance_id",
+        "profile_id",
+        "profile_revision",
+        "profile_snapshot_digest",
+        "operation_id",
+        "workspace_id",
+        "supervisor_id",
+        "status",
+        "process_ref",
+        "terminal_ref",
+        "branch_ref",
+        "worktree_ref",
+        "budget_digest",
+        "started_at",
+        "updated_at",
+        "completed_at",
+        "exit_code",
+        "failure_code"
+      ]
+    },
+    "Team": {
+      "properties": {
+        "app_contract_version": {
+          "const": 1
+        },
+        "kind": {
+          "const": "team"
+        },
+        "revision": {
+          "$ref": "#/$defs/revision"
+        },
+        "team_id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "name": {
+          "$ref": "#/$defs/label120"
+        },
+        "member_profile_ids": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 128,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/identifier"
+          }
+        },
+        "coordination_policy_id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "handoff_policy_id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "resource_policy_id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "created_at": {
+          "$ref": "#/$defs/timestamp"
+        },
+        "updated_at": {
+          "$ref": "#/$defs/timestamp"
+        }
+      },
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "app_contract_version",
+        "kind",
+        "revision",
+        "team_id",
+        "name",
+        "member_profile_ids",
+        "coordination_policy_id",
+        "handoff_policy_id",
+        "resource_policy_id",
+        "created_at",
+        "updated_at"
+      ]
+    },
+    "WorkspaceRef": {
+      "properties": {
+        "app_contract_version": {
+          "const": 1
+        },
+        "kind": {
+          "const": "workspace_ref"
+        },
+        "revision": {
+          "$ref": "#/$defs/revision"
+        },
+        "workspace_id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "name": {
+          "$ref": "#/$defs/label160"
+        },
+        "root_digest": {
+          "$ref": "#/$defs/digest"
+        },
+        "instruction_digests": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 128,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/digest"
+          }
+        },
+        "runtime_ids": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 32,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/identifier"
+          }
+        },
+        "editable": {
+          "type": "boolean"
+        },
+        "last_opened_at": {
+          "$ref": "#/$defs/timestamp"
+        }
+      },
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "app_contract_version",
+        "kind",
+        "revision",
+        "workspace_id",
+        "name",
+        "root_digest",
+        "instruction_digests",
+        "runtime_ids",
+        "editable",
+        "last_opened_at"
+      ]
+    },
+    "Handoff": {
+      "properties": {
+        "app_contract_version": {
+          "const": 1
+        },
+        "kind": {
+          "const": "handoff"
+        },
+        "revision": {
+          "$ref": "#/$defs/revision"
+        },
+        "handoff_id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "operation_id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "from_instance_id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "to_profile_id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "to_instance_id": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/identifier"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "status": {
+          "enum": [
+            "pending",
+            "accepted",
+            "rejected",
+            "blocked"
+          ]
+        },
+        "outcome_digest": {
+          "$ref": "#/$defs/digest"
+        },
+        "decision_digests": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 256,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/digest"
+          }
+        },
+        "blocker_codes": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 128,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/failureCode"
+          }
+        },
+        "artifact_digests": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 1024,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/digest"
+          }
+        },
+        "verification_digests": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 1024,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/digest"
+          }
+        },
+        "next_action_digest": {
+          "$ref": "#/$defs/digest"
+        },
+        "created_at": {
+          "$ref": "#/$defs/timestamp"
+        },
+        "resolved_at": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/timestamp"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "app_contract_version",
+        "kind",
+        "revision",
+        "handoff_id",
+        "operation_id",
+        "from_instance_id",
+        "to_profile_id",
+        "to_instance_id",
+        "status",
+        "outcome_digest",
+        "decision_digests",
+        "blocker_codes",
+        "artifact_digests",
+        "verification_digests",
+        "next_action_digest",
+        "created_at",
+        "resolved_at"
+      ]
+    },
+    "SupervisorEvent": {
+      "properties": {
+        "app_contract_version": {
+          "const": 1
+        },
+        "kind": {
+          "const": "supervisor_event"
+        },
+        "event_id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "supervisor_id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "operation_id": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/identifier"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "instance_id": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/identifier"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "sequence": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "subject_revision": {
+          "$ref": "#/$defs/revision"
+        },
+        "event_type": {
+          "enum": [
+            "instance-queued",
+            "instance-started",
+            "instance-output",
+            "instance-paused",
+            "instance-resumed",
+            "instance-blocked",
+            "instance-completed",
+            "instance-failed",
+            "instance-cancelled",
+            "instance-lost",
+            "handoff-created",
+            "handoff-accepted",
+            "handoff-rejected",
+            "approval-required",
+            "approval-resolved",
+            "artifact-recorded",
+            "recovery-started",
+            "recovery-completed"
+          ]
+        },
+        "status": {
+          "enum": [
+            "queued",
+            "starting",
+            "running",
+            "pause-requested",
+            "paused",
+            "blocked",
+            "completed",
+            "failed",
+            "cancelled",
+            "lost",
+            "pending",
+            "accepted",
+            "rejected",
+            "unknown"
+          ]
+        },
+        "payload_digest": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/digest"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "recorded_at": {
+          "$ref": "#/$defs/timestamp"
+        }
+      },
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "app_contract_version",
+        "kind",
+        "event_id",
+        "supervisor_id",
+        "operation_id",
+        "instance_id",
+        "sequence",
+        "subject_revision",
+        "event_type",
+        "status",
+        "payload_digest",
+        "recorded_at"
+      ]
+    },
+    "OperationDefinition": {
+      "properties": {
+        "app_contract_version": {
+          "const": 1
+        },
+        "kind": {
+          "const": "operation_definition"
+        },
+        "revision": {
+          "$ref": "#/$defs/revision"
+        },
+        "operation_id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "workspace_id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "team_id": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/identifier"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "lead_profile_id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "title": {
+          "$ref": "#/$defs/label160"
+        },
+        "objective_digest": {
+          "$ref": "#/$defs/digest"
+        },
+        "step_ids": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 256,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/identifier"
+          }
+        },
+        "policy_digests": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 256,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/digest"
+          }
+        },
+        "created_at": {
+          "$ref": "#/$defs/timestamp"
+        },
+        "updated_at": {
+          "$ref": "#/$defs/timestamp"
+        }
+      },
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "app_contract_version",
+        "kind",
+        "revision",
+        "operation_id",
+        "workspace_id",
+        "team_id",
+        "lead_profile_id",
+        "title",
+        "objective_digest",
+        "step_ids",
+        "policy_digests",
+        "created_at",
+        "updated_at"
+      ]
+    }
+  }
+}

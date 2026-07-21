@@ -1,0 +1,82 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://citadel.dev/schemas/operation-graph-journal-v0.1.json",
+  "title": "Citadel Operation Graph Journal Entry v0.1",
+  "description": "Hash-chained durable checkpoint for one Operation Graph run.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "journal_version",
+    "kind",
+    "sequence",
+    "recorded_at",
+    "event_type",
+    "run_id",
+    "graph_id",
+    "graph_digest",
+    "run_digest",
+    "run_snapshot",
+    "previous_hash",
+    "entry_hash"
+  ],
+  "properties": {
+    "journal_version": {
+      "const": "0.1"
+    },
+    "kind": {
+      "const": "operation_graph_journal_entry"
+    },
+    "sequence": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "recorded_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "event_type": {
+      "enum": [
+        "initialized",
+        "node_transition",
+        "edge_decision",
+        "checkpoint"
+      ]
+    },
+    "run_id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9]*(?:[-_.:][a-z0-9]+)*$",
+      "maxLength": 128
+    },
+    "graph_id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9]*(?:[-_.:][a-z0-9]+)*$",
+      "maxLength": 128
+    },
+    "graph_digest": {
+      "type": "string",
+      "pattern": "^sha256:[a-f0-9]{64}$"
+    },
+    "run_digest": {
+      "type": "string",
+      "pattern": "^sha256:[a-f0-9]{64}$"
+    },
+    "run_snapshot": {
+      "$ref": "operation-graph-run-v0.1.json"
+    },
+    "previous_hash": {
+      "anyOf": [
+        {
+          "type": "string",
+          "pattern": "^sha256:[a-f0-9]{64}$"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "entry_hash": {
+      "type": "string",
+      "pattern": "^sha256:[a-f0-9]{64}$"
+    }
+  }
+}

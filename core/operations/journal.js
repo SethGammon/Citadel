@@ -13,7 +13,7 @@ const EFFECT_CLASSES = Object.freeze([
   'external-idempotent',
   'external-nonrepeatable',
 ]);
-const IDEMPOTENCY_STATES = Object.freeze(['pending', 'completed', 'unknown']);
+const IDEMPOTENCY_STATES = Object.freeze(['pending', 'completed', 'unknown', 'retryable']);
 const JOURNAL_FIELDS = Object.freeze([
   'protocol_version', 'kind', 'sequence', 'recorded_at', 'run_id', 'attempt_id',
   'idempotency_key', 'effect_class', 'state', 'payload_digest', 'evidence_digest',
@@ -57,7 +57,9 @@ function validateJournalEntry(entry, options = {}) {
   if (entry.evidence_digest !== null && (typeof entry.evidence_digest !== 'string' || !DIGEST_PATTERN.test(entry.evidence_digest))) {
     errors.push('evidence_digest must be null or a sha256 digest');
   }
-  if (entry.state === 'completed' && entry.evidence_digest === null) errors.push('completed checkpoints require evidence_digest');
+  if (['completed', 'retryable'].includes(entry.state) && entry.evidence_digest === null) {
+    errors.push('completed and retryable checkpoints require evidence_digest');
+  }
   if (entry.previous_hash !== null && (typeof entry.previous_hash !== 'string' || !DIGEST_PATTERN.test(entry.previous_hash))) {
     errors.push('previous_hash must be null or a sha256 digest');
   }
@@ -76,10 +78,39 @@ function entryFiles(journalDir) {
     .filter((name) => ENTRY_PATTERN.test(name))
     .sort();
 }
+function validateJournalContinuation(previous, entry) {
+  const errors = [];
+  if (!previous) {
+    if (entry.state !== 'pending') errors.push('first idempotency checkpoint must be pending');
+    return errors;
+  }
+  for (const field of ['run_id', 'attempt_id', 'effect_class', 'payload_digest']) {
+    if (entry[field] !== previous[field]) errors.push(field + ' cannot change for an idempotency key');
+  }
+  if (Date.parse(entry.recorded_at) < Date.parse(previous.recorded_at)) {
+    errors.push('idempotency checkpoint timestamps must be monotonic');
+  }
+  const allowed = {
+    pending: ['pending', 'completed', 'unknown', 'retryable'],
+    unknown: ['pending', 'completed', 'retryable'],
+    retryable: ['pending'],
+    completed: [],
+  };
+  if (!allowed[previous.state].includes(entry.state)) {
+    errors.push('invalid idempotency state transition: ' + previous.state + ' -> ' + entry.state);
+  }
+  if (entry.state === 'pending' && previous.effect_class === 'external-nonrepeatable'
+      && previous.state !== 'retryable') {
+    errors.push('nonrepeatable effects require an evidenced retryable resolution before retry');
+  }
+  return errors;
+}
+
 
 function readJournal(journalDir) {
   const files = entryFiles(journalDir);
   const entries = [];
+  const latest = new Map();
   let previousHash = null;
   files.forEach((name, index) => {
     const match = name.match(ENTRY_PATTERN);
@@ -97,6 +128,9 @@ function readJournal(journalDir) {
     });
     if (errors.length) throw new JournalCorruptionError('INVALID_ENTRY', errors.join('; '));
     entries.push(entry);
+    const continuationErrors = validateJournalContinuation(latest.get(entry.idempotency_key), entry);
+    if (continuationErrors.length) throw new JournalCorruptionError('INVALID_ENTRY', continuationErrors.join('; '));
+    latest.set(entry.idempotency_key, entry);
     previousHash = entry.entry_hash;
   });
   return Object.freeze({
@@ -162,6 +196,10 @@ function appendJournalEntry(journalDir, input, options = {}) {
       expectedSequence: journal.next_sequence,
       expectedPreviousHash: journal.head_hash,
     });
+    const previous = [...journal.entries].reverse()
+      .find((item) => item.idempotency_key === entry.idempotency_key);
+    errors.push(...validateJournalContinuation(previous, entry));
+
     if (errors.length) throw new TypeError(`Invalid journal entry: ${errors.join('; ')}`);
     const target = path.join(journalDir, `${String(entry.sequence).padStart(8, '0')}.json`);
     atomicWrite(target, `${canonicalSerialize(entry)}\n`);

@@ -1,0 +1,209 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://citadel.dev/schemas/operation-graph-run-v0.1.json",
+  "title": "Citadel Operation Graph Run v0.1",
+  "description": "Privacy-safe scheduler snapshot with deterministic traversal tokens.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "run_version",
+    "kind",
+    "run_id",
+    "graph_id",
+    "graph_digest",
+    "status",
+    "scheduler_state",
+    "traversal_tokens",
+    "created_at",
+    "updated_at"
+  ],
+  "properties": {
+    "run_version": {
+      "const": "0.1"
+    },
+    "kind": {
+      "const": "operation_graph_run"
+    },
+    "run_id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9]*(?:[-_.:][a-z0-9]+)*$",
+      "maxLength": 128
+    },
+    "graph_id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9]*(?:[-_.:][a-z0-9]+)*$",
+      "maxLength": 128
+    },
+    "graph_digest": {
+      "type": "string",
+      "pattern": "^sha256:[a-f0-9]{64}$"
+    },
+    "status": {
+      "enum": [
+        "pending",
+        "running",
+        "passed",
+        "failed",
+        "blocked",
+        "unknown"
+      ]
+    },
+    "scheduler_state": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "state_version",
+        "graph_id",
+        "node_statuses",
+        "visit_counts",
+        "attempt_counts",
+        "edge_decisions",
+        "loop_decision_visits",
+        "transition_count",
+        "total_attempts"
+      ],
+      "properties": {
+        "state_version": {
+          "const": "0.1"
+        },
+        "graph_id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9]*(?:[-_.:][a-z0-9]+)*$",
+          "maxLength": 128
+        },
+        "node_statuses": {
+          "type": "object",
+          "propertyNames": {
+            "pattern": "^[a-z][a-z0-9]*(?:[-_.:][a-z0-9]+)*$"
+          },
+          "additionalProperties": {
+            "enum": [
+              "pending",
+              "running",
+              "passed",
+              "failed",
+              "blocked",
+              "unknown"
+            ]
+          }
+        },
+        "visit_counts": {
+          "type": "object",
+          "propertyNames": {
+            "pattern": "^[a-z][a-z0-9]*(?:[-_.:][a-z0-9]+)*$"
+          },
+          "additionalProperties": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "attempt_counts": {
+          "type": "object",
+          "propertyNames": {
+            "pattern": "^[a-z][a-z0-9]*(?:[-_.:][a-z0-9]+)*$"
+          },
+          "additionalProperties": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "edge_decisions": {
+          "type": "object",
+          "propertyNames": {
+            "pattern": "^[a-z][a-z0-9]*(?:[-_.:][a-z0-9]+)*$"
+          },
+          "additionalProperties": {
+            "type": "boolean"
+          }
+        },
+        "loop_decision_visits": {
+          "type": "object",
+          "propertyNames": {
+            "pattern": "^[a-z][a-z0-9]*(?:[-_.:][a-z0-9]+)*$"
+          },
+          "additionalProperties": {
+            "type": "integer",
+            "minimum": 1
+          }
+        },
+        "transition_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "total_attempts": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "traversal_tokens": {
+      "type": "array",
+      "maxItems": 25600,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "token_id",
+          "node_id",
+          "visit",
+          "parent_token_ids",
+          "via_edge_ids",
+          "status"
+        ],
+        "properties": {
+          "token_id": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9]*(?:[-_.:][a-z0-9]+)*$",
+            "maxLength": 128
+          },
+          "node_id": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9]*(?:[-_.:][a-z0-9]+)*$",
+            "maxLength": 128
+          },
+          "visit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100
+          },
+          "parent_token_ids": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9]*(?:[-_.:][a-z0-9]+)*$",
+              "maxLength": 128
+            }
+          },
+          "via_edge_ids": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9]*(?:[-_.:][a-z0-9]+)*$",
+              "maxLength": 128
+            }
+          },
+          "status": {
+            "enum": [
+              "pending",
+              "running",
+              "passed",
+              "failed",
+              "blocked",
+              "unknown"
+            ]
+          }
+        }
+      }
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}

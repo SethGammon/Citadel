@@ -1,0 +1,310 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://citadel.dev/schemas/operation-graph-v0.1.json",
+  "title": "Citadel Operation Graph v0.1",
+  "description": "Experimental bounded orchestration graph referencing an immutable Operations Protocol v0.1 specification.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "graph_version",
+    "kind",
+    "graph_id",
+    "operation_spec_digest",
+    "entry_node_ids",
+    "nodes",
+    "edges",
+    "joins",
+    "limits",
+    "created_at"
+  ],
+  "properties": {
+    "graph_version": {
+      "const": "0.1"
+    },
+    "kind": {
+      "const": "operation_graph_spec"
+    },
+    "graph_id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9]*(?:[-_.:][a-z0-9]+)*$",
+      "maxLength": 128
+    },
+    "operation_spec_digest": {
+      "type": "string",
+      "pattern": "^sha256:[a-f0-9]{64}$"
+    },
+    "entry_node_ids": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 256,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z][a-z0-9]*(?:[-_.:][a-z0-9]+)*$",
+        "maxLength": 128
+      }
+    },
+    "nodes": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 256,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "node_id",
+          "step_id",
+          "node_kind",
+          "input_schema_digest",
+          "output_schema_digest",
+          "executor_profile",
+          "scope_digest",
+          "timeout_ms",
+          "max_attempts",
+          "max_visits",
+          "effect_class",
+          "verifier"
+        ],
+        "properties": {
+          "node_id": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9]*(?:[-_.:][a-z0-9]+)*$",
+            "maxLength": 128
+          },
+          "step_id": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9]*(?:[-_.:][a-z0-9]+)*$",
+            "maxLength": 128
+          },
+          "node_kind": {
+            "enum": [
+              "agent",
+              "deterministic",
+              "gate",
+              "human"
+            ]
+          },
+          "input_schema_digest": {
+            "type": "string",
+            "pattern": "^sha256:[a-f0-9]{64}$"
+          },
+          "output_schema_digest": {
+            "type": "string",
+            "pattern": "^sha256:[a-f0-9]{64}$"
+          },
+          "executor_profile": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9]*(?:[-_.:][a-z0-9]+)*$",
+            "maxLength": 128
+          },
+          "scope_digest": {
+            "type": "string",
+            "pattern": "^sha256:[a-f0-9]{64}$"
+          },
+          "timeout_ms": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 86400000
+          },
+          "max_attempts": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100
+          },
+          "max_visits": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100
+          },
+          "effect_class": {
+            "enum": [
+              "pure",
+              "workspace-reversible",
+              "external-idempotent",
+              "external-nonrepeatable"
+            ]
+          },
+          "verifier": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "required",
+              "policy",
+              "evidence_types"
+            ],
+            "properties": {
+              "required": {
+                "type": "boolean"
+              },
+              "policy": {
+                "enum": [
+                  "none",
+                  "deterministic",
+                  "single",
+                  "arbiter"
+                ]
+              },
+              "evidence_types": {
+                "type": "array",
+                "uniqueItems": true,
+                "maxItems": 8,
+                "items": {
+                  "enum": [
+                    "artifact",
+                    "command",
+                    "deployment",
+                    "diff",
+                    "policy",
+                    "review",
+                    "test",
+                    "other"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "edges": {
+      "type": "array",
+      "maxItems": 2048,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "edge_id",
+          "from_node_id",
+          "to_node_id",
+          "edge_kind",
+          "condition_digest",
+          "data_contract_digest"
+        ],
+        "properties": {
+          "edge_id": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9]*(?:[-_.:][a-z0-9]+)*$",
+            "maxLength": 128
+          },
+          "from_node_id": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9]*(?:[-_.:][a-z0-9]+)*$",
+            "maxLength": 128
+          },
+          "to_node_id": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9]*(?:[-_.:][a-z0-9]+)*$",
+            "maxLength": 128
+          },
+          "edge_kind": {
+            "enum": [
+              "success",
+              "conditional",
+              "failure",
+              "loop"
+            ]
+          },
+          "condition_digest": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^sha256:[a-f0-9]{64}$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "data_contract_digest": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^sha256:[a-f0-9]{64}$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        }
+      }
+    },
+    "joins": {
+      "type": "array",
+      "maxItems": 256,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "node_id",
+          "policy",
+          "threshold",
+          "missing_input_status"
+        ],
+        "properties": {
+          "node_id": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9]*(?:[-_.:][a-z0-9]+)*$",
+            "maxLength": 128
+          },
+          "policy": {
+            "enum": [
+              "all",
+              "quorum",
+              "first_success"
+            ]
+          },
+          "threshold": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 256
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "missing_input_status": {
+            "enum": [
+              "blocked",
+              "unknown",
+              "failed"
+            ]
+          }
+        }
+      }
+    },
+    "limits": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "max_transitions",
+        "max_parallel",
+        "max_total_attempts"
+      ],
+      "properties": {
+        "max_transitions": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100000
+        },
+        "max_parallel": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 64
+        },
+        "max_total_attempts": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100000
+        }
+      }
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}
