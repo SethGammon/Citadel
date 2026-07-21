@@ -2,5 +2,9 @@
   "name": "@citadel/client",
   "version": "0.1.0",
   "private": true,
-  "main": "./index.js"
+  "main": "./index.js",
+  "exports": {
+    ".": "./index.js",
+    "./supervisor": "./supervisor/index.js"
+  }
 }

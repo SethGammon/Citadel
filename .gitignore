@@ -18,6 +18,9 @@ apps/
 # Coordination (ephemeral, per-session)
 .planning/coordination/instances/*.json
 .planning/coordination/claims/*.json
+.planning/discoveries/
+.planning/workspace/
+.worktrees/
 
 # Telemetry logs and runtime state
 .planning/telemetry/

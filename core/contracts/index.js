@@ -9,4 +9,5 @@ module.exports = Object.freeze({
   skillManifest: require('./skill-manifest'),
   agentRole: require('./agent-role'),
   runtime: require('./runtime'),
+  provider: require('./provider'),
 });

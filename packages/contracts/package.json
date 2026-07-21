@@ -2,5 +2,10 @@
   "name": "@citadel/contracts",
   "version": "0.1.0",
   "private": true,
-  "main": "./index.js"
+  "main": "./index.js",
+  "exports": {
+    ".": "./index.js",
+    "./app": "./app/index.js",
+    "./schemas/*": "./schemas/*"
+  }
 }
