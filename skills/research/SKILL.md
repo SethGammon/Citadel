@@ -212,10 +212,13 @@ Source: {scout report path}
 {What couldn't be resolved — needs human judgment}
 ```
 
-Also log to `.planning/telemetry/agent-runs.jsonl`:
-```json
-{"event":"research-fleet-complete","slug":"{slug}","scouts":0,"waves":0,"timestamp":"ISO"}
+Log the completed wave through Citadel's project-local telemetry helper:
+```bash
+node .citadel/scripts/telemetry-log.cjs --event wave-complete --agent research-fleet --session fleet-{slug} --status success
 ```
+If the helper is unavailable, skip telemetry without blocking the research result.
+Keep the scout count and total wave count authoritative in `REPORT.md` and the
+parallel-mode HANDOFF rather than duplicating them in telemetry metadata.
 
 ### Safety Rules (Parallel Mode)
 
