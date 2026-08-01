@@ -4,8 +4,8 @@
   "files": [
     {
       "path": "404.html",
-      "bytes": 1065,
-      "digest": "sha256:f75a238d8003a6f213e91086cfd909c42a1847696081cf3939d58e4bbf4f1c5b"
+      "bytes": 1078,
+      "digest": "sha256:dba7effef32735c0a31a549de8f98bdbb6840652bdf4a3ed7b5b34edb62e1063"
     },
     {
       "path": "EVIDENCE_MANIFEST.md",
@@ -69,8 +69,8 @@
     },
     {
       "path": "evidence.html",
-      "bytes": 24968,
-      "digest": "sha256:843e2ba1b352c54cdaf5df1d93c4fc66ffa5c3709939f27a34c474649068e13b"
+      "bytes": 24981,
+      "digest": "sha256:bc9be5add0785088ac4072a1b8fe76351a9ad1cd9035f8342ccda592d4b6e541"
     },
     {
       "path": "grants/APPLICANT_AND_ADOPTION.md",
@@ -134,23 +134,23 @@
     },
     {
       "path": "index.html",
-      "bytes": 201634,
-      "digest": "sha256:9c7c2af8ed32aae0f08fa288818ee1a979e292babe99c4e37da599f0c4e5839b"
+      "bytes": 201647,
+      "digest": "sha256:522eddab43be3a811ebd9ba2c32bbb2d159263306842ac7c758c42045d8f6114"
     },
     {
       "path": "operation-control.html",
-      "bytes": 26447,
-      "digest": "sha256:56713acf9747a3f083a75976a2a28559a64ad103499a19d66d4810a1325d034f"
+      "bytes": 26460,
+      "digest": "sha256:e007b5b194ed9fb52ec442366577141b0d02f15c6f987a7380d6879c0d0c6eb2"
     },
     {
       "path": "optimizer.html",
-      "bytes": 31917,
-      "digest": "sha256:cfd427c918bf24b8ff943b4b1b454f3cb87da8eb73ddf22331d9377c9c657a84"
+      "bytes": 31930,
+      "digest": "sha256:bd916d5808be1d7687ce6348e6e0bcddcfc3c35592b397462dbe97720e0929c8"
     },
     {
       "path": "research.html",
-      "bytes": 17336,
-      "digest": "sha256:97d8aa08b3c2e049623ac49b461decfd38908d0babe707a4e7e0c94c2dcf0a87"
+      "bytes": 17349,
+      "digest": "sha256:0e3cdb60cde19d77398118b97f5f7961376f32fa0b823aa63563ce3505b7729d"
     },
     {
       "path": "robots.txt",
@@ -179,9 +179,9 @@
     },
     {
       "path": "walkthrough.html",
-      "bytes": 9099,
-      "digest": "sha256:ca3f39e33de6bd76dedd06c64f2703393de43da3ef98da3a2aa4e2540a29df7e"
+      "bytes": 9112,
+      "digest": "sha256:fe6a87df64bb6248b53a182bee63f7eb288e9128e669caf96e8b9ee26bc27f05"
     }
   ],
-  "source_digest": "sha256:4d11d88bc7ecf951bfdeb6b8f79a2bfb78ff4f07db5eacc1fe5d4aa39468c838"
+  "source_digest": "sha256:d656b11616bfc5a8cf3eb13ce086554484166c09f191f4558b23836b12d494d1"
 }
