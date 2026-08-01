@@ -16,7 +16,7 @@
 - [x] Representative replay retained: both policies 6/12 verified, zero false passes, zero path violations, 7.1% measured GPU-energy reduction below the 20% gate.
 - [x] Transitive source-closure manifests and local measurement audit published with explicit limitations.
 - [x] Claim-discipline contract rejects stale or inflated application wording.
-- [ ] Clean hosted browser smoke check on the final merged site.
+- [x] Clean hosted browser smoke check on the final merged site.
 
 ## Presentation
 
@@ -32,7 +32,15 @@
 - [x] Social preview source designed for the evaluator-facing site.
 - [x] Capture three final application images and rendered social preview.
 - [x] Verify sitemap, metadata, keyboard path, video playback, and local desktop/mobile layouts.
-- [ ] Confirm final responsive and console-clean checks on the merged hosted site.
+- [x] Confirm final responsive and console-clean checks on the merged hosted site.
+
+Post-merge evidence for `6a7413180b408e3b7397b06da174a3f2c7228957`:
+[Tests #153](https://github.com/SethGammon/Citadel/actions/runs/30689491568),
+[Pages deployment #158](https://github.com/SethGammon/Citadel/actions/runs/30689490997),
+and [Hosted Pages Smoke #1](https://github.com/SethGammon/Citadel/actions/runs/30689640454)
+all completed successfully on 2026-08-01. The hosted smoke exercised the final
+release manifest, responsive layouts, browser console, focus behavior, overflow,
+page titles, images, and application media.
 
 ## Submission authority
 
