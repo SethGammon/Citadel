@@ -79,8 +79,8 @@
     },
     {
       "path": "grants/APPLICATION_CHECKLIST.md",
-      "bytes": 2504,
-      "digest": "sha256:94cdcccfcef3f124230da0e1059f4cd49c33bd077cb5508deca61f0e328455cd"
+      "bytes": 3036,
+      "digest": "sha256:ced9989d65c55f82bd6fba044fab4600ea0cadb226204aed799c43bcb98b1809"
     },
     {
       "path": "grants/APPLICATION_MEDIA.md",
@@ -183,5 +183,5 @@
       "digest": "sha256:72ee2abbae6b4a1f500abeebf803e149640fa9f53da04343606c648766065121"
     }
   ],
-  "source_digest": "sha256:5727b949891123314e7df7d8b983c729271f982d80f84a309b3e7c93d5487f3b"
+  "source_digest": "sha256:337e6fa544ef832efe639763acf11a8279f88d9f5cd7e18de49c9c98e33e6194"
 }
