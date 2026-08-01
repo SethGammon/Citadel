@@ -10,6 +10,16 @@ Citadel is a protected operating layer. Its visual language uses gates, lanes, c
 
 ## Colors
 
+### Ambient palette
+
+- ink: `#030812`, the deepest page plane
+- ocean: `#06111f`, the default page field
+- surface: `#0a1d30`, a visibly blue panel rather than neutral charcoal
+- surface-raised: `#102b47`
+- surface-soft: `#173b5b`
+- secondary text: `#b8d5e8`, blue-white rather than gray
+- dim technical text: `#7fa6c2`
+
 ### Primary palette
 
 - command: `#29b6d8`, used for primary actions and active routing
@@ -19,15 +29,13 @@ Citadel is a protected operating layer. Its visual language uses gates, lanes, c
 - campaign: `#d09a58`, used for durable work and active phases
 - fleet: `#9d87d9`, used for parallel coordination
 
-### Neutral palette
+### Structural palette
 
-- background: `#0b0f14`
-- surface: `#121820`
-- surface-raised: `#18212b`
-- border: `#2c3946`
-- text-primary: `#edf3f7`
-- text-secondary: `#b2bec8`
-- text-muted: `#778592`
+- border: `#245979`
+- border-strong: `#3a86aa`
+- text-primary: `#f4fbff`
+- backgrounds stay chromatic even at low luminance; neutral gray is not a
+  default surface or text role
 
 ### Semantic palette
 
@@ -53,8 +61,10 @@ Citadel is a protected operating layer. Its visual language uses gates, lanes, c
 - component padding: 16px or 24px
 - section gap: 72px
 - radii: 4px controls, 8px panels, 12px feature surfaces
-- borders are preferred over large shadows
-- glow is reserved for an active transition or verified state change
+- borders clarify structure, while colored ambient shadows and inset highlights
+  establish four readable depth planes
+- glow is restrained and ambient; strong glow remains reserved for active
+  transition or verified state change
 
 ## Motion
 
@@ -68,7 +78,8 @@ Citadel is a protected operating layer. Its visual language uses gates, lanes, c
 ## Component patterns
 
 - button: 12px vertical padding, 16px horizontal padding, 4px radius, 700 weight
-- card: 24px padding, 8px radius, one-pixel border
+- card: 20 to 28px padding, 12 to 18px radius, one-pixel structural border,
+  inset highlight, and a low-opacity blue or violet shadow
 - terminal: restrained monospace, no fake typing longer than three seconds
 - proof receipt: source, result, timestamp or run reference, and truth boundary
 - status: semantic color plus text label, never color alone
@@ -81,5 +92,8 @@ Citadel is a protected operating layer. Its visual language uses gates, lanes, c
 - unsupported live counters
 - feature counts copied manually into multiple public surfaces
 - mocked evidence presented as a live run
+- gray-on-gray panels that flatten the hierarchy
+- invisible reveal states that make a static viewport look empty
+- hover transforms inside clipping containers
 - em dashes in public copy
 - claims such as any project, no config, or guaranteed routing without a stated boundary

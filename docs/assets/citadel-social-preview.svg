@@ -3,16 +3,21 @@
   <desc id="description">A dark technical card showing Citadel's progressive path from slash-do to signed operation evidence.</desc>
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#070b12" />
-      <stop offset="0.62" stop-color="#0a111b" />
-      <stop offset="1" stop-color="#101528" />
+      <stop offset="0" stop-color="#030812" />
+      <stop offset="0.54" stop-color="#07192a" />
+      <stop offset="1" stop-color="#18143a" />
     </linearGradient>
     <linearGradient id="cyan" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#45ddff" />
-      <stop offset="1" stop-color="#78a7ff" />
+      <stop offset="0" stop-color="#49e2ff" />
+      <stop offset="1" stop-color="#7d9fff" />
+    </linearGradient>
+    <linearGradient id="panel" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#102b47" />
+      <stop offset=".58" stop-color="#0a1d30" />
+      <stop offset="1" stop-color="#16183e" />
     </linearGradient>
     <pattern id="grid" width="48" height="48" patternUnits="userSpaceOnUse">
-      <path d="M48 0H0V48" fill="none" stroke="#25364a" stroke-opacity=".32" />
+      <path d="M48 0H0V48" fill="none" stroke="#4a94ba" stroke-opacity=".22" />
     </pattern>
     <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
       <feGaussianBlur stdDeviation="16" />
@@ -20,34 +25,36 @@
   </defs>
   <rect width="1200" height="630" fill="url(#bg)" />
   <rect width="1200" height="630" fill="url(#grid)" />
-  <circle cx="1060" cy="30" r="230" fill="#45ddff" opacity=".08" filter="url(#glow)" />
-  <circle cx="1040" cy="590" r="250" fill="#b495ff" opacity=".08" filter="url(#glow)" />
+  <circle cx="1060" cy="30" r="230" fill="#49e2ff" opacity=".15" filter="url(#glow)" />
+  <circle cx="1040" cy="590" r="250" fill="#b98cff" opacity=".16" filter="url(#glow)" />
+  <circle cx="60" cy="620" r="190" fill="#247da7" opacity=".11" filter="url(#glow)" />
   <g transform="translate(72 62)">
-    <rect width="46" height="46" rx="12" fill="#45ddff" fill-opacity=".10" stroke="#45ddff" stroke-opacity=".55" />
-    <text x="23" y="31" text-anchor="middle" fill="#45ddff" font-family="Consolas, monospace" font-size="20" font-weight="700">C</text>
-    <text x="65" y="31" fill="#f2f7fb" font-family="Consolas, monospace" font-size="18" font-weight="700" letter-spacing="5">CITADEL</text>
+    <rect width="46" height="46" rx="12" fill="#49e2ff" fill-opacity=".13" stroke="#49e2ff" stroke-opacity=".7" />
+    <text x="23" y="31" text-anchor="middle" fill="#49e2ff" font-family="Consolas, monospace" font-size="20" font-weight="700">C</text>
+    <text x="65" y="31" fill="#f4fbff" font-family="Consolas, monospace" font-size="18" font-weight="700" letter-spacing="5">CITADEL</text>
   </g>
   <g transform="translate(72 176)">
-    <text fill="#45ddff" font-family="Consolas, monospace" font-size="18" font-weight="700" letter-spacing="3">THE OPERATION EVIDENCE LAYER</text>
-    <text y="82" fill="#f2f7fb" font-family="Segoe UI, Arial, sans-serif" font-size="64" font-weight="750">Start with <tspan fill="url(#cyan)">/do</tspan>.</text>
-    <text y="154" fill="#a4b2c2" font-family="Segoe UI, Arial, sans-serif" font-size="58" font-weight="700">Prove what actually ran.</text>
-    <text y="210" fill="#a4b2c2" font-family="Segoe UI, Arial, sans-serif" font-size="24">Durable state · bounded control · model-external verification · signed receipts</text>
+    <text fill="#49e2ff" font-family="Consolas, monospace" font-size="18" font-weight="700" letter-spacing="3">THE OPERATION EVIDENCE LAYER</text>
+    <text y="82" fill="#f4fbff" font-family="Segoe UI, Arial, sans-serif" font-size="64" font-weight="750">Start with <tspan fill="url(#cyan)">/do</tspan>.</text>
+    <text y="154" fill="#d6edfa" font-family="Segoe UI, Arial, sans-serif" font-size="58" font-weight="700">Prove what actually ran.</text>
+    <text y="210" fill="#b8d5e8" font-family="Segoe UI, Arial, sans-serif" font-size="24">Durable state · bounded control · model-external verification · signed receipts</text>
   </g>
   <g transform="translate(72 490)">
-    <rect width="1056" height="82" rx="18" fill="#0d141f" stroke="#35516c" />
+    <rect width="1056" height="82" rx="18" fill="url(#panel)" stroke="#3a86aa" />
+    <path d="M18 1H1038" stroke="#b8edff" stroke-opacity=".13" />
     <g transform="translate(30 19)">
       <text y="19" fill="#62e39d" font-family="Consolas, monospace" font-size="22" font-weight="700">168</text>
-      <text y="45" fill="#718095" font-family="Consolas, monospace" font-size="14">signed prospective local cells</text>
+      <text y="45" fill="#7fa6c2" font-family="Consolas, monospace" font-size="14">signed prospective local cells</text>
     </g>
-    <path d="M290 14V68" stroke="#24364a" />
+    <path d="M290 14V68" stroke="#245979" />
     <g transform="translate(330 19)">
       <text y="19" fill="#62e39d" font-family="Consolas, monospace" font-size="22" font-weight="700">0</text>
-      <text y="45" fill="#718095" font-family="Consolas, monospace" font-size="14">adversarial false passes</text>
+      <text y="45" fill="#7fa6c2" font-family="Consolas, monospace" font-size="14">adversarial false passes</text>
     </g>
-    <path d="M630 14V68" stroke="#24364a" />
+    <path d="M630 14V68" stroke="#245979" />
     <g transform="translate(670 19)">
-      <text y="19" fill="#45ddff" font-family="Consolas, monospace" font-size="22" font-weight="700">OPEN SOURCE</text>
-      <text y="45" fill="#718095" font-family="Consolas, monospace" font-size="14">method · failures · verification</text>
+      <text y="19" fill="#49e2ff" font-family="Consolas, monospace" font-size="22" font-weight="700">OPEN SOURCE</text>
+      <text y="45" fill="#7fa6c2" font-family="Consolas, monospace" font-size="14">method · failures · verification</text>
     </g>
   </g>
 </svg>

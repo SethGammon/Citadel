@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import argparse
 import asyncio
 import re
 import shutil
@@ -48,12 +49,13 @@ def slide(source: Path, title: str, subtitle: str, output: Path) -> None:
     draw = ImageDraw.Draw(overlay)
     for y in range(HEIGHT - 350, HEIGHT):
         alpha = int(225 * ((y - (HEIGHT - 350)) / 350))
-        draw.line((0, y, WIDTH, y), fill=(5, 8, 13, alpha))
-    draw.rounded_rectangle((92, HEIGHT - 268, WIDTH - 92, HEIGHT - 72), radius=26, fill=(7, 11, 18, 226), outline=(53, 81, 108, 230), width=2)
-    draw.rectangle((92, HEIGHT - 268, 100, HEIGHT - 72), fill=(69, 221, 255, 255))
-    draw.text((138, HEIGHT - 235), title, font=font(55, True), fill=(242, 247, 251, 255))
-    draw.text((140, HEIGHT - 158), subtitle, font=font(28), fill=(164, 178, 194, 255))
-    draw.text((WIDTH - 382, HEIGHT - 112), "CITADEL · OPEN EVIDENCE", font=font(19, True), fill=(69, 221, 255, 230))
+        draw.line((0, y, WIDTH, y), fill=(3, 8, 18, alpha))
+    draw.rounded_rectangle((92, HEIGHT - 268, WIDTH - 92, HEIGHT - 72), radius=26, fill=(10, 29, 48, 232), outline=(58, 134, 170, 235), width=2)
+    draw.line((118, HEIGHT - 267, WIDTH - 118, HEIGHT - 267), fill=(184, 237, 255, 28), width=2)
+    draw.rectangle((92, HEIGHT - 268, 100, HEIGHT - 72), fill=(73, 226, 255, 255))
+    draw.text((138, HEIGHT - 235), title, font=font(55, True), fill=(244, 251, 255, 255))
+    draw.text((140, HEIGHT - 158), subtitle, font=font(28), fill=(184, 213, 232, 255))
+    draw.text((WIDTH - 382, HEIGHT - 112), "CITADEL · OPEN EVIDENCE", font=font(19, True), fill=(73, 226, 255, 235))
     Image.alpha_composite(canvas, overlay).convert("RGB").save(output, quality=94)
 
 
@@ -76,16 +78,29 @@ async def synthesize(text: str, output: Path, captions: Path) -> None:
 
 
 def main() -> None:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--reuse-existing-audio",
+        action="store_true",
+        help="Rebuild the visual track offline while preserving the committed walkthrough audio and captions.",
+    )
+    args = parser.parse_args()
     required = [MEDIA / item[0] for item in SLIDES]
     missing = [path for path in required if not path.exists()]
     if missing:
         raise FileNotFoundError(f"missing application images: {missing}")
     text = NARRATION.read_text(encoding="utf-8").strip()
     ffmpeg = imageio_ffmpeg.get_ffmpeg_exe()
+    if args.reuse_existing_audio and not OUTPUT.exists():
+        raise FileNotFoundError(f"cannot reuse audio because {OUTPUT} does not exist")
     with tempfile.TemporaryDirectory(prefix="citadel-walkthrough-") as temporary:
         temp = Path(temporary)
-        audio = temp / "narration.mp3"
-        asyncio.run(synthesize(text, audio, CAPTIONS))
+        if args.reuse_existing_audio:
+            audio = temp / "narration.m4a"
+            run([ffmpeg, "-loglevel", "error", "-y", "-i", str(OUTPUT), "-vn", "-c:a", "copy", str(audio)])
+        else:
+            audio = temp / "narration.mp3"
+            asyncio.run(synthesize(text, audio, CAPTIONS))
         segment_paths: list[Path] = []
         for index, (filename, title, subtitle) in enumerate(SLIDES):
             rendered = temp / f"slide-{index:02d}.jpg"

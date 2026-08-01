@@ -4,6 +4,6 @@
   "description": "A progressive operating and evidence layer for coding agents.",
   "start_url": "./",
   "display": "standalone",
-  "background_color": "#070b12",
-  "theme_color": "#070b12"
+  "background_color": "#06111f",
+  "theme_color": "#06111f"
 }

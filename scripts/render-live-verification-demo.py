@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import argparse
 import hashlib
 import json
 import os
@@ -64,37 +65,49 @@ def wrapped_lines(record: dict[str, object]) -> list[str]:
 
 
 def render(record: dict[str, object], index: int, target: Path) -> None:
-    image = Image.new("RGB", (WIDTH, HEIGHT), "#070b12")
+    image = Image.new("RGB", (WIDTH, HEIGHT), "#030812")
     draw = ImageDraw.Draw(image)
-    draw.rectangle((0, 0, WIDTH, 96), fill="#0c1420")
-    draw.text((72, 30), "CITADEL · RECORDED REAL COMMAND OUTPUT", font=font(25, True), fill="#45ddff")
-    draw.text((WIDTH - 250, 30), f"{index + 1} / {len(COMMANDS)}", font=font(25, True), fill="#718095")
-    draw.rounded_rectangle((72, 140, WIDTH - 72, HEIGHT - 72), radius=22, fill="#05080d", outline="#35516c", width=2)
-    draw.rectangle((72, 140, WIDTH - 72, 204), fill="#101a28")
+    draw.rectangle((0, 0, WIDTH, 96), fill="#07192a")
+    draw.text((72, 30), "CITADEL · RECORDED REAL COMMAND OUTPUT", font=font(25, True), fill="#49e2ff")
+    draw.text((WIDTH - 250, 30), f"{index + 1} / {len(COMMANDS)}", font=font(25, True), fill="#7fa6c2")
+    draw.rounded_rectangle((72, 140, WIDTH - 72, HEIGHT - 72), radius=22, fill="#020a16", outline="#3a86aa", width=2)
+    draw.line((94, 141, WIDTH - 94, 141), fill="#b8edff", width=1)
+    draw.rectangle((72, 140, WIDTH - 72, 204), fill="#102b47")
     for offset, color in enumerate(("#ff6b73", "#f4bd4f", "#45d483")):
         draw.ellipse((102 + offset * 38, 162, 120 + offset * 38, 180), fill=color)
-    draw.text((250, 157), str(record["label"]), font=font(22, True), fill="#dce8f3")
+    draw.text((250, 157), str(record["label"]), font=font(22, True), fill="#f4fbff")
     y = 242
     for line in wrapped_lines(record):
-        color = "#62e39d" if line.startswith("exit 0") else ("#45ddff" if line.startswith("$") else "#b7c5d3")
+        color = "#62e39d" if line.startswith("exit 0") else ("#49e2ff" if line.startswith("$") else "#b8d5e8")
         draw.text((110, y), line, font=font(25, line.startswith("$") or line.startswith("exit 0")), fill=color)
         y += 34
     image.save(target, quality=95)
 
 
 def main() -> None:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--reuse-recorded-output",
+        action="store_true",
+        help="Rebuild the visual track without rerunning commands or changing the committed transcript.",
+    )
+    args = parser.parse_args()
     MEDIA.mkdir(parents=True, exist_ok=True)
-    records = [execute(label, script) for label, script in COMMANDS]
-    payload = {
-        "schema": 1,
-        "kind": "citadel-recorded-verification-output",
-        "recorded_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
-        "source_revision": subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip(),
-        "commands": records,
-    }
-    canonical = json.dumps(payload, sort_keys=True, separators=(",", ":"))
-    payload["transcript_sha256"] = hashlib.sha256(canonical.encode("utf-8")).hexdigest()
-    TRANSCRIPT.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
+    if args.reuse_recorded_output:
+        payload = json.loads(TRANSCRIPT.read_text(encoding="utf-8"))
+        records = payload["commands"]
+    else:
+        records = [execute(label, script) for label, script in COMMANDS]
+        payload = {
+            "schema": 1,
+            "kind": "citadel-recorded-verification-output",
+            "recorded_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+            "source_revision": subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip(),
+            "commands": records,
+        }
+        canonical = json.dumps(payload, sort_keys=True, separators=(",", ":"))
+        payload["transcript_sha256"] = hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+        TRANSCRIPT.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
 
     ffmpeg = imageio_ffmpeg.get_ffmpeg_exe()
     with tempfile.TemporaryDirectory(prefix="citadel-live-verification-") as temporary:
