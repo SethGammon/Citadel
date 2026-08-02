@@ -1,10 +1,10 @@
 {
   "schema": 1,
   "kind": "citadel_public_holdout_selection_request",
-  "request_id": "sha256:af8f4bc938bedd7f1f913b1f0c853972db99e5a4d194d1e8a3e0589de13d0755",
-  "frozen_at": "2026-08-02T20:01:41.734Z",
+  "request_id": "sha256:404f1a5571d1dbcf27120cc750e935e6e8957e2b18653ee90faa0a7e11f36c11",
+  "frozen_at": "2026-08-02T21:45:04.604Z",
   "pool_id": "sha256:0edaff148f782c8cb3e369dc021af2f25fb6b7e1c309a59fd07f7ec31e4bfd5c",
-  "supersedes_request_id": "sha256:56ea91ea5c55e8cb64ee5cb944b52b38352a608814906e7e9bb5bbbd36358dd7",
+  "supersedes_request_id": "sha256:af8f4bc938bedd7f1f913b1f0c853972db99e5a4d194d1e8a3e0589de13d0755",
   "eligible_candidate_digests": [
     "sha256:034a7450fcf03d53d3241c372e2949f0aefd328c3ca4e5184eb431451c080814",
     "sha256:03a58e015a518dda3db285373c84f203d83e9860cca799e51d9ff13c5931c614",
@@ -161,8 +161,8 @@
     "terminal_rule": "if quotas cannot be filled from the frozen eligible pool, result is setup-unknown; no outcome-based replacement"
   },
   "source_digests": {
-    ".github/workflows/public-holdout-evaluation.yml": "sha256:e64aa9fe334e9e41c84fcfc4b57f50df10e0700809cee76d47d20462a6024742",
-    "benchmarks/public-holdout-capstone/METHOD.md": "sha256:f6bea641592cda55722c5d9307a21cc5ccfada9c1528e302294687fcd0a88ac9",
+    ".github/workflows/public-holdout-evaluation.yml": "sha256:779e173432b05aa748fab71865ab156309745613cdf42ca734a65d7c0db64012",
+    "benchmarks/public-holdout-capstone/METHOD.md": "sha256:8aefab4fe7808435edd948ef9cf1896ea6704fe7dea84b41f5afe6f524b59ee8",
     "benchmarks/public-holdout-capstone/RESEARCH.md": "sha256:f516e5746c4f78e63056b2edab900229386869671ba5ba6525f4a8c4824eec1b",
     "core/operation-control/contracts.js": "sha256:d91adea8e5f5649dd38712e0fe244a0beb7dbe6e221e308ee975fd152f2fb5be",
     "core/operation-control/receipt.js": "sha256:3ef5cfce5e17d22f5dbd68ff69cadf9138e95fa6b952c6ac26b29f4e7dc5aa66",
@@ -176,9 +176,9 @@
     "core/public-holdout/selection.js": "sha256:e8049c9c77c21c97bc54f4f118d6990a7ccccf74ac81a672e05ebaebc8ede887",
     "core/public-holdout/statistics.js": "sha256:7808172b494f0b05ba5285e94be28bb05ddff648c33213c8efdac2f83f676246",
     "scripts/public-holdout-capstone.js": "sha256:6dc552ef0d5637eab37df3535feaeed1e666612c576d35fda8b657db67918002",
-    "scripts/public-holdout-evaluator-summary.js": "sha256:8267b009d3c039f38c9ef98697c642a15719015e1a83b63b1e681e1167b545ac",
+    "scripts/public-holdout-evaluator-summary.js": "sha256:24031b3f1c0b971a24f79e3b5c6193aeacdda51e6147cf92fd436b9ea9b22655",
     "scripts/public-holdout-matrix.js": "sha256:2a9df25c9053bbf53479066301c379992fbc28c2fa3d457fce56b96cc541e469",
-    "scripts/test-public-holdout-capstone.js": "sha256:1d89f70b5517c6dca8a6e40e05eb92b9babc20953a017d1e71c17fcf028515a4",
+    "scripts/test-public-holdout-capstone.js": "sha256:24fa233d8212580194c640a573b04563be6846c65f20b4fe3a2b2a53377bd64a",
     "package.json": "sha256:2e6129771d502c717bc514ce24c0bd2e9e9a75af9df6b6a6323e1fa7af75d050"
   },
   "attestation_public_key": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAttWhQcx2y2SU1nrcHD82MM3tDuwS0Lvz9w/mmByC/rQ=\n-----END PUBLIC KEY-----\n",
@@ -187,12 +187,12 @@
     "chain_hash": "8990e7a9aaed2ffed73dbd7092123d6f289930540d7651336225dc172e51b2ce",
     "public_key": "868f005eb8e6e4ca0a47c8a77ceaa5309a47978a7c71bc5cce96366b5d7a569937c529eeda66c7293784a9402801af31",
     "period_seconds": 30,
-    "round": 6342418,
-    "round_time": "2026-08-02T20:46:00.000Z",
+    "round": 6342616,
+    "round_time": "2026-08-02T22:25:00.000Z",
     "source_urls": [
-      "https://api.drand.sh/public/6342418",
-      "https://api2.drand.sh/public/6342418",
-      "https://drand.cloudflare.com/public/6342418"
+      "https://api.drand.sh/public/6342616",
+      "https://api2.drand.sh/public/6342616",
+      "https://drand.cloudflare.com/public/6342616"
     ],
     "minimum_identical_sources": 3
   }
