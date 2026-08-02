@@ -1,0 +1,1002 @@
+{
+  "schema": 1,
+  "kind": "citadel_public_holdout_selection",
+  "selection_id": "sha256:720e46672c751c3d2d39dbc399f99d32b389f9efea8d5151a2cf645dacc529ff",
+  "request_id": "sha256:af8f4bc938bedd7f1f913b1f0c853972db99e5a4d194d1e8a3e0589de13d0755",
+  "pool_id": "sha256:0edaff148f782c8cb3e369dc021af2f25fb6b7e1c309a59fd07f7ec31e4bfd5c",
+  "observed_at": "2026-08-02T20:47:07.029Z",
+  "beacon": {
+    "round": 6342418,
+    "randomness": "6001ae82e312b6ac7135f84ba721887127c5ff9d2395d78b848d3bb5c65c4092",
+    "signature": "b79d2d829f2074d69316bf4954078f9e9f7866e3b396d18923cd0a968be8f6531270e9fd6f766c13e8f514268a4f4f1911405e7ea339664d5f3c998bdc8e9ab33e8371008c2e7ea68209f7fbba7fd05679e8f16def662df97464f288cf31fcf0",
+    "previous_signature": "b4cc138b3997f3437ffab19661048118273246b53b63797db0cdc1f7ee8ecca4b70d1e99f1e98b1ae4b167d0ccb1717c044cd8eb7e47f0f4153eea9064e320eb61897ead8f9c881c177be62051e1679c884274619fd3285d04ff0a150e215abe"
+  },
+  "source_urls": [
+    "https://api.drand.sh/public/6342418",
+    "https://api2.drand.sh/public/6342418",
+    "https://drand.cloudflare.com/public/6342418"
+  ],
+  "verified_relay_count": 3,
+  "ordered_candidates": {
+    "js": [
+      {
+        "rank": 1,
+        "instance_id": "Automattic__mongoose-15485",
+        "repo": "Automattic/mongoose",
+        "feature_key": "js.issue-long",
+        "candidate_digest": "sha256:22adcd05ba3a7af0372da2292cf4cc5b64d47fe2570b64152eeb737191cc596b",
+        "rank_digest": "sha256:039d5208b6c3b215c7d567411dce3cc1fba0d4b2af9eac6f2d2faf1a978234b2"
+      },
+      {
+        "rank": 2,
+        "instance_id": "ember-cli__ember-cli-10776",
+        "repo": "ember-cli/ember-cli",
+        "feature_key": "js.issue-short",
+        "candidate_digest": "sha256:2a0249dfba986f7c90b29b38d352f87589f2aca0f60bbade7c5133f853942db3",
+        "rank_digest": "sha256:0b1c5ab49fa8c5de6cbefacf9858b5823b210eda8a53ffe1a9b88122f4d2a3f0"
+      },
+      {
+        "rank": 3,
+        "instance_id": "GladysAssistant__Gladys-2504",
+        "repo": "GladysAssistant/Gladys",
+        "feature_key": "js.issue-short",
+        "candidate_digest": "sha256:a9a577f378b515d33159c0ae35f8147b2ff987fc99504481c5aa02325bcf4cfd",
+        "rank_digest": "sha256:10afaed6b987589393d8dd45a404431e43005b2721c2083413557d3fb63cd161"
+      },
+      {
+        "rank": 4,
+        "instance_id": "aralroca__next-translate-1259",
+        "repo": "aralroca/next-translate",
+        "feature_key": "js.issue-long",
+        "candidate_digest": "sha256:d22447a747badecf4764d94c4f48a98055e0d0ea11b7f6d05be5532f5aedfa3c",
+        "rank_digest": "sha256:1fc78ba0205d0273ffa13b37f0602f0152cf344509e4a76b1519875393a8311c"
+      },
+      {
+        "rank": 5,
+        "instance_id": "Mintplex-Labs__anything-llm-5252",
+        "repo": "Mintplex-Labs/anything-llm",
+        "feature_key": "js.issue-long",
+        "candidate_digest": "sha256:a1ae380f669907d41a94e05145ff3234ec91cc0784fd700c83eb0f8ceac42cab",
+        "rank_digest": "sha256:209da4ec88ea112c88cb2a130d2c69d0cd67e604d07aff46b9f46782e90566c9"
+      },
+      {
+        "rank": 6,
+        "instance_id": "rollup__rollup-6038",
+        "repo": "rollup/rollup",
+        "feature_key": "js.issue-long",
+        "candidate_digest": "sha256:15002a2a54de43764c00f0a46123e5a7044ffd404d73a76813d75771a67e12f0",
+        "rank_digest": "sha256:20a314e272fae36113ac958142f60af7db9358e67b3c773f494ed0ad2dae1c7a"
+      },
+      {
+        "rank": 7,
+        "instance_id": "docsifyjs__docsify-2595",
+        "repo": "docsifyjs/docsify",
+        "feature_key": "js.issue-long",
+        "candidate_digest": "sha256:8c6edc114371919e7fcfaca5dc2d9b1fdc9c1ebef06cb04a76278c160fd3bb11",
+        "rank_digest": "sha256:2840391ddef2a1d5f1b12e4f24bd399f06703be9d63caf4713fd1e5d57536a38"
+      },
+      {
+        "rank": 8,
+        "instance_id": "nodejs__undici-5011",
+        "repo": "nodejs/undici",
+        "feature_key": "js.issue-short",
+        "candidate_digest": "sha256:c62dc0cfe9ce18da71839e966ca1566a33e34159c31225f528105b4c0b96262f",
+        "rank_digest": "sha256:2b1722c0ab93e05941d8bc9a621f2b84cd57d2247dae8df5435e6d47ede63780"
+      },
+      {
+        "rank": 9,
+        "instance_id": "usebruno__bruno-7620",
+        "repo": "usebruno/bruno",
+        "feature_key": "js.issue-long",
+        "candidate_digest": "sha256:37c5bec9d1fadf17723ed712be88d41041d3ba8511e5a593280cfd8dca83053b",
+        "rank_digest": "sha256:2eb044c4d9019cc409480bb66eaa2d1f484ccd58b776f0248094d6c67868da93"
+      },
+      {
+        "rank": 10,
+        "instance_id": "cytoscape__cytoscape.js-3396",
+        "repo": "cytoscape/cytoscape.js",
+        "feature_key": "js.issue-long",
+        "candidate_digest": "sha256:3433585c9ef6903ce674242a670bbe7b132ff3086145748c2b62aadbd33ffb18",
+        "rank_digest": "sha256:2f0ed1353e60bff0fa229e642ecc97487e7dfd74f7c893a57d22e38bfd91ccdb"
+      },
+      {
+        "rank": 11,
+        "instance_id": "proj4js__proj4js-560",
+        "repo": "proj4js/proj4js",
+        "feature_key": "js.issue-long",
+        "candidate_digest": "sha256:bbd3d82e9dec9e68f361682f82bb12f7ab325ccdc0f17c3d8fa865168a6f3d5c",
+        "rank_digest": "sha256:322b48fc9029a7e9434b8e46434dfc02d39cf6aa876eb6dab42e5f4920e6539e"
+      },
+      {
+        "rank": 12,
+        "instance_id": "Automattic__mongoose-15534",
+        "repo": "Automattic/mongoose",
+        "feature_key": "js.issue-long",
+        "candidate_digest": "sha256:9317a2b2358e437183dc19bd4df3e8ee0a7f06c3c6072ed1ee79bffdf0ebae64",
+        "rank_digest": "sha256:350a960b70f3de6ba410c307a7aa6147c47eadeeb12d02fef4f961b25c10cbdd"
+      },
+      {
+        "rank": 13,
+        "instance_id": "hotwired__turbo-1421",
+        "repo": "hotwired/turbo",
+        "feature_key": "js.issue-short",
+        "candidate_digest": "sha256:40f81b71ae30c783b319e1b1aa248b15ecdca7bcdaa99e8c9418d937e9a36d01",
+        "rank_digest": "sha256:3d07a8159f2f7d13e7336ff9676908b43d6bd79959f1cf811d6642557b92a38a"
+      },
+      {
+        "rank": 14,
+        "instance_id": "cthackers__adm-zip-559",
+        "repo": "cthackers/adm-zip",
+        "feature_key": "js.issue-short",
+        "candidate_digest": "sha256:41f2cd505e7bce083cefb828a1cb2e979de9559db05a37fc737a4a1aadd933db",
+        "rank_digest": "sha256:43149f900c675f129ac219178623e4eb9496693a7228fe890d8f03a552e3a1df"
+      },
+      {
+        "rank": 15,
+        "instance_id": "MultiQC__MultiQC-3300",
+        "repo": "MultiQC/MultiQC",
+        "feature_key": "js.issue-long",
+        "candidate_digest": "sha256:8633fa23c6a6a451d04857c0e91a93a07fedc40ef6828390e495fc872f6433af",
+        "rank_digest": "sha256:44c1140b0be0fa31ff2af7b52ecfc616307f47897d1509ce9ff27faf35f9d6e1"
+      },
+      {
+        "rank": 16,
+        "instance_id": "gsd-build__get-shit-done-2186",
+        "repo": "gsd-build/get-shit-done",
+        "feature_key": "js.issue-long",
+        "candidate_digest": "sha256:ccf27d968305f15cb8ad4a8537a7e8ce26b73fff2032e7f2104e638d3fb266d3",
+        "rank_digest": "sha256:46d2c2b3f79de608b40f41221594e62629616813112a25fdc142d1313c136925"
+      },
+      {
+        "rank": 17,
+        "instance_id": "less__less.js-4363",
+        "repo": "less/less.js",
+        "feature_key": "js.issue-short",
+        "candidate_digest": "sha256:bf9b8b0e38297439bc8e05bae92ab5282a2377f8c0805771ba951036894fe12b",
+        "rank_digest": "sha256:4ba25f7bc40f263188a846da5ed537facea5af7107ae264fa4f477aece163ebf"
+      },
+      {
+        "rank": 18,
+        "instance_id": "nodejs__undici-4453",
+        "repo": "nodejs/undici",
+        "feature_key": "js.issue-long",
+        "candidate_digest": "sha256:095c3a5de9e8f2182232b7f8ec4e937ce61e9d2c4c7b2ff0a13a4fa5784c24c3",
+        "rank_digest": "sha256:4f8c856b4b2b71517705c73cd804f351a856b656b1b86840387f6ea4a34c8fff"
+      },
+      {
+        "rank": 19,
+        "instance_id": "gsd-build__get-shit-done-2107",
+        "repo": "gsd-build/get-shit-done",
+        "feature_key": "js.issue-long",
+        "candidate_digest": "sha256:8dc3b6463533bce4c02956b74f21541f6ba607e676f1fc96fcbde6949c251b11",
+        "rank_digest": "sha256:54910877ad8087d4edb37ead04c3929f9050f8b591ae80262992840e04c3f504"
+      },
+      {
+        "rank": 20,
+        "instance_id": "TryGhost__Ghost-24345",
+        "repo": "TryGhost/Ghost",
+        "feature_key": "js.issue-short",
+        "candidate_digest": "sha256:f4e611c270901bf934d4552954e712dc633800951903c4ea13e2e10a5dfdd5c6",
+        "rank_digest": "sha256:568a6b9a0212931e223777fefe5afdd35e982d807587b3f1753160bd7691387d"
+      },
+      {
+        "rank": 21,
+        "instance_id": "grommet__grommet-7709",
+        "repo": "grommet/grommet",
+        "feature_key": "js.issue-short",
+        "candidate_digest": "sha256:a7f512dd90dc5c9186ea13e0e527505dfd45519a4586c56c1e198163c9e5221a",
+        "rank_digest": "sha256:5bf785192d5d984982c4a7e4ecc66017752198003a8dce79a57598bd097fd794"
+      },
+      {
+        "rank": 22,
+        "instance_id": "nock__nock-2880",
+        "repo": "nock/nock",
+        "feature_key": "js.issue-long",
+        "candidate_digest": "sha256:f942ea8f1dd584fe56b42cdede7146c0f078a1ffd8ef52d981366fb285e5c139",
+        "rank_digest": "sha256:5d1560f36563b1f811571f195b86116964ab2c8bf7b1eedfaeab424abe35cd90"
+      },
+      {
+        "rank": 23,
+        "instance_id": "stdlib-js__stdlib-7672",
+        "repo": "stdlib-js/stdlib",
+        "feature_key": "js.issue-short",
+        "candidate_digest": "sha256:756fd649dd71e77daabe017dc81e98db40a801a50ef5e3c5d6858264c5d5f058",
+        "rank_digest": "sha256:607cb48355dec1097722df1ab9c617abe1b488bf9918efbfa93ba155aa99c14c"
+      },
+      {
+        "rank": 24,
+        "instance_id": "openai__codex-plugin-cc-83",
+        "repo": "openai/codex-plugin-cc",
+        "feature_key": "js.issue-long",
+        "candidate_digest": "sha256:49a5ef4dc55863b798ea7e2991b2c2d1e081f67a0a6651aee2d6e42e22a3cd5f",
+        "rank_digest": "sha256:6187f3e6ffe769b1cc014f0ba25ebbeac89808716a4c7db83ae48bfd41cb4a68"
+      },
+      {
+        "rank": 25,
+        "instance_id": "thlorenz__doctoc-329",
+        "repo": "thlorenz/doctoc",
+        "feature_key": "js.issue-short",
+        "candidate_digest": "sha256:3c19c0bbb85ee25bd286e8e286a370b60b89fbe762bfe5039cb27c60b64696e9",
+        "rank_digest": "sha256:68cc2429c2f83180aebd5cb3c6fccd6e19a105885d202af9e588b676e4a1209e"
+      },
+      {
+        "rank": 26,
+        "instance_id": "codeceptjs__CodeceptJS-5106",
+        "repo": "codeceptjs/CodeceptJS",
+        "feature_key": "js.issue-short",
+        "candidate_digest": "sha256:2647831155620bb0e69abfdd2510d7da9458d1b12d544f60ccfdbb841cec38a8",
+        "rank_digest": "sha256:6fee03c0165ca336b67900ef8780c2eae7c7bd6f0204cfed8eb26947449ca0c1"
+      },
+      {
+        "rank": 27,
+        "instance_id": "rollup__rollup-6009",
+        "repo": "rollup/rollup",
+        "feature_key": "js.issue-short",
+        "candidate_digest": "sha256:c59fea53fff0d35bc2a6a82c15f48cf3a15c0366aeafd962cde7de1f3598946f",
+        "rank_digest": "sha256:73dd1a704363f50630553fd65dd2e235bfcab94b37438f9244bd165340ef1674"
+      },
+      {
+        "rank": 28,
+        "instance_id": "facebook__stylex-1209",
+        "repo": "facebook/stylex",
+        "feature_key": "js.issue-long",
+        "candidate_digest": "sha256:3cee13516c3992e28d552c08be5af2c67988d520945bba5a51d6ec52987ae91d",
+        "rank_digest": "sha256:741dc049831162bffa66c8a5d1cabe2e94e4c9a0b6359f9129538f0f12cef91e"
+      },
+      {
+        "rank": 29,
+        "instance_id": "Automattic__mongoose-16153",
+        "repo": "Automattic/mongoose",
+        "feature_key": "js.issue-long",
+        "candidate_digest": "sha256:7335054304cb7eebba73b772c79dde6c8c90f9d20c6471258922acfdcc9859ec",
+        "rank_digest": "sha256:79494e2b37a33c352f5c3fb58334b34e39d5cb4b91cefead19bf3818a672077f"
+      },
+      {
+        "rank": 30,
+        "instance_id": "simple-icons__simple-icons-13659",
+        "repo": "simple-icons/simple-icons",
+        "feature_key": "js.issue-short",
+        "candidate_digest": "sha256:6bbf983efb3ef656d361d3186dafa344085ae1a586550529293960de514b1de5",
+        "rank_digest": "sha256:7c96096be3d7a6d0522b74f4b8d426cecbfd7bfaed2a4752131f705093491b56"
+      },
+      {
+        "rank": 31,
+        "instance_id": "rollup__rollup-6051",
+        "repo": "rollup/rollup",
+        "feature_key": "js.issue-short",
+        "candidate_digest": "sha256:e75df8e6bc1b5d1e31f085647e3851e0b2c02b748b93e06c73c44c210eef6702",
+        "rank_digest": "sha256:8ffb650ad8cbf533d0db641856733a2b3648f924bdd115da68b2b713c169bc18"
+      },
+      {
+        "rank": 32,
+        "instance_id": "hapijs__joi-3082",
+        "repo": "hapijs/joi",
+        "feature_key": "js.issue-long",
+        "candidate_digest": "sha256:d1218ef73469ad4d3350f523481eb8fedfc0c9462657abe4ac7ae240ae423bef",
+        "rank_digest": "sha256:9b47c3bf24a211cdf824bfc6ef7948031d0d4931a0bb5010a4ac2d362f9b0adf"
+      },
+      {
+        "rank": 33,
+        "instance_id": "grommet__grommet-7719",
+        "repo": "grommet/grommet",
+        "feature_key": "js.issue-short",
+        "candidate_digest": "sha256:c59b44a6a4328667553a78f7e0fd147d22536103f8ea257326c20ae7849c2629",
+        "rank_digest": "sha256:9b753d5aabe1a61f311b71a6d928633f2d5660096a9b271db030bf2f20ca4771"
+      },
+      {
+        "rank": 34,
+        "instance_id": "codeceptjs__CodeceptJS-5072",
+        "repo": "codeceptjs/CodeceptJS",
+        "feature_key": "js.issue-long",
+        "candidate_digest": "sha256:075a761e0476efee89fe9a45424dd5f6c485bebb221e6b0f94c7eccd1ec94b2e",
+        "rank_digest": "sha256:a02683deafea2b832f09616006ff58f55adae3332cd1a48396958089acf0319a"
+      },
+      {
+        "rank": 35,
+        "instance_id": "code-charity__youtube-3708",
+        "repo": "code-charity/youtube",
+        "feature_key": "js.issue-long",
+        "candidate_digest": "sha256:89803e805630c8d37885afb1accdd9e99d3684110e21b4cce71065357eb26aa6",
+        "rank_digest": "sha256:a206b820f72b48046f1c776f109e75233eac00175a76490e264ea2184b541f53"
+      },
+      {
+        "rank": 36,
+        "instance_id": "Automattic__mongoose-15492",
+        "repo": "Automattic/mongoose",
+        "feature_key": "js.issue-long",
+        "candidate_digest": "sha256:b117af1f3b50ed8d46bd32429787d0f376d106bf032f147d1cc81100c9948b74",
+        "rank_digest": "sha256:a849a7a2d763ebcad43f132c2067e65bf99eb29d6756abc2bdc4439556aec1e7"
+      },
+      {
+        "rank": 37,
+        "instance_id": "mozilla__pdf.js-20160",
+        "repo": "mozilla/pdf.js",
+        "feature_key": "js.issue-long",
+        "candidate_digest": "sha256:84dae0a23dcbe6a569e41646a2ef99104f7ced1cb32ee1773e5f50f35d9dbf78",
+        "rank_digest": "sha256:a9f3e106228509f00b8be155b26f5aa142f9d51c7564e7d471813c53aeb4e45d"
+      },
+      {
+        "rank": 38,
+        "instance_id": "rollup__rollup-6041",
+        "repo": "rollup/rollup",
+        "feature_key": "js.issue-short",
+        "candidate_digest": "sha256:79fd5ffe319b5d5e11baeb7fc53e0380fa6a20b9e912273e30a5933a7d22f678",
+        "rank_digest": "sha256:afdb5baf1524ec11faa2ff12f1b5b0c5f5fb5d2443a0c7f2fb0843b9c1b8471d"
+      },
+      {
+        "rank": 39,
+        "instance_id": "haraka__Haraka-3535",
+        "repo": "haraka/Haraka",
+        "feature_key": "js.issue-long",
+        "candidate_digest": "sha256:3b3cd695d3074e3c6a82fc247677efcf242345e93c9ffbd0c9a320a402a26ba0",
+        "rank_digest": "sha256:b526cd27e034b08b4268d292db61f9aa84d098f9482654f0d7fd9c08f18ca0ad"
+      },
+      {
+        "rank": 40,
+        "instance_id": "siimon__prom-client-679",
+        "repo": "siimon/prom-client",
+        "feature_key": "js.issue-long",
+        "candidate_digest": "sha256:a7427cf8b911bf5e4ef4b779cccbbc8b5111d1063bd136eeaff72191e4f6fdf0",
+        "rank_digest": "sha256:bb6604c33cf82ee5a8557ef893a222e7174e876f47a2121c25c25c1f0d6cab90"
+      },
+      {
+        "rank": 41,
+        "instance_id": "shaka-project__shaka-player-8835",
+        "repo": "shaka-project/shaka-player",
+        "feature_key": "js.issue-long",
+        "candidate_digest": "sha256:d05a2e3a1f4e472da534eccc2709de8c49b333e598452a9fadb06f5e370fd714",
+        "rank_digest": "sha256:c18e2b8f8484364ac77458d6d2f70397b48a7042b686faf6a98855b2946776db"
+      },
+      {
+        "rank": 42,
+        "instance_id": "preactjs__preact-4880",
+        "repo": "preactjs/preact",
+        "feature_key": "js.issue-short",
+        "candidate_digest": "sha256:4a9ba4d013bd34b0b4ffe36a6e4f0fe8c2f77444d6f6c3f2dd98618d58bc1e24",
+        "rank_digest": "sha256:c94b8873a7aa4d20ae50b13e6daa7cf6137d3fe7c1913f5c143c750b5f62ca08"
+      },
+      {
+        "rank": 43,
+        "instance_id": "nodejs__undici-5000",
+        "repo": "nodejs/undici",
+        "feature_key": "js.issue-long",
+        "candidate_digest": "sha256:f168b71bf8ab5a827f92814d165113b4a6ab14bf581cd8ecf0a0bec4364fc7e1",
+        "rank_digest": "sha256:cb4b080eb99e70948d7a294bd72f4155da8dac09664b4a697ee84d4f16ab2c6d"
+      },
+      {
+        "rank": 44,
+        "instance_id": "grommet__grommet-7718",
+        "repo": "grommet/grommet",
+        "feature_key": "js.issue-short",
+        "candidate_digest": "sha256:c937ef7ea81edfb930d6b6790e1392cfd93c04ce8d1a04987ef052d04d739f75",
+        "rank_digest": "sha256:cbdc031f575f55521761d8f10a0aaccf6af38d120090fd5929d27775f03b732f"
+      },
+      {
+        "rank": 45,
+        "instance_id": "decaporg__decap-cms-7495",
+        "repo": "decaporg/decap-cms",
+        "feature_key": "js.issue-short",
+        "candidate_digest": "sha256:5f6eb9a74df0dc97b944688aec0b4d5ab3c0219d07f8192815020e221c98bc2b",
+        "rank_digest": "sha256:d143a62ba7b83660fd6869a81d73a3862f38832903b9a6ba78c855ac6de28c9a"
+      },
+      {
+        "rank": 46,
+        "instance_id": "moment__luxon-1720",
+        "repo": "moment/luxon",
+        "feature_key": "js.issue-short",
+        "candidate_digest": "sha256:fcbbe3555b9b217d8e6d2462280a874ee6902904b7ad72caedf9a22b4d8fc809",
+        "rank_digest": "sha256:d7e0f22376599f1b7788d623eaf8edacd9d2c1854a68a15dde84e4d2e1c23188"
+      },
+      {
+        "rank": 47,
+        "instance_id": "thlorenz__doctoc-328",
+        "repo": "thlorenz/doctoc",
+        "feature_key": "js.issue-short",
+        "candidate_digest": "sha256:7eb66a53cab8bd9bc4941e50ec908b763a4dd7b882492e4fb82dc4658c5d9143",
+        "rank_digest": "sha256:e3a4a1f396a0070753018d35b0e4d231c5fadfa7867c15046dc1c4c5ca1097ef"
+      },
+      {
+        "rank": 48,
+        "instance_id": "camunda__camunda-modeler-5121",
+        "repo": "camunda/camunda-modeler",
+        "feature_key": "js.issue-short",
+        "candidate_digest": "sha256:5ef2d98b056e110a5680bc096d20cd82d350be55c5d1143b84d9155586bf8d95",
+        "rank_digest": "sha256:e82a994eb4cb354a5befcabc2cba0bcc06a4a99a8428681025bc3f7faa3e9812"
+      },
+      {
+        "rank": 49,
+        "instance_id": "rollup__rollup-6071",
+        "repo": "rollup/rollup",
+        "feature_key": "js.issue-short",
+        "candidate_digest": "sha256:68e97a229d37de9d49fa2d67e7ae1103faf9024f9a88f29a7ab9378fa3e98158",
+        "rank_digest": "sha256:f01ba2cf85905c6f7cfd1bbfbf5e312b4b8bcba2500a10f7608bfe65ec9c3fcf"
+      },
+      {
+        "rank": 50,
+        "instance_id": "less__less.js-4349",
+        "repo": "less/less.js",
+        "feature_key": "js.issue-short",
+        "candidate_digest": "sha256:696546d989625b605fa8a60a3398f9eccb3ad5f0dd121d72dc48fdad79861a95",
+        "rank_digest": "sha256:f2c201e59d079e8a90a8943f4e2bcf30f57d1da53a58a1ead6a6647417fbb735"
+      }
+    ],
+    "ts": [
+      {
+        "rank": 1,
+        "instance_id": "MetaMask__metamask-mobile-17623",
+        "repo": "MetaMask/metamask-mobile",
+        "feature_key": "ts.issue-long",
+        "candidate_digest": "sha256:947c86cbaf0c4a6d5f8fae611db97b10803fe450702e90d4f59e9fdc69824cd7",
+        "rank_digest": "sha256:00e315f7347fdfc427c0b0c9282f32547a5a931176bbc43165fa28c8fcb4a391"
+      },
+      {
+        "rank": 2,
+        "instance_id": "webdriverio__webdriverio-14672",
+        "repo": "webdriverio/webdriverio",
+        "feature_key": "ts.issue-long",
+        "candidate_digest": "sha256:bd11e52b2a0f276edb38553b73f68133420c982c4012a0fcaed71bbfbe6d4226",
+        "rank_digest": "sha256:014045216c256862e7ec79d78c4416794df28ee492adf1832d11c488702af8a2"
+      },
+      {
+        "rank": 3,
+        "instance_id": "TanStack__router-4629",
+        "repo": "TanStack/router",
+        "feature_key": "ts.issue-long",
+        "candidate_digest": "sha256:92385c21a1df3d0409cbd1338d0857a5e69c2306500e28eeeeed0d3829cd3262",
+        "rank_digest": "sha256:02d99618a9ff51d266276daa979b4dc42b365857c2176a4a9534c0533ce434e1"
+      },
+      {
+        "rank": 4,
+        "instance_id": "formbricks__formbricks-6302",
+        "repo": "formbricks/formbricks",
+        "feature_key": "ts.issue-short",
+        "candidate_digest": "sha256:034a7450fcf03d53d3241c372e2949f0aefd328c3ca4e5184eb431451c080814",
+        "rank_digest": "sha256:03899d507c8599ed0e6a44280d4b41ec2850fe72cd2cb1ae5fcf73134d77d859"
+      },
+      {
+        "rank": 5,
+        "instance_id": "recharts__recharts-6068",
+        "repo": "recharts/recharts",
+        "feature_key": "ts.issue-short",
+        "candidate_digest": "sha256:f0275bf57a6f6662dbd601b3318bee6cfb99d20b28a24745d01da67c4f21f100",
+        "rank_digest": "sha256:05457fec5dd965f7f471d2315de7f9dfc51ba2f392a699a051e887b75b086560"
+      },
+      {
+        "rank": 6,
+        "instance_id": "mui__mui-x-22062",
+        "repo": "mui/mui-x",
+        "feature_key": "ts.issue-long",
+        "candidate_digest": "sha256:051da9e35bbc3adab47a574dc222f2fe8aaf29402d1677fb93cb5aad3825d931",
+        "rank_digest": "sha256:057e79992a9fc7877bf90229ce6e30bc2c42521f960a24d714560941f6119c1f"
+      },
+      {
+        "rank": 7,
+        "instance_id": "code-yeongyu__oh-my-openagent-3013",
+        "repo": "code-yeongyu/oh-my-openagent",
+        "feature_key": "ts.issue-long",
+        "candidate_digest": "sha256:10d799278c9da6d1c80ed52928e54cd7aded045f914bc94273fac00d8e7dfb41",
+        "rank_digest": "sha256:0c978d3e050a6f6c8abf376656b8b6a66d350969f65c590309329c579bbcafcd"
+      },
+      {
+        "rank": 8,
+        "instance_id": "mui__base-ui-2493",
+        "repo": "mui/base-ui",
+        "feature_key": "ts.issue-short",
+        "candidate_digest": "sha256:b34a0c79f48ce8f479a6fc04287de23245b9f8dcb3d535e385c7b64889ad58ec",
+        "rank_digest": "sha256:0d188cfefaf9fa99dab6ebddbb83f57582622fbd0ad4139c736bfe9818d962dc"
+      },
+      {
+        "rank": 9,
+        "instance_id": "QwenLM__qwen-code-349",
+        "repo": "QwenLM/qwen-code",
+        "feature_key": "ts.issue-long",
+        "candidate_digest": "sha256:5da681a97ec29f251c223231f8393fdde855fa1535e7cf3c65717ce1bb84105f",
+        "rank_digest": "sha256:163d2981f55e97ab1f5c0e3d7faaf432b0852b6f1900f52c373d965b3f9d3cc3"
+      },
+      {
+        "rank": 10,
+        "instance_id": "dsherret__ts-morph-1663",
+        "repo": "dsherret/ts-morph",
+        "feature_key": "ts.issue-long",
+        "candidate_digest": "sha256:dee660f8a02cac3c3c0fbcb25e0ffa49469029e0066800a39a89fcf968fcdcdf",
+        "rank_digest": "sha256:183d66bb1b418e8e136f082758fa7da6ab4d359584269f4ba79c8fecd956a146"
+      },
+      {
+        "rank": 11,
+        "instance_id": "vueuse__vueuse-5336",
+        "repo": "vueuse/vueuse",
+        "feature_key": "ts.issue-long",
+        "candidate_digest": "sha256:e4f870d161e2f0827e66f223a14931b65c4036ff3171ea1b0ee18ba2f36a434c",
+        "rank_digest": "sha256:1976dd1994c17c4bb4b3714c991af0654b0c69acf5ca2c9829fb73a5607a1623"
+      },
+      {
+        "rank": 12,
+        "instance_id": "honojs__hono-4329",
+        "repo": "honojs/hono",
+        "feature_key": "ts.issue-long",
+        "candidate_digest": "sha256:ce813c61917dfe870b8266e3970ef4fb025196d8d4a08cedab96cdcd86c2bb86",
+        "rank_digest": "sha256:1c13a841feed3d8a9d4e0fbec6cbc8d65da0be3fc5ab47050620ed519c7e9169"
+      },
+      {
+        "rank": 13,
+        "instance_id": "recharts__recharts-6070",
+        "repo": "recharts/recharts",
+        "feature_key": "ts.issue-long",
+        "candidate_digest": "sha256:cd39d80c4fb3c938b8d7c43c9bac8bb25ea3be41db3cb3497b28e4f349637a28",
+        "rank_digest": "sha256:1fd4f4cfd33004dc6f1ca11ac9e674f7f67e8672560a04f986730bb940a06d55"
+      },
+      {
+        "rank": 14,
+        "instance_id": "orval-labs__orval-2328",
+        "repo": "orval-labs/orval",
+        "feature_key": "ts.issue-short",
+        "candidate_digest": "sha256:c7e9cfa81e38f4a57a48f429fb735ecca46a539ff91d430bf8f1ebe2a1e7e9f1",
+        "rank_digest": "sha256:20663815565969f9fc10aedecec0271df38d39c69760289cf38c5e3ac5a7d006"
+      },
+      {
+        "rank": 15,
+        "instance_id": "firefox-devtools__profiler-5512",
+        "repo": "firefox-devtools/profiler",
+        "feature_key": "ts.issue-short",
+        "candidate_digest": "sha256:5528106acd5ae368194d51212f98543ba29ed4f03de567f232f69c56753ee7aa",
+        "rank_digest": "sha256:270aff5a03a9e1e3ba39dbe5c9456d132644a21125c2d8df4709b10b3f1f5e7b"
+      },
+      {
+        "rank": 16,
+        "instance_id": "ChainSafe__lodestar-8203",
+        "repo": "ChainSafe/lodestar",
+        "feature_key": "ts.issue-long",
+        "candidate_digest": "sha256:35f10160d177680e8b951c18f4adcea304c1fb63ea56985d7dd48f981dd06d08",
+        "rank_digest": "sha256:2911aa43351a9b98d20b999a843ecfc73364e38551cf4d40dbd4ec9a6aab1031"
+      },
+      {
+        "rank": 17,
+        "instance_id": "kepano__defuddle-243",
+        "repo": "kepano/defuddle",
+        "feature_key": "ts.issue-short",
+        "candidate_digest": "sha256:d2cb73a6c8dc43299073f06475b9c256bd6b8f153e2a24af7cd76230a07ea91f",
+        "rank_digest": "sha256:2e8274b2f1846d6d472306e94a137d4202b540268ceca059f73992c1ae58aea8"
+      },
+      {
+        "rank": 18,
+        "instance_id": "maplibre__maplibre-gl-js-6216",
+        "repo": "maplibre/maplibre-gl-js",
+        "feature_key": "ts.issue-long",
+        "candidate_digest": "sha256:8c497cc88bc6163af26bdace7df8576bf7338f0d60996040c89f8630c739879d",
+        "rank_digest": "sha256:2efbfb8151148bf8c35502dbd88f480a46410477f5db0fb29fbc6a9256ff3c54"
+      },
+      {
+        "rank": 19,
+        "instance_id": "RooCodeInc__Roo-Code-12135",
+        "repo": "RooCodeInc/Roo-Code",
+        "feature_key": "ts.issue-long",
+        "candidate_digest": "sha256:03a58e015a518dda3db285373c84f203d83e9860cca799e51d9ff13c5931c614",
+        "rank_digest": "sha256:316f08aa283697ec885bd3d0834fd7630abbcc7bae73089199b844be01b02147"
+      },
+      {
+        "rank": 20,
+        "instance_id": "mui__base-ui-2231",
+        "repo": "mui/base-ui",
+        "feature_key": "ts.issue-long",
+        "candidate_digest": "sha256:136923bddb62224008966b65fb18be71e0c8d8d715403c34631450c3294ff852",
+        "rank_digest": "sha256:339f18f38dbdbe36b0f0b2c356440eccc9d4524e1eda93ecc1ab35fdb65f2a48"
+      },
+      {
+        "rank": 21,
+        "instance_id": "remotion-dev__remotion-5529",
+        "repo": "remotion-dev/remotion",
+        "feature_key": "ts.issue-short",
+        "candidate_digest": "sha256:2af9805c1f3f60f07047fae0c05e01ce136870d586d3f76ce2ee7af4a12987fd",
+        "rank_digest": "sha256:357a5c37fbe9b930691b089b90c5454c4480c9a7a05d8ccd62e9e0c315338d6a"
+      },
+      {
+        "rank": 22,
+        "instance_id": "TanStack__form-1664",
+        "repo": "TanStack/form",
+        "feature_key": "ts.issue-long",
+        "candidate_digest": "sha256:04cc3c9c076766387a2d6cfb21426b7db2ad531e6561f65b80948be6ddd9daec",
+        "rank_digest": "sha256:3aec29a2bb106baddca7b837e7be30931d832072e8eadf9a8329ba1cdccf1399"
+      },
+      {
+        "rank": 23,
+        "instance_id": "tailwindlabs__tailwindcss-18718",
+        "repo": "tailwindlabs/tailwindcss",
+        "feature_key": "ts.issue-short",
+        "candidate_digest": "sha256:b1ebca9b444fa5232999021043cd41f76ec67efc45a9a243bd59f7712c70eef6",
+        "rank_digest": "sha256:48646bad7245bea0a73f6021eb744a6d79fada264e78ee34ecc3c28ab136f0af"
+      },
+      {
+        "rank": 24,
+        "instance_id": "react-hook-form__react-hook-form-12990",
+        "repo": "react-hook-form/react-hook-form",
+        "feature_key": "ts.issue-short",
+        "candidate_digest": "sha256:8e584f67f4284ff5ad799795cb2da10349f9a040eaa800ba9ed65264dd105beb",
+        "rank_digest": "sha256:4c9b1c009fe15eb166ed3a40dd7ae102aa6f8b50dd8e95edd289b0a715f38323"
+      },
+      {
+        "rank": 25,
+        "instance_id": "better-auth__better-auth-4175",
+        "repo": "better-auth/better-auth",
+        "feature_key": "ts.issue-short",
+        "candidate_digest": "sha256:6cba7d46948c125810c4fd2a51fa8913b2a77d9a1969eafb5e82e21ac68a3b9f",
+        "rank_digest": "sha256:4f005b48cdb1149ee8437c25e78dc83b234012b2e092fcf77287717dd4142eb6"
+      },
+      {
+        "rank": 26,
+        "instance_id": "Milkdown__milkdown-2041",
+        "repo": "Milkdown/milkdown",
+        "feature_key": "ts.issue-short",
+        "candidate_digest": "sha256:b2547395e8dc3b9c65c78b53b195fda78e6a8178ac45d4db98d2c9787f93eb41",
+        "rank_digest": "sha256:4fa0b0d7cf3d87993c12b2e81efb350c4aac2b75bd5bd8a651681bed7a6cf573"
+      },
+      {
+        "rank": 27,
+        "instance_id": "excalidraw__excalidraw-9760",
+        "repo": "excalidraw/excalidraw",
+        "feature_key": "ts.issue-short",
+        "candidate_digest": "sha256:0bc5957bd0528446729a87f65a9528ccc71f744af196e460af621eb1fd86dcb0",
+        "rank_digest": "sha256:4fb488627b82cbcd91f4f3a03b5b293c5894e95b77e7c16d7f5c9ff545ae9f89"
+      },
+      {
+        "rank": 28,
+        "instance_id": "lightdash__lightdash-16521",
+        "repo": "lightdash/lightdash",
+        "feature_key": "ts.issue-short",
+        "candidate_digest": "sha256:05f580bf73494483a4704e6e8570643fecd41ddbb6f2f4551d3e4e6c1a047f45",
+        "rank_digest": "sha256:50bebf8b450f7436d5c394c7c401e22e4715a44504174b5288357d49732f0cad"
+      },
+      {
+        "rank": 29,
+        "instance_id": "ether__etherpad-7445",
+        "repo": "ether/etherpad",
+        "feature_key": "ts.issue-long",
+        "candidate_digest": "sha256:0c8b202d6dc235bdfe4f01c6aacc4d0ad3b0948bae33ea059aa4c3a4696ba566",
+        "rank_digest": "sha256:543cf6ca154341ca2d6768cde23da1a38c76cfcc726858a4724d0d5ea7250244"
+      },
+      {
+        "rank": 30,
+        "instance_id": "antvis__G2-7076",
+        "repo": "antvis/G2",
+        "feature_key": "ts.issue-short",
+        "candidate_digest": "sha256:1f79639f74711c30db34d748345bab1db5150f49dc9cfeab6e6e03eaed51854c",
+        "rank_digest": "sha256:55cc2f0220d0b680f998629afc55a64d6b608fdbafe2ce08a27282ecc5b2746e"
+      },
+      {
+        "rank": 31,
+        "instance_id": "MetaMask__metamask-mobile-17198",
+        "repo": "MetaMask/metamask-mobile",
+        "feature_key": "ts.issue-short",
+        "candidate_digest": "sha256:bd800b4031682e497db21e38ae320170161a813360b25e3c3b5f8a9566f72c24",
+        "rank_digest": "sha256:56380b67f6e0c9b77f5db1b213f08950aac2f5013b0d15a09f513b26dd7622de"
+      },
+      {
+        "rank": 32,
+        "instance_id": "owid__owid-grapher-5115",
+        "repo": "owid/owid-grapher",
+        "feature_key": "ts.issue-long",
+        "candidate_digest": "sha256:115bafe1365eb7c68ed947cdacdccaa417f48a13926cf026ef3a5f30466e6006",
+        "rank_digest": "sha256:5760b75e1dfe3036d82de73244e0c2365fef521ebad49e36ad2fa833acca4cd6"
+      },
+      {
+        "rank": 33,
+        "instance_id": "denoland__std-6775",
+        "repo": "denoland/std",
+        "feature_key": "ts.issue-short",
+        "candidate_digest": "sha256:5054dc9dce57ce1e9bfabddfa5a99c21f869f7e5f48080bd1c276dc625ffd34a",
+        "rank_digest": "sha256:5860c62454bb92152d7d5d70226286d977426339c4cf6d29e68c8708d5b9d3f9"
+      },
+      {
+        "rank": 34,
+        "instance_id": "monkeytypegame__monkeytype-6830",
+        "repo": "monkeytypegame/monkeytype",
+        "feature_key": "ts.issue-long",
+        "candidate_digest": "sha256:b5ff53e4c8dc2f8339bed33e0fd66314bddacff74ef546befdfae6c8e90503ae",
+        "rank_digest": "sha256:5d1fa7642dfb9dfa6f6aa402da434743c9ce0aec2c204d1bc58437c4028f6cff"
+      },
+      {
+        "rank": 35,
+        "instance_id": "chimurai__http-proxy-middleware-1163",
+        "repo": "chimurai/http-proxy-middleware",
+        "feature_key": "ts.issue-short",
+        "candidate_digest": "sha256:2790fd314a4b5fcd4552ffaccdbee2307a694ba10b8847a810f58172248c2ec2",
+        "rank_digest": "sha256:60a5f5e8cf1744775c01e4caed7f55c7adbea415be4f3a76bdf8f651e833079f"
+      },
+      {
+        "rank": 36,
+        "instance_id": "mui__base-ui-2591",
+        "repo": "mui/base-ui",
+        "feature_key": "ts.issue-short",
+        "candidate_digest": "sha256:25e84567653605e148a7737bb037cf7c211c57454eb7cdd6ea43ace46c5ff2a7",
+        "rank_digest": "sha256:672072807e7892396293ba591e7be2589d7bbbbed22bc5930f74504b66b53a9c"
+      },
+      {
+        "rank": 37,
+        "instance_id": "surveyjs__survey-library-11137",
+        "repo": "surveyjs/survey-library",
+        "feature_key": "ts.issue-short",
+        "candidate_digest": "sha256:40cdfdaa8cb5451c8f579c6228b051498a769d2f81418b88986e6ed1344ae2f0",
+        "rank_digest": "sha256:6e95ac882704951afaf2a6354d59f706dd82ba2ab4b0dc1e5066c44878c2f618"
+      },
+      {
+        "rank": 38,
+        "instance_id": "antvis__G2-7021",
+        "repo": "antvis/G2",
+        "feature_key": "ts.issue-short",
+        "candidate_digest": "sha256:56070b9994fecc15430db11f76fe334cc295a30e1a1ddbe2701be88e41bc1da5",
+        "rank_digest": "sha256:727e87104cf11b3de5cccd3fb2e5e174ca6ab1d01886b5ae32b452c7f4dbc006"
+      },
+      {
+        "rank": 39,
+        "instance_id": "react-hook-form__react-hook-form-12983",
+        "repo": "react-hook-form/react-hook-form",
+        "feature_key": "ts.issue-long",
+        "candidate_digest": "sha256:92166a2ac06ec202955d98ae3c740311285b851c03c054e4505cd7307fa7fd99",
+        "rank_digest": "sha256:77bc21092658a1b2a8d24a8b0408875a385806087b378bcd46bf2a9bd54e7d77"
+      },
+      {
+        "rank": 40,
+        "instance_id": "MetaMask__metamask-mobile-17294",
+        "repo": "MetaMask/metamask-mobile",
+        "feature_key": "ts.issue-short",
+        "candidate_digest": "sha256:2c7561a65d4fda73b69f33a50ae252dc5a6ac1295940a7c0a889b568ca2f717c",
+        "rank_digest": "sha256:787711fc532ceaedac033760c5131709b38a4538332decab5af26609fca98318"
+      },
+      {
+        "rank": 41,
+        "instance_id": "gsd-build__gsd-2-4400",
+        "repo": "gsd-build/gsd-2",
+        "feature_key": "ts.issue-long",
+        "candidate_digest": "sha256:c0a9f38e6341d09c62c20c90825134a22ae18629a71471fcffa70e58d3a2ad26",
+        "rank_digest": "sha256:821dbfb461ec4aff975e09f37fdb9a637dfd0dc43657a01dd92f1d882e23ace5"
+      },
+      {
+        "rank": 42,
+        "instance_id": "TypeCellOS__BlockNote-2629",
+        "repo": "TypeCellOS/BlockNote",
+        "feature_key": "ts.issue-long",
+        "candidate_digest": "sha256:37d780f2abcac17860ad38a1d979ad06118fd66ea7a32bd30fc4b3cd51582322",
+        "rank_digest": "sha256:874223ce97e861ba871160351b892b5ab098a997199ba7fdd949cee46ab8f09e"
+      },
+      {
+        "rank": 43,
+        "instance_id": "NVIDIA__NemoClaw-330",
+        "repo": "NVIDIA/NemoClaw",
+        "feature_key": "ts.issue-short",
+        "candidate_digest": "sha256:91765153f46129d397a00597e57961c145172f96a5d2cdbef4546a6b1ccfaaa3",
+        "rank_digest": "sha256:9b77be5fb01a6d8025198297bdd589dea371a970de6571e974f431a65916d9ab"
+      },
+      {
+        "rank": 44,
+        "instance_id": "maplibre__maplibre-gl-js-6266",
+        "repo": "maplibre/maplibre-gl-js",
+        "feature_key": "ts.issue-long",
+        "candidate_digest": "sha256:af9d2a5f2a4978a1d009cd629db8db479f130d08864dc801d918be183ad3154c",
+        "rank_digest": "sha256:9c3c97c8851458031e26016e9b8b5eb54095ee4d20220f5711219376946740c5"
+      },
+      {
+        "rank": 45,
+        "instance_id": "honojs__hono-4269",
+        "repo": "honojs/hono",
+        "feature_key": "ts.issue-long",
+        "candidate_digest": "sha256:c3521a30d31c06249fcafa3657bba86e60ee6baa6b9fb71bdd3fb99b844ed725",
+        "rank_digest": "sha256:9eb505a53be8732bcaf28b4db6d7ae1f32a153c7c868c4184958174dea0d6b84"
+      },
+      {
+        "rank": 46,
+        "instance_id": "MetaMask__metamask-mobile-17409",
+        "repo": "MetaMask/metamask-mobile",
+        "feature_key": "ts.issue-short",
+        "candidate_digest": "sha256:95018d8ab293cccfa5a7c4b8115e677591139edc13ca510f24df0d6dc52a2660",
+        "rank_digest": "sha256:a460e554fa6df9c783703113d4831511d8f857bc5f128dadb42db656d61ac6e3"
+      },
+      {
+        "rank": 47,
+        "instance_id": "lightdash__lightdash-15838",
+        "repo": "lightdash/lightdash",
+        "feature_key": "ts.issue-short",
+        "candidate_digest": "sha256:055f02c55c61b52927dc52e47cca4e4f350676cf05dce58b6747b4a6381bcf4a",
+        "rank_digest": "sha256:a900466192288858d639aeef3d3a74beefcf7925e190af9cbc7394fa1952f839"
+      },
+      {
+        "rank": 48,
+        "instance_id": "MetaMask__metamask-mobile-17208",
+        "repo": "MetaMask/metamask-mobile",
+        "feature_key": "ts.issue-short",
+        "candidate_digest": "sha256:c572af31077e79460899756950693724afd171b7b1f429010739fcbf5b2cbdbb",
+        "rank_digest": "sha256:aed2b517fffd10bee84b510d0249ac248e609fcb9850216d9744f2fc47e53b4f"
+      },
+      {
+        "rank": 49,
+        "instance_id": "TanStack__router-4685",
+        "repo": "TanStack/router",
+        "feature_key": "ts.issue-long",
+        "candidate_digest": "sha256:c0a8a80d5a79def768412384fe29deb4033cb81d92f2295f74f0dbefb98ea86a",
+        "rank_digest": "sha256:b133d0f92c60523295a472a439724f2972921b915295828f0059b0b6f2c78c16"
+      },
+      {
+        "rank": 50,
+        "instance_id": "TanStack__router-4611",
+        "repo": "TanStack/router",
+        "feature_key": "ts.issue-long",
+        "candidate_digest": "sha256:7dff17058432ad92a1ea3617af60cca3920e33ce5011619bd19e323ddca3dc70",
+        "rank_digest": "sha256:b4b1711824ab92396997261cf508b27912e37e286d243fa61373e9b7714867de"
+      },
+      {
+        "rank": 51,
+        "instance_id": "formbricks__formbricks-6270",
+        "repo": "formbricks/formbricks",
+        "feature_key": "ts.issue-long",
+        "candidate_digest": "sha256:c425cfeb9573835613cde7f5c741445b0fd28c5c47742073fcca4198b05e88c8",
+        "rank_digest": "sha256:b78cdd6b23757351108f3239742e20b089122c53d78a3988f4eb795af80c04dc"
+      },
+      {
+        "rank": 52,
+        "instance_id": "can1357__oh-my-pi-489",
+        "repo": "can1357/oh-my-pi",
+        "feature_key": "ts.issue-long",
+        "candidate_digest": "sha256:a61af483b72852b5dec45062f41a563ece665b46d041fff13aa7297c20c9b6b5",
+        "rank_digest": "sha256:b9ca7888abb167da3a82247a04cf57738e580a23d7a1a78f9f507b37d0edbbf3"
+      },
+      {
+        "rank": 53,
+        "instance_id": "QwenLM__qwen-code-3310",
+        "repo": "QwenLM/qwen-code",
+        "feature_key": "ts.issue-long",
+        "candidate_digest": "sha256:1debc914141c90558900f3b94d247b35ff134a985c61bb2afc018fa6dd770996",
+        "rank_digest": "sha256:bd9b83acfe0e78d7f42f503dcd9e5b0859c8e5785e2d1b673e4823158fe709b6"
+      },
+      {
+        "rank": 54,
+        "instance_id": "jhlywa__chess.js-546",
+        "repo": "jhlywa/chess.js",
+        "feature_key": "ts.issue-short",
+        "candidate_digest": "sha256:ff24ba16770e77af338e73eea5f0a5a4375246a461a6f1de3f7f0246a2fbbb83",
+        "rank_digest": "sha256:be3832eb41c41a8d8a4da2be7af5005de42c268ee948f797abd29a93e8d4e6f7"
+      },
+      {
+        "rank": 55,
+        "instance_id": "unplugin__unplugin-vue-components-858",
+        "repo": "unplugin/unplugin-vue-components",
+        "feature_key": "ts.issue-long",
+        "candidate_digest": "sha256:ff9ba8f55d1f4c2e600e352a0d1e593da289159369ec504720540ab79e792715",
+        "rank_digest": "sha256:c2c09f34ff71fa0a8fc408f47426bfa96bc7400c89ba25f15f2883ca9eda2f7b"
+      },
+      {
+        "rank": 56,
+        "instance_id": "TanStack__form-1620",
+        "repo": "TanStack/form",
+        "feature_key": "ts.issue-short",
+        "candidate_digest": "sha256:2513b926a6fc81574aa419849724e0af3943353a0323295de9569d8aebaa4451",
+        "rank_digest": "sha256:c7ece00aa9b8f6dbd847e0ff4ac64ad9debe6434795b5b1acfe726f9fd055244"
+      },
+      {
+        "rank": 57,
+        "instance_id": "openai__openai-agents-js-156",
+        "repo": "openai/openai-agents-js",
+        "feature_key": "ts.issue-long",
+        "candidate_digest": "sha256:c45b61e66315e424014cf51d15f3005263df093b5ffb8b18a33bc13e5d764260",
+        "rank_digest": "sha256:ca324011654123d0f0d400936bc8fa71fec47d67bb80aeb69ba08413c57cd3f1"
+      },
+      {
+        "rank": 58,
+        "instance_id": "wxt-dev__wxt-2267",
+        "repo": "wxt-dev/wxt",
+        "feature_key": "ts.issue-long",
+        "candidate_digest": "sha256:1a2bdd0231d50f45929c040d8417f69ca97e70dc5271b03ad2923b6c3b0a21cf",
+        "rank_digest": "sha256:d04d4b2d2cd5e7e8a17d356cc40cd64a74c71bb08138db67722842ee72c44bf2"
+      },
+      {
+        "rank": 59,
+        "instance_id": "reown-com__appkit-4542",
+        "repo": "reown-com/appkit",
+        "feature_key": "ts.issue-short",
+        "candidate_digest": "sha256:22800fe9b3e3d7adadd5b8d6d1288fcf58fde9c130b6bc6b19314d60c448145c",
+        "rank_digest": "sha256:d2e6742d9bfe62249094f76fa15d88a50aa9b19251eeae5d3ee86e0c7e3a4853"
+      },
+      {
+        "rank": 60,
+        "instance_id": "unocss__unocss-4827",
+        "repo": "unocss/unocss",
+        "feature_key": "ts.issue-short",
+        "candidate_digest": "sha256:21f002011054b721b88364c829a87f2ea8ca55e788246f0b7f2a04024704a028",
+        "rank_digest": "sha256:d3766dc6d660249a63c602db724341bb318e01f126d4b668672f33519aa73191"
+      },
+      {
+        "rank": 61,
+        "instance_id": "TanStack__router-5033",
+        "repo": "TanStack/router",
+        "feature_key": "ts.issue-long",
+        "candidate_digest": "sha256:5d74a53e139548e8c9d088e0c2ebfed45ffa0c13cbc163ea02c19660f22fabbb",
+        "rank_digest": "sha256:d5452e8b1d399e376a0e46d4949b1abd304df3e131fddd2bdceadf94d83c982d"
+      },
+      {
+        "rank": 62,
+        "instance_id": "RocketChat__Rocket.Chat.ReactNative-6382",
+        "repo": "RocketChat/Rocket.Chat.ReactNative",
+        "feature_key": "ts.issue-short",
+        "candidate_digest": "sha256:bb052fba1cc4e1217ac9abd9eaf24f24d0dda50fcca29dfefce14a0bbfbefedd",
+        "rank_digest": "sha256:dad21ada0edc679a4bba571606d966c965d9b18a5f5c75a9bc15e6828c9aaa47"
+      },
+      {
+        "rank": 63,
+        "instance_id": "TanStack__router-4716",
+        "repo": "TanStack/router",
+        "feature_key": "ts.issue-long",
+        "candidate_digest": "sha256:929ab337d6005389898e8f6d8103b918e2398b529e394caf7d534a97d679811a",
+        "rank_digest": "sha256:dad6877ad1eb54c2c04bff82d0d85600191f184e67b347bb33387390f4570593"
+      },
+      {
+        "rank": 64,
+        "instance_id": "TanStack__router-4915",
+        "repo": "TanStack/router",
+        "feature_key": "ts.issue-short",
+        "candidate_digest": "sha256:9813313698e386cd8ed97423fe16ded5e2af83749df0d6a3508a522a092f26a9",
+        "rank_digest": "sha256:db4c60eaf158f4082161d61cf075eae98016d00acdc218cc34eed12309fc2d03"
+      },
+      {
+        "rank": 65,
+        "instance_id": "mikro-orm__mikro-orm-7464",
+        "repo": "mikro-orm/mikro-orm",
+        "feature_key": "ts.issue-short",
+        "candidate_digest": "sha256:b85ed0306835911ec1fad97704d60bacbda7547c6660883c5dd764e733b11cae",
+        "rank_digest": "sha256:e47270d0c99604c75c68f238f379f6f5bf59ba4330711dc4800d05f585a48ca2"
+      },
+      {
+        "rank": 66,
+        "instance_id": "jestjs__jest-15714",
+        "repo": "jestjs/jest",
+        "feature_key": "ts.issue-long",
+        "candidate_digest": "sha256:0ba8b848035438afa5183fce578be303195a2fa2d3b21ca6220ac196e1359629",
+        "rank_digest": "sha256:e79788366e5f903a71664e509aeccdd533487d296a15bca8fdccd6bae560939f"
+      },
+      {
+        "rank": 67,
+        "instance_id": "honojs__hono-4249",
+        "repo": "honojs/hono",
+        "feature_key": "ts.issue-long",
+        "candidate_digest": "sha256:1792943bcc6801ed7d0f7bf87d997ad985e23056a5018bff3379b3e0b97a3888",
+        "rank_digest": "sha256:eae817e2f667c872b03e806cb008a82f94638d54d49075f9c7f089e74951d5b1"
+      },
+      {
+        "rank": 68,
+        "instance_id": "mui__base-ui-2290",
+        "repo": "mui/base-ui",
+        "feature_key": "ts.issue-long",
+        "candidate_digest": "sha256:8b680986d306bb15cf34a7bee074f41c4b2f21b98fcbddf52ec79d0f8ecdbb88",
+        "rank_digest": "sha256:ebf3a59f1993320f884e28bf4a9818328857678b507bcc12389b35c6628a2845"
+      },
+      {
+        "rank": 69,
+        "instance_id": "TanStack__router-4751",
+        "repo": "TanStack/router",
+        "feature_key": "ts.issue-short",
+        "candidate_digest": "sha256:068036e1f984328526985eb65071353e7e11dfad225f2ae45bad606ed41ba3b0",
+        "rank_digest": "sha256:f2500929d4eb335317512d9e64e772895706b25c986554cb948755bf12a8d107"
+      },
+      {
+        "rank": 70,
+        "instance_id": "gsd-build__gsd-2-2643",
+        "repo": "gsd-build/gsd-2",
+        "feature_key": "ts.issue-long",
+        "candidate_digest": "sha256:bd4fd054ccb863283b5856c8d1015b158065da8cdbdad5dc99944b67a486aeb7",
+        "rank_digest": "sha256:f6c94928778575f9668badb560812df676ba924b9a5a63129cabfe7ff6573535"
+      },
+      {
+        "rank": 71,
+        "instance_id": "gpbl__react-day-picker-2815",
+        "repo": "gpbl/react-day-picker",
+        "feature_key": "ts.issue-long",
+        "candidate_digest": "sha256:15c88e1402643be7b86deed2ad5cf506e1db6ed8c667d066262e86478eda6ad1",
+        "rank_digest": "sha256:fafde21f001a46971f2d3083fb01d8c104b5e09bb859b77b46beeb1e4524097b"
+      },
+      {
+        "rank": 72,
+        "instance_id": "getsentry__sentry-javascript-17013",
+        "repo": "getsentry/sentry-javascript",
+        "feature_key": "ts.issue-long",
+        "candidate_digest": "sha256:bd668c9cd0faef30c96c41a890e53f99c947c3340e7b5e0262097614bc75313d",
+        "rank_digest": "sha256:ff0573a23027349f7ef861ce24c9101792df7ae27d7055dbd36e66db2a02a6d2"
+      }
+    ]
+  }
+}
