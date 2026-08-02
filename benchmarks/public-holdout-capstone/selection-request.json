@@ -1,10 +1,10 @@
 {
   "schema": 1,
   "kind": "citadel_public_holdout_selection_request",
-  "request_id": "sha256:56ea91ea5c55e8cb64ee5cb944b52b38352a608814906e7e9bb5bbbd36358dd7",
-  "frozen_at": "2026-08-02T19:37:17.700Z",
+  "request_id": "sha256:af8f4bc938bedd7f1f913b1f0c853972db99e5a4d194d1e8a3e0589de13d0755",
+  "frozen_at": "2026-08-02T20:01:41.734Z",
   "pool_id": "sha256:0edaff148f782c8cb3e369dc021af2f25fb6b7e1c309a59fd07f7ec31e4bfd5c",
-  "supersedes_request_id": "sha256:2f82dbbdf4b71c0d3ff58946ba09c90bd95af7930b27f200513526f7b1a0c880",
+  "supersedes_request_id": "sha256:56ea91ea5c55e8cb64ee5cb944b52b38352a608814906e7e9bb5bbbd36358dd7",
   "eligible_candidate_digests": [
     "sha256:034a7450fcf03d53d3241c372e2949f0aefd328c3ca4e5184eb431451c080814",
     "sha256:03a58e015a518dda3db285373c84f203d83e9860cca799e51d9ff13c5931c614",
@@ -187,12 +187,12 @@
     "chain_hash": "8990e7a9aaed2ffed73dbd7092123d6f289930540d7651336225dc172e51b2ce",
     "public_key": "868f005eb8e6e4ca0a47c8a77ceaa5309a47978a7c71bc5cce96366b5d7a569937c529eeda66c7293784a9402801af31",
     "period_seconds": 30,
-    "round": 6348012,
-    "round_time": "2026-08-04T19:23:00.000Z",
+    "round": 6342418,
+    "round_time": "2026-08-02T20:46:00.000Z",
     "source_urls": [
-      "https://api.drand.sh/public/6348012",
-      "https://api2.drand.sh/public/6348012",
-      "https://drand.cloudflare.com/public/6348012"
+      "https://api.drand.sh/public/6342418",
+      "https://api2.drand.sh/public/6342418",
+      "https://drand.cloudflare.com/public/6342418"
     ],
     "minimum_identical_sources": 3
   }
