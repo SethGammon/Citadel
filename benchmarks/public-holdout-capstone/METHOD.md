@@ -6,6 +6,8 @@ Status: implementation and candidate-pool construction. No model has been run on
 
 The first public request, `sha256:2f82dbbdf4b71c0d3ff58946ba09c90bd95af7930b27f200513526f7b1a0c880`, was merged in PR #233 before selection. A non-benchmark smoke on Citadel's own repository then exposed `ENAMETOOLONG`: the Claude prompt was passed as a Windows command-line argument. No candidate was selected and no benchmark task was sent to any model. The replacement runner streams the same bounded prompt over stdin, and the replacement request explicitly binds the superseded request ID. Only the newest request merged before the committed round governs selection.
 
+The next governing request, `sha256:af8f4bc938bedd7f1f913b1f0c853972db99e5a4d194d1e8a3e0589de13d0755`, produced selection `sha256:720e46672c751c3d2d39dbc399f99d32b389f9efea8d5151a2cf645dacc529ff`. Its first public gold preflight (GitHub Actions run `30766637122`) correctly classified all cells as setup errors before assignment: the pinned Microsoft evaluator's `launch` dependency is a git submodule, but the workflow had not checked submodules out. No model was run and no task was assigned. The replacement workflow recursively checks out the evaluator closure, verifies both the parent and `launch` commits, and records process exit status plus both evaluator commits in every summary. A new prospective request and beacon selection are required after this source change; the failed preflight and prior selection remain public negative evidence.
+
 ## Question
 
 Can an evidence-conditioned Citadel controller reduce the comparison cost of real repository repair operations while remaining non-inferior to an always-Claude baseline under model-external tests?

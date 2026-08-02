@@ -64,6 +64,12 @@ jobs:
           repository: microsoft/SWE-bench-Live
           ref: 70ec57e852e3f2d195790fe71f553e272c691833
           path: swe-bench-live
+          submodules: recursive
+      - name: Verify evaluator dependency closure
+        shell: bash
+        run: |
+          test "$(git -C swe-bench-live rev-parse HEAD)" = "70ec57e852e3f2d195790fe71f553e272c691833"
+          test "$(git -C swe-bench-live/launch rev-parse HEAD)" = "7735b1e7363dd3bbc69bd0ef80db646a2ae391fd"
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'

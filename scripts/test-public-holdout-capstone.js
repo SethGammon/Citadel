@@ -15,6 +15,7 @@ const { buildAnalysis, buildAssignment, buildPreflight, buildRouteLedger, buildV
 const { retrieve } = require('../core/public-holdout/retrieval');
 const { parseFiles, promptFor } = require('../core/public-holdout/runner');
 const { goldMatrix } = require('./public-holdout-matrix');
+const { EVALUATOR_COMMIT, EVALUATOR_LAUNCH_COMMIT, readResult } = require('./public-holdout-evaluator-summary');
 
 function row(index, split, issueSize = 'short') {
   const extension = split === 'js' ? 'js' : 'ts';
@@ -48,8 +49,8 @@ function costs(amount) {
 }
 
 function evaluatorSummary(mode, candidate, status = 'passed', repetitions = 1) {
-  const attempts = Array.from({ length: repetitions }, (_, index) => ({ repetition: index + 1, status, result_digest: digest(`${candidate.instance_id}-${index}`), reason: null }));
-  const unsigned = { schema: 1, kind: 'citadel_public_holdout_evaluator_summary', summary_id: null, mode, instance_id: candidate.instance_id, repo: candidate.repo, split: candidate.split, feature_key: candidate.public_features.feature_key, evaluator_repo: 'https://github.com/microsoft/SWE-bench-Live', evaluator_commit: '70ec57e852e3f2d195790fe71f553e272c691833', runner: { os: 'Linux', arch: 'X64', name: 'test', image: 'ubuntu24' }, attempts, passes: status === 'passed' ? repetitions : 0, failures: status === 'failed' ? repetitions : 0, errors: status === 'error' ? repetitions : 0 };
+  const attempts = Array.from({ length: repetitions }, (_, index) => ({ repetition: index + 1, status, result_digest: digest(`${candidate.instance_id}-${index}`), process_exit_status: 0, reason: null }));
+  const unsigned = { schema: 1, kind: 'citadel_public_holdout_evaluator_summary', summary_id: null, mode, instance_id: candidate.instance_id, repo: candidate.repo, split: candidate.split, feature_key: candidate.public_features.feature_key, evaluator_repo: 'https://github.com/microsoft/SWE-bench-Live', evaluator_commit: EVALUATOR_COMMIT, evaluator_launch_commit: EVALUATOR_LAUNCH_COMMIT, runner: { os: 'Linux', arch: 'X64', name: 'test', image: 'ubuntu24' }, attempts, passes: status === 'passed' ? repetitions : 0, failures: status === 'failed' ? repetitions : 0, errors: status === 'error' ? repetitions : 0 };
   return { ...unsigned, summary_id: digest(unsigned) };
 }
 
@@ -65,6 +66,16 @@ function main() {
   assert.strictEqual(candidateFromRow({ row_idx: 1, row: row(1, 'ts') }, 'ts').public_features.feature_key, 'ts.issue-short');
 
   const pool = fakePool();
+  const evaluatorFixture = fs.mkdtempSync(path.join(os.tmpdir(), 'citadel-evaluator-summary-test-'));
+  try {
+    const exitStatusFile = path.join(evaluatorFixture, 'process-exit-status.txt');
+    fs.writeFileSync(exitStatusFile, '1\n', 'utf8');
+    assert.deepStrictEqual(readResult(path.join(evaluatorFixture, 'results.json'), 'fixture', exitStatusFile), { status: 'error', result_digest: null, process_exit_status: 1, reason: 'evaluator-exit-1-results-json-missing' });
+    const result = { success_ids: ['fixture'], failure_ids: [], empty_patch_ids: [], error_ids: [] };
+    fs.writeFileSync(path.join(evaluatorFixture, 'results.json'), `${JSON.stringify(result)}\n`, 'utf8');
+    fs.writeFileSync(exitStatusFile, '0\n', 'utf8');
+    assert.deepStrictEqual(readResult(path.join(evaluatorFixture, 'results.json'), 'fixture', exitStatusFile), { status: 'passed', result_digest: digest(result), process_exit_status: 0, reason: null });
+  } finally { fs.rmSync(evaluatorFixture, { recursive: true, force: true }); }
   assert.strictEqual(pool.counts.total, 180);
   const signature = 'ab'.repeat(96);
   const randomness = crypto.createHash('sha256').update(Buffer.from(signature, 'hex')).digest('hex');
