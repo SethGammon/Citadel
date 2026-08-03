@@ -1,0 +1,189 @@
+{
+  "schema": 1,
+  "kind": "citadel_public_holdout_model_attempt",
+  "attempt_id": "sha256:43ef565e18efd6a0a38ddc821b9cbea85f51ce3877cabd2cc251ec5aaf3ec5e6",
+  "instance_id": "simple-icons__simple-icons-13659",
+  "plan_id": "qwen-3b",
+  "base_commit": "6c8f4377578ea1a4d6f22a35da31a279a0b9f7fe",
+  "retrieval": {
+    "schema": 1,
+    "kind": "citadel_public_holdout_retrieval",
+    "retrieval_id": "sha256:4abeb40a765c0722f09b18c571910f47c214eb828ddda42b68c78afe83b88f45",
+    "instance_id": "simple-icons__simple-icons-13659",
+    "contract": {
+      "maximum_files": 12,
+      "maximum_total_characters": 60000,
+      "maximum_file_characters": 12000,
+      "maximum_file_bytes": 100000,
+      "excluded_directories": [
+        ".git",
+        ".hg",
+        ".svn",
+        "build",
+        "coverage",
+        "dist",
+        "node_modules",
+        "vendor"
+      ],
+      "extensions": [
+        ".cjs",
+        ".js",
+        ".jsx",
+        ".json",
+        ".md",
+        ".mjs",
+        ".ts",
+        ".tsx",
+        ".yaml",
+        ".yml"
+      ],
+      "always_consider": [
+        "package.json",
+        "tsconfig.json",
+        "jsconfig.json"
+      ],
+      "maximum_query_terms": 24,
+      "scoring_rule": "explicit path/basename or adjacent issue-term match, then git-grep inverse-document-frequency evidence, path overlap, and capped content frequency; lexical tie by path"
+    },
+    "inventory_count": 24,
+    "selected_file_count": 12,
+    "selected_character_count": 26447,
+    "files": [
+      {
+        "path": "CONTRIBUTING.md",
+        "score": 4413.240560766341,
+        "truncated": true,
+        "content": "<!-- markdownlint-disable no-blanks-blockquote -->\r\n\r\n# Contributing to Simple Icons\r\n\r\n[![Good first issues](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fapi.github.com%2Fsearch%2Fissues%3Fq%3Drepo%3Asimple-icons%2Fsimple-icons%2520label%3A%2522good%2520first%2520issue%2522%2520is%3Aopen%2520-linked%3Apr&query=%24.total_count&suffix=%20open&logo=github&label=good%20first%20issues&color=228f6c&labelColor=228f6c&logoColor=white&style=flat-square)](https://github.com/simple-icons/simple-icons/issues?q=is%3Aopen+label%3A%22good+first+issue%22+-linked%3Apr) [![Icon issues](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fapi.github.com%2Fsearch%2Fissues%3Fq%3Drepo%3Asimple-icons%2Fsimple-icons%2520label%3A%2522update%2520icon%2Fdata%2522%2C%2522new%2520icon%2522%2520is%3Aopen%2520-linked%3Apr&query=%24.total_count&suffix=%20open&logo=svg&logoColor=333&label=icon%20issues&labelColor=FFB13B&color=FFB13B&style=flat-square)](https://github.com/simple-icons/simple-icons/issues?q=is%3Aissue+is%3Aopen+label%3A%22new+icon%22%2C%22update+icon%2Fdata%22) [![Code issues](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fapi.github.com%2Fsearch%2Fissues%3Fq%3Drepo%3Asimple-icons%2Fsimple-icons%2520is%3Aissue%2520is%3Aopen%2520label%3Ameta%2Cpackage%2520-linked%3Apr&query=%24.total_count&suffix=%20open&logo=typescript&logoColor=white&label=code%20issues&labelColor=3178C6&color=3178C6&style=flat-square)](https://github.com/simple-icons/simple-icons/issues?q=is%3Aissue+is%3Aopen+label%3Adocs%2Cmeta%2Cpackage+-linked%3Apr) [![Documentation issues](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fapi.github.com%2Fsearch%2Fissues%3Fq%3Drepo%3Asimple-icons%2Fsimple-icons%2520label%3Adocs%2520is%3Aopen%2520-linked%3Apr&query=%24.total_count&suffix=%20open&logo=markdown&label=docs%20issues&labelColor=343a40&color=343a40&logoColor=FFF&style=flat-square)](https://github.com/simple-icons/simple-icons/issues?q=is%3Aopen+is%3Aissue+label%3Adocs+-linked%3Apr)\r\n\r\n> [!IMPORTANT]\\\r\n> We ask that all users read our [legal disclaimer](./DISCLAIMER.md) before contributing to Simple Icons.\r\n\r\nSimple Icons welcomes contributions and corrections. Before contributing, please make sure you have read the guidelines below. If you decide to contribute anything, please follow the steps below. If you're new to _git_ and/or _GitHub_, we suggest you go through [the GitHub Guides](https://guides.github.com/introduction/flow/).\r\n\r\n1. Fork this repository\r\n1. (Optional) Clone the fork\r\n\r\n   - Using SSH\r\n\r\n     ```shell\r\n     git clone --filter=tree:0 git@github.com:simple-icons/simple-icons.git\r\n     ```\r\n\r\n   - Using HTTPS\r\n\r\n     ```shell\r\n     git clone --filter=tree:0 https://github.com/simple-icons/simple-icons.git\r\n     ```\r\n\r\n   - Using GitHub CLI\r\n\r\n     ```shell\r\n     gh repo clone simple-icons/simple-icons -- --filter=tree:0\r\n     ```\r\n\r\n1. Create a new branch from the latest `develop`\r\n1. Start hacking on the new branch\r\n1. Commit and push to the new branch\r\n1. Make a pull request\r\n\r\n## Table of contents\r\n\r\n- [Requesting an Icon](#requesting-an-icon)\r\n  - [Forbidden Brands](#forbidden-brands)\r\n  - [Assessing Popularity](#assessing-popularity)\r\n  - [Opening an Issue](#opening-an-issue)\r\n- [Adding or Updating an Icon](#adding-or-updating-an-icon)\r\n  - [Requesting Permission](#requesting-permission)\r\n- [Testing Package Locally](#testing-package-locally)\r\n- [Using Docker](#using-docker)\r\n\r\n## Requesting an Icon\r\n\r\nWe welcome icon requests. Before you submit a new issue please make sure the icon:\r\n\r\n- Has not already been requested. If you find an existing issue or pull request for the brand you're looking for then please add a reaction or comment to show your support.\r\n- Is of a _popular_ brand - see \"[Assessing Popularity](#assessing-popularity)\" below.\r\n- Doesn't fall into one of the following categories:\r\n  - Illegal services (e.g. piracy, malware, threatening material, spam, etc.)\r\n  - Military-related brands and organizations\r\n  - Governmental agencies, programs, departments\r\n    - Allowed: International organizations and NGOs with supranational interests\r\n    - Allowed: Space agencies\r\n    - Allowed: Meteorological services\r\n    - Allowed: State owned media (unless engaged in propaganda)\r\n  - Religious institutions and organisations\r\n  - Brands that operate in service of a religion or faith\r\n    - Allowed: Brands where religion or faith are part of the corporate culture\r\n  - Symbols, including flags and banners\r\n    - Allowed: standards like FCC, CE, CCC, RoHS...\r\n    - Allowed: licenses like CC, Unlicense, MIT...\r\n  - Sport clubs\r\n    - Allowed: Sports organizations\r\n  - Yearly releases\r\n  - Universities or other educational institutions\r\n  - Any brands representing individuals rather than an organization, company, or product. This includes musicians, bands, and social media personalities.\r\n\r\n### Forbidden Brands\r\n\r\nSome companies and organizations are excessively protective with their brands, so please don't consider them:\r\n\r\n- [Amazon / AWS](https://github.com/simple-icons/simple-icons/pull/13056)\r\n- BP\r\n- Disney, including, but not limited to:\r\n  - Marvel\r\n- International Olympic Committee\r\n- Mattel\r\n- Microchip Technology Inc.\r\n- [Microsoft](https://github.com/simple-icons/simple-icons/issues/11236), including, but not limited to:\r\n  - C#\r\n  - LinkedIn\r\n  - Playwright\r\n  - Visual Studio\r\n- Oracle, including, but not limited to:\r\n  - Java\r\n- [Yahoo!](https://github.com/simple-icons/simple-icons/pull/9861#issuecomment-1819664495)\r\n- Do you know more? Please, [report them](https://github.com/simple-icons/simple-icons/issues/new?labels=docs&template=documentation.yml).\r\n\r\nIf you are in doubt, feel free to submit it and we'll have a look.\r\n\r\n### Assessing Popularity\r\n\r\n> [!NOTE]\\\r\n> Please make your way through the following metrics _in order_, only moving on to the next metric if the current metric is not applicable to the brand being assessed or if it would put the brand outside our scope.\r\n\r\n> [!TIP]\\\r\n> Similarweb is now trying to force users to log in to view statistics. You can bypass this by going directly to:\r\n>\r\n> - `https://similarweb.com/website/google.com` for websites, replacing `google.com` with the TLD you would like to get the stats on,\r\n> - `https://www.similarweb.com/app/google/com.android.chrome` for Android apps, replacing `com.android.chrome` with the Google Play package ID of the app you would like to get the stats on, or,\r\n> - `https://www.similarweb.com/app/apple/535886823` for iOS apps, replacing `535886823` with the numerical Apple Store ID of the app you would like to get stats on.\r\n>\r\n> You may need to use incognito mode if you visit these ranking pages often. Regular contributors may find the [Similarweb browser extensions](https://www.similarweb.com/corp/extension/) to be of use as they provide the global rank at a glance, without any rate limiting.\r\n\r\nTo be considered popular enough to be within our scope, a brand must be in existence for at least one year and meet one of the following metrics of popularity, in order of preference:\r\n\r\n1. Its website's Similarweb global rank is in the top 500k.\r\n   - As Similarweb updates its data only once every month, there will be a monitoring window for websites ranked between 450k & 550k until the next update, _unless_ the brand is within scope on any other metric below.\r\n   - For existing icons in our library, the threshold is dropped from 500k to 750k.\r\n   - A rank lower than 2m, without any other metric being provided, will result in the brand being declared outside our scope.\r\n1. The website's Similarweb rank in any one country is either:\r\n   - In the top 100, or,\r\n   - In the top 10k, _with_ a global rank of 1m or better.\r\n1. Its app's Similarweb country rank, in any one country, is in the top 1k for either Android or iOS.\r\n   - Android apps should be assessed by their usage rank, rather than their store rank.\r\n   - Category ranks will not be accepted.\r\n1. In cases where a brand does not have its own website the Similarweb rank of its parent company will be accepted _if_ the brand is that company's primary product.\r\n1. Its packages meet one of the following minimum requirements:\r\n   - [npm](https://www.npmjs.com): 100k weekly downloads,\r\n   - [jsDelivr](https://www.jsdelivr.com): 1m daily or 35m monthly requests,\r\n   - [crates.io](https://crates.io): 1,200,000 recent (100k weekly) downloads,\r\n   - [PyPi Stats](https://pypistats.org): 100k weekly downloads,\r\n   - [Homebrew Formulae](https://formulae.brew.sh): 5k installs in the last 30 days or 50k installs in the last year,\r\n   - [Arch User Repository](https://aur.archlinux.org): popularity of 7.00, or,\r\n   - [Docker](https://www.docker.com): 500k weekly downloads.\r\n1. If the brand is a Fediverse project, it needs to have a minimum of 10,000 Monthly Active Users as listed on [FediDB](https://fedidb.org/software).\r\n   - In addition, for **servers** that have a unique recognizable logo, the User Count as listed on [FediDB](https://fedidb.org/network) should be 100,000 or higher.\r\n1. The brand's popularity can be illustrated by other publicly available & verifiable statistic (e.g., downloads, usage).\r\n   - Stats should preferably also include data on one of our existing brands so a direct comparison can be made.\r\n1. The brand's popularity can be illustrated through a worldwide Google Trends comparison, or similar.\r\n   - Must be with a similar brand that is already in our library and still within our scope, or that would qualify under any metric.\r\n   - Must be unambiguous (i.e., it's not a suitable metric for brands with generic words for names).\r\n   - Trending equal to or higher than the compared brand will be considered in scope.\r\n   - Trending lower than the compared brand but with an upward trajectory will require the consensus of the person providing the comparison and at least 2 project maintainers.\r\n\r\nAs a last resort, after exhausting all other options above, and where applicable, the primary repository for the brand's GitHub project will be considered provided it meets the following requirements (see note below):\r\n\r\n- It is active,\r\n- It has a minimum of 5k GitHub stars,\r\n- It has an average of 1k stars for each year of its existence (e.g., a project started 10 years ago would require a minimum of 10k stars), and,\r\n- Its [star history](https://star-history.com) is on a consistently upward trajectory.\r\n\r\nIf all else fails, though, feel free to make a good case for the popularity of the brand you're requesting on any other grounds, provided it can be backed up with verifiable data. Example: a car manufacturer's own website falls outside our scope but a major dealership dealing exclusively or primarily in that brand falls within our scope - in that case we'd accept the manufacturer as being popular. If you can provide a _particularly_ good metric that can be applied to other brands then it will be added to this list.\r\n\r\n> [!NOTE]\\\r\n> All metrics & cut-offs above are subject to ongoing review and potential change. These current metrics were devised in order to no longer rely on GitHub stars as an indication of a project's popularity. But, for projects that only exist on GitHub, we do still need some way of assessing their popularity so, until we can come up with a better way to do so, we have kept stars for the time being but will not be putting as much weight on them as in the past. If you know of a better way of assessing the popularity of a GitHub project then please create an issue for discussion.\r\n\r\n### Opening an Issue\r\n\r\nWhen submitting a request for a new or updated icon include helpful information such as:\r\n\r\n- **Issue Title:** The brand name. For example:\r\n\r\n  - New Icons: `Request: GitHub Icon`\r\n  - Icon Updates: `Update: GitHub Color` or `Update: GitHub Icon`\r\n\r\n- **Issue Body:** Links to official sources for the brand's icon and colors (e.g. media kits, brand guidelines, SVG files, etc.)\r\n\r\nIf you have an affiliation to the br",
+        "content_digest": "sha256:1b00b032ce859f9f670eeb26b6f4905935fd61754d6c496a3b010f330486f21c"
+      },
+      {
+        "path": ".github/ISSUE_TEMPLATE/icon_request.yml",
+        "score": 413.24056076634145,
+        "truncated": false,
+        "content": "name: Icon request\r\ndescription: Request a new icon for Simple Icons\r\nlabels: [new icon]\r\ntitle: 'Request: <brand-name>'\r\n\r\nbody:\r\n  - type: markdown\r\n    attributes:\r\n      value: |\r\n        We won't add non-brand icons or anything related to illegal services. If in\r\n        doubt, open an issue and we'll have a look. For more details see the\r\n        [Contributing Guidelines].\r\n\r\n        Before opening a new issue, make sure it isn't covered by an existing issue.\r\n        Please search for [issues with the `new icon` label][new-icon-issues]\r\n        (including closed issues) before you continue. If you find one for the brand\r\n        you're requesting then leave a comment on it or add a reaction.\r\n\r\n        > [!TIP]\r\n        > In order to view website rankings on `similarweb.com`:\r\n        > Go to `https://similarweb.com/website`, enter the website address, and click on Analyze Traffic.\r\n\r\n        [contributing guidelines]: https://github.com/simple-icons/simple-icons/blob/develop/CONTRIBUTING.md\r\n\r\n        [new-icon-issues]: https://github.com/simple-icons/simple-icons/issues?q=is%3Aissue+label%3A%22new+icon%22\r\n\r\n  - type: input\r\n    attributes:\r\n      label: Brand Name\r\n      placeholder: 'Example: Simple Icons'\r\n    validations:\r\n      required: true\r\n\r\n  - type: input\r\n    attributes:\r\n      label: Website\r\n      description: |\r\n        For non-web brands you can add a relevant link. You can put \"None\" if you don't\r\n        think there's a website.\r\n      placeholder: 'Example: https://simpleicons.org'\r\n    validations:\r\n      required: true\r\n\r\n  - type: textarea\r\n    attributes:\r\n      label: Popularity Metric\r\n      description: |\r\n        Provide either a [Similarweb rank], which must be in the top 500,000 to qualify,\r\n        or failing that another metric from [our contributing guidelines] that we can\r\n        use to assess the popularity of the requested brand.\r\n\r\n        [Similarweb rank]: https://www.similarweb.com\r\n        [our contributing guidelines]: https://github.com/simple-icons/simple-icons/blob/develop/CONTRIBUTING.md#assessing-popularity\r\n      placeholder: 'Example: The Similarweb rank is 261,758. See https://www.similarweb.com/website/simpleicons.org'\r\n    validations:\r\n      required: true\r\n\r\n  - type: checkboxes\r\n    attributes:\r\n      label: Forbidden Brands\r\n      options:\r\n        - label: I have reviewed the list of [forbidden brands](https://github.com/simple-icons/simple-icons/blob/develop/CONTRIBUTING.md#forbidden-brands) and can confirm the brand I am requesting is not one of them, nor is it a subsidiary of one of them.\r\n          required: true\r\n\r\n  - type: input\r\n    attributes:\r\n      label: Terms of Service\r\n      description: |\r\n        A lot of websites specify whether or not we can use their brand assets in their Terms of Service.\r\n        Please ensure you include the link here where relevant.\r\n\r\n  - type: textarea\r\n    attributes:\r\n      label: Official Resources for Icon and Color\r\n      description: |\r\n        Media kits, brand guidelines, SVG files, etc. You can set\r\n        this to \"None\" if you are unable to find any resources.\r\n      placeholder: |\r\n        Example:\r\n        - SVG: https://github.com/simple-icons/simple-icons/blob/develop/icons/simpleicons.svg\r\n        - Color: `#111111`, from the website header\r\n    validations:\r\n      required: true\r\n\r\n  - type: textarea\r\n    attributes:\r\n      label: Additional Comments\r\n      description: |\r\n        Is there anything else we should know about the brand? Remember that not everyone knows the brand as well as you do. For example:\r\n        - Are there multiple options for the logo and/or color?\r\n        - Is the icon released under a license?\r\n        - If you think the brand might not be accepted, why do you think it should be considered?\r\n      placeholder: 'Example: There are two variants of this icon...'\r\n",
+        "content_digest": "sha256:fca0c6186d6d0c9c8692de6a6c06756e161106da1c4a27a20cfc0a67aa187c81"
+      },
+      {
+        "path": ".github/PULL_REQUEST_TEMPLATE.md",
+        "score": 413.24056076634145,
+        "truncated": false,
+        "content": "<!--\r\nBefore opening your pull request, have a quick look at our contribution guidelines:\r\nhttps://github.com/simple-icons/simple-icons/blob/develop/CONTRIBUTING.md\r\n\r\nConsider adding a preview image of your submission using:\r\nhttps://simpleicons.org/preview\r\n-->\r\n\r\n**Issue:** closes #\r\n\r\n**Popularity metric:**\r\n\r\n<!--\r\nRegardless of whether or not the linked issue (if there is one) has a metric, please include the metric here for PR reviewers to validate. See our contributing guidelines at https://github.com/simple-icons/simple-icons/blob/develop/CONTRIBUTING.md#assessing-popularity for more details on how we assess a brand's popularity.\r\n-->\r\n\r\n### Checklist\r\n\r\n- [ ] I have reviewed the [forbidden brands](https://github.com/simple-icons/simple-icons/blob/develop/CONTRIBUTING.md#forbidden-brands) list and confirm the brand I am submitting a PR for is not one of them, nor is it a subsidiary of one of those brands\r\n- [ ] I have reviewed the brand's terms of service, and am confident we can add this icon\r\n- [ ] I updated the JSON data in `data/simple-icons.json`\r\n- [ ] I optimized the icon with SVGO or SVGOMG\r\n- [ ] The SVG `viewbox` is `0 0 24 24`\r\n\r\n### Description\r\n\r\n<!--\r\nAnything relevant, for example:\r\n  - Why did you pick the hex value?\r\n  - Did you manually vectorize the logo?\r\n  - Have you used multiple sources?\r\n  - etc.\r\n-->\r\n",
+        "content_digest": "sha256:75058a36b0e301689444980da40da6c6ce85fa960784e478c9eeaf6058f804c1"
+      },
+      {
+        "path": ".github/actions/check-is-fork/action.yml",
+        "score": 250,
+        "truncated": false,
+        "content": "# When working in a fork, some workflows should not be executed\r\n# as they do not have the necessary permissions. This causes\r\n# them to fail and only serve to generate noise for people\r\n# watching the fork's activity.\r\n\r\nname: Check if running in a fork\r\ndescription: Check if a workflow is running in a forked repository and set an output accordingly.\r\n\r\ninputs:\r\n  in-fork-message:\r\n    description: Message to display when the workflow is running in a fork.\r\n    required: true\r\noutputs:\r\n  is-fork:\r\n    description: Indicates if the current repository is a fork.\r\n    value: ${{ steps.check-is-fork.outputs.is-fork }}\r\n\r\nruns:\r\n  using: composite\r\n  steps:\r\n    - id: check-is-fork\r\n      shell: bash\r\n      env:\r\n        IN_FORK_MESSAGE: ${{ inputs.in-fork-message }}\r\n      run: |\r\n        if [ \"${{ github.repository_owner }}\" != \"simple-icons\" ]; then\r\n          echo \"is-fork=true\" >> $GITHUB_OUTPUT\r\n          echo \"$IN_FORK_MESSAGE\"\r\n        else\r\n          echo \"is-fork=false\" >> $GITHUB_OUTPUT\r\n        fi\r\n",
+        "content_digest": "sha256:4ab3a979af28e85709d5ed82e2c6b4b139a048b445a7a7d29ead608e4037d373"
+      },
+      {
+        "path": ".github/actions/get-labels/action.yml",
+        "score": 250,
+        "truncated": false,
+        "content": "name: Get issue/pull request labels\r\ndescription: Get the current labels of an issue or pull request\r\n\r\ninputs:\r\n  issue_number:\r\n    description: Issue or pull request number to get labels from\r\n    required: true\r\n  github-token:\r\n    description: GitHub token used to authenticate with the GitHub API\r\n    required: true\r\noutputs:\r\n  labels:\r\n    description: Labels of the issue or pull request\r\n    value: ${{ steps.get-labels.outputs.labels }}\r\n\r\nruns:\r\n  using: composite\r\n  steps:\r\n    - id: get-labels\r\n      shell: sh\r\n      env:\r\n        GH_TOKEN: ${{ inputs.github-token }}\r\n      run: |\r\n        labels=\"$(gh api 'repos/simple-icons/simple-icons/issues/${{ inputs.issue_number }}' --jq '.labels.[].name' | tr '\\n' ',')\"\r\n        echo \"labels=$labels\" >> $GITHUB_OUTPUT\r\n",
+        "content_digest": "sha256:f62e64a7048e8f7782919159faf6026f70589f8fc8c586cf88241ec0719f37b4"
+      },
+      {
+        "path": ".github/actions/get-version/action.yml",
+        "score": 250,
+        "truncated": false,
+        "content": "name: Get version\r\ndescription: Get the current version of the project\r\n\r\noutputs:\r\n  version:\r\n    description: The version of the project\r\n    value: ${{ steps.get-version.outputs.version }}\r\n\r\nruns:\r\n  using: composite\r\n  steps:\r\n    - id: get-version\r\n      shell: sh\r\n      run: |\r\n        version=\"$(grep version -m 1 -i package.json | cut -d '\"' -f4)\"\r\n        echo \"version=$version\" >> $GITHUB_OUTPUT\r\n",
+        "content_digest": "sha256:145fb486400ea6b8a63a78a53330af44133807dafc97582a189b5837d086d653"
+      },
+      {
+        "path": ".github/ISSUE_TEMPLATE/config.yml",
+        "score": 250,
+        "truncated": false,
+        "content": "contact_links:\r\n  - name: Website\r\n    about: Issues and improvements for the website\r\n    url: https://github.com/simple-icons/simple-icons-website-rs/issues/new?template=website.md\r\n",
+        "content_digest": "sha256:4a092bbf1a3b886f4639fc94ae61add631b52540de181d70ab52dffc1d2bd94f"
+      },
+      {
+        "path": ".github/ISSUE_TEMPLATE/documentation.yml",
+        "score": 250,
+        "truncated": false,
+        "content": "name: Documentation\r\ndescription: Report problems and suggest ideas for the documentation\r\nlabels: [docs]\r\n\r\nbody:\r\n  - type: markdown\r\n    attributes:\r\n      value: |\r\n        Before opening a new issue, make sure it isn't covered by an existing issue.\r\n        Please search for [issues with the `docs` label][docs-issues] (including\r\n        closed issues) before you continue.\r\n\r\n        [docs-issues]: https://github.com/simple-icons/simple-icons/labels/docs\r\n\r\n  - type: dropdown\r\n    attributes:\r\n      label: Kind of Issue\r\n      description: |\r\n        If your issue type is not here, select \"other\" and explain in the\r\n        \"Description\" field below.\r\n      options: [Improvement, Mistake, Other]\r\n    validations:\r\n      required: true\r\n\r\n  - type: textarea\r\n    attributes:\r\n      label: Description\r\n      description: |\r\n        Include as much detail as possible, for example:\r\n        - A (perma)link to the docs in question\r\n        - Suggestions for how to change the docs\r\n      placeholder: \"Example: The documentation doesn't cover my use case of the NPM package...\"\r\n    validations:\r\n      required: true\r\n",
+        "content_digest": "sha256:dbc4f7d276f1b27dd6e7ef2437670f0a0754a114497548a556b0bfeb1c0cba3a"
+      },
+      {
+        "path": ".github/ISSUE_TEMPLATE/icon_removal.yml",
+        "score": 250,
+        "truncated": false,
+        "content": "name: Icon removal\r\ndescription: Report an icon for removal\r\nlabels: [breaking change]\r\ntitle: 'Removal: <brand-name>'\r\n\r\nbody:\r\n  - type: markdown\r\n    attributes:\r\n      value: |\r\n        Before opening a new issue, make sure it isn't covered by an existing issue.\r\n        Please search for [issues with the `breaking change` label][breaking-issues]\r\n        (including closed issues) before you continue. If you find one for the brand\r\n        you're reporting then leave a comment on it or add a reaction.\r\n\r\n        [breaking-issues]: https://github.com/simple-icons/simple-icons/labels/breaking%20change\r\n\r\n  - type: input\r\n    attributes:\r\n      label: Brand Name\r\n      placeholder: 'Example: Simple Icons'\r\n    validations:\r\n      required: true\r\n\r\n  - type: textarea\r\n    attributes:\r\n      label: Reason for Removal\r\n      description: |\r\n        - If the brand no longer exists, include a link supporting that claim.\r\n        - If the brand should be removed for another reason, explain why.\r\n      placeholder: >-\r\n        Example: [this blogpost](https://example.com) announced the brand has been discontinued...\r\n\r\n\r\n    validations:\r\n      required: true\r\n",
+        "content_digest": "sha256:b28bce3d0347c29b53e4ecea7055a0c446748e516148c175e634f0b56dca14aa"
+      },
+      {
+        "path": ".github/ISSUE_TEMPLATE/icon_update.yml",
+        "score": 250,
+        "truncated": false,
+        "content": "name: Icon update\r\ndescription: Help us improve by reporting outdated icons\r\nlabels: [update icon/data]\r\ntitle: 'Update: <brand-name>'\r\n\r\nbody:\r\n  - type: markdown\r\n    attributes:\r\n      value: |\r\n        Before opening a new issue, make sure it isn't covered by an existing issue.\r\n        Please search for [issues with the `update icon/data` label][update-icon-data-issues]\r\n        (including closed issues) before you continue. If you find one for the brand\r\n        you're reporting then leave a comment on it or add a reaction.\r\n\r\n        [update-icon-data-issues]: https://github.com/simple-icons/simple-icons/labels/update%20icon/data\r\n\r\n  - type: input\r\n    attributes:\r\n      label: Brand Name\r\n      placeholder: 'Example: Simple Icons'\r\n    validations:\r\n      required: true\r\n\r\n  - type: input\r\n    attributes:\r\n      label: Terms of Service\r\n      description: |\r\n        A lot of websites specify whether or not we can use their brand assets in their Terms of Service.\r\n        Please ensure you include the link here where relevant.\r\n\r\n  - type: textarea\r\n    attributes:\r\n      label: Official Resources for Icon and Color\r\n      description: |\r\n        Media kits, brand guidelines, SVG files, etc. You can set\r\n        this to \"None\" if you are unable to find any resources.\r\n      placeholder: |\r\n        Example:\r\n        svg: https://github.com/simple-icons/simple-icons/blob/develop/icons/simpleicons.svg\r\n        color: `#111111`, from the website header\r\n    validations:\r\n      required: true\r\n\r\n  - type: textarea\r\n    attributes:\r\n      label: Additional Comments\r\n      description: |\r\n        Is there anything else we should know about the brand? Remember that not everyone knows the brand as well as you do. For example:\r\n        - Are there multiple options for the logo and/or color?\r\n        - Is the icon released under a license?\r\n      placeholder: 'Example: There are two variants of this icon...'\r\n",
+        "content_digest": "sha256:0544254d155a1e830765e25824917323a7b48f7d0af4622be51e1d639410922e"
+      },
+      {
+        "path": ".github/ISSUE_TEMPLATE/package.yml",
+        "score": 250,
+        "truncated": false,
+        "content": "name: Packages\r\ndescription: Report problems and suggest ideas for the NPM and Packagist packages\r\nlabels: [package]\r\n\r\nbody:\r\n  - type: markdown\r\n    attributes:\r\n      value: |\r\n        Before opening a new issue, make sure it isn't covered by an existing issue.\r\n        Please search for [issues with the `package` label][package-issues] (including\r\n        closed issues) before you continue.\r\n\r\n        [package-issues]: https://github.com/simple-icons/simple-icons/labels/package\r\n\r\n  - type: dropdown\r\n    attributes:\r\n      label: Kind of Issue\r\n      description: |\r\n        If your issue type is not here, select \"other\" and explain in the\r\n        \"Description\" field below.\r\n      options: [Bug, Feature, Performance, Other]\r\n    validations:\r\n      required: true\r\n\r\n  - type: dropdown\r\n    attributes:\r\n      label: This issue concerns the...\r\n      options: [NPM package, Packagist package]\r\n      multiple: true\r\n    validations:\r\n      required: true\r\n\r\n  - type: input\r\n    attributes:\r\n      label: Package Version\r\n      placeholder: 'Example: 5.11.0'\r\n    validations:\r\n      required: true\r\n\r\n  - type: textarea\r\n    attributes:\r\n      label: Other Software\r\n      description: |\r\n        The software that you are using the package with (Node.js & NPM, PHP & Packagist,\r\n        Browser(s), other) and their versions. You can put \"None\" if you are unsure.\r\n      placeholder: |\r\n        Example:\r\n        Node.js v16\r\n        Chrome 92.0.4515.159 (Official Build) (64-bit)\r\n    validations:\r\n      required: true\r\n\r\n  - type: textarea\r\n    attributes:\r\n      label: Description\r\n      description: |\r\n        Anything relevant, for example:\r\n        - For bugs: \"Steps to reproduce\" and \"Expected behavior\"\r\n        - For feature requests: An example of a use case\r\n        - For performance: An example where performance is poor\r\n      placeholder: 'Example: The NPM package does not work for my use case...'\r\n    validations:\r\n      required: true\r\n",
+        "content_digest": "sha256:e3c9c1f024d3d747842f6ce1c24fc2235a26576f9cd011264675bc82f09a2df2"
+      },
+      {
+        "path": ".github/labeler.yml",
+        "score": 250,
+        "truncated": false,
+        "content": "new icon:\r\n  - any: [icons/*.svg]\r\n    status: added\r\nupdate icon/data:\r\n  - any: [icons/*.svg]\r\n    status: modified\r\n  - all: [data/simple-icons.json]\r\n    status: modified\r\nbreaking change:\r\n  - any: [icons/*.svg]\r\n    status: removed\r\ndocs:\r\n  - any: ['*.md']\r\n    status: modified\r\nmeta:\r\n  - any:\r\n      [\r\n        '.github/*',\r\n        'scripts/*',\r\n        'tests/*',\r\n        '.husky/*',\r\n        '*.mjs',\r\n        '*.d.ts',\r\n        '*.json',\r\n        '*.toml',\r\n        '*',\r\n      ]\r\n    status: modified\r\ndependencies:\r\n  - all: ['package-lock.json']\r\n    status: modified\r\n",
+        "content_digest": "sha256:5c44d552c27b5a45a73c3761b4325113cd5685a5607b7aa94704a382557c89b2"
+      }
+    ]
+  },
+  "prompt_digest": "sha256:2e7cef4bdde45b6251badc15d7e82363fcd29dba2be79b22c2031b327691adbc",
+  "output_text": "{\n  \"files\": {\n    \".github/ISSUE_TEMPLATE/icon_request.yml\": \"---\\nname: Icon request\\ndescription: Request a new icon for Simple Icons\\nlabels: [new icon]\\ntitle: 'Request: <brand-name>'\\n\\nbody:\\n  - type: markdown\\n    attributes:\\n      value: |\\n        We won't add non-brand icons or anything related to illegal services. If in\\n        doubt, open an issue and we'll have a look. For more details see the\\n        [Contributing Guidelines].\\n\\n        Before opening a new issue, make sure it isn't covered by an existing issue.\\n        Please search for [issues with the `new icon` label][new-icon-issues]\\n        (including closed issues) before you continue. If you find one for the brand\\n        you're requesting then leave a comment on it or add a reaction.\\n\\n        > [!TIP]\\n        > In order to view website rankings on `similarweb.com`:\\n        > Go to `https://similarweb.com/website`, enter the website address, and click on Analyze Traffic.\\n\\n        [contributing guidelines]: https://github.com/simple-icons/simple-icons/blob/develop/CONTRIBUTING.md\\n\\n        [new-icon-issues]: https://github.com/simple-icons/simple-icons/issues?q=is%3Aissue+label%3A%22new+icon%22\\n\\n  - type: input\\n    attributes:\\n      label: Brand Name\\n      placeholder: 'Example: Simple Icons'\\n    validations:\\n      required: true\\n\\n  - type: input\\n    attributes:\\n      label: Website\\n      description: |\\n        For non-web brands you can add a relevant link. You can put \"   }\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n",
+  "output_digest": "sha256:eea6217c7b091d842ecfeaf55ef0465386a10e05e770e4d9dfd4285c6a69388d",
+  "parse_status": "failed",
+  "parse_failure_code": "FILES_JSON_INVALID",
+  "generated_patch": "",
+  "generated_patch_digest": "sha256:12ae32cb1ec02d01eda3581b127c1fee3b0dc53572ed6baf239721a03d82e126",
+  "changed_paths": [],
+  "started_at": "2026-08-03T18:53:10.359Z",
+  "duration_ms": 22330,
+  "usage": {
+    "input_tokens": 0,
+    "output_tokens": 0
+  },
+  "execution_evidence": {
+    "status": "unknown",
+    "runtime": "ollama-chat",
+    "requested_model": "qwen2.5-coder:3b",
+    "canonical_model": "qwen2.5-coder:3b",
+    "model_digest": "sha256:f72c60cabf6237b07f6e632b2c48d533cef25eda2efbd34bed21c5e9c01e6225",
+    "response_digest": "sha256:8873ca562716b0944c332dc5425ad0c99dbde3e9ee3ee806d82e152dd3696615",
+    "error": null
+  },
+  "economics": {
+    "comparison_cost": {
+      "status": "derived-comparison",
+      "amount_usd": 0.00018139,
+      "source": "measured-gpu-energy-plus-frozen-residual-amortization"
+    },
+    "actual_subscription_cash": {
+      "status": "not-applicable",
+      "amount_usd": 0
+    },
+    "gpu": {
+      "status": "measured",
+      "samples": 44,
+      "average_watts": 96.216818,
+      "energy_kwh": 0.000596812
+    }
+  },
+  "hidden_verification": {
+    "status": "not-run",
+    "source": "official-swe-bench-live-evaluator"
+  },
+  "pilot_freeze_id": "sha256:cfe2d091ccd01effd8cacc443986e649a9db442a828fbe20946673a9eff173c8",
+  "pilot_assignment_id": "sha256:c5fa3f2a08617b1347fa402964fb91ae422036333a92fc1f551da073e3eb765e",
+  "attestation": {
+    "algorithm": "Ed25519",
+    "payload_digest": "sha256:c8f10490c40af109e837c4225494fc88ee2d7ca4b831d2551418744bf3d39fdd",
+    "signature": "Pj0YZ1C8UeKFp2UGJDPINq8G0n2pcpnHnv0v4XWXpaY2ZfyUh0WjP9jl93AWCEcnJfhrYJSGW8lRC8IjrInXAQ=="
+  }
+}

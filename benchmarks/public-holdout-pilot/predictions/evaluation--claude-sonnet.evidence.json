@@ -1,0 +1,111 @@
+{
+  "schema": 1,
+  "kind": "citadel_public_holdout_prediction_evidence",
+  "evidence_id": "sha256:dad37d15885ec59380829295c2dca1f4322a240823c53ce775434491d3ddbcfc",
+  "phase": "pilot-evaluation",
+  "plan_id": "claude-sonnet",
+  "prediction_digest": "sha256:3b0628959fcdc8d187a8098a478debcee3d9dd5ee510d82eb395515d65f84874",
+  "attempts": [
+    {
+      "instance_id": "preactjs__preact-4880",
+      "attempt_id": "sha256:b005b8c1af5fecc0bdac6cdc1235d20325eef496581b918eb0511436add97700",
+      "generated_patch_digest": "sha256:c4e0c59d40b5ee57aabcf73905c8ff04f86a376708a92e60eb5ec3bcab9f7d66",
+      "execution_status": "verified"
+    },
+    {
+      "instance_id": "GladysAssistant__Gladys-2504",
+      "attempt_id": "sha256:7f2033d6b02e86657495368f1d2211b59f50c714ce9a92f9749ee9c618d5bd77",
+      "generated_patch_digest": "sha256:573106e821994a9c4114ce964634581c7c093c69bd71d418f0a98c3dd67d86ad",
+      "execution_status": "verified"
+    },
+    {
+      "instance_id": "simple-icons__simple-icons-13659",
+      "attempt_id": "sha256:30ede03d3f9bc3d0ad622fcfde85675b502d66938bd857b1ec1fab3a5fd7e695",
+      "generated_patch_digest": "sha256:12ae32cb1ec02d01eda3581b127c1fee3b0dc53572ed6baf239721a03d82e126",
+      "execution_status": "verified"
+    },
+    {
+      "instance_id": "moment__luxon-1720",
+      "attempt_id": "sha256:c542adb165c69479c96bcc29d99547d8ae4084369c7e55bea6dac6303054333c",
+      "generated_patch_digest": "sha256:12ae32cb1ec02d01eda3581b127c1fee3b0dc53572ed6baf239721a03d82e126",
+      "execution_status": "unknown"
+    },
+    {
+      "instance_id": "gsd-build__get-shit-done-2186",
+      "attempt_id": "sha256:5fa726d841f5bae1b4fe2f54bf1e7ba23ce3a7348e2108c25285ebd9b736f673",
+      "generated_patch_digest": "sha256:62ae9408933112221c57a76a81be6473ef118a5e8bb40acceb2134dd26a33f94",
+      "execution_status": "verified"
+    },
+    {
+      "instance_id": "docsifyjs__docsify-2595",
+      "attempt_id": "sha256:d0bfe24347766b845bebb31e49e6a3abe9494ebe3a25125bb6c3d5cddf6cfd08",
+      "generated_patch_digest": "sha256:019e6976f6a367c7c7d284828d888a25fc449801e88564d7d6051a879dcc48f2",
+      "execution_status": "verified"
+    },
+    {
+      "instance_id": "openai__codex-plugin-cc-83",
+      "attempt_id": "sha256:47dff4348aac236c56a1f2938bab014bbfceca55b28dfeeca56ae86523132a63",
+      "generated_patch_digest": "sha256:69cfc7cee1d02df0d220f5fdbb65fd58599ec7d4e93f995f1766242c3a891d1a",
+      "execution_status": "verified"
+    },
+    {
+      "instance_id": "aralroca__next-translate-1259",
+      "attempt_id": "sha256:fc565bb50b4071b091e464c059802ef62886093266bc4f8bf0aea7641ea2a05d",
+      "generated_patch_digest": "sha256:5fe5283dc5220f30a95de37214f3bdd6cb21c97717397c888f2a40d6b235be27",
+      "execution_status": "verified"
+    },
+    {
+      "instance_id": "MetaMask__metamask-mobile-17294",
+      "attempt_id": "sha256:84ff33a6206ca71076dcdd7a24f8a59cd2f0ed80c148ba09dffc9c833243bdeb",
+      "generated_patch_digest": "sha256:f64826880c8d55138abcb2627c7979009f70aad594feed30457654f5f3826ea7",
+      "execution_status": "verified"
+    },
+    {
+      "instance_id": "denoland__std-6775",
+      "attempt_id": "sha256:1b3f5cd421ae98c680bcb7b4a0ac22d03112d13a97f57b62227d383c94cf8279",
+      "generated_patch_digest": "sha256:3f27f29a786d9fc7fa04ccba4d3ba9181cce537a339b2e0015beb05c0f87cd31",
+      "execution_status": "verified"
+    },
+    {
+      "instance_id": "RocketChat__Rocket.Chat.ReactNative-6382",
+      "attempt_id": "sha256:ed3ec6e0d53458ecb154de375288a2fc48c1e7b52f377c42da6c5eaa00020829",
+      "generated_patch_digest": "sha256:12ae32cb1ec02d01eda3581b127c1fee3b0dc53572ed6baf239721a03d82e126",
+      "execution_status": "verified"
+    },
+    {
+      "instance_id": "jhlywa__chess.js-546",
+      "attempt_id": "sha256:1281689729a4c9dd253f72e31eda52255f4df225dbb003e40cb84d226660b505",
+      "generated_patch_digest": "sha256:12ae32cb1ec02d01eda3581b127c1fee3b0dc53572ed6baf239721a03d82e126",
+      "execution_status": "verified"
+    },
+    {
+      "instance_id": "code-yeongyu__oh-my-openagent-3013",
+      "attempt_id": "sha256:bc26364d59dacb32c10c221480da12675e637265d250d7ebf9310a80b0cb50d2",
+      "generated_patch_digest": "sha256:12ae32cb1ec02d01eda3581b127c1fee3b0dc53572ed6baf239721a03d82e126",
+      "execution_status": "verified"
+    },
+    {
+      "instance_id": "honojs__hono-4269",
+      "attempt_id": "sha256:1d3b49f16cefff0e3b296f178dac960ee8891aa875c3091517a5324e7284448c",
+      "generated_patch_digest": "sha256:c402381db8605fe2763b24354a5edc4f11f024b51e5b9905530691612c08bb9a",
+      "execution_status": "verified"
+    },
+    {
+      "instance_id": "TanStack__router-4611",
+      "attempt_id": "sha256:78d3ab3a29c789ca60c78701b7a055771fec1f363df6b699940cb7213f92b904",
+      "generated_patch_digest": "sha256:12ae32cb1ec02d01eda3581b127c1fee3b0dc53572ed6baf239721a03d82e126",
+      "execution_status": "verified"
+    },
+    {
+      "instance_id": "openai__openai-agents-js-156",
+      "attempt_id": "sha256:8b010d5e5d0c103d3026e24a07007cf780206648bf0c9373bfd58ccd02e4d343",
+      "generated_patch_digest": "sha256:de47dd52e7ea62167aa1254b830f41bb925d0b29b44341c6ef2bb2d80eb0da1c",
+      "execution_status": "verified"
+    }
+  ],
+  "attestation": {
+    "algorithm": "Ed25519",
+    "payload_digest": "sha256:13cbb437022ca7878ede92d2de66140aec37670c1cd74ad3578f0c950835ea7f",
+    "signature": "KTPtJTiRfjADmzieXXrolmIa0YJxrNCM8QNqzRYl8n7c12lQN/3U2AwslMO2BSyqRwxNdsaVaEaa8W3WhGJ8DA=="
+  }
+}

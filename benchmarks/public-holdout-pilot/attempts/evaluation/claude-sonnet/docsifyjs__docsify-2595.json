@@ -1,0 +1,195 @@
+{
+  "schema": 1,
+  "kind": "citadel_public_holdout_model_attempt",
+  "attempt_id": "sha256:d0bfe24347766b845bebb31e49e6a3abe9494ebe3a25125bb6c3d5cddf6cfd08",
+  "instance_id": "docsifyjs__docsify-2595",
+  "plan_id": "claude-sonnet",
+  "base_commit": "32aa74e0d2fcd89705e5c30fc8b8e2562e7b774e",
+  "retrieval": {
+    "schema": 1,
+    "kind": "citadel_public_holdout_retrieval",
+    "retrieval_id": "sha256:3693a77ed75fa89f06e9faf0202c57adcf135ed53780cfa454dd16042e436bf0",
+    "instance_id": "docsifyjs__docsify-2595",
+    "contract": {
+      "maximum_files": 12,
+      "maximum_total_characters": 60000,
+      "maximum_file_characters": 12000,
+      "maximum_file_bytes": 100000,
+      "excluded_directories": [
+        ".git",
+        ".hg",
+        ".svn",
+        "build",
+        "coverage",
+        "dist",
+        "node_modules",
+        "vendor"
+      ],
+      "extensions": [
+        ".cjs",
+        ".js",
+        ".jsx",
+        ".json",
+        ".md",
+        ".mjs",
+        ".ts",
+        ".tsx",
+        ".yaml",
+        ".yml"
+      ],
+      "always_consider": [
+        "package.json",
+        "tsconfig.json",
+        "jsconfig.json"
+      ],
+      "maximum_query_terms": 24,
+      "scoring_rule": "explicit path/basename or adjacent issue-term match, then git-grep inverse-document-frequency evidence, path overlap, and capped content frequency; lexical tie by path"
+    },
+    "inventory_count": 35,
+    "selected_file_count": 12,
+    "selected_character_count": 13740,
+    "files": [
+      {
+        "path": "docs/quickstart.md",
+        "score": 2500,
+        "truncated": false,
+        "content": "# Quick start\n\nIt is recommended to install `docsify-cli` globally, which helps initializing and previewing the website locally.\n\n```bash\nnpm i docsify-cli -g\n```\n\n## Initialize\n\nIf you want to write the documentation in the `./docs` subdirectory, you can use the `init` command.\n\n```bash\ndocsify init ./docs\n```\n\n## Writing content\n\nAfter the `init` is complete, you can see the file list in the `./docs` subdirectory.\n\n- `index.html` as the entry file\n- `README.md` as the home page\n- `.nojekyll` prevents GitHub Pages from ignoring files that begin with an underscore\n\nYou can easily update the documentation in `./docs/README.md`, of course you can add [more pages](adding-pages.md).\n\n## Preview your site\n\nRun the local server with `docsify serve`. You can preview your site in your browser on `http://localhost:3000`.\n\n```bash\ndocsify serve docs\n```\n\n?> For more use cases of `docsify-cli`, head over to the [docsify-cli documentation](https://github.com/docsifyjs/docsify-cli).\n\n## Manual initialization\n\nDownload or create an `index.html` template using the following markup:\n\n<div id=\"template\">\n\n<a href=\"#\" class=\"button primary\" download=\"index.html\">Download Template</a>\n\n<!-- prettier-ignore -->\n```html\n<!doctype html>\n<html>\n  <head>\n    <meta charset=\"utf-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1, viewport-fit=cover\">\n\n    <!-- Core Theme -->\n    <link rel=\"stylesheet\" href=\"//cdn.jsdelivr.net/npm/docsify@5/dist/themes/core.min.css\">\n  </head>\n  <body class=\"loading\">\n    <div id=\"app\"></div>\n\n    <!-- Configuration -->\n    <script>\n      window.$docsify = {\n        //...\n      };\n    </script>\n\n    <!-- Docsify.js -->\n    <script src=\"//cdn.jsdelivr.net/npm/docsify@5\"></script>\n\n    <!-- Plugins (optional) -->\n    <!-- <script src=\"//cdn.jsdelivr.net/npm/docsify@5/dist/plugins/search.min.js\"></script> -->\n  </body>\n</html>\n```\n\n</div>\n\n### Specifying docsify versions\n\n?> Note that in both of the examples below, docsify URLs will need to be manually updated when a new major version of docsify is released (e.g. `v5.x.x` => `v6.x.x`). Check the docsify website periodically to see if a new major version has been released.\n\nSpecifying a major version in the URL (`@5`) will allow your site to receive non-breaking enhancements (i.e. \"minor\" updates) and bug fixes (i.e. \"patch\" updates) automatically. This is the recommended way to load docsify resources.\n\n<!-- prettier-ignore -->\n```html\n<!-- Core Theme -->\n<link rel=\"stylesheet\" href=\"//cdn.jsdelivr.net/npm/docsify@5/dist/themes/core.min.css\">\n\n<!-- Docsify -->\n<script src=\"//cdn.jsdelivr.net/npm/docsify@5\"></script>\n```\n\nIf you prefer to lock docsify to a specific version, specify the full version after the `@` symbol in the URL. This is the safest way to ensure your site will look and behave the same way regardless of any changes made to future versions of docsify.\n\n<!-- prettier-ignore -->\n```html\n<!-- Core Theme -->\n<link rel=\"stylesheet\" href=\"//cdn.jsdelivr.net/npm/docsify@5.0.0/themes/core.min.css\">\n\n<!-- Docsify -->\n<script src=\"//cdn.jsdelivr.net/npm/docsify@5.0.0\"></script>\n```\n\n### Manually preview your site\n\nIf you have Python installed on your system, you can easily use it to run a static server to preview your site.\n\n```python\n# Python 2\ncd docs && python -m SimpleHTTPServer 3000\n```\n\n```python\n# Python 3\ncd docs && python -m http.server 3000\n```\n\n<script>\n  (function() {\n    const linkElm = document.querySelector('#template a[download=\"index.html\"]');\n    const codeElm = document.querySelector('#template code');\n    const html = codeElm?.textContent;\n\n    linkElm?.setAttribute('href', `data:text/plain,${html}`);\n  })();\n</script>\n",
+        "content_digest": "sha256:7c2b0f8ce823a573bc35ab550483d4f1c10fa5b37c20521b8b651ff83095f59b"
+      },
+      {
+        "path": ".github/crowdin/crowdin-push.yml",
+        "score": 250,
+        "truncated": false,
+        "content": "files:\n  - source: /*.md\n    translation: /%two_letters_code%/%original_file_name%\n    ignore:\n      - '/_coverpage.md'\n      - '/_navbar.md'\n\nproject_id_env: CROWDIN_PROJECT_ID\napi_token_env: CROWDIN_PERSONAL_TOKEN\n",
+        "content_digest": "sha256:e9289b642fa165ab4bd962c8dd5d2a9f76966a28edd9d00f53c5aad0565c84f7"
+      },
+      {
+        "path": ".github/dependabot.yml",
+        "score": 250,
+        "truncated": false,
+        "content": "# To get started with Dependabot version updates, you'll need to specify which\n# package ecosystems to update and where the package manifests are located.\n# Please see the documentation for all configuration options:\n# https://docs.github.com/github/administering-a-repository/configuration-options-for-dependency-updates\n\nversion: 2\nupdates:\n  - package-ecosystem: npm # See documentation for possible values\n    directory: '/' # Location of package manifests\n    open-pull-requests-limit: 10\n    schedule:\n      interval: monthly\n    ignore:\n      # For all dependencies, trigger pull requests only for semver-major updates (ignore minor and patch).\n      - dependency-name: '*'\n        update-types:\n          ['version-update:semver-patch', 'version-update:semver-minor']\n  - package-ecosystem: 'github-actions'\n    directory: '/'\n    open-pull-requests-limit: 10\n    schedule:\n      interval: monthly\n    ignore:\n      # For all dependencies, trigger pull requests only for semver-major and semver-minor updates (ignore patch).\n      - dependency-name: '*'\n        update-types:\n          ['version-update:semver-patch', 'version-update:semver-minor']\n",
+        "content_digest": "sha256:971c6e34ec89cd55ca0ef7eadb5f5f425e941028bf2d5fe1e8d19731d5d9a3ff"
+      },
+      {
+        "path": ".github/ISSUE_TEMPLATE/bug_report.yml",
+        "score": 250,
+        "truncated": false,
+        "content": "name: Bug Report\ndescription: Submit a bug report.\nlabels: ['bug', 'Triage']\n\nbody:\n  - type: markdown\n    attributes:\n      value: |\n        Thanks for taking the time to fill out this bug report! **Please write in English**.\n        Before creating an issue please make sure you are using the latest version of Docsify.\n\n  - type: textarea\n    attributes:\n      label: Description\n      description: A clear and concise description of what the bug is, and why you consider it to be a bug.\n    validations:\n      required: true\n\n  - type: textarea\n    attributes:\n      label: Expected behavior\n      description: A description of what you expected to happen.\n    validations:\n      required: true\n  - type: textarea\n    attributes:\n      label: Actual behavior\n      description: A description of what is actually happening.\n    validations:\n      required: true\n  - type: textarea\n    attributes:\n      label: Steps to reproduce\n      description: |\n        A description with steps to reproduce the issue.\n        Provide a link to a public repository or create a reproducible [sandbox](https://codesandbox.io/s/307qqv236):\n      placeholder: |\n        1. Step 1\n        2. Step 2\n    validations:\n      required: true\n\n  - type: textarea\n    attributes:\n      label: Environment\n      description: |\n        Please provide the following information if relevant to the issue:\n        ```markdown\n        - Your OS:\n        - Node.js version:\n        - npm/yarn version:\n        - Browser version:\n        - Docsify version:\n        - Docsify plugins (if the bug happens when plugins enabled, please try to isolate the issue):\n        ```\n\n  - type: checkboxes\n    attributes:\n      label: Additional Information\n      options:\n        - label: Bug still occurs when all/other plugins are disabled?\n",
+        "content_digest": "sha256:436a29fd5515f6eba8b7ee1a8a4029d1c55396afc0e28a43e4f2a04ab440b792"
+      },
+      {
+        "path": ".github/ISSUE_TEMPLATE/config.yml",
+        "score": 250,
+        "truncated": false,
+        "content": "blank_issues_enabled: false\ncontact_links:\n  - name: Discord - the community chat\n    url: https://discord.gg/docsify\n    about: Join the Discord community and chat about Docsify\n",
+        "content_digest": "sha256:46baf4b45bf6275deb7d47d9c59ef04ef0fe378af22111eb8ce980106435972c"
+      },
+      {
+        "path": ".github/ISSUE_TEMPLATE/feature_request.yml",
+        "score": 250,
+        "truncated": false,
+        "content": "name: Feature Request\ndescription: Propose a new feature or improvement for this project.\nlabels: ['feature request', 'Triage']\n\nbody:\n  - type: markdown\n    attributes:\n      value: |\n        Thank you for suggesting a feature! Please provide as much detail as possible to help us understand your idea. **Write in English.**\n\n  - type: textarea\n    attributes:\n      label: Problem or Desire\n      description: What problem or need will this feature address? Why is it important?\n    validations:\n      required: true\n\n  - type: textarea\n    attributes:\n      label: Proposal\n      description: What is your proposed solution? How should this feature work?\n    validations:\n      required: true\n\n  - type: textarea\n    attributes:\n      label: Implementation Details\n      description: If you have any ideas about how this feature could be implemented, please share them here.\n\n  - type: textarea\n    attributes:\n      label: Additional Context\n      description: Add any other context, screenshots, or references that might help us understand your request.\n",
+        "content_digest": "sha256:345b0b4c84e5921b9b9cbfdc9ef3b7c5e890a752c2e61d5062839466d01e78d9"
+      },
+      {
+        "path": ".github/PULL_REQUEST_TEMPLATE.md",
+        "score": 250,
+        "truncated": false,
+        "content": "## Summary\n\n<!-- Describe what the change does and why it should be merged. Provide **before/after** screenshots for any UI changes. -->\n\n## Related issue, if any:\n\n<!-- Paste issue's link or number hashtag here. -->\n\n## What kind of change does this PR introduce?\n\n<!-- (Change \"[ ]\" to \"[x]\" to check a box.) -->\n\n- [ ] Bugfix\n- [ ] Feature\n- [ ] Code style update (formatting, renaming)\n- [ ] Refactoring (no functional changes, no api changes)\n- [ ] Build related changes\n- [ ] Documentation content changes\n- [ ] Other (please describe):\n\n## For any code change,\n\n- [ ] Related documentation has been updated, if needed\n- [ ] Related tests have been added or updated, if needed\n\n## Does this PR introduce a breaking change?\n\n<!-- If yes, describe the impact and migration path for existing applications. -->\n\n- [ ] Yes\n- [ ] No\n\n## Tested in the following browsers:\n\n- [ ] Chrome\n- [ ] Firefox\n- [ ] Safari\n- [ ] Edge\n",
+        "content_digest": "sha256:de63402d06fcd9a7352004fc09a7da1ab45ebf934270b8718f13bab15db90afa"
+      },
+      {
+        "path": ".github/semantic.yml",
+        "score": 250,
+        "truncated": false,
+        "content": "titleAndCommits: true\nallowMergeCommits: true\nallowRevertCommits: true\nanyCommit: true\n",
+        "content_digest": "sha256:8f9866b26c17b949b37ded1f39ea34ae417bc07ca2d659e6f9bf94cd422a2839"
+      },
+      {
+        "path": ".github/workflows/crowdin.yml",
+        "score": 250,
+        "truncated": false,
+        "content": "name: Crowdin Action\n\non:\n  workflow_dispatch:\n  push:\n    paths:\n      - 'docs/**.md'\n    branches: [develop, main]\n\njobs:\n  crowdin:\n    if: github.repository == 'docsifyjs/docsify'\n    runs-on: ubuntu-latest\n    steps:\n      - name: Checkout\n        uses: actions/checkout@v4\n\n      - name: Crowdin push\n        uses: crowdin/github-action@v2\n        with:\n          upload_sources: true\n          upload_translations: false\n          download_translations: false\n          push_translations: false\n          config: '.github/crowdin/crowdin-push.yml'\n          crowdin_branch_name: ${{ github.ref_name }}\n          base_path: ${{ github.workspace }}/docs\n        env:\n          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}\n          CROWDIN_PROJECT_ID: ${{ secrets.CROWDIN_PROJECT_ID }}\n          CROWDIN_PERSONAL_TOKEN: ${{ secrets.CROWDIN_PERSONAL_TOKEN }}\n",
+        "content_digest": "sha256:2c2acce8d0dd925973bd099356480d6e50289aabf86d431e934810f0e9b380b2"
+      },
+      {
+        "path": ".github/workflows/emoji.yml",
+        "score": 250,
+        "truncated": false,
+        "content": "name: Sync Emoji\n\non:\n  schedule:\n    - cron: '0 2 * * *'\n  workflow_dispatch:\n\njobs:\n  sync-emoji:\n    if: github.repository == 'docsifyjs/docsify'\n    runs-on: ubuntu-latest\n    steps:\n      - uses: actions/checkout@v4\n\n      - uses: actions/setup-node@v4\n        with:\n          node-version: latest\n          cache: 'npm'\n\n      - name: Install dependencies\n        run: npm ci --ignore-scripts\n\n      - name: Run script to sync emoji data\n        run: npm run build:emoji\n\n      - name: Commit\n        id: auto-commit-action\n        uses: stefanzweifel/git-auto-commit-action@v6\n        with:\n          commit_message: 'chore: Sync emoji data with GitHub emoji API'\n          branch: sync-emoji\n          create_branch: true\n          file_pattern: 'src/core/render/emoji-data.js docs/emoji.md'\n          push_options: '--force'\n\n      - name: Create Pull Request\n        if: ${{ steps.auto-commit-action.outputs.changes_detected == 'true' }}\n        run: |\n          gh pr create --title 'chore: Sync emoji data with GitHub emoji API' --body 'Found updated github emojis need to sync.' --base develop --reviewer docsifyjs/reviewers\n        continue-on-error: true\n        env:\n          GH_TOKEN: ${{ secrets.READ_TEAM_TOKEN }}\n",
+        "content_digest": "sha256:54f76292b571360544eb17cf07faf782d6944d3ddab679df6b80e4dc969135b1"
+      },
+      {
+        "path": ".github/workflows/test.yml",
+        "score": 250,
+        "truncated": false,
+        "content": "name: Build & Test\n\non:\n  push:\n    branches: [main, develop]\n  pull_request:\n    branches: [main, develop]\n  workflow_dispatch:\n\njobs:\n  lint:\n    runs-on: ubuntu-latest\n    strategy:\n      matrix:\n        node-version: ['lts/*']\n    steps:\n      - uses: actions/checkout@v4\n      - name: Setup Node.js ${{ matrix.node-version }}\n        uses: actions/setup-node@v3\n        with:\n          node-version: ${{ matrix.node-version }}\n          cache: 'npm'\n      - name: Install dependencies\n        run: npm ci --ignore-scripts\n      - name: Build\n        run: npm run build\n      - name: Lint\n        run: npm run lint\n\n  test-jest:\n    runs-on: ${{ matrix.os }}\n    strategy:\n      fail-fast: false\n      matrix:\n        node-version: ['lts/*']\n        os: ['macos-latest', 'ubuntu-latest', 'windows-latest']\n    steps:\n      - uses: actions/checkout@v4\n      - name: Setup Node.js ${{ matrix.node-version }}\n        uses: actions/setup-node@v3\n        with:\n          node-version: ${{ matrix.node-version }}\n          cache: 'npm'\n      - name: Install dependencies\n        run: npm ci --ignore-scripts\n      - name: Build\n        run: npm run build\n      - name: Unit Tests\n        run: npm run test:unit -- --ci --runInBand\n      - name: Integration Tests\n        run: npm run test:integration -- --ci --runInBand\n\n  test-playwright:\n    runs-on: ubuntu-latest\n    strategy:\n      matrix:\n        node-version: ['lts/*']\n    steps:\n      - uses: actions/checkout@v4\n      - name: Setup Node.js ${{ matrix.node-version }}\n        uses: actions/setup-node@v3\n        with:\n          node-version: ${{ matrix.node-version }}\n          cache: 'npm'\n      - name: Install dependencies\n        run: npm ci --ignore-scripts\n      - name: Build\n        run: npm run build\n      - name: Install Playwright\n        run: npx playwright install --with-deps\n      - name: E2E Tests (Playwright)\n        run: npm run test:e2e\n      - name: Store artifacts\n        uses: actions/upload-artifact@v4\n        if: failure()\n        with:\n          name: ${{ matrix.os }}-${{ matrix.node-version }}-artifacts\n          path: |\n            _playwright-results/\n            _playwright-report/\n",
+        "content_digest": "sha256:d8bf6b69a036f25b1be1638273e58901cc007779666dbbef4e6c3655e7a8c664"
+      },
+      {
+        "path": "docs/_coverpage.md",
+        "score": 250,
+        "truncated": false,
+        "content": "<!-- markdownlint-disable first-line-h1 -->\n\n![logo](_media/icon.svg)\n\n# docsify <small>5.0.0-rc.1</small>\n\n> A magical documentation site generator\n\n- Simple and lightweight\n- No statically built HTML files\n- Multiple themes\n\n[Get Started](#docsify)\n[GitHub](https://github.com/docsifyjs/docsify/)\n\n<!-- ![color](#f0f0f0) -->\n<!-- ![](/_media/icon.svg) -->\n",
+        "content_digest": "sha256:e88bd2398458895e230d67406ce2b3ff6e1166db805804b5c52cef0ffc9697c2"
+      }
+    ]
+  },
+  "prompt_digest": "sha256:c977f5d9543c8831f35afb912795dfa28c728b0f68e112bcebce3a749fd4eb50",
+  "output_text": "{\"files\":{\"docs/_coverpage.md\":\"<!-- markdownlint-disable first-line-h1 -->\\n\\n![logo](_media/icon.svg)\\n\\n# docsify <small>5.0.0-rc.1</small> :id=cover-title\\n\\n> A magical documentation site generator\\n\\n- Simple and lightweight\\n- No statically built HTML files\\n- Multiple themes\\n\\n[Get Started](#docsify)\\n[GitHub](https://github.com/docsifyjs/docsify/)\\n\\n<!-- ![color](#f0f0f0) -->\\n<!-- ![](/_media/icon.svg) -->\\n\"}}",
+  "output_digest": "sha256:286a562c6421d4694d3729a6880db402b0ca76fa74f573703a91d09cd67ef494",
+  "parse_status": "passed",
+  "parse_failure_code": null,
+  "generated_patch": "diff --git a/docs/_coverpage.md b/docs/_coverpage.md\nindex e9292be..2ab056a 100644\n--- a/docs/_coverpage.md\n+++ b/docs/_coverpage.md\n@@ -2,7 +2,7 @@\n \n ![logo](_media/icon.svg)\n \n-# docsify <small>5.0.0-rc.1</small>\n+# docsify <small>5.0.0-rc.1</small> :id=cover-title\n \n > A magical documentation site generator\n \n",
+  "generated_patch_digest": "sha256:019e6976f6a367c7c7d284828d888a25fc449801e88564d7d6051a879dcc48f2",
+  "changed_paths": [
+    "docs/_coverpage.md"
+  ],
+  "started_at": "2026-08-03T19:45:54.295Z",
+  "duration_ms": 202767,
+  "usage": {
+    "input_tokens": 2,
+    "output_tokens": 17947,
+    "cache_creation_input_tokens": 6543,
+    "cache_read_input_tokens": 0
+  },
+  "execution_evidence": {
+    "status": "verified",
+    "runtime": "claude-code-print",
+    "requested_model": "sonnet",
+    "canonical_model": "claude-sonnet-5",
+    "cli_version": "2.1.219",
+    "response_digest": "sha256:f8fe0898bf30860048aa55747961400f2765f16882217bbae51f524430a9a4c4",
+    "exit_status": 0,
+    "error": null
+  },
+  "economics": {
+    "comparison_cost": {
+      "status": "provider-reported-equivalent",
+      "amount_usd": 0.313779,
+      "source": "claude-code-total-cost-usd"
+    },
+    "actual_subscription_cash": {
+      "status": "unknown",
+      "amount_usd": null,
+      "source": "subscription-not-allocated-per-operation"
+    },
+    "gpu": {
+      "status": "not-applicable",
+      "samples": 0,
+      "average_watts": null,
+      "energy_kwh": 0
+    }
+  },
+  "hidden_verification": {
+    "status": "not-run",
+    "source": "official-swe-bench-live-evaluator"
+  },
+  "pilot_freeze_id": "sha256:cfe2d091ccd01effd8cacc443986e649a9db442a828fbe20946673a9eff173c8",
+  "pilot_assignment_id": "sha256:c5fa3f2a08617b1347fa402964fb91ae422036333a92fc1f551da073e3eb765e",
+  "attestation": {
+    "algorithm": "Ed25519",
+    "payload_digest": "sha256:31ff82f0ce465d16b40f6d76323e863abee41d37b7494408e0abf08b5695f889",
+    "signature": "kbUQhIScUbuygi9sxn9aB/Pm+U5DWmh0bGDVJRXbTURI4C6a5MGWiEelVAroBVOcG6qx33Y0RGM0V/NZRdU3Cg=="
+  }
+}

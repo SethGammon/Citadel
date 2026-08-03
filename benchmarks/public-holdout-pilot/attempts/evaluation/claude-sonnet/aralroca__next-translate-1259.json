@@ -1,0 +1,195 @@
+{
+  "schema": 1,
+  "kind": "citadel_public_holdout_model_attempt",
+  "attempt_id": "sha256:fc565bb50b4071b091e464c059802ef62886093266bc4f8bf0aea7641ea2a05d",
+  "instance_id": "aralroca__next-translate-1259",
+  "plan_id": "claude-sonnet",
+  "base_commit": "f1fbf473b42cf795ae8eb996003222625bfc58ac",
+  "retrieval": {
+    "schema": 1,
+    "kind": "citadel_public_holdout_retrieval",
+    "retrieval_id": "sha256:08c89a377ae2b85723c178188ce7882e4c59b4ef5bf41e65a73cee53e365d362",
+    "instance_id": "aralroca__next-translate-1259",
+    "contract": {
+      "maximum_files": 12,
+      "maximum_total_characters": 60000,
+      "maximum_file_characters": 12000,
+      "maximum_file_bytes": 100000,
+      "excluded_directories": [
+        ".git",
+        ".hg",
+        ".svn",
+        "build",
+        "coverage",
+        "dist",
+        "node_modules",
+        "vendor"
+      ],
+      "extensions": [
+        ".cjs",
+        ".js",
+        ".jsx",
+        ".json",
+        ".md",
+        ".mjs",
+        ".ts",
+        ".tsx",
+        ".yaml",
+        ".yml"
+      ],
+      "always_consider": [
+        "package.json",
+        "tsconfig.json",
+        "jsconfig.json"
+      ],
+      "maximum_query_terms": 24,
+      "scoring_rule": "explicit path/basename or adjacent issue-term match, then git-grep inverse-document-frequency evidence, path overlap, and capped content frequency; lexical tie by path"
+    },
+    "inventory_count": 44,
+    "selected_file_count": 12,
+    "selected_character_count": 22563,
+    "files": [
+      {
+        "path": "src/AppDirI18nProvider.tsx",
+        "score": 2500,
+        "truncated": false,
+        "content": "'use client'\r\n\r\nimport { I18nDictionary, LoaderConfig } from '.'\r\n\r\ntype AppDirI18nProviderProps = {\r\n  lang: string\r\n  namespaces: Record<string, I18nDictionary>\r\n  config: LoaderConfig\r\n  children: React.ReactNode\r\n}\r\n\r\n/**\r\n * @description AppDirI18nProvider for internal use (next-translate-plugin) only.\r\n * Is required because this is a RCC (React Client Component) and this way we\r\n * provide a global i18n context for client components.\r\n */\r\nexport default function AppDirI18nProvider({\r\n  lang,\r\n  namespaces = {},\r\n  config,\r\n  children,\r\n}: AppDirI18nProviderProps) {\r\n  globalThis.__NEXT_TRANSLATE__ = { lang, namespaces, config }\r\n\r\n  // It return children and avoid re-renders and also allow children to be RSC (React Server Components)\r\n  return children\r\n}\r\n",
+        "content_digest": "sha256:bfcc1ae8401688fa3afb16647fed2b480d43eee68b618e523401ab55bde7ca69"
+      },
+      {
+        "path": "src/I18nProvider.tsx",
+        "score": 2500,
+        "truncated": false,
+        "content": "import React, { createContext, useContext } from 'react'\r\nimport { useRouter } from 'next/router'\r\nimport I18nContext from './context'\r\nimport transCore from './transCore'\r\nimport useTranslation from './useTranslation'\r\nimport { I18nDictionary, I18nProviderProps } from '.'\r\n\r\nexport const InternalContext = createContext({ ns: {}, config: {} })\r\n\r\nexport default function I18nProvider({\r\n  lang: lng,\r\n  namespaces = {},\r\n  children,\r\n  config: newConfig = {},\r\n}: I18nProviderProps) {\r\n  const { lang: parentLang } = useTranslation()\r\n  const { locale, defaultLocale } = useRouter() || {}\r\n  const internal = useContext(InternalContext)\r\n  const allNamespaces: Record<string, I18nDictionary> = {\r\n    ...initialBrowserNamespaces(),\r\n    ...internal.ns,\r\n    ...namespaces,\r\n  }\r\n  const lang = lng || parentLang || locale || defaultLocale || ''\r\n  const config = { ...internal.config, ...newConfig }\r\n  const localesToIgnore = config.localesToIgnore || ['default']\r\n  const ignoreLang = !lang || localesToIgnore.includes(lang)\r\n  const pluralRules = new Intl.PluralRules(ignoreLang ? undefined : lang)\r\n  const t = transCore({ config, allNamespaces, pluralRules, lang })\r\n\r\n  return (\r\n    <I18nContext.Provider value={{ lang, t }}>\r\n      <InternalContext.Provider value={{ ns: allNamespaces, config }}>\r\n        {children}\r\n      </InternalContext.Provider>\r\n    </I18nContext.Provider>\r\n  )\r\n}\r\n\r\nfunction initialBrowserNamespaces() {\r\n  if (typeof window === 'undefined') return {}\r\n  return window.__NEXT_DATA__?.props?.__namespaces || {}\r\n}\r\n",
+        "content_digest": "sha256:22cdf0691cd3c7c455db02c43360e4c72ac194af80b06723374e742058150ac9"
+      },
+      {
+        "path": "__tests__/getPageNamespaces.test.js",
+        "score": 250,
+        "truncated": false,
+        "content": "import getPageNamespaces from '../src/getPageNamespaces'\r\n\r\ndescribe('getPageNamespaces', () => {\r\n  let ctx\r\n  beforeAll(() => {\r\n    ctx = { query: {} }\r\n  })\r\n\r\n  describe('empty', () => {\r\n    test('should not return any namespace with empty pages', async () => {\r\n      const input = [{ pages: {} }, '/test-page', ctx]\r\n      const output = await getPageNamespaces(...input)\r\n\r\n      expect(output.length).toBe(0)\r\n    })\r\n    test('should not return any namespace with pages as undefined', async () => {\r\n      const input = [{}, '/test-page', ctx]\r\n      const output = await getPageNamespaces(...input)\r\n\r\n      expect(output.length).toBe(0)\r\n    })\r\n  })\r\n\r\n  describe('regular expressions', () => {\r\n    test('should return namespaces that match the rgx', async () => {\r\n      const config = {\r\n        pages: {\r\n          '*': ['common'],\r\n          '/example/form': ['valid'],\r\n          '/example/form/other': ['invalid'],\r\n          'rgx:/form$': ['form'],\r\n          'rgx:/invalid$': ['invalid'],\r\n          'rgx:^/example': ['example'],\r\n        },\r\n      }\r\n      const input = [config, '/example/form']\r\n      const output = await getPageNamespaces(...input)\r\n\r\n      expect(output.length).toBe(4)\r\n      expect(output[0]).toBe('common')\r\n      expect(output[1]).toBe('valid')\r\n      expect(output[2]).toBe('form')\r\n      expect(output[3]).toBe('example')\r\n    })\r\n  })\r\n\r\n  describe('as array', () => {\r\n    test('should return the page namespace', async () => {\r\n      const input = [\r\n        { pages: { '/test-page': ['test-ns'] } },\r\n        '/test-page',\r\n        ctx,\r\n      ]\r\n      const output = await getPageNamespaces(...input)\r\n      const expected = ['test-ns']\r\n\r\n      expect(output.length).toBe(1)\r\n      expect(output[0]).toBe(expected[0])\r\n    })\r\n\r\n    test('should return the page namespace + common', async () => {\r\n      const input = [\r\n        {\r\n          pages: {\r\n            '*': ['common'],\r\n            '/test-page': ['test-ns'],\r\n          },\r\n        },\r\n        '/test-page',\r\n        ctx,\r\n      ]\r\n      const output = await getPageNamespaces(...input)\r\n      const expected = ['common', 'test-ns']\r\n\r\n      expect(output.length).toBe(2)\r\n      expect(output[0]).toBe(expected[0])\r\n      expect(output[1]).toBe(expected[1])\r\n    })\r\n  })\r\n\r\n  describe('as function', () => {\r\n    test('should work as a fn', async () => {\r\n      ctx.query.example = '1'\r\n      const input = [\r\n        {\r\n          pages: {\r\n            '/test-page': ({ query }) => (query.example ? ['test-ns'] : []),\r\n          },\r\n        },\r\n        '/test-page',\r\n        ctx,\r\n      ]\r\n      const output = await getPageNamespaces(...input)\r\n      const expected = ['test-ns']\r\n\r\n      expect(output.length).toBe(1)\r\n      expect(output[0]).toBe(expected[0])\r\n    })\r\n\r\n    test('should work as an async fn', async () => {\r\n      ctx.query.example = '1'\r\n      const input = [\r\n        {\r\n          pages: {\r\n            '*': () => ['common'],\r\n            '/test-page': async ({ query }) =>\r\n              query.example ? ['test-ns'] : [],\r\n          },\r\n        },\r\n        '/test-page',\r\n        ctx,\r\n      ]\r\n      const output = await getPageNamespaces(...input)\r\n      const expected = ['common', 'test-ns']\r\n\r\n      expect(output.length).toBe(2)\r\n      expect(output[0]).toBe(expected[0])\r\n      expect(output[1]).toBe(expected[1])\r\n    })\r\n  })\r\n})\r\n",
+        "content_digest": "sha256:50e82002462420ddb002abe38ad3d8f483b9d0973f2c2932da86c7a263824480"
+      },
+      {
+        "path": "__tests__/loadNamespaces.test.js",
+        "score": 250,
+        "truncated": false,
+        "content": "import React from 'react'\r\nimport loadNamespaces from '../src/loadNamespaces'\r\n\r\ndescribe('loadNamespaces', () => {\r\n  test('should load a namespace', async () => {\r\n    const result = await loadNamespaces({\r\n      logBuild: false,\r\n      loader: false,\r\n      locale: 'en',\r\n      pages: { '*': ['common'] },\r\n      pathname: './index.js',\r\n      loadLocaleFrom: (__lang, ns) =>\r\n        Promise.resolve({ test: 'This is a Test' }),\r\n    })\r\n\r\n    expect(result).toEqual({\r\n      __lang: 'en',\r\n      __namespaces: { common: { test: 'This is a Test' } },\r\n    })\r\n  })\r\n\r\n  test('should load existing namespaces if one failed', async () => {\r\n    const result = await loadNamespaces({\r\n      logBuild: false,\r\n      loader: false,\r\n      locale: 'en',\r\n      pages: { '*': ['common', 'demo'] },\r\n      pathname: './index.js',\r\n      loadLocaleFrom: (__lang, ns) => {\r\n        if (ns === 'demo') {\r\n          return Promise.reject()\r\n        } else {\r\n          return Promise.resolve({ test: 'This is a Test' })\r\n        }\r\n      },\r\n    })\r\n\r\n    expect(result).toEqual({\r\n      __lang: 'en',\r\n      __namespaces: { common: { test: 'This is a Test' }, demo: {} },\r\n    })\r\n  })\r\n})\r\n",
+        "content_digest": "sha256:243889f7c0342b43b29395c99851e7bb6086cdbf0a47ca2ae5f0591057ecb9a0"
+      },
+      {
+        "path": "__tests__/useTranslation.test.js",
+        "score": 250,
+        "truncated": true,
+        "content": "import React, { useEffect, useState } from 'react'\r\nimport { render, cleanup, fireEvent } from '@testing-library/react'\r\nimport I18nProvider from '../src/I18nProvider'\r\nimport useTranslation from '../src/useTranslation'\r\n\r\nconst Inner = ({ i18nKey, query }) => {\r\n  const { t } = useTranslation()\r\n  return t(i18nKey, query)\r\n}\r\n\r\nconst TestEnglish = ({ i18nKey, query, namespaces }) => {\r\n  return (\r\n    <I18nProvider lang=\"en\" namespaces={namespaces}>\r\n      <Inner i18nKey={i18nKey} query={query} />\r\n    </I18nProvider>\r\n  )\r\n}\r\n\r\ndescribe('useTranslation', () => {\r\n  afterEach(cleanup)\r\n  beforeAll(() => {\r\n    console.warn = jest.fn()\r\n  })\r\n\r\n  describe('fallbacks', () => {\r\n    test('should return an empty string if t(undefined)', () => {\r\n      const Inner = () => {\r\n        const { t } = useTranslation()\r\n        const test = t(undefined)\r\n        return (\r\n          <>\r\n            {test} | {typeof test}\r\n          </>\r\n        )\r\n      }\r\n\r\n      const expected = ' | string'\r\n\r\n      const { container } = render(\r\n        <I18nProvider lang=\"en\" namespaces={{}}>\r\n          <Inner />\r\n        </I18nProvider>\r\n      )\r\n      expect(container.textContent).toBe(expected)\r\n    })\r\n\r\n    test('interpolation should not be lazy', () => {\r\n      const Inner = () => {\r\n        const { t } = useTranslation()\r\n        return t('common:key', {\r\n          something: 'something',\r\n          somethingElse: 'something else',\r\n        })\r\n      }\r\n\r\n      const expected = 'something else'\r\n\r\n      const { container } = render(\r\n        <I18nProvider\r\n          lang=\"en\"\r\n          namespaces={{ common: { key: '{{somethingElse}}' } }}\r\n        >\r\n          <Inner />\r\n        </I18nProvider>\r\n      )\r\n      expect(container.textContent).toBe(expected)\r\n    })\r\n\r\n    test('should return the key as fallback using wrong the nested translations', () => {\r\n      const i18nKey = 'ns:grandfather.parent'\r\n      const expected = 'ns:grandfather.parent'\r\n      const nested = {\r\n        grandfather: {\r\n          parent: {\r\n            child: 'I am the child',\r\n          },\r\n        },\r\n      }\r\n      const { container } = render(\r\n        <TestEnglish namespaces={{ ns: nested }} i18nKey={i18nKey} />\r\n      )\r\n      expect(container.textContent).toContain(expected)\r\n    })\r\n\r\n    test('should return the key as fallback using wrong the very nested translations', () => {\r\n      const i18nKey = 'ns:grandfather.parent.this.is.very.nested.example'\r\n      const expected = 'ns:grandfather.parent.this.is.very.nested.example'\r\n      const nested = {\r\n        grandfather: {\r\n          parent: {\r\n            child: 'I am the child',\r\n          },\r\n        },\r\n      }\r\n      const { container } = render(\r\n        <TestEnglish namespaces={{ ns: nested }} i18nKey={i18nKey} />\r\n      )\r\n      expect(container.textContent).toContain(expected)\r\n    })\r\n\r\n    test('should return the key as fallback WITH PROVIDER', () => {\r\n      const Inner = () => {\r\n        const { t } = useTranslation()\r\n        const test = t('ns:template-string')\r\n        return (\r\n          <>\r\n            {test} | {typeof test}\r\n          </>\r\n        )\r\n      }\r\n\r\n      const expected = 'ns:template-string | string'\r\n\r\n      const { container } = render(\r\n        <I18nProvider lang=\"en\" namespaces={{}}>\r\n          <Inner />\r\n        </I18nProvider>\r\n      )\r\n      expect(container.textContent).toBe(expected)\r\n    })\r\n\r\n    test('should return the key as fallback WITHOUT PROVIDER', () => {\r\n      const Inner = () => {\r\n        const { t } = useTranslation()\r\n        const test = t('ns:template-string')\r\n        return (\r\n          <>\r\n            {test} | {typeof test}\r\n          </>\r\n        )\r\n      }\r\n\r\n      const expected = 'ns:template-string | string'\r\n\r\n      const { container } = render(<Inner />)\r\n      expect(container.textContent).toBe(expected)\r\n    })\r\n\r\n    test('should return the key as fallback using a template string WITH PROVIDER', () => {\r\n      const Inner = () => {\r\n        const { t } = useTranslation()\r\n        const test = t`ns:template-string`\r\n        return (\r\n          <>\r\n            {test} | {typeof test}\r\n          </>\r\n        )\r\n      }\r\n\r\n      const expected = 'ns:template-string | string'\r\n\r\n      const { container } = render(\r\n        <I18nProvider lang=\"en\" namespaces={{}}>\r\n          <Inner />\r\n        </I18nProvider>\r\n      )\r\n      expect(container.textContent).toBe(expected)\r\n    })\r\n\r\n    test('should work with a defined default namespace | t as template string', () => {\r\n      const Inner = () => {\r\n        const { t } = useTranslation('a')\r\n        return (\r\n          <>\r\n            {t`test`} {t`b:test`}\r\n          </>\r\n        )\r\n      }\r\n\r\n      const ns = {\r\n        a: { test: 'Test from A' },\r\n        b: { test: 'Test from B' },\r\n      }\r\n\r\n      const expected = 'Test from A Test from B'\r\n\r\n      const { container } = render(\r\n        <I18nProvider lang=\"en\" namespaces={ns}>\r\n          <Inner />\r\n        </I18nProvider>\r\n      )\r\n      expect(container.textContent).toBe(expected)\r\n    })\r\n\r\n    test('should work with custom nsSeparator', () => {\r\n      const Inner = () => {\r\n        const { t } = useTranslation('a')\r\n        return t`b||test`\r\n      }\r\n\r\n      const ns = {\r\n        a: { test: 'Test from A' },\r\n        b: { test: 'Test from B' },\r\n      }\r\n\r\n      const expected = 'Test from B'\r\n\r\n      const { container } = render(\r\n        <I18nProvider lang=\"en\" namespaces={ns} config={{ nsSeparator: '||' }}>\r\n          <Inner />\r\n        </I18nProvider>\r\n      )\r\n      expect(container.textContent).toBe(expected)\r\n    })\r\n\r\n    test('should work with natural text as key and defaultNS', () => {\r\n      const Inner = () => {\r\n        const { t } = useTranslation()\r\n        return t`progress: loading...`\r\n      }\r\n\r\n      const ns = {\r\n        a: { 'progress: loading...': 'progression: chargement...' },\r\n      }\r\n\r\n      const expected = 'progression: chargement...'\r\n\r\n      const { container } = render(\r\n        <I18nProvider\r\n          lang=\"en\"\r\n          namespaces={ns}\r\n          config={{ nsSeparator: false, keySeparator: false, defaultNS: 'a' }}\r\n        >\r\n          <Inner />\r\n        </I18nProvider>\r\n      )\r\n      expect(container.textContent).toBe(expected)\r\n    })\r\n\r\n    test('should work with flat key', () => {\r\n      const Inner = () => {\r\n        const { t } = useTranslation('a')\r\n        return t`this.is.a.flat.key`\r\n      }\r\n\r\n      const ns = {\r\n        a: { 'this.is.a.flat.key': 'works' },\r\n      }\r\n\r\n      const expected = 'works'\r\n\r\n      const { container } = render(\r\n        <I18nProvider\r\n          lang=\"en\"\r\n          namespaces={ns}\r\n          config={{ keySeparator: false }}\r\n        >\r\n          <Inner />\r\n        </I18nProvider>\r\n      )\r\n      expect(container.textContent).toBe(expected)\r\n    })\r\n\r\n    test('should work with a defined default namespace | t as function', () => {\r\n      const Inner = () => {\r\n        const { t } = useTranslation('a')\r\n        return (\r\n          <>\r\n            {t('test')} {t('b:test')}\r\n          </>\r\n        )\r\n      }\r\n\r\n      const ns = {\r\n        a: { test: 'Test from A' },\r\n        b: { test: 'Test from B' },\r\n      }\r\n\r\n      const expected = 'Test from A Test from B'\r\n\r\n      const { container } = render(\r\n        <I18nProvider lang=\"en\" namespaces={ns}>\r\n          <Inner />\r\n        </I18nProvider>\r\n      )\r\n      expect(container.textContent).toBe(expected)\r\n    })\r\n\r\n    test('should work with fallbacks that depend on the defined default namespace | t as function', () => {\r\n      const Inner = () => {\r\n        const { t } = useTranslation('a')\r\n\r\n        return (\r\n          <>\r\n            {t('test')} {t('unknown', {}, { fallback: 'fallback' })}\r\n          </>\r\n        )\r\n      }\r\n\r\n      const ns = {\r\n        a: {\r\n          test: 'Test text',\r\n          fallback: 'Fallback text',\r\n        },\r\n      }\r\n\r\n      const expected = 'Test text Fallback text'\r\n\r\n      const { container } = render(\r\n        <I18nProvider lang=\"en\" namespaces={ns}>\r\n          <Inner />\r\n        </I18nProvider>\r\n      )\r\n\r\n      expect(container.textContent).toBe(expected)\r\n    })\r\n\r\n    test('should return the key as fallback using a template string WITHOUT PROVIDER', () => {\r\n      const Inner = () => {\r\n        const { t } = useTranslation()\r\n        const test = t`ns:template-string`\r\n        return (\r\n          <>\r\n            {test} | {typeof test}\r\n          </>\r\n        )\r\n      }\r\n\r\n      const expected = 'ns:template-string | string'\r\n\r\n      const { container } = render(<Inner />)\r\n      expect(container.textContent).toBe(expected)\r\n    })\r\n  })\r\n\r\n  describe('nested', () => {\r\n    test('should work with nested keys', () => {\r\n      const i18nKey = 'ns:grandfather.parent.child'\r\n      const expected = 'I am the child'\r\n      const nested = {\r\n        grandfather: {\r\n          parent: {\r\n            child: expected,\r\n          },\r\n        },\r\n      }\r\n      const { container } = render(\r\n        <TestEnglish namespaces={{ ns: nested }} i18nKey={i18nKey} />\r\n      )\r\n      expect(container.textContent).toContain(expected)\r\n    })\r\n\r\n    test('should work with nested keys + plural', () => {\r\n      const i18nKey = 'ns:grandfather.parent.child'\r\n      const expected = 'Plural! 2'\r\n      const nested = {\r\n        grandfather: {\r\n          parent: {\r\n            child: 'Singular {{count}}',\r\n            child_other: 'Plural! {{count}}',\r\n          },\r\n        },\r\n      }\r\n      const { container } = render(\r\n        <TestEnglish\r\n          namespaces={{ ns: nested }}\r\n          i18nKey={i18nKey}\r\n          query={{ count: 2 }}\r\n        />\r\n      )\r\n      expect(container.textContent).toContain(expected)\r\n    })\r\n\r\n    test('should work with nested keys + count=1', () => {\r\n      const i18nKey = 'ns:grandfather.parent.child'\r\n      const expected = 'One! 1'\r\n      const nested = {\r\n        grandfather: {\r\n          parent: {\r\n            child: 'Singular {{count}}',\r\n            child_1: 'One! {{count}}',\r\n          },\r\n        },\r\n      }\r\n      const { container } = render(\r\n        <TestEnglish\r\n          namespaces={{ ns: nested }}\r\n          i18nKey={i18nKey}\r\n          query={{ count: 1 }}\r\n        />\r\n      )\r\n      expect(container.textContent).toContain(expected)\r\n    })\r\n  })\r\n\r\n  describe('plurals', () => {\r\n    test('should work with singular | count=1', () => {\r\n      const i18nKey = 'ns:withsingular'\r\n      const expected = 'The number is NOT ZERO'\r\n      const withSingular = {\r\n        withsingular: 'The number is NOT ZERO',\r\n        withsingular_0: 'The number is ZERO!',\r\n        withsingular_other: 'Oops!',\r\n      }\r\n      const { container } = render(\r\n        <TestEnglish\r\n          namespaces={{ ns: withSingular }}\r\n          i18nKey={i18nKey}\r\n          query={{ count: 1 }}\r\n        />\r\n      )\r\n      expect(container.textContent).toContain(expected)\r\n    })\r\n\r\n    test('should work with singular | count=1', () => {\r\n      const i18nKey = 'ns:withsingular'\r\n      const expected = 'The number is NOT ZERO'\r\n      const withSingular = {\r\n        withsingular_one: 'The number is NOT ZERO',\r\n        withsingular_0: 'The number is ZERO!',\r\n        withsingular_other: 'Oops!',\r\n      }\r\n      const { container } = render(\r\n        <TestEnglish\r\n          namespaces={{ ns: withSingular }}\r\n          i18nKey={i18nKey}\r\n          query={{ count: 1 }}\r\n        />\r\n      )\r\n      expect(container.textContent).toContain(expected)\r\n    })\r\n\r\n    test('should work with singular | count=0', () => {\r\n      const i18nKey = 'ns:withsingular'\r\n      const expected = 'The number is NOT ONE'\r\n      const withSingular = {\r\n        withsingular: 'The number is NOT ONE',\r\n        withsingular_1: 'The number is ONE!',\r\n      }\r\n      const { container } = render(\r\n        <TestEnglish\r\n          namespaces={{ ns: withSingular }}\r\n          i18nKey={i18nKey}\r\n          query={{ count: 0 }}\r\n        />\r\n      )\r\n      expect(container.textContent",
+        "content_digest": "sha256:a49f2aafaae5340deba9ac007165826f163b6ff3a335442205a6304a6b598452"
+      },
+      {
+        "path": ".github/workflows/test.yml",
+        "score": 250,
+        "truncated": false,
+        "content": "name: CI\r\non: [pull_request]\r\njobs:\r\n  build:\r\n    name: Test\r\n    runs-on: ${{ matrix.os }}\r\n    strategy:\r\n      matrix:\r\n        os: [ubuntu-latest, windows-latest]\r\n        node-version: [16.10.x, 18.x, 20.x]\r\n    steps:\r\n      - uses: actions/checkout@v1\r\n      - name: Use Node.js ${{ matrix.node-version }}\r\n        uses: actions/setup-node@v1\r\n        with:\r\n          node-version: ${{ matrix.node-version }}\r\n      - name: Install dependencies\r\n        run: |\r\n          npm install -g yarn\r\n      - name: yarn install, build, and test\r\n        run: |\r\n          yarn install\r\n          yarn build\r\n          yarn test\r\n",
+        "content_digest": "sha256:fd217ec3d26b8744bab8e3e66e93cd600faa14ce646fac5d3812be10d5eb8f92"
+      },
+      {
+        "path": "docs/hoist-non-react-statics.md",
+        "score": 250,
+        "truncated": false,
+        "content": "# hoist-non-react-statics\r\n\r\nThe HOCs we have in our API ([appWithI18n](../README.md#appwithi18n)), do not use [hoist-non-react-statics](https://github.com/mridgway/hoist-non-react-statics) in order not to include more kb than necessary _(static values different than getInitialProps in the pages are rarely used)_. If you have any conflict with statics, you can add hoist-non-react-statics (or any other alternative) in the configuration.\r\n\r\n**i18n.js**\r\n\r\n```js\r\nconst hoistNonReactStatics = require('hoist-non-react-statics')\r\n\r\nmodule.exports = {\r\n  locales: ['en', 'ca', 'es'],\r\n  defaultLocale: 'en',\r\n  // you need to add:\r\n  staticsHoc: hoistNonReactStatics,\r\n  // ... rest of conf\r\n}\r\n```\r\n",
+        "content_digest": "sha256:2ac2e1cc97a042ad6496f5eeb567cd1df65a02d6d85a7b7532ad4e4addc263e7"
+      },
+      {
+        "path": "examples/basic/components/header.js",
+        "score": 250,
+        "truncated": false,
+        "content": "import React from 'react'\r\nimport Head from 'next/head'\r\nimport Link from 'next/link'\r\nimport Router from 'next/router'\r\nimport useTranslation from 'next-translate/useTranslation'\r\n\r\nimport styles from './header.module.css'\r\n\r\nexport default function Header() {\r\n  const { t, lang } = useTranslation('common')\r\n  const title = t('title')\r\n  const headTitle = `${title} (${lang.toUpperCase()})`\r\n\r\n  function changeToEn() {\r\n    Router.push('/', undefined, { locale: 'en' })\r\n  }\r\n\r\n  return (\r\n    <>\r\n      <Head>\r\n        <title key=\"title\">{headTitle}</title>\r\n        <link key=\"favicon\" rel=\"icon\" href=\"/favicon.ico\" />\r\n      </Head>\r\n      <header className={styles.header}>\r\n        <h1>{title}</h1>\r\n        <nav style={{ display: 'flex', gap: '10px', marginBottom: '10px' }}>\r\n          <Link href=\"/\">Home</Link>\r\n          <Link href=\"/about\">About</Link>\r\n          <Link href=\"/dashboard\">Dashboard</Link>\r\n        </nav>\r\n        {lang !== 'es' && (\r\n          <Link href=\"/\" locale=\"es\">\r\n            Español\r\n          </Link>\r\n        )}\r\n        {lang !== 'ca' && (\r\n          <Link href=\"/\" locale=\"ca\">\r\n            Català\r\n          </Link>\r\n        )}\r\n        {lang !== 'en' && (\r\n          <>\r\n            <Link href=\"/\" locale=\"en\">\r\n              English\r\n            </Link>\r\n            <button onClick={changeToEn}>English Router.push</button>\r\n          </>\r\n        )}\r\n      </header>\r\n    </>\r\n  )\r\n}\r\n",
+        "content_digest": "sha256:f96be352fd655ce0549016e1b95c4ff81a70c83d0f125f3257e6d37f76bd4d1c"
+      },
+      {
+        "path": "examples/basic/components/no-functional-component.js",
+        "score": 250,
+        "truncated": false,
+        "content": "import React from 'react'\r\nimport withTranslation from 'next-translate/withTranslation'\r\n\r\nclass NoFunctionalComponent extends React.Component {\r\n  render() {\r\n    const { t, lang } = this.props.i18n\r\n\r\n    return <div>{t('more-examples:no-functional-example')}</div>\r\n  }\r\n}\r\n\r\nexport default withTranslation(NoFunctionalComponent)\r\n",
+        "content_digest": "sha256:e2f6e95b96c90c35c6032439824f4c67e4d594855713b9e1338ae34ddb4495b0"
+      },
+      {
+        "path": "examples/basic/components/plural-example.js",
+        "score": 250,
+        "truncated": false,
+        "content": "import React, { useState, useEffect } from 'react'\r\nimport useTranslation from 'next-translate/useTranslation'\r\n\r\nexport default function PluralExample() {\r\n  const [count, setCount] = useState(0)\r\n  const { t } = useTranslation()\r\n\r\n  useEffect(() => {\r\n    const interval = setInterval(() => {\r\n      setCount((v) => (v === 5 ? 0 : v + 1))\r\n    }, 1000)\r\n\r\n    return () => clearInterval(interval)\r\n  }, [])\r\n\r\n  return <p>{t('more-examples:plural-example', { count })}</p>\r\n}\r\n",
+        "content_digest": "sha256:e5a905a3e0efae883f7a3446983bc7be89f4f89cf43479a8782eb3036554fe70"
+      },
+      {
+        "path": "examples/basic/locales/ca/common.json",
+        "score": 250,
+        "truncated": false,
+        "content": "{\r\n  \"title\": \"Llibreria next-translate\"\r\n}\r\n",
+        "content_digest": "sha256:fda16fe4bfd05a5ef54e0add63c13b1f306b492becef8a3d4049b2820b12c19d"
+      },
+      {
+        "path": "examples/basic/locales/en/common.json",
+        "score": 250,
+        "truncated": false,
+        "content": "{\r\n  \"title\": \"next-translate library\"\r\n}\r\n",
+        "content_digest": "sha256:afedec9221778290bb194b6a315a42c6c6479c3bcbb4c11ae20903a8f1a72c72"
+      }
+    ]
+  },
+  "prompt_digest": "sha256:442f9a36490efd3205690a81b29767bcd65028806fa0f1bdfc6a8dc8e5a6456b",
+  "output_text": "{\"files\":{\"src/I18nProvider.tsx\":\"import React, { createContext, useContext } from 'react'\\nimport { useRouter } from 'next/router'\\nimport I18nContext from './context'\\nimport transCore from './transCore'\\nimport { I18nDictionary, I18nProviderProps } from '.'\\n\\nexport const InternalContext = createContext({ ns: {}, config: {} })\\n\\nexport default function I18nProvider({\\n  lang: lng,\\n  namespaces = {},\\n  children,\\n  config: newConfig = {},\\n}: I18nProviderProps) {\\n  // Read the lang directly from the nearest ancestor I18nContext instead of\\n  // going through the public useTranslation() hook. Using useTranslation()\\n  // here introduced a regression (since 3.0.1/3.0.2) where the explicit\\n  // `lang` prop passed to I18nProvider could end up being ignored, because\\n  // the hook applies its own extra resolution/caching logic that isn't\\n  // needed for this internal fallback lookup. A direct context read keeps\\n  // this provider's fallback logic simple and predictable, matching the\\n  // behavior from 3.0.0.\\n  const { lang: parentLang } = useContext(I18nContext)\\n  const { locale, defaultLocale } = useRouter() || {}\\n  const internal = useContext(InternalContext)\\n  const allNamespaces: Record<string, I18nDictionary> = {\\n    ...initialBrowserNamespaces(),\\n    ...internal.ns,\\n    ...namespaces,\\n  }\\n  const lang = lng || parentLang || locale || defaultLocale || ''\\n  const config = { ...internal.config, ...newConfig }\\n  const localesToIgnore = config.localesToIgnore || ['default']\\n  const ignoreLang = !lang || localesToIgnore.includes(lang)\\n  const pluralRules = new Intl.PluralRules(ignoreLang ? undefined : lang)\\n  const t = transCore({ config, allNamespaces, pluralRules, lang })\\n\\n  return (\\n    <I18nContext.Provider value={{ lang, t }}>\\n      <InternalContext.Provider value={{ ns: allNamespaces, config }}>\\n        {children}\\n      </InternalContext.Provider>\\n    </I18nContext.Provider>\\n  )\\n}\\n\\nfunction initialBrowserNamespaces() {\\n  if (typeof window === 'undefined') return {}\\n  return window.__NEXT_DATA__?.props?.__namespaces || {}\\n}\\n\"}}",
+  "output_digest": "sha256:f2487f75c67045e0788f70ce2d20ea8460185c55953d580bd8b3fdaafa3f1366",
+  "parse_status": "passed",
+  "parse_failure_code": null,
+  "generated_patch": "diff --git a/src/I18nProvider.tsx b/src/I18nProvider.tsx\nindex 8230eb3..bb2b007 100644\n--- a/src/I18nProvider.tsx\n+++ b/src/I18nProvider.tsx\n@@ -2,7 +2,6 @@ import React, { createContext, useContext } from 'react'\n import { useRouter } from 'next/router'\n import I18nContext from './context'\n import transCore from './transCore'\n-import useTranslation from './useTranslation'\n import { I18nDictionary, I18nProviderProps } from '.'\n \n export const InternalContext = createContext({ ns: {}, config: {} })\n@@ -13,7 +12,15 @@ export default function I18nProvider({\n   children,\n   config: newConfig = {},\n }: I18nProviderProps) {\n-  const { lang: parentLang } = useTranslation()\n+  // Read the lang directly from the nearest ancestor I18nContext instead of\n+  // going through the public useTranslation() hook. Using useTranslation()\n+  // here introduced a regression (since 3.0.1/3.0.2) where the explicit\n+  // `lang` prop passed to I18nProvider could end up being ignored, because\n+  // the hook applies its own extra resolution/caching logic that isn't\n+  // needed for this internal fallback lookup. A direct context read keeps\n+  // this provider's fallback logic simple and predictable, matching the\n+  // behavior from 3.0.0.\n+  const { lang: parentLang } = useContext(I18nContext)\n   const { locale, defaultLocale } = useRouter() || {}\n   const internal = useContext(InternalContext)\n   const allNamespaces: Record<string, I18nDictionary> = {\n",
+  "generated_patch_digest": "sha256:5fe5283dc5220f30a95de37214f3bdd6cb21c97717397c888f2a40d6b235be27",
+  "changed_paths": [
+    "src/I18nProvider.tsx"
+  ],
+  "started_at": "2026-08-03T19:53:18.915Z",
+  "duration_ms": 227393,
+  "usage": {
+    "input_tokens": 2,
+    "output_tokens": 21340,
+    "cache_creation_input_tokens": 9620,
+    "cache_read_input_tokens": 0
+  },
+  "execution_evidence": {
+    "status": "verified",
+    "runtime": "claude-code-print",
+    "requested_model": "sonnet",
+    "canonical_model": "claude-sonnet-5",
+    "cli_version": "2.1.219",
+    "response_digest": "sha256:c13ac29712eb4212d7c6db5c49b5b236ead4a3cee63fd86d979b71b89aaa316f",
+    "exit_status": 0,
+    "error": null
+  },
+  "economics": {
+    "comparison_cost": {
+      "status": "provider-reported-equivalent",
+      "amount_usd": 0.386144,
+      "source": "claude-code-total-cost-usd"
+    },
+    "actual_subscription_cash": {
+      "status": "unknown",
+      "amount_usd": null,
+      "source": "subscription-not-allocated-per-operation"
+    },
+    "gpu": {
+      "status": "not-applicable",
+      "samples": 0,
+      "average_watts": null,
+      "energy_kwh": 0
+    }
+  },
+  "hidden_verification": {
+    "status": "not-run",
+    "source": "official-swe-bench-live-evaluator"
+  },
+  "pilot_freeze_id": "sha256:cfe2d091ccd01effd8cacc443986e649a9db442a828fbe20946673a9eff173c8",
+  "pilot_assignment_id": "sha256:c5fa3f2a08617b1347fa402964fb91ae422036333a92fc1f551da073e3eb765e",
+  "attestation": {
+    "algorithm": "Ed25519",
+    "payload_digest": "sha256:5518a3e237dab9f2d0ab376b83e6711fdff680495d579992137d6f5e41a545c6",
+    "signature": "prIKMNEm1re9SeBwghPnzzrBcLfWaEWvs4sQy8brcakk7D+jWSaKqYSjLGBnH2irkwGrqEikOK0ZPm2Cgg9+BQ=="
+  }
+}

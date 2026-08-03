@@ -1,0 +1,195 @@
+{
+  "schema": 1,
+  "kind": "citadel_public_holdout_model_attempt",
+  "attempt_id": "sha256:1d3b49f16cefff0e3b296f178dac960ee8891aa875c3091517a5324e7284448c",
+  "instance_id": "honojs__hono-4269",
+  "plan_id": "claude-sonnet",
+  "base_commit": "0432f81c376a3854d5a00da350b6f8f74a6ad9f2",
+  "retrieval": {
+    "schema": 1,
+    "kind": "citadel_public_holdout_retrieval",
+    "retrieval_id": "sha256:32a571c55ef166c7ce00342d459e3713cee46b3dc7b322ee47128d7307b4755e",
+    "instance_id": "honojs__hono-4269",
+    "contract": {
+      "maximum_files": 12,
+      "maximum_total_characters": 60000,
+      "maximum_file_characters": 12000,
+      "maximum_file_bytes": 100000,
+      "excluded_directories": [
+        ".git",
+        ".hg",
+        ".svn",
+        "build",
+        "coverage",
+        "dist",
+        "node_modules",
+        "vendor"
+      ],
+      "extensions": [
+        ".cjs",
+        ".js",
+        ".jsx",
+        ".json",
+        ".md",
+        ".mjs",
+        ".ts",
+        ".tsx",
+        ".yaml",
+        ".yml"
+      ],
+      "always_consider": [
+        "package.json",
+        "tsconfig.json",
+        "jsconfig.json"
+      ],
+      "maximum_query_terms": 24,
+      "scoring_rule": "explicit path/basename or adjacent issue-term match, then git-grep inverse-document-frequency evidence, path overlap, and capped content frequency; lexical tie by path"
+    },
+    "inventory_count": 225,
+    "selected_file_count": 12,
+    "selected_character_count": 10686,
+    "files": [
+      {
+        "path": "src/index.ts",
+        "score": 3750,
+        "truncated": false,
+        "content": "/**\r\n * @module\r\n *\r\n * Hono - Web Framework built on Web Standards\r\n *\r\n * @example\r\n * ```ts\r\n * import { Hono } from 'hono'\r\n * const app = new Hono()\r\n *\r\n * app.get('/', (c) => c.text('Hono!'))\r\n *\r\n * export default app\r\n * ```\r\n */\r\n\r\nimport { Hono } from './hono'\r\n\r\n/**\r\n * Types for environment variables, error handlers, handlers, middleware handlers, and more.\r\n */\r\nexport type {\r\n  Env,\r\n  ErrorHandler,\r\n  Handler,\r\n  MiddlewareHandler,\r\n  Next,\r\n  NotFoundHandler,\r\n  ValidationTargets,\r\n  Input,\r\n  Schema,\r\n  ToSchema,\r\n  TypedResponse,\r\n} from './types'\r\n/**\r\n * Types for context, context variable map, context renderer, and execution context.\r\n */\r\nexport type { Context, ContextVariableMap, ContextRenderer, ExecutionContext } from './context'\r\n/**\r\n * Type for HonoRequest.\r\n */\r\nexport type { HonoRequest } from './request'\r\n/**\r\n * Types for inferring request and response types and client request options.\r\n */\r\nexport type { InferRequestType, InferResponseType, ClientRequestOptions } from './client'\r\n\r\n/**\r\n * Hono framework for building web applications.\r\n */\r\nexport { Hono }\r\n",
+        "content_digest": "sha256:2d380d250abc0546e43e93d728dd3f3613ebf704357904e0178a1efcba880976"
+      },
+      {
+        "path": "src/validator/validator.ts",
+        "score": 3583.3333333333335,
+        "truncated": false,
+        "content": "import type { Context } from '../context'\r\nimport { getCookie } from '../helper/cookie'\r\nimport { HTTPException } from '../http-exception'\r\nimport type { Env, MiddlewareHandler, TypedResponse, ValidationTargets } from '../types'\r\nimport type { BodyData } from '../utils/body'\r\nimport { bufferToFormData } from '../utils/buffer'\r\n\r\ntype ValidationTargetKeysWithBody = 'form' | 'json'\r\ntype ValidationTargetByMethod<M> = M extends 'get' | 'head' // GET and HEAD request must not have a body content.\r\n  ? Exclude<keyof ValidationTargets, ValidationTargetKeysWithBody>\r\n  : keyof ValidationTargets\r\n\r\nexport type ValidationFunction<\r\n  InputType,\r\n  OutputType,\r\n  E extends Env = {},\r\n  P extends string = string\r\n> = (\r\n  value: InputType,\r\n  c: Context<E, P>\r\n) => OutputType | Response | Promise<OutputType> | Promise<Response>\r\n\r\n// eslint-disable-next-line @typescript-eslint/no-explicit-any\r\ntype ExcludeResponseType<T> = T extends Response & TypedResponse<any> ? never : T\r\n\r\nconst jsonRegex = /^application\\/([a-z-\\.]+\\+)?json(;\\s*[a-zA-Z0-9\\-]+\\=([^;]+))*$/\r\nconst multipartRegex = /^multipart\\/form-data(;\\s?boundary=[a-zA-Z0-9'\"()+_,\\-./:=?]+)?$/\r\nconst urlencodedRegex = /^application\\/x-www-form-urlencoded(;\\s*[a-zA-Z0-9\\-]+\\=([^;]+))*$/\r\n\r\nexport const validator = <\r\n  InputType,\r\n  P extends string,\r\n  M extends string,\r\n  U extends ValidationTargetByMethod<M>,\r\n  OutputType = ValidationTargets[U],\r\n  OutputTypeExcludeResponseType = ExcludeResponseType<OutputType>,\r\n  P2 extends string = P,\r\n  V extends {\r\n    in: {\r\n      [K in U]: K extends 'json'\r\n        ? unknown extends InputType\r\n          ? OutputTypeExcludeResponseType\r\n          : InputType\r\n        : { [K2 in keyof OutputTypeExcludeResponseType]: ValidationTargets[K][K2] }\r\n    }\r\n    out: { [K in U]: OutputTypeExcludeResponseType }\r\n  } = {\r\n    in: {\r\n      [K in U]: K extends 'json'\r\n        ? unknown extends InputType\r\n          ? OutputTypeExcludeResponseType\r\n          : InputType\r\n        : { [K2 in keyof OutputTypeExcludeResponseType]: ValidationTargets[K][K2] }\r\n    }\r\n    out: { [K in U]: OutputTypeExcludeResponseType }\r\n  },\r\n  // eslint-disable-next-line @typescript-eslint/no-explicit-any\r\n  E extends Env = any\r\n>(\r\n  target: U,\r\n  validationFunc: ValidationFunction<\r\n    unknown extends InputType ? ValidationTargets[U] : InputType,\r\n    OutputType,\r\n    E,\r\n    P2\r\n  >\r\n): MiddlewareHandler<E, P, V> => {\r\n  return async (c, next) => {\r\n    let value = {}\r\n    const contentType = c.req.header('Content-Type')\r\n\r\n    switch (target) {\r\n      case 'json':\r\n        if (!contentType || !jsonRegex.test(contentType)) {\r\n          break\r\n        }\r\n        try {\r\n          value = await c.req.json()\r\n        } catch {\r\n          const message = 'Malformed JSON in request body'\r\n          throw new HTTPException(400, { message })\r\n        }\r\n        break\r\n      case 'form': {\r\n        if (\r\n          !contentType ||\r\n          !(multipartRegex.test(contentType) || urlencodedRegex.test(contentType))\r\n        ) {\r\n          break\r\n        }\r\n\r\n        let formData: FormData\r\n\r\n        if (c.req.bodyCache.formData) {\r\n          formData = await c.req.bodyCache.formData\r\n        } else {\r\n          try {\r\n            const arrayBuffer = await c.req.arrayBuffer()\r\n            formData = await bufferToFormData(arrayBuffer, contentType)\r\n            c.req.bodyCache.formData = formData\r\n          } catch (e) {\r\n            let message = 'Malformed FormData request.'\r\n            message += e instanceof Error ? ` ${e.message}` : ` ${String(e)}`\r\n            throw new HTTPException(400, { message })\r\n          }\r\n        }\r\n\r\n        const form: BodyData<{ all: true }> = {}\r\n        formData.forEach((value, key) => {\r\n          if (key.endsWith('[]')) {\r\n            ;((form[key] ??= []) as unknown[]).push(value)\r\n          } else if (Array.isArray(form[key])) {\r\n            ;(form[key] as unknown[]).push(value)\r\n          } else if (key in form) {\r\n            form[key] = [form[key] as string | File, value]\r\n          } else {\r\n            form[key] = value\r\n          }\r\n        })\r\n        value = form\r\n        break\r\n      }\r\n      case 'query':\r\n        value = Object.fromEntries(\r\n          Object.entries(c.req.queries()).map(([k, v]) => {\r\n            return v.length === 1 ? [k, v[0]] : [k, v]\r\n          })\r\n        )\r\n        break\r\n      case 'param':\r\n        value = c.req.param() as Record<string, string>\r\n        break\r\n      case 'header':\r\n        value = c.req.header()\r\n        break\r\n      case 'cookie':\r\n        value = getCookie(c)\r\n        break\r\n    }\r\n\r\n    const res = await validationFunc(value as never, c as never)\r\n\r\n    if (res instanceof Response) {\r\n      return res\r\n    }\r\n\r\n    c.req.addValidatedData(target, res as never)\r\n\r\n    await next()\r\n  }\r\n}\r\n",
+        "content_digest": "sha256:fa467685c164c64c04015d6e02f9892bec14d4e82847fbf5a859400083492e29"
+      },
+      {
+        "path": "runtime-tests/workerd/index.ts",
+        "score": 2583.3333333333335,
+        "truncated": false,
+        "content": "import { upgradeWebSocket } from '../../src/adapter/cloudflare-workers'\r\nimport { env, getRuntimeKey } from '../../src/helper/adapter'\r\nimport { Hono } from '../../src/hono'\r\nimport { getColorEnabledAsync } from '../../src/utils/color'\r\n\r\nconst app = new Hono()\r\n\r\napp.get('/', (c) => c.text(`Hello from ${getRuntimeKey()}`))\r\n\r\napp.get('/env', (c) => {\r\n  const { NAME } = env<{ NAME: string }>(c)\r\n  return c.text(NAME)\r\n})\r\n\r\napp.get(\r\n  '/ws',\r\n  upgradeWebSocket(() => {\r\n    return {\r\n      onMessage(event, ws) {\r\n        ws.send(event.data as string)\r\n      },\r\n    }\r\n  })\r\n)\r\n\r\napp.get('/color', async (c) => {\r\n  return c.text((await getColorEnabledAsync()) ? 'True' : 'False')\r\n})\r\n\r\nexport default app\r\n",
+        "content_digest": "sha256:900b6d1daac1d806af7cfa54b3f58a8d31ff6e53eaab4898087f966803beb6fe"
+      },
+      {
+        "path": "src/client/index.ts",
+        "score": 2583.3333333333335,
+        "truncated": false,
+        "content": "/**\r\n * @module\r\n * The HTTP Client for Hono.\r\n */\r\n\r\nexport { hc } from './client'\r\nexport type {\r\n  InferResponseType,\r\n  InferRequestType,\r\n  Fetch,\r\n  ClientRequestOptions,\r\n  ClientRequest,\r\n  ClientResponse,\r\n} from './types'\r\n",
+        "content_digest": "sha256:83a7e2d9ad84f6a24b68583610440df71149d5cc3ae8fd1788999fe13f3d3220"
+      },
+      {
+        "path": "src/jsx/index.ts",
+        "score": 2583.3333333333335,
+        "truncated": false,
+        "content": "/**\r\n * @module\r\n * JSX for Hono.\r\n */\r\n\r\nimport { Fragment, cloneElement, isValidElement, jsx, memo, reactAPICompatVersion } from './base'\r\nimport type { DOMAttributes } from './base'\r\nimport { Children } from './children'\r\nimport { ErrorBoundary } from './components'\r\nimport { createContext, useContext } from './context'\r\nimport { useActionState, useOptimistic } from './dom/hooks'\r\nimport {\r\n  createRef,\r\n  forwardRef,\r\n  startTransition,\r\n  startViewTransition,\r\n  use,\r\n  useCallback,\r\n  useDebugValue,\r\n  useDeferredValue,\r\n  useEffect,\r\n  useId,\r\n  useImperativeHandle,\r\n  useInsertionEffect,\r\n  useLayoutEffect,\r\n  useMemo,\r\n  useReducer,\r\n  useRef,\r\n  useState,\r\n  useSyncExternalStore,\r\n  useTransition,\r\n  useViewTransition,\r\n} from './hooks'\r\nimport { Suspense } from './streaming'\r\n\r\nexport {\r\n  reactAPICompatVersion as version,\r\n  jsx,\r\n  memo,\r\n  Fragment,\r\n  Fragment as StrictMode,\r\n  isValidElement,\r\n  jsx as createElement,\r\n  cloneElement,\r\n  ErrorBoundary,\r\n  createContext,\r\n  useContext,\r\n  useState,\r\n  useEffect,\r\n  useRef,\r\n  useCallback,\r\n  useReducer,\r\n  useId,\r\n  useDebugValue,\r\n  use,\r\n  startTransition,\r\n  useTransition,\r\n  useDeferredValue,\r\n  startViewTransition,\r\n  useViewTransition,\r\n  useMemo,\r\n  useLayoutEffect,\r\n  useInsertionEffect,\r\n  createRef,\r\n  forwardRef,\r\n  useImperativeHandle,\r\n  useSyncExternalStore,\r\n  useActionState,\r\n  useOptimistic,\r\n  Suspense,\r\n  Children,\r\n  DOMAttributes,\r\n}\r\n\r\nexport default {\r\n  version: reactAPICompatVersion,\r\n  memo,\r\n  Fragment,\r\n  StrictMode: Fragment,\r\n  isValidElement,\r\n  createElement: jsx,\r\n  cloneElement,\r\n  ErrorBoundary,\r\n  createContext,\r\n  useContext,\r\n  useState,\r\n  useEffect,\r\n  useRef,\r\n  useCallback,\r\n  useReducer,\r\n  useId,\r\n  useDebugValue,\r\n  use,\r\n  startTransition,\r\n  useTransition,\r\n  useDeferredValue,\r\n  startViewTransition,\r\n  useViewTransition,\r\n  useMemo,\r\n  useLayoutEffect,\r\n  useInsertionEffect,\r\n  createRef,\r\n  forwardRef,\r\n  useImperativeHandle,\r\n  useSyncExternalStore,\r\n  useActionState,\r\n  useOptimistic,\r\n  Suspense,\r\n  Children,\r\n}\r\n\r\nexport type * from './types'\r\n\r\nexport type { JSX } from './intrinsic-elements'\r\n",
+        "content_digest": "sha256:ad06e32a3c48f447baf251216a6dc2ab89dfa824ab38dcb9f5e77562ab6088c0"
+      },
+      {
+        "path": "src/validator/index.ts",
+        "score": 2583.3333333333335,
+        "truncated": false,
+        "content": "/**\r\n * @module\r\n * Validator for Hono.\r\n */\r\n\r\nexport { validator } from './validator'\r\nexport type { ValidationFunction } from './validator'\r\n",
+        "content_digest": "sha256:0ead16c150f0d8b507199ed2a11e5d76b3c9803fa6b5804e630c6b8d85997218"
+      },
+      {
+        "path": "src/adapter/aws-lambda/index.ts",
+        "score": 2500,
+        "truncated": false,
+        "content": "/**\r\n * @module\r\n * AWS Lambda Adapter for Hono.\r\n */\r\n\r\nexport { handle, streamHandle } from './handler'\r\nexport type { APIGatewayProxyResult, LambdaEvent } from './handler'\r\nexport type {\r\n  ApiGatewayRequestContext,\r\n  ApiGatewayRequestContextV2,\r\n  ALBRequestContext,\r\n  LambdaContext,\r\n} from './types'\r\n",
+        "content_digest": "sha256:1215dabb750db9024de3033b5fa04abdb67dd4ddcaa044517e8c235cbc6af677"
+      },
+      {
+        "path": "src/adapter/bun/index.ts",
+        "score": 2500,
+        "truncated": false,
+        "content": "/**\r\n * @module\r\n * Bun Adapter for Hono.\r\n */\r\n\r\nexport { serveStatic } from './serve-static'\r\nexport { bunFileSystemModule, toSSG } from './ssg'\r\nexport { createBunWebSocket } from './websocket'\r\nexport type { BunWebSocketData, BunWebSocketHandler } from './websocket'\r\nexport { getConnInfo } from './conninfo'\r\n",
+        "content_digest": "sha256:df3e7febde6bc43e44dbafab9d20e0179b50cb1717c2f03a4577264778414a1d"
+      },
+      {
+        "path": "src/adapter/cloudflare-pages/index.ts",
+        "score": 2500,
+        "truncated": false,
+        "content": "/**\r\n * @module\r\n * Cloudflare Pages Adapter for Hono.\r\n */\r\n\r\nexport { handle, handleMiddleware, serveStatic } from './handler'\r\nexport type { EventContext } from './handler'\r\n",
+        "content_digest": "sha256:fe74968eb2495201b13c043380c231195cfcd4ae35d59068dc8d432f0557ae62"
+      },
+      {
+        "path": "src/adapter/cloudflare-workers/index.ts",
+        "score": 2500,
+        "truncated": false,
+        "content": "/**\r\n * @module\r\n * Cloudflare Workers Adapter for Hono.\r\n */\r\n\r\nexport { serveStatic } from './serve-static-module'\r\nexport { upgradeWebSocket } from './websocket'\r\nexport { getConnInfo } from './conninfo'\r\n",
+        "content_digest": "sha256:5b00490433fa2b8a0e196bc8917a2a6b8bacf933e3474147009681cec43e903e"
+      },
+      {
+        "path": "src/adapter/deno/index.ts",
+        "score": 2500,
+        "truncated": false,
+        "content": "/**\r\n * @module\r\n * Deno Adapter for Hono.\r\n */\r\n\r\nexport { serveStatic } from './serve-static'\r\nexport { toSSG, denoFileSystemModule } from './ssg'\r\nexport { upgradeWebSocket } from './websocket'\r\nexport { getConnInfo } from './conninfo'\r\n",
+        "content_digest": "sha256:967f1d044cd144caf38997834d54dee5774728050ea6232a6b5d657d0c3b43dc"
+      },
+      {
+        "path": "src/adapter/lambda-edge/index.ts",
+        "score": 2500,
+        "truncated": false,
+        "content": "/**\r\n * @module\r\n * Lambda@Edge Adapter for Hono.\r\n */\r\n\r\nexport { handle } from './handler'\r\nexport { getConnInfo } from './conninfo'\r\nexport type {\r\n  Callback,\r\n  CloudFrontConfig,\r\n  CloudFrontRequest,\r\n  CloudFrontResponse,\r\n  CloudFrontEdgeEvent,\r\n} from './handler'\r\n",
+        "content_digest": "sha256:752687060aa707dbea9352028e7d15238b27f0a350a6b1731c5d9a6f6cc7587b"
+      }
+    ]
+  },
+  "prompt_digest": "sha256:4c96f997a08dd707dc5e14a9915d407fdfb9ca775b5d2cd2716994b918ec5168",
+  "output_text": "{\"files\":{\"src/validator/validator.ts\":\"import type { Context } from '../context'\\nimport { getCookie } from '../helper/cookie'\\nimport { HTTPException } from '../http-exception'\\nimport type { Env, MiddlewareHandler, TypedResponse, ValidationTargets } from '../types'\\nimport type { BodyData } from '../utils/body'\\nimport { bufferToFormData } from '../utils/buffer'\\n\\ntype ValidationTargetKeysWithBody = 'form' | 'json'\\ntype ValidationTargetByMethod<M> = M extends 'get' | 'head' // GET and HEAD request must not have a body content.\\n  ? Exclude<keyof ValidationTargets, ValidationTargetKeysWithBody>\\n  : keyof ValidationTargets\\n\\nexport type ValidationFunction<\\n  InputType,\\n  OutputType,\\n  E extends Env = {},\\n  P extends string = string\\n> = (\\n  value: InputType,\\n  c: Context<E, P>\\n) => OutputType | Response | Promise<OutputType> | Promise<Response>\\n\\n// eslint-disable-next-line @typescript-eslint/no-explicit-any\\ntype ExcludeResponseType<T> = T extends Response & TypedResponse<any> ? never : T\\n\\nconst jsonRegex = /^application\\\\/([a-z-\\\\.]+\\\\+)?json(;\\\\s*[a-zA-Z0-9\\\\-]+\\\\=([^;]+))*$/\\nconst multipartRegex = /^multipart\\\\/form-data(;\\\\s?boundary=[a-zA-Z0-9'\\\"()+_,\\\\-./:=?]+)?$/\\nconst urlencodedRegex = /^application\\\\/x-www-form-urlencoded(;\\\\s*[a-zA-Z0-9\\\\-]+\\\\=([^;]+))*$/\\n\\nexport const validator = <\\n  InputType,\\n  P extends string,\\n  M extends string,\\n  U extends ValidationTargetByMethod<M>,\\n  OutputType = ValidationTargets[U],\\n  OutputTypeExcludeResponseType = ExcludeResponseType<OutputType>,\\n  P2 extends string = P,\\n  V extends {\\n    in: {\\n      [K in U]: K extends 'json'\\n        ? unknown extends InputType\\n          ? OutputTypeExcludeResponseType\\n          : InputType\\n        : { [K2 in keyof OutputTypeExcludeResponseType]: ValidationTargets[K][K2] }\\n    }\\n    out: { [K in U]: OutputTypeExcludeResponseType }\\n  } = {\\n    in: {\\n      [K in U]: K extends 'json'\\n        ? unknown extends InputType\\n          ? OutputTypeExcludeResponseType\\n          : InputType\\n        : { [K2 in keyof OutputTypeExcludeResponseType]: ValidationTargets[K][K2] }\\n    }\\n    out: { [K in U]: OutputTypeExcludeResponseType }\\n  },\\n  // eslint-disable-next-line @typescript-eslint/no-explicit-any\\n  E extends Env = any\\n>(\\n  target: U,\\n  validationFunc: ValidationFunction<\\n    unknown extends InputType ? ValidationTargets[U] : InputType,\\n    OutputType,\\n    E,\\n    P2\\n  >\\n): MiddlewareHandler<E, P, V> => {\\n  return async (c, next) => {\\n    let value = {}\\n    const contentType = c.req.header('Content-Type')\\n\\n    switch (target) {\\n      case 'json':\\n        if (!contentType || !jsonRegex.test(contentType)) {\\n          break\\n        }\\n        try {\\n          // Use a cloned request to parse the JSON body so that the original\\n          // `c.req.raw` request body stream is left untouched. This allows\\n          // downstream middleware/handlers (or other validators, e.g. for\\n          // `header`) to still access the raw body (for example via\\n          // `c.req.raw.clone()`) without hitting a \\\"Body is unusable\\\" error.\\n          if (!c.req.bodyCache.json) {\\n            c.req.bodyCache.json = c.req.raw.clone().json()\\n          }\\n          value = await c.req.bodyCache.json\\n        } catch {\\n          const message = 'Malformed JSON in request body'\\n          throw new HTTPException(400, { message })\\n        }\\n        break\\n      case 'form': {\\n        if (\\n          !contentType ||\\n          !(multipartRegex.test(contentType) || urlencodedRegex.test(contentType))\\n        ) {\\n          break\\n        }\\n\\n        let formData: FormData\\n\\n        if (c.req.bodyCache.formData) {\\n          formData = await c.req.bodyCache.formData\\n        } else {\\n          try {\\n            const arrayBuffer = await c.req.arrayBuffer()\\n            formData = await bufferToFormData(arrayBuffer, contentType)\\n            c.req.bodyCache.formData = formData\\n          } catch (e) {\\n            let message = 'Malformed FormData request.'\\n            message += e instanceof Error ? ` ${e.message}` : ` ${String(e)}`\\n            throw new HTTPException(400, { message })\\n          }\\n        }\\n\\n        const form: BodyData<{ all: true }> = {}\\n        formData.forEach((value, key) => {\\n          if (key.endsWith('[]')) {\\n            ;((form[key] ??= []) as unknown[]).push(value)\\n          } else if (Array.isArray(form[key])) {\\n            ;(form[key] as unknown[]).push(value)\\n          } else if (key in form) {\\n            form[key] = [form[key] as string | File, value]\\n          } else {\\n            form[key] = value\\n          }\\n        })\\n        value = form\\n        break\\n      }\\n      case 'query':\\n        value = Object.fromEntries(\\n          Object.entries(c.req.queries()).map(([k, v]) => {\\n            return v.length === 1 ? [k, v[0]] : [k, v]\\n          })\\n        )\\n        break\\n      case 'param':\\n        value = c.req.param() as Record<string, string>\\n        break\\n      case 'header':\\n        value = c.req.header()\\n        break\\n      case 'cookie':\\n        value = getCookie(c)\\n        break\\n    }\\n\\n    const res = await validationFunc(value as never, c as never)\\n\\n    if (res instanceof Response) {\\n      return res\\n    }\\n\\n    c.req.addValidatedData(target, res as never)\\n\\n    await next()\\n  }\\n}\\n\"}}",
+  "output_digest": "sha256:969cad58fd0bf3c6fb8ad5067456b02d13c36829faa43f4675eddf72a8a165f7",
+  "parse_status": "passed",
+  "parse_failure_code": null,
+  "generated_patch": "diff --git a/src/validator/validator.ts b/src/validator/validator.ts\nindex ae1e162..95b1696 100644\n--- a/src/validator/validator.ts\n+++ b/src/validator/validator.ts\n@@ -75,7 +75,15 @@ export const validator = <\n           break\n         }\n         try {\n-          value = await c.req.json()\n+          // Use a cloned request to parse the JSON body so that the original\n+          // `c.req.raw` request body stream is left untouched. This allows\n+          // downstream middleware/handlers (or other validators, e.g. for\n+          // `header`) to still access the raw body (for example via\n+          // `c.req.raw.clone()`) without hitting a \"Body is unusable\" error.\n+          if (!c.req.bodyCache.json) {\n+            c.req.bodyCache.json = c.req.raw.clone().json()\n+          }\n+          value = await c.req.bodyCache.json\n         } catch {\n           const message = 'Malformed JSON in request body'\n           throw new HTTPException(400, { message })\n",
+  "generated_patch_digest": "sha256:c402381db8605fe2763b24354a5edc4f11f024b51e5b9905530691612c08bb9a",
+  "changed_paths": [
+    "src/validator/validator.ts"
+  ],
+  "started_at": "2026-08-03T19:59:15.743Z",
+  "duration_ms": 60040,
+  "usage": {
+    "input_tokens": 2,
+    "output_tokens": 6006,
+    "cache_creation_input_tokens": 6030,
+    "cache_read_input_tokens": 0
+  },
+  "execution_evidence": {
+    "status": "verified",
+    "runtime": "claude-code-print",
+    "requested_model": "sonnet",
+    "canonical_model": "claude-sonnet-5",
+    "cli_version": "2.1.219",
+    "response_digest": "sha256:bbec0f0f7ea3c33cb3171f3d2a50c7cd8c755542c31cac5a82b2f26984cf95a9",
+    "exit_status": 0,
+    "error": null
+  },
+  "economics": {
+    "comparison_cost": {
+      "status": "provider-reported-equivalent",
+      "amount_usd": 0.131441,
+      "source": "claude-code-total-cost-usd"
+    },
+    "actual_subscription_cash": {
+      "status": "unknown",
+      "amount_usd": null,
+      "source": "subscription-not-allocated-per-operation"
+    },
+    "gpu": {
+      "status": "not-applicable",
+      "samples": 0,
+      "average_watts": null,
+      "energy_kwh": 0
+    }
+  },
+  "hidden_verification": {
+    "status": "not-run",
+    "source": "official-swe-bench-live-evaluator"
+  },
+  "pilot_freeze_id": "sha256:cfe2d091ccd01effd8cacc443986e649a9db442a828fbe20946673a9eff173c8",
+  "pilot_assignment_id": "sha256:c5fa3f2a08617b1347fa402964fb91ae422036333a92fc1f551da073e3eb765e",
+  "attestation": {
+    "algorithm": "Ed25519",
+    "payload_digest": "sha256:d86941ddd5d00635b7734517eea9454cd0196a521ef53b4fe13bf8c7f070b391",
+    "signature": "Cl2ESeGVH6pnGmAfNPZCDuW1r3rJjVpyWsmIlsg1yaafhrHY8psKYS7DsKacDxG4KtY1MGvnlKhIuaxG6L0lAQ=="
+  }
+}

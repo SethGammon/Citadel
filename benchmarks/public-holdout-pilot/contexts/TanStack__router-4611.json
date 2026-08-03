@@ -1,0 +1,130 @@
+{
+  "schema": 1,
+  "kind": "citadel_public_holdout_retrieval",
+  "retrieval_id": "sha256:3a9b95861fae7273ff9b8d184051388f9c5ce7b4d850f084f09caad7d2814d24",
+  "instance_id": "TanStack__router-4611",
+  "contract": {
+    "maximum_files": 12,
+    "maximum_total_characters": 60000,
+    "maximum_file_characters": 12000,
+    "maximum_file_bytes": 100000,
+    "excluded_directories": [
+      ".git",
+      ".hg",
+      ".svn",
+      "build",
+      "coverage",
+      "dist",
+      "node_modules",
+      "vendor"
+    ],
+    "extensions": [
+      ".cjs",
+      ".js",
+      ".jsx",
+      ".json",
+      ".md",
+      ".mjs",
+      ".ts",
+      ".tsx",
+      ".yaml",
+      ".yml"
+    ],
+    "always_consider": [
+      "package.json",
+      "tsconfig.json",
+      "jsconfig.json"
+    ],
+    "maximum_query_terms": 24,
+    "scoring_rule": "explicit path/basename or adjacent issue-term match, then git-grep inverse-document-frequency evidence, path overlap, and capped content frequency; lexical tie by path"
+  },
+  "inventory_count": 4017,
+  "selected_file_count": 12,
+  "selected_character_count": 13699,
+  "files": [
+    {
+      "path": "packages/start-server-core/src/tanstack-start.d.ts",
+      "score": 2250,
+      "truncated": false,
+      "content": "declare module 'tanstack-start-manifest:v' {\r\n  import type { Manifest } from '@tanstack/router-core'\r\n\r\n  export const tsrStartManifest: () => Manifest & { clientEntry: string }\r\n}\r\n\r\ndeclare module 'tanstack-start-route-tree:v' {\r\n  import type { AnyServerRouteWithTypes } from '@tanstack/start-server-core'\r\n  import type { AnyRoute } from '@tanstack/router-core'\r\n\r\n  export const routeTree: AnyRoute | undefined\r\n  export const serverRouteTree: AnyServerRouteWithTypes | undefined\r\n}\r\n\r\ndeclare module 'tanstack-start-server-fn-manifest:v' {\r\n  const serverFnManifest: Record<\r\n    string,\r\n    {\r\n      importer: () => Promise<\r\n        Record<string, (...args: Array<any>) => Promise<any>> | undefined\r\n      >\r\n      functionName: string\r\n    }\r\n  >\r\n\r\n  export default serverFnManifest\r\n}\r\n",
+      "content_digest": "sha256:0562c3989be9e3133a82d7a470b185b7aaa8a533e3b10dcd380b6100018857fb"
+    },
+    {
+      "path": "docs/router/framework/react/guide/tanstack-start.md",
+      "score": 2166.6666666666665,
+      "truncated": false,
+      "content": "---\r\nid: tanstack-start\r\ntitle: TanStack Start\r\n---\r\n\r\nTanStack Start is a full-stack framework for building server-rendered React applications built on top of [TanStack Router](https://tanstack.com/router).\r\n\r\nTo set up a TanStack Start project, you'll need to:\r\n\r\n1. Install the dependencies\r\n2. Add a configuration file\r\n3. Create required templating\r\n\r\nFollow this guide to build a basic TanStack Start web application. Together, we will use TanStack Start to:\r\n\r\n- Serve an index page...\r\n- Which displays a counter...\r\n- With a button to increment the counter persistently.\r\n\r\n[Here is what that will look like](https://stackblitz.com/github/tanstack/router/tree/main/examples/react/start-basic-counter)\r\n\r\nCreate a new project if you're starting fresh.\r\n\r\n```shell\r\nmkdir myApp\r\ncd myApp\r\nnpm init -y\r\n```\r\n\r\nCreate a `tsconfig.json` file with at least the following settings:\r\n\r\n```jsonc\r\n{\r\n  \"compilerOptions\": {\r\n    \"jsx\": \"react-jsx\",\r\n    \"moduleResolution\": \"Bundler\",\r\n    \"module\": \"Preserve\",\r\n    \"target\": \"ES2022\",\r\n    \"skipLibCheck\": true,\r\n  },\r\n}\r\n```\r\n\r\n# Install Dependencies\r\n\r\nTanStack Start is powered by the following packages and need to be installed as dependencies:\r\n\r\n- [@tanstack/start](https://github.com/tanstack/start)\r\n- [@tanstack/react-router](https://tanstack.com/router)\r\n- [Vite](https://vite.dev/)\r\n\r\nTo install them, run:\r\n\r\n```shell\r\nnpm i @tanstack/react-start @tanstack/react-router vite\r\n```\r\n\r\nYou'll also need React and the Vite React plugin, so install their dependencies as well:\r\n\r\n```shell\r\nnpm i react react-dom @vitejs/plugin-react\r\n```\r\n\r\nPlease, for you, your fellow developers, and your users' sake, use TypeScript:\r\n\r\n```shell\r\nnpm i -D typescript @types/react @types/react-dom\r\n```\r\n\r\n# Update Configuration Files\r\n\r\nWe'll then update our `package.json` to use Vite's CLI and set `\"type\": \"module\"`:\r\n\r\n```jsonc\r\n{\r\n  // ...\r\n  \"type\": \"module\",\r\n  \"scripts\": {\r\n    \"dev\": \"vite dev\",\r\n    \"build\": \"vite build\",\r\n    \"start\": \"vite start\",\r\n  },\r\n}\r\n```\r\n\r\nThen configure TanStack Start's `app.config.ts` file:\r\n\r\n```typescript\r\n// app.config.ts\r\nimport { defineConfig } from '@tanstack/react-start/config'\r\n\r\nexport default defineConfig({})\r\n```\r\n\r\n# Add the Basic Templating\r\n\r\nThere are 2 required files for TanStack Start usage:\r\n\r\n1. The router configuration\r\n2. The root of your application\r\n\r\nOnce configuration is done, we'll have a file tree that looks like the following:\r\n\r\n```\r\n.\r\n├── app/\r\n│   ├── routes/\r\n│   │   └── `__root.tsx`\r\n│   ├── `router.tsx`\r\n│   ├── `routeTree.gen.ts`\r\n├── `.gitignore`\r\n├── `app.config.ts`\r\n├── `package.json`\r\n└── `tsconfig.json`\r\n```\r\n\r\n## The Router Configuration\r\n\r\nThis is the file that will dictate the behavior of TanStack Router used within Start for both the server and the client. Here, you can configure everything\r\nfrom the default [preloading functionality](../preloading.md) to [caching staleness](../data-loading.md).\r\n\r\n```tsx\r\n// app/router.tsx\r\nimport { createRouter as createTanStackRouter } from '@tanstack/react-router'\r\nimport { routeTree } from './routeTree.gen'\r\n\r\nexport function createRouter() {\r\n  const router = createTanStackRouter({\r\n    routeTree,\r\n  })\r\n\r\n  return router\r\n}\r\n\r\ndeclare module '@tanstack/react-router' {\r\n  interface Register {\r\n    router: ReturnType<typeof createRouter>\r\n  }\r\n}\r\n```\r\n\r\n> `routeTree.gen.ts` is not a file you're expected to have at this point.\r\n> It will be generated when you run TanStack Start (via `npm run dev` or `npm run start`) for the first time.\r\n\r\n## The Root of Your Application\r\n\r\nFinally, we need to create the root of our application. This is the entry point for all application routes. The code in this file will wrap all other routes in the application.\r\n\r\n```tsx\r\n// app/routes/__root.tsx\r\nimport { createRootRoute, HeadContent, Scripts } from '@tanstack/react-router'\r\nimport { Outlet } from '@tanstack/react-router'\r\nimport * as React from 'react'\r\n\r\nexport const Route = createRootRoute({\r\n  head: () => ({\r\n    meta: [\r\n      {\r\n        charSet: 'utf-8',\r\n      },\r\n      {\r\n        name: 'viewport',\r\n        content: 'width=device-width, initial-scale=1',\r\n      },\r\n      {\r\n        title: 'TanStack Start Starter',\r\n      },\r\n    ],\r\n  }),\r\n  component: RootComponent,\r\n})\r\n\r\nfunction RootComponent() {\r\n  return (\r\n    <RootDocument>\r\n      <Outlet />\r\n    </RootDocument>\r\n  )\r\n}\r\n\r\nfunction RootDocument({ children }: { children: React.ReactNode }) {\r\n  return (\r\n    <html>\r\n      <head>\r\n        <HeadContent />\r\n      </head>\r\n      <body>\r\n        {children}\r\n        <Scripts />\r\n      </body>\r\n    </html>\r\n  )\r\n}\r\n```\r\n\r\n# Writing Your First Route\r\n\r\nNow that we have the basic templating setup, we can write our first route. This is done by creating a new file in the `app/routes` directory.\r\n\r\n```tsx\r\n// app/routes/index.tsx\r\nimport * as fs from 'fs'\r\nimport { createFileRoute, useRouter } from '@tanstack/react-router'\r\nimport { createServerFn } from '@tanstack/react-start'\r\n\r\nconst filePath = 'count.txt'\r\n\r\nasync function readCount() {\r\n  return parseInt(\r\n    await fs.promises.readFile(filePath, 'utf-8').catch(() => '0'),\r\n  )\r\n}\r\n\r\nconst getCount = createServerFn({\r\n  method: 'GET',\r\n}).handler(() => {\r\n  return readCount()\r\n})\r\n\r\nconst updateCount = createServerFn({ method: 'POST' })\r\n  .validator((d: number) => d)\r\n  .handler(async ({ data }) => {\r\n    const count = await readCount()\r\n    await fs.promises.writeFile(filePath, `${count + data}`)\r\n  })\r\n\r\nexport const Route = createFileRoute('/')({\r\n  component: Home,\r\n  loader: async () => await getCount(),\r\n})\r\n\r\nfunction Home() {\r\n  const router = useRouter()\r\n  const state = Route.useLoaderData()\r\n\r\n  return (\r\n    <button\r\n      onClick={() => {\r\n        updateCount({ data: 1 }).then(() => {\r\n          router.invalidate()\r\n        })\r\n      }}\r\n    >\r\n      Add 1 to {state}?\r\n    </button>\r\n  )\r\n}\r\n```\r\n\r\nThat's it! 🤯 You've now set up a TanStack Start project and written your first route. 🎉\r\n\r\nYou can now run `npm run dev` to start your server and navigate to `http://localhost:3000` to see your route in action.\r\n",
+      "content_digest": "sha256:e53fdffdcf7bbc005f4f3595ecd6841011e19dbd2a1e022f3ba52abba244b578"
+    },
+    {
+      "path": "e2e/react-router/basic-esbuild-file-based/package.json",
+      "score": 252,
+      "truncated": false,
+      "content": "{\r\n  \"name\": \"tanstack-router-e2e-react-basic-esbuild-file-based\",\r\n  \"private\": true,\r\n  \"type\": \"module\",\r\n  \"scripts\": {\r\n    \"dev\": \"esbuild src/main.tsx --serve=5601 --bundle --outfile=dist/main.js --watch --servedir=.\",\r\n    \"build\": \"esbuild src/main.tsx --bundle --outfile=dist/main.js && tsc --noEmit\",\r\n    \"serve\": \"esbuild src/main.tsx --bundle --outfile=dist/main.js --servedir=.\",\r\n    \"start\": \"dev\",\r\n    \"test:e2e\": \"playwright test --project=chromium\"\r\n  },\r\n  \"dependencies\": {\r\n    \"@tanstack/react-router\": \"workspace:^\",\r\n    \"@tanstack/react-router-devtools\": \"workspace:^\",\r\n    \"@tanstack/router-plugin\": \"workspace:^\",\r\n    \"@tanstack/zod-adapter\": \"workspace:^\",\r\n    \"react\": \"^19.0.0\",\r\n    \"react-dom\": \"^19.0.0\",\r\n    \"redaxios\": \"^0.5.1\",\r\n    \"zod\": \"^3.24.2\"\r\n  },\r\n  \"devDependencies\": {\r\n    \"@playwright/test\": \"^1.50.1\",\r\n    \"@tanstack/router-e2e-utils\": \"workspace:^\",\r\n    \"@types/react\": \"^19.0.8\",\r\n    \"@types/react-dom\": \"^19.0.3\",\r\n    \"esbuild\": \"^0.25.0\"\r\n  }\r\n}\r\n",
+      "content_digest": "sha256:9ede4e3d78a3c925db5f747103408ab74d0698cd96875ad46aba24b103fd837a"
+    },
+    {
+      "path": "e2e/react-router/basic-esbuild-file-based/tsconfig.json",
+      "score": 252,
+      "truncated": false,
+      "content": "{\r\n  \"compilerOptions\": {\r\n    \"strict\": true,\r\n    \"esModuleInterop\": true,\r\n    \"jsx\": \"react-jsx\",\r\n    \"target\": \"ESNext\",\r\n    \"moduleResolution\": \"Bundler\",\r\n    \"module\": \"ESNext\",\r\n    \"skipLibCheck\": true,\r\n    \"resolveJsonModule\": true,\r\n    \"allowJs\": true\r\n  },\r\n  \"exclude\": [\"node_modules\", \"dist\"]\r\n}\r\n",
+      "content_digest": "sha256:96912ef537632694535fa81a54e195c15597ffba79e90a2a984ae5f2a2478e0b"
+    },
+    {
+      "path": "e2e/react-router/basic-file-based-code-splitting/package.json",
+      "score": 252,
+      "truncated": false,
+      "content": "{\r\n  \"name\": \"tanstack-router-e2e-react-basic-file-based-code-splitting\",\r\n  \"private\": true,\r\n  \"type\": \"module\",\r\n  \"scripts\": {\r\n    \"dev\": \"vite --port 3000\",\r\n    \"dev:e2e\": \"vite\",\r\n    \"build\": \"vite build && tsc --noEmit\",\r\n    \"serve\": \"vite preview\",\r\n    \"start\": \"vite\",\r\n    \"test:e2e:verbose-routes:true\": \"VERBOSE_FILE_ROUTES=1 playwright test --project=chromium\",\r\n    \"test:e2e:verbose-routes:false\": \"VERBOSE_FILE_ROUTES=0 playwright test --project=chromium\",\r\n    \"test:e2e\": \"pnpm run test:e2e:verbose-routes:true && pnpm run test:e2e:verbose-routes:false\"\r\n  },\r\n  \"dependencies\": {\r\n    \"@tanstack/react-router\": \"workspace:^\",\r\n    \"@tanstack/react-router-devtools\": \"workspace:^\",\r\n    \"@tanstack/router-plugin\": \"workspace:^\",\r\n    \"react\": \"^19.0.0\",\r\n    \"react-dom\": \"^19.0.0\",\r\n    \"postcss\": \"^8.5.1\",\r\n    \"autoprefixer\": \"^10.4.20\",\r\n    \"tailwindcss\": \"^3.4.17\",\r\n    \"zod\": \"^3.24.2\"\r\n  },\r\n  \"devDependencies\": {\r\n    \"@playwright/test\": \"^1.50.1\",\r\n    \"@tanstack/router-e2e-utils\": \"workspace:^\",\r\n    \"@types/react\": \"^19.0.8\",\r\n    \"@types/react-dom\": \"^19.0.3\",\r\n    \"@vitejs/plugin-react\": \"^4.3.4\",\r\n    \"vite\": \"^6.3.5\"\r\n  }\r\n}\r\n",
+      "content_digest": "sha256:a5fddb39b1ee0af26888f21243380ea96911caad72dbb477b46851d3c25326d6"
+    },
+    {
+      "path": "e2e/react-router/basic-file-based-code-splitting/tsconfig.json",
+      "score": 252,
+      "truncated": false,
+      "content": "{\r\n  \"compilerOptions\": {\r\n    \"strict\": true,\r\n    \"esModuleInterop\": true,\r\n    \"jsx\": \"react-jsx\",\r\n    \"target\": \"ESNext\",\r\n    \"moduleResolution\": \"Bundler\",\r\n    \"module\": \"ESNext\",\r\n    \"skipLibCheck\": true,\r\n    \"resolveJsonModule\": true,\r\n    \"allowJs\": true\r\n  },\r\n  \"exclude\": [\"node_modules\", \"dist\"]\r\n}\r\n",
+      "content_digest": "sha256:96912ef537632694535fa81a54e195c15597ffba79e90a2a984ae5f2a2478e0b"
+    },
+    {
+      "path": "e2e/react-router/basic-file-based/package.json",
+      "score": 252,
+      "truncated": false,
+      "content": "{\r\n  \"name\": \"tanstack-router-e2e-react-basic-file-based\",\r\n  \"private\": true,\r\n  \"type\": \"module\",\r\n  \"scripts\": {\r\n    \"dev\": \"vite --port 3000\",\r\n    \"dev:e2e\": \"vite\",\r\n    \"build\": \"vite build && tsc --noEmit\",\r\n    \"serve\": \"vite preview\",\r\n    \"start\": \"vite\",\r\n    \"test:e2e\": \"playwright test --project=chromium\"\r\n  },\r\n  \"dependencies\": {\r\n    \"@tanstack/react-router\": \"workspace:^\",\r\n    \"@tanstack/react-router-devtools\": \"workspace:^\",\r\n    \"@tanstack/router-plugin\": \"workspace:^\",\r\n    \"@tanstack/zod-adapter\": \"workspace:^\",\r\n    \"react\": \"^19.0.0\",\r\n    \"react-dom\": \"^19.0.0\",\r\n    \"redaxios\": \"^0.5.1\",\r\n    \"postcss\": \"^8.5.1\",\r\n    \"autoprefixer\": \"^10.4.20\",\r\n    \"tailwindcss\": \"^3.4.17\",\r\n    \"zod\": \"^3.24.2\"\r\n  },\r\n  \"devDependencies\": {\r\n    \"@playwright/test\": \"^1.50.1\",\r\n    \"@tanstack/router-e2e-utils\": \"workspace:^\",\r\n    \"@types/react\": \"^19.0.8\",\r\n    \"@types/react-dom\": \"^19.0.3\",\r\n    \"@vitejs/plugin-react\": \"^4.3.4\",\r\n    \"combinate\": \"^1.1.11\",\r\n    \"vite\": \"^6.3.5\"\r\n  }\r\n}\r\n",
+      "content_digest": "sha256:6eff79e270b70edf88553b831dbf7212324ba5a6606362b6625190312ea5a738"
+    },
+    {
+      "path": "e2e/react-router/basic-file-based/tsconfig.json",
+      "score": 252,
+      "truncated": false,
+      "content": "{\r\n  \"compilerOptions\": {\r\n    \"strict\": true,\r\n    \"esModuleInterop\": true,\r\n    \"jsx\": \"react-jsx\",\r\n    \"target\": \"ESNext\",\r\n    \"moduleResolution\": \"Bundler\",\r\n    \"module\": \"ESNext\",\r\n    \"skipLibCheck\": true,\r\n    \"resolveJsonModule\": true,\r\n    \"allowJs\": true\r\n  },\r\n  \"exclude\": [\"node_modules\", \"dist\"]\r\n}\r\n",
+      "content_digest": "sha256:96912ef537632694535fa81a54e195c15597ffba79e90a2a984ae5f2a2478e0b"
+    },
+    {
+      "path": "e2e/react-router/basic-react-query-file-based/package.json",
+      "score": 252,
+      "truncated": false,
+      "content": "{\r\n  \"name\": \"tanstack-router-e2e-react-basic-react-query-file-based\",\r\n  \"private\": true,\r\n  \"type\": \"module\",\r\n  \"scripts\": {\r\n    \"dev\": \"vite --port 3000\",\r\n    \"dev:e2e\": \"vite\",\r\n    \"build\": \"vite build && tsc --noEmit\",\r\n    \"serve\": \"vite preview\",\r\n    \"start\": \"vite\",\r\n    \"test:e2e\": \"playwright test --project=chromium\"\r\n  },\r\n  \"dependencies\": {\r\n    \"@tanstack/react-query\": \"^5.66.0\",\r\n    \"@tanstack/react-query-devtools\": \"^5.66.0\",\r\n    \"@tanstack/react-router\": \"workspace:^\",\r\n    \"@tanstack/react-router-devtools\": \"workspace:^\",\r\n    \"@tanstack/router-plugin\": \"workspace:^\",\r\n    \"react\": \"^19.0.0\",\r\n    \"react-dom\": \"^19.0.0\",\r\n    \"redaxios\": \"^0.5.1\",\r\n    \"postcss\": \"^8.5.1\",\r\n    \"autoprefixer\": \"^10.4.20\",\r\n    \"tailwindcss\": \"^3.4.17\",\r\n    \"zod\": \"^3.24.2\"\r\n  },\r\n  \"devDependencies\": {\r\n    \"@playwright/test\": \"^1.50.1\",\r\n    \"@tanstack/router-e2e-utils\": \"workspace:^\",\r\n    \"@types/react\": \"^19.0.8\",\r\n    \"@types/react-dom\": \"^19.0.3\",\r\n    \"@vitejs/plugin-react\": \"^4.3.4\",\r\n    \"vite\": \"^6.3.5\"\r\n  }\r\n}\r\n",
+      "content_digest": "sha256:bf92b10b19a21e26c6739fb69cb5e9fef691ef29a9f842bd7660f5e489334eb5"
+    },
+    {
+      "path": "e2e/react-router/basic-react-query-file-based/tsconfig.json",
+      "score": 252,
+      "truncated": false,
+      "content": "{\r\n  \"compilerOptions\": {\r\n    \"strict\": true,\r\n    \"esModuleInterop\": true,\r\n    \"jsx\": \"react-jsx\",\r\n    \"target\": \"ESNext\",\r\n    \"moduleResolution\": \"Bundler\",\r\n    \"module\": \"ESNext\",\r\n    \"skipLibCheck\": true,\r\n    \"resolveJsonModule\": true,\r\n    \"allowJs\": true\r\n  },\r\n  \"exclude\": [\"node_modules\", \"dist\"]\r\n}\r\n",
+      "content_digest": "sha256:96912ef537632694535fa81a54e195c15597ffba79e90a2a984ae5f2a2478e0b"
+    },
+    {
+      "path": "e2e/react-router/basic-react-query/package.json",
+      "score": 252,
+      "truncated": false,
+      "content": "{\r\n  \"name\": \"tanstack-router-e2e-react-react-query\",\r\n  \"private\": true,\r\n  \"type\": \"module\",\r\n  \"scripts\": {\r\n    \"dev\": \"vite --port 3000\",\r\n    \"dev:e2e\": \"vite\",\r\n    \"build\": \"vite build && tsc --noEmit\",\r\n    \"serve\": \"vite preview\",\r\n    \"start\": \"vite\",\r\n    \"test:e2e\": \"playwright test --project=chromium\"\r\n  },\r\n  \"dependencies\": {\r\n    \"@tanstack/react-query\": \"^5.66.0\",\r\n    \"@tanstack/react-query-devtools\": \"^5.66.0\",\r\n    \"@tanstack/react-router\": \"workspace:^\",\r\n    \"@tanstack/router-devtools\": \"workspace:^\",\r\n    \"react\": \"^19.0.0\",\r\n    \"react-dom\": \"^19.0.0\",\r\n    \"redaxios\": \"^0.5.1\",\r\n    \"postcss\": \"^8.5.1\",\r\n    \"autoprefixer\": \"^10.4.20\",\r\n    \"tailwindcss\": \"^3.4.17\"\r\n  },\r\n  \"devDependencies\": {\r\n    \"@playwright/test\": \"^1.50.1\",\r\n    \"@tanstack/router-e2e-utils\": \"workspace:^\",\r\n    \"@types/react\": \"^19.0.8\",\r\n    \"@types/react-dom\": \"^19.0.3\",\r\n    \"@vitejs/plugin-react\": \"^4.3.4\",\r\n    \"vite\": \"^6.3.5\"\r\n  }\r\n}\r\n",
+      "content_digest": "sha256:ed700819abec29c3218071cdebc1468ee1eba57616fd4c62c2783482b2b5a044"
+    },
+    {
+      "path": "e2e/react-router/basic-react-query/tsconfig.json",
+      "score": 252,
+      "truncated": false,
+      "content": "{\r\n  \"compilerOptions\": {\r\n    \"strict\": true,\r\n    \"esModuleInterop\": true,\r\n    \"jsx\": \"react-jsx\",\r\n    \"target\": \"ESNext\",\r\n    \"moduleResolution\": \"Bundler\",\r\n    \"module\": \"ESNext\",\r\n    \"skipLibCheck\": true,\r\n    \"resolveJsonModule\": true,\r\n    \"allowJs\": true\r\n  },\r\n  \"exclude\": [\"node_modules\", \"dist\"]\r\n}\r\n",
+      "content_digest": "sha256:96912ef537632694535fa81a54e195c15597ffba79e90a2a984ae5f2a2478e0b"
+    }
+  ]
+}
