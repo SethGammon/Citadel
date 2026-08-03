@@ -1,0 +1,63 @@
+{
+  "schema": 1,
+  "kind": "citadel_public_holdout_prediction_evidence",
+  "evidence_id": "sha256:9a68fe6d8b4ebe0c8b5660bccc73cad9d83d14b8c420f2142c27c7bb95595cde",
+  "phase": "pilot-calibration",
+  "plan_id": "claude-sonnet",
+  "prediction_digest": "sha256:c1923224b95bdabfa603b49d8a596bc34424e8123970d11451f5b5c3b176956c",
+  "attempts": [
+    {
+      "instance_id": "rollup__rollup-6041",
+      "attempt_id": "sha256:cdcb2f64d05bfd8ff859a2013f971718ec205d1051313ca43828c8d5c02afb6e",
+      "generated_patch_digest": "sha256:12ae32cb1ec02d01eda3581b127c1fee3b0dc53572ed6baf239721a03d82e126",
+      "execution_status": "verified"
+    },
+    {
+      "instance_id": "nodejs__undici-5011",
+      "attempt_id": "sha256:e528de5915948753caf11ae3d82751675d2d565a4150bee08a598c6edf071d1f",
+      "generated_patch_digest": "sha256:12ae32cb1ec02d01eda3581b127c1fee3b0dc53572ed6baf239721a03d82e126",
+      "execution_status": "verified"
+    },
+    {
+      "instance_id": "codeceptjs__CodeceptJS-5072",
+      "attempt_id": "sha256:5306a4e4d2d16c6a19ba9175e20d37f4a2733eb7874ea91855ceec30afa207c7",
+      "generated_patch_digest": "sha256:12ae32cb1ec02d01eda3581b127c1fee3b0dc53572ed6baf239721a03d82e126",
+      "execution_status": "verified"
+    },
+    {
+      "instance_id": "siimon__prom-client-679",
+      "attempt_id": "sha256:906752a93bc13f0396ea52397abf14ae13254e9cc2b06996583c5e0fe8f037fc",
+      "generated_patch_digest": "sha256:30826b6014ebdc2506c79b6d744618790f34d2a2ce8afce69546d5c65d86890c",
+      "execution_status": "verified"
+    },
+    {
+      "instance_id": "excalidraw__excalidraw-9760",
+      "attempt_id": "sha256:0312e32187b3998351608b764c44eef11d3da2d4b42d77b6debf46c51fe23ee2",
+      "generated_patch_digest": "sha256:12ae32cb1ec02d01eda3581b127c1fee3b0dc53572ed6baf239721a03d82e126",
+      "execution_status": "verified"
+    },
+    {
+      "instance_id": "mui__base-ui-2493",
+      "attempt_id": "sha256:bdb75afce950aa337c91607f55f1ca4945d47369d333e411989ad361cc80f2a3",
+      "generated_patch_digest": "sha256:16b2cc48aa9ea078f4a4ffd64d5bc68c3fbb264393e51c9edf9e3c4efeec7141",
+      "execution_status": "verified"
+    },
+    {
+      "instance_id": "QwenLM__qwen-code-349",
+      "attempt_id": "sha256:5e94ca6a9842d12235b63949aad8ee127e0390cee722052f8e60182794ba8748",
+      "generated_patch_digest": "sha256:12ae32cb1ec02d01eda3581b127c1fee3b0dc53572ed6baf239721a03d82e126",
+      "execution_status": "verified"
+    },
+    {
+      "instance_id": "TypeCellOS__BlockNote-2629",
+      "attempt_id": "sha256:8612230d290bf514d8df5c4f466da63a2bace097d137ed8517b7c765e242d7cd",
+      "generated_patch_digest": "sha256:12ae32cb1ec02d01eda3581b127c1fee3b0dc53572ed6baf239721a03d82e126",
+      "execution_status": "verified"
+    }
+  ],
+  "attestation": {
+    "algorithm": "Ed25519",
+    "payload_digest": "sha256:af9f022bf44276291bab883497464aadb519c107d2905c452888cf04f170fa74",
+    "signature": "nOpebDtqvd0VwVVsEBvdMgJVfnpPvvT0xmz0ewMmoIuKk/aeIcspEOujbp7V9vH3ATRlpnPjTJ+f0m1dKw+3Dg=="
+  }
+}

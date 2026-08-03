@@ -1,0 +1,192 @@
+{
+  "schema": 1,
+  "kind": "citadel_public_holdout_model_attempt",
+  "attempt_id": "sha256:ecc086cbc55e50aff5314221e18c4e6ed0234bfc5eb608465b7cfd2d71121947",
+  "instance_id": "TypeCellOS__BlockNote-2629",
+  "plan_id": "qwen-3b",
+  "base_commit": "38be5fd2ddab06977a663ac8b5077042a0a5eac7",
+  "retrieval": {
+    "schema": 1,
+    "kind": "citadel_public_holdout_retrieval",
+    "retrieval_id": "sha256:322b9954382329c57b794fe70e2c338386889cedef72167c2a6489d7fb3d9334",
+    "instance_id": "TypeCellOS__BlockNote-2629",
+    "contract": {
+      "maximum_files": 12,
+      "maximum_total_characters": 60000,
+      "maximum_file_characters": 12000,
+      "maximum_file_bytes": 100000,
+      "excluded_directories": [
+        ".git",
+        ".hg",
+        ".svn",
+        "build",
+        "coverage",
+        "dist",
+        "node_modules",
+        "vendor"
+      ],
+      "extensions": [
+        ".cjs",
+        ".js",
+        ".jsx",
+        ".json",
+        ".md",
+        ".mjs",
+        ".ts",
+        ".tsx",
+        ".yaml",
+        ".yml"
+      ],
+      "always_consider": [
+        "package.json",
+        "tsconfig.json",
+        "jsconfig.json"
+      ],
+      "maximum_query_terms": 24,
+      "scoring_rule": "explicit path/basename or adjacent issue-term match, then git-grep inverse-document-frequency evidence, path overlap, and capped content frequency; lexical tie by path"
+    },
+    "inventory_count": 1207,
+    "selected_file_count": 12,
+    "selected_character_count": 9876,
+    "files": [
+      {
+        "path": "examples/01-basic/02-block-objects/package.json",
+        "score": 252,
+        "truncated": false,
+        "content": "{\r\n  \"name\": \"@blocknote/example-basic-block-objects\",\r\n  \"description\": \"AUTO-GENERATED FILE, DO NOT EDIT DIRECTLY\",\r\n  \"type\": \"module\",\r\n  \"private\": true,\r\n  \"version\": \"0.12.4\",\r\n  \"scripts\": {\r\n    \"start\": \"vite\",\r\n    \"dev\": \"vite\",\r\n    \"build:prod\": \"tsc && vite build\",\r\n    \"preview\": \"vite preview\"\r\n  },\r\n  \"dependencies\": {\r\n    \"@blocknote/ariakit\": \"latest\",\r\n    \"@blocknote/core\": \"latest\",\r\n    \"@blocknote/mantine\": \"latest\",\r\n    \"@blocknote/react\": \"latest\",\r\n    \"@blocknote/shadcn\": \"latest\",\r\n    \"@mantine/core\": \"^8.3.11\",\r\n    \"@mantine/hooks\": \"^8.3.11\",\r\n    \"@mantine/utils\": \"^6.0.22\",\r\n    \"react\": \"^19.2.3\",\r\n    \"react-dom\": \"^19.2.3\"\r\n  },\r\n  \"devDependencies\": {\r\n    \"@types/react\": \"^19.2.3\",\r\n    \"@types/react-dom\": \"^19.2.3\",\r\n    \"@vitejs/plugin-react\": \"^4.7.0\",\r\n    \"vite\": \"^5.4.20\"\r\n  }\r\n}",
+        "content_digest": "sha256:d87192deb672b99200e237abc8a14506c49c55f73283ee4ed1391294c9d3992d"
+      },
+      {
+        "path": "examples/01-basic/02-block-objects/tsconfig.json",
+        "score": 252,
+        "truncated": false,
+        "content": "{\r\n  \"__comment\": \"AUTO-GENERATED FILE, DO NOT EDIT DIRECTLY\",\r\n  \"compilerOptions\": {\r\n    \"target\": \"ESNext\",\r\n    \"useDefineForClassFields\": true,\r\n    \"lib\": [\r\n      \"DOM\",\r\n      \"DOM.Iterable\",\r\n      \"ESNext\"\r\n    ],\r\n    \"allowJs\": false,\r\n    \"skipLibCheck\": true,\r\n    \"esModuleInterop\": false,\r\n    \"allowSyntheticDefaultImports\": true,\r\n    \"strict\": true,\r\n    \"forceConsistentCasingInFileNames\": true,\r\n    \"module\": \"ESNext\",\r\n    \"moduleResolution\": \"bundler\",\r\n    \"resolveJsonModule\": true,\r\n    \"isolatedModules\": true,\r\n    \"noEmit\": true,\r\n    \"jsx\": \"react-jsx\",\r\n    \"composite\": true\r\n  },\r\n  \"include\": [\r\n    \".\"\r\n  ],\r\n  \"__ADD_FOR_LOCAL_DEV_references\": [\r\n    {\r\n      \"path\": \"../../../packages/core/\"\r\n    },\r\n    {\r\n      \"path\": \"../../../packages/react/\"\r\n    }\r\n  ]\r\n}",
+        "content_digest": "sha256:e599803d30b3d928b4aff41e0188c591eb197bf73cca0131251c088636ed06af"
+      },
+      {
+        "path": "examples/01-basic/04-default-blocks/package.json",
+        "score": 252,
+        "truncated": false,
+        "content": "{\r\n  \"name\": \"@blocknote/example-basic-default-blocks\",\r\n  \"description\": \"AUTO-GENERATED FILE, DO NOT EDIT DIRECTLY\",\r\n  \"type\": \"module\",\r\n  \"private\": true,\r\n  \"version\": \"0.12.4\",\r\n  \"scripts\": {\r\n    \"start\": \"vite\",\r\n    \"dev\": \"vite\",\r\n    \"build:prod\": \"tsc && vite build\",\r\n    \"preview\": \"vite preview\"\r\n  },\r\n  \"dependencies\": {\r\n    \"@blocknote/ariakit\": \"latest\",\r\n    \"@blocknote/core\": \"latest\",\r\n    \"@blocknote/mantine\": \"latest\",\r\n    \"@blocknote/react\": \"latest\",\r\n    \"@blocknote/shadcn\": \"latest\",\r\n    \"@mantine/core\": \"^8.3.11\",\r\n    \"@mantine/hooks\": \"^8.3.11\",\r\n    \"@mantine/utils\": \"^6.0.22\",\r\n    \"react\": \"^19.2.3\",\r\n    \"react-dom\": \"^19.2.3\"\r\n  },\r\n  \"devDependencies\": {\r\n    \"@types/react\": \"^19.2.3\",\r\n    \"@types/react-dom\": \"^19.2.3\",\r\n    \"@vitejs/plugin-react\": \"^4.7.0\",\r\n    \"vite\": \"^5.4.20\"\r\n  }\r\n}",
+        "content_digest": "sha256:c0cb49c998d52df813511ae8b844d623e8a17134bcf4d524ad631432b9887bc4"
+      },
+      {
+        "path": "examples/01-basic/04-default-blocks/tsconfig.json",
+        "score": 252,
+        "truncated": false,
+        "content": "{\r\n  \"__comment\": \"AUTO-GENERATED FILE, DO NOT EDIT DIRECTLY\",\r\n  \"compilerOptions\": {\r\n    \"target\": \"ESNext\",\r\n    \"useDefineForClassFields\": true,\r\n    \"lib\": [\r\n      \"DOM\",\r\n      \"DOM.Iterable\",\r\n      \"ESNext\"\r\n    ],\r\n    \"allowJs\": false,\r\n    \"skipLibCheck\": true,\r\n    \"esModuleInterop\": false,\r\n    \"allowSyntheticDefaultImports\": true,\r\n    \"strict\": true,\r\n    \"forceConsistentCasingInFileNames\": true,\r\n    \"module\": \"ESNext\",\r\n    \"moduleResolution\": \"bundler\",\r\n    \"resolveJsonModule\": true,\r\n    \"isolatedModules\": true,\r\n    \"noEmit\": true,\r\n    \"jsx\": \"react-jsx\",\r\n    \"composite\": true\r\n  },\r\n  \"include\": [\r\n    \".\"\r\n  ],\r\n  \"__ADD_FOR_LOCAL_DEV_references\": [\r\n    {\r\n      \"path\": \"../../../packages/core/\"\r\n    },\r\n    {\r\n      \"path\": \"../../../packages/react/\"\r\n    }\r\n  ]\r\n}",
+        "content_digest": "sha256:e599803d30b3d928b4aff41e0188c591eb197bf73cca0131251c088636ed06af"
+      },
+      {
+        "path": "examples/01-basic/05-removing-default-blocks/package.json",
+        "score": 252,
+        "truncated": false,
+        "content": "{\r\n  \"name\": \"@blocknote/example-basic-removing-default-blocks\",\r\n  \"description\": \"AUTO-GENERATED FILE, DO NOT EDIT DIRECTLY\",\r\n  \"type\": \"module\",\r\n  \"private\": true,\r\n  \"version\": \"0.12.4\",\r\n  \"scripts\": {\r\n    \"start\": \"vite\",\r\n    \"dev\": \"vite\",\r\n    \"build:prod\": \"tsc && vite build\",\r\n    \"preview\": \"vite preview\"\r\n  },\r\n  \"dependencies\": {\r\n    \"@blocknote/ariakit\": \"latest\",\r\n    \"@blocknote/core\": \"latest\",\r\n    \"@blocknote/mantine\": \"latest\",\r\n    \"@blocknote/react\": \"latest\",\r\n    \"@blocknote/shadcn\": \"latest\",\r\n    \"@mantine/core\": \"^8.3.11\",\r\n    \"@mantine/hooks\": \"^8.3.11\",\r\n    \"@mantine/utils\": \"^6.0.22\",\r\n    \"react\": \"^19.2.3\",\r\n    \"react-dom\": \"^19.2.3\"\r\n  },\r\n  \"devDependencies\": {\r\n    \"@types/react\": \"^19.2.3\",\r\n    \"@types/react-dom\": \"^19.2.3\",\r\n    \"@vitejs/plugin-react\": \"^4.7.0\",\r\n    \"vite\": \"^5.4.20\"\r\n  }\r\n}",
+        "content_digest": "sha256:66a51f630200ef5abf0fc0fbc6dd68a3f7e1731f785693a264f9b506536cbbed"
+      },
+      {
+        "path": "examples/01-basic/05-removing-default-blocks/tsconfig.json",
+        "score": 252,
+        "truncated": false,
+        "content": "{\r\n  \"__comment\": \"AUTO-GENERATED FILE, DO NOT EDIT DIRECTLY\",\r\n  \"compilerOptions\": {\r\n    \"target\": \"ESNext\",\r\n    \"useDefineForClassFields\": true,\r\n    \"lib\": [\r\n      \"DOM\",\r\n      \"DOM.Iterable\",\r\n      \"ESNext\"\r\n    ],\r\n    \"allowJs\": false,\r\n    \"skipLibCheck\": true,\r\n    \"esModuleInterop\": false,\r\n    \"allowSyntheticDefaultImports\": true,\r\n    \"strict\": true,\r\n    \"forceConsistentCasingInFileNames\": true,\r\n    \"module\": \"ESNext\",\r\n    \"moduleResolution\": \"bundler\",\r\n    \"resolveJsonModule\": true,\r\n    \"isolatedModules\": true,\r\n    \"noEmit\": true,\r\n    \"jsx\": \"react-jsx\",\r\n    \"composite\": true\r\n  },\r\n  \"include\": [\r\n    \".\"\r\n  ],\r\n  \"__ADD_FOR_LOCAL_DEV_references\": [\r\n    {\r\n      \"path\": \"../../../packages/core/\"\r\n    },\r\n    {\r\n      \"path\": \"../../../packages/react/\"\r\n    }\r\n  ]\r\n}",
+        "content_digest": "sha256:e599803d30b3d928b4aff41e0188c591eb197bf73cca0131251c088636ed06af"
+      },
+      {
+        "path": "examples/01-basic/06-block-manipulation/package.json",
+        "score": 252,
+        "truncated": false,
+        "content": "{\r\n  \"name\": \"@blocknote/example-basic-block-manipulation\",\r\n  \"description\": \"AUTO-GENERATED FILE, DO NOT EDIT DIRECTLY\",\r\n  \"type\": \"module\",\r\n  \"private\": true,\r\n  \"version\": \"0.12.4\",\r\n  \"scripts\": {\r\n    \"start\": \"vite\",\r\n    \"dev\": \"vite\",\r\n    \"build:prod\": \"tsc && vite build\",\r\n    \"preview\": \"vite preview\"\r\n  },\r\n  \"dependencies\": {\r\n    \"@blocknote/ariakit\": \"latest\",\r\n    \"@blocknote/core\": \"latest\",\r\n    \"@blocknote/mantine\": \"latest\",\r\n    \"@blocknote/react\": \"latest\",\r\n    \"@blocknote/shadcn\": \"latest\",\r\n    \"@mantine/core\": \"^8.3.11\",\r\n    \"@mantine/hooks\": \"^8.3.11\",\r\n    \"@mantine/utils\": \"^6.0.22\",\r\n    \"react\": \"^19.2.3\",\r\n    \"react-dom\": \"^19.2.3\"\r\n  },\r\n  \"devDependencies\": {\r\n    \"@types/react\": \"^19.2.3\",\r\n    \"@types/react-dom\": \"^19.2.3\",\r\n    \"@vitejs/plugin-react\": \"^4.7.0\",\r\n    \"vite\": \"^5.4.20\"\r\n  }\r\n}",
+        "content_digest": "sha256:04ed778d34356c1de06ec85e0a9be111de6fa52a6f69363b1f8a8f9cfe4b6280"
+      },
+      {
+        "path": "examples/01-basic/06-block-manipulation/tsconfig.json",
+        "score": 252,
+        "truncated": false,
+        "content": "{\r\n  \"__comment\": \"AUTO-GENERATED FILE, DO NOT EDIT DIRECTLY\",\r\n  \"compilerOptions\": {\r\n    \"target\": \"ESNext\",\r\n    \"useDefineForClassFields\": true,\r\n    \"lib\": [\r\n      \"DOM\",\r\n      \"DOM.Iterable\",\r\n      \"ESNext\"\r\n    ],\r\n    \"allowJs\": false,\r\n    \"skipLibCheck\": true,\r\n    \"esModuleInterop\": false,\r\n    \"allowSyntheticDefaultImports\": true,\r\n    \"strict\": true,\r\n    \"forceConsistentCasingInFileNames\": true,\r\n    \"module\": \"ESNext\",\r\n    \"moduleResolution\": \"bundler\",\r\n    \"resolveJsonModule\": true,\r\n    \"isolatedModules\": true,\r\n    \"noEmit\": true,\r\n    \"jsx\": \"react-jsx\",\r\n    \"composite\": true\r\n  },\r\n  \"include\": [\r\n    \".\"\r\n  ],\r\n  \"__ADD_FOR_LOCAL_DEV_references\": [\r\n    {\r\n      \"path\": \"../../../packages/core/\"\r\n    },\r\n    {\r\n      \"path\": \"../../../packages/react/\"\r\n    }\r\n  ]\r\n}",
+        "content_digest": "sha256:e599803d30b3d928b4aff41e0188c591eb197bf73cca0131251c088636ed06af"
+      },
+      {
+        "path": "examples/01-basic/07-selection-blocks/package.json",
+        "score": 252,
+        "truncated": false,
+        "content": "{\r\n  \"name\": \"@blocknote/example-basic-selection-blocks\",\r\n  \"description\": \"AUTO-GENERATED FILE, DO NOT EDIT DIRECTLY\",\r\n  \"type\": \"module\",\r\n  \"private\": true,\r\n  \"version\": \"0.12.4\",\r\n  \"scripts\": {\r\n    \"start\": \"vite\",\r\n    \"dev\": \"vite\",\r\n    \"build:prod\": \"tsc && vite build\",\r\n    \"preview\": \"vite preview\"\r\n  },\r\n  \"dependencies\": {\r\n    \"@blocknote/ariakit\": \"latest\",\r\n    \"@blocknote/core\": \"latest\",\r\n    \"@blocknote/mantine\": \"latest\",\r\n    \"@blocknote/react\": \"latest\",\r\n    \"@blocknote/shadcn\": \"latest\",\r\n    \"@mantine/core\": \"^8.3.11\",\r\n    \"@mantine/hooks\": \"^8.3.11\",\r\n    \"@mantine/utils\": \"^6.0.22\",\r\n    \"react\": \"^19.2.3\",\r\n    \"react-dom\": \"^19.2.3\"\r\n  },\r\n  \"devDependencies\": {\r\n    \"@types/react\": \"^19.2.3\",\r\n    \"@types/react-dom\": \"^19.2.3\",\r\n    \"@vitejs/plugin-react\": \"^4.7.0\",\r\n    \"vite\": \"^5.4.20\"\r\n  }\r\n}",
+        "content_digest": "sha256:6392e97d5be9bef5aded41be6d21324a1ea5bc454449b90895151a5b89a0d4db"
+      },
+      {
+        "path": "examples/01-basic/07-selection-blocks/tsconfig.json",
+        "score": 252,
+        "truncated": false,
+        "content": "{\r\n  \"__comment\": \"AUTO-GENERATED FILE, DO NOT EDIT DIRECTLY\",\r\n  \"compilerOptions\": {\r\n    \"target\": \"ESNext\",\r\n    \"useDefineForClassFields\": true,\r\n    \"lib\": [\r\n      \"DOM\",\r\n      \"DOM.Iterable\",\r\n      \"ESNext\"\r\n    ],\r\n    \"allowJs\": false,\r\n    \"skipLibCheck\": true,\r\n    \"esModuleInterop\": false,\r\n    \"allowSyntheticDefaultImports\": true,\r\n    \"strict\": true,\r\n    \"forceConsistentCasingInFileNames\": true,\r\n    \"module\": \"ESNext\",\r\n    \"moduleResolution\": \"bundler\",\r\n    \"resolveJsonModule\": true,\r\n    \"isolatedModules\": true,\r\n    \"noEmit\": true,\r\n    \"jsx\": \"react-jsx\",\r\n    \"composite\": true\r\n  },\r\n  \"include\": [\r\n    \".\"\r\n  ],\r\n  \"__ADD_FOR_LOCAL_DEV_references\": [\r\n    {\r\n      \"path\": \"../../../packages/core/\"\r\n    },\r\n    {\r\n      \"path\": \"../../../packages/react/\"\r\n    }\r\n  ]\r\n}",
+        "content_digest": "sha256:e599803d30b3d928b4aff41e0188c591eb197bf73cca0131251c088636ed06af"
+      },
+      {
+        "path": "examples/01-basic/12-multi-editor/package.json",
+        "score": 252,
+        "truncated": false,
+        "content": "{\r\n  \"name\": \"@blocknote/example-basic-multi-editor\",\r\n  \"description\": \"AUTO-GENERATED FILE, DO NOT EDIT DIRECTLY\",\r\n  \"type\": \"module\",\r\n  \"private\": true,\r\n  \"version\": \"0.12.4\",\r\n  \"scripts\": {\r\n    \"start\": \"vite\",\r\n    \"dev\": \"vite\",\r\n    \"build:prod\": \"tsc && vite build\",\r\n    \"preview\": \"vite preview\"\r\n  },\r\n  \"dependencies\": {\r\n    \"@blocknote/ariakit\": \"latest\",\r\n    \"@blocknote/core\": \"latest\",\r\n    \"@blocknote/mantine\": \"latest\",\r\n    \"@blocknote/react\": \"latest\",\r\n    \"@blocknote/shadcn\": \"latest\",\r\n    \"@mantine/core\": \"^8.3.11\",\r\n    \"@mantine/hooks\": \"^8.3.11\",\r\n    \"@mantine/utils\": \"^6.0.22\",\r\n    \"react\": \"^19.2.3\",\r\n    \"react-dom\": \"^19.2.3\"\r\n  },\r\n  \"devDependencies\": {\r\n    \"@types/react\": \"^19.2.3\",\r\n    \"@types/react-dom\": \"^19.2.3\",\r\n    \"@vitejs/plugin-react\": \"^4.7.0\",\r\n    \"vite\": \"^5.4.20\"\r\n  }\r\n}",
+        "content_digest": "sha256:336d40f06580518156df2703886c7d8c0a888eb846c8b15a6de076b371d77936"
+      },
+      {
+        "path": "examples/01-basic/12-multi-editor/tsconfig.json",
+        "score": 252,
+        "truncated": false,
+        "content": "{\r\n  \"__comment\": \"AUTO-GENERATED FILE, DO NOT EDIT DIRECTLY\",\r\n  \"compilerOptions\": {\r\n    \"target\": \"ESNext\",\r\n    \"useDefineForClassFields\": true,\r\n    \"lib\": [\r\n      \"DOM\",\r\n      \"DOM.Iterable\",\r\n      \"ESNext\"\r\n    ],\r\n    \"allowJs\": false,\r\n    \"skipLibCheck\": true,\r\n    \"esModuleInterop\": false,\r\n    \"allowSyntheticDefaultImports\": true,\r\n    \"strict\": true,\r\n    \"forceConsistentCasingInFileNames\": true,\r\n    \"module\": \"ESNext\",\r\n    \"moduleResolution\": \"bundler\",\r\n    \"resolveJsonModule\": true,\r\n    \"isolatedModules\": true,\r\n    \"noEmit\": true,\r\n    \"jsx\": \"react-jsx\",\r\n    \"composite\": true\r\n  },\r\n  \"include\": [\r\n    \".\"\r\n  ],\r\n  \"__ADD_FOR_LOCAL_DEV_references\": [\r\n    {\r\n      \"path\": \"../../../packages/core/\"\r\n    },\r\n    {\r\n      \"path\": \"../../../packages/react/\"\r\n    }\r\n  ]\r\n}",
+        "content_digest": "sha256:e599803d30b3d928b4aff41e0188c591eb197bf73cca0131251c088636ed06af"
+      }
+    ]
+  },
+  "prompt_digest": "sha256:107ef4715b0f70ebded4964b03734e81bbb60396fe28396c832a4bf8a4230e80",
+  "output_text": "{\n  \"files\": {\n    \"examples/01-basic/02-block-objects/package.json\": \"{\\\"name\\\":\\\"@blocknote/example-basic-block-objects\\\",\\\"description\\\":\\\"AUTO-GENERATED FILE, DO NOT EDIT DIRECTLY\\\",\\\"type\\\":\\\"module\\\",\\\"private\\\":true,\\\"version\\\":\\\"0.12.4\\\",\\\"scripts\\\":{\\\"start\\\":\\\"vite\\\",\\\"dev\\\":\\\"vite\\\",\\\"build:prod\\\":\\\"tsc && vite build\\\",\\\"preview\\\":\\\"vite preview\\\"},\\\"dependencies\\\":{\\\"@blocknote/ariakit\\\":\\\"latest\\\",\\\"@blocknote/core\\\":\\\"latest\\\",\\\"@blocknote/mantine\\\":\\\"latest\\\",\\\"@blocknote/react\\\":\\\"latest\\\",\\\"@blocknote/shadcn\\\":\\\"latest\\\",\\\"@mantine/core\\\":\\\"^8.3.11\\\",\\\"@mantine/hooks\\\":\\\"^8.3.11\\\",\\\"@mantine/utils\\\":\\\"^6.0.22\\\",\\\"react\\\":\\\"^19.2.3\\\",\\\"react-dom\\\":\\\"^19.2.3\\\"},\\\"devDependencies\\\":{\\\"@types/react\\\":\\\"^19.2.3\\\",\\\"@types/react-dom\\\":\\\"^19.2.3\\\",\\\"@vitejs/plugin-react\\\":\\\"^4.7.0\\\",\\\"vite\\\":\\\"^5.4.20\\\"}}\",\n    \"examples/01-basic/02-block-objects/tsconfig.json\": \"{\\\"__comment\\\":\\\"AUTO-GENERATED FILE, DO NOT EDIT DIRECTLY\\\",\\\"compilerOptions\\\":{\\\"target\\\":\\\"ESNext\\\",\\\"useDefineForClassFields\\\":true,\\\"lib\\\":[\\\"DOM\\\",\\\"DOM.Iterable\\\",\\\"ESNext\\\"],\\\"allowJs\\\":false,\\\"skipLibCheck\\\":true,\\\"esModuleInterop\\\":false,\\\"allowSyntheticDefaultImports\\\":true,\\\"strict\\\":true,\\\"forceConsistentCasingInFileNames\\\":true,\\\"module\\\":\\\"ESNext\\\",\\\"moduleResolution\\\":\\\"bundler\\\",\\\"resolveJsonModule\\\":true,\\\"isolatedModules\\\":true,\\\"noEmit\\\":true,\\\"jsx\\\":\\\"react-jsx\\\",\\\"composite\\\":true},\\\"include\\\":[\\\".\\\"],\\\"__ADD_FOR_LOCAL_DEV_references\\\":[{\\\"path\\\":\\\"../../../packages/core/\\\"},{\\\"path\\\":\\\"../../../packages/react/\\\"}]}\"\n  }\n}",
+  "output_digest": "sha256:9fe7e89674f263297a1c90afc3c16cad7da9011c7838b29b4ecfedfe1988ea68",
+  "parse_status": "passed",
+  "parse_failure_code": null,
+  "generated_patch": "diff --git a/examples/01-basic/02-block-objects/package.json b/examples/01-basic/02-block-objects/package.json\nindex 8b3ca5bf..a75dd201 100644\n--- a/examples/01-basic/02-block-objects/package.json\n+++ b/examples/01-basic/02-block-objects/package.json\n@@ -1,31 +1 @@\n-{\n-  \"name\": \"@blocknote/example-basic-block-objects\",\n-  \"description\": \"AUTO-GENERATED FILE, DO NOT EDIT DIRECTLY\",\n-  \"type\": \"module\",\n-  \"private\": true,\n-  \"version\": \"0.12.4\",\n-  \"scripts\": {\n-    \"start\": \"vite\",\n-    \"dev\": \"vite\",\n-    \"build:prod\": \"tsc && vite build\",\n-    \"preview\": \"vite preview\"\n-  },\n-  \"dependencies\": {\n-    \"@blocknote/ariakit\": \"latest\",\n-    \"@blocknote/core\": \"latest\",\n-    \"@blocknote/mantine\": \"latest\",\n-    \"@blocknote/react\": \"latest\",\n-    \"@blocknote/shadcn\": \"latest\",\n-    \"@mantine/core\": \"^8.3.11\",\n-    \"@mantine/hooks\": \"^8.3.11\",\n-    \"@mantine/utils\": \"^6.0.22\",\n-    \"react\": \"^19.2.3\",\n-    \"react-dom\": \"^19.2.3\"\n-  },\n-  \"devDependencies\": {\n-    \"@types/react\": \"^19.2.3\",\n-    \"@types/react-dom\": \"^19.2.3\",\n-    \"@vitejs/plugin-react\": \"^4.7.0\",\n-    \"vite\": \"^5.4.20\"\n-  }\n-}\n\\ No newline at end of file\n+{\"name\":\"@blocknote/example-basic-block-objects\",\"description\":\"AUTO-GENERATED FILE, DO NOT EDIT DIRECTLY\",\"type\":\"module\",\"private\":true,\"version\":\"0.12.4\",\"scripts\":{\"start\":\"vite\",\"dev\":\"vite\",\"build:prod\":\"tsc && vite build\",\"preview\":\"vite preview\"},\"dependencies\":{\"@blocknote/ariakit\":\"latest\",\"@blocknote/core\":\"latest\",\"@blocknote/mantine\":\"latest\",\"@blocknote/react\":\"latest\",\"@blocknote/shadcn\":\"latest\",\"@mantine/core\":\"^8.3.11\",\"@mantine/hooks\":\"^8.3.11\",\"@mantine/utils\":\"^6.0.22\",\"react\":\"^19.2.3\",\"react-dom\":\"^19.2.3\"},\"devDependencies\":{\"@types/react\":\"^19.2.3\",\"@types/react-dom\":\"^19.2.3\",\"@vitejs/plugin-react\":\"^4.7.0\",\"vite\":\"^5.4.20\"}}\n\\ No newline at end of file\ndiff --git a/examples/01-basic/02-block-objects/tsconfig.json b/examples/01-basic/02-block-objects/tsconfig.json\nindex dbe3e6f6..e43910dd 100644\n--- a/examples/01-basic/02-block-objects/tsconfig.json\n+++ b/examples/01-basic/02-block-objects/tsconfig.json\n@@ -1,36 +1 @@\n-{\n-  \"__comment\": \"AUTO-GENERATED FILE, DO NOT EDIT DIRECTLY\",\n-  \"compilerOptions\": {\n-    \"target\": \"ESNext\",\n-    \"useDefineForClassFields\": true,\n-    \"lib\": [\n-      \"DOM\",\n-      \"DOM.Iterable\",\n-      \"ESNext\"\n-    ],\n-    \"allowJs\": false,\n-    \"skipLibCheck\": true,\n-    \"esModuleInterop\": false,\n-    \"allowSyntheticDefaultImports\": true,\n-    \"strict\": true,\n-    \"forceConsistentCasingInFileNames\": true,\n-    \"module\": \"ESNext\",\n-    \"moduleResolution\": \"bundler\",\n-    \"resolveJsonModule\": true,\n-    \"isolatedModules\": true,\n-    \"noEmit\": true,\n-    \"jsx\": \"react-jsx\",\n-    \"composite\": true\n-  },\n-  \"include\": [\n-    \".\"\n-  ],\n-  \"__ADD_FOR_LOCAL_DEV_references\": [\n-    {\n-      \"path\": \"../../../packages/core/\"\n-    },\n-    {\n-      \"path\": \"../../../packages/react/\"\n-    }\n-  ]\n-}\n\\ No newline at end of file\n+{\"__comment\":\"AUTO-GENERATED FILE, DO NOT EDIT DIRECTLY\",\"compilerOptions\":{\"target\":\"ESNext\",\"useDefineForClassFields\":true,\"lib\":[\"DOM\",\"DOM.Iterable\",\"ESNext\"],\"allowJs\":false,\"skipLibCheck\":true,\"esModuleInterop\":false,\"allowSyntheticDefaultImports\":true,\"strict\":true,\"forceConsistentCasingInFileNames\":true,\"module\":\"ESNext\",\"moduleResolution\":\"bundler\",\"resolveJsonModule\":true,\"isolatedModules\":true,\"noEmit\":true,\"jsx\":\"react-jsx\",\"composite\":true},\"include\":[\".\"],\"__ADD_FOR_LOCAL_DEV_references\":[{\"path\":\"../../../packages/core/\"},{\"path\":\"../../../packages/react/\"}]}\n\\ No newline at end of file\n",
+  "generated_patch_digest": "sha256:e89d9a0905669bc71cc0d00c9c30d0bc2bb0f477eaec5ee5488fa88ed33a9d48",
+  "changed_paths": [
+    "examples/01-basic/02-block-objects/package.json",
+    "examples/01-basic/02-block-objects/tsconfig.json"
+  ],
+  "started_at": "2026-08-03T18:09:37.655Z",
+  "duration_ms": 16286,
+  "usage": {
+    "input_tokens": 3755,
+    "output_tokens": 435
+  },
+  "execution_evidence": {
+    "status": "verified",
+    "runtime": "ollama-chat",
+    "requested_model": "qwen2.5-coder:3b",
+    "canonical_model": "qwen2.5-coder:3b",
+    "model_digest": "sha256:f72c60cabf6237b07f6e632b2c48d533cef25eda2efbd34bed21c5e9c01e6225",
+    "response_digest": "sha256:31b6aae5b0dc302bcea40dc892a7257b15424698584e3cef28b27d0d6b256f23",
+    "error": null
+  },
+  "economics": {
+    "comparison_cost": {
+      "status": "derived-comparison",
+      "amount_usd": 0.000143967,
+      "source": "measured-gpu-energy-plus-frozen-residual-amortization"
+    },
+    "actual_subscription_cash": {
+      "status": "not-applicable",
+      "amount_usd": 0
+    },
+    "gpu": {
+      "status": "measured",
+      "samples": 32,
+      "average_watts": 109.119062,
+      "energy_kwh": 0.000493643
+    }
+  },
+  "hidden_verification": {
+    "status": "not-run",
+    "source": "official-swe-bench-live-evaluator"
+  },
+  "pilot_freeze_id": "sha256:cfe2d091ccd01effd8cacc443986e649a9db442a828fbe20946673a9eff173c8",
+  "pilot_assignment_id": "sha256:c5fa3f2a08617b1347fa402964fb91ae422036333a92fc1f551da073e3eb765e",
+  "attestation": {
+    "algorithm": "Ed25519",
+    "payload_digest": "sha256:66675edd08e25d9a075238abbce9450add70ad94002fcf757eb4918a0e009c46",
+    "signature": "RpbRgKKCvrbLF/ErB5eZxghAqbNAkCnxBdEepHmF8KsZpCiRyUcYnJkpfhL3Fpv33wxqPuzifMnOPN+ino9MBg=="
+  }
+}

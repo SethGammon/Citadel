@@ -1,0 +1,189 @@
+{
+  "schema": 1,
+  "kind": "citadel_public_holdout_model_attempt",
+  "attempt_id": "sha256:e4cae86ff455e5c79a418f8387f92b6f3d8f9e2e3f9bf96970fb92cc4894f778",
+  "instance_id": "codeceptjs__CodeceptJS-5072",
+  "plan_id": "qwen-3b",
+  "base_commit": "a27b99eb23d89764b9ec7c79a25a7dc5781f6258",
+  "retrieval": {
+    "schema": 1,
+    "kind": "citadel_public_holdout_retrieval",
+    "retrieval_id": "sha256:838c867fb3d81f1a2fa8840dbbc1ce7de97b282dcd13cd6df550b3f3e844d063",
+    "instance_id": "codeceptjs__CodeceptJS-5072",
+    "contract": {
+      "maximum_files": 12,
+      "maximum_total_characters": 60000,
+      "maximum_file_characters": 12000,
+      "maximum_file_bytes": 100000,
+      "excluded_directories": [
+        ".git",
+        ".hg",
+        ".svn",
+        "build",
+        "coverage",
+        "dist",
+        "node_modules",
+        "vendor"
+      ],
+      "extensions": [
+        ".cjs",
+        ".js",
+        ".jsx",
+        ".json",
+        ".md",
+        ".mjs",
+        ".ts",
+        ".tsx",
+        ".yaml",
+        ".yml"
+      ],
+      "always_consider": [
+        "package.json",
+        "tsconfig.json",
+        "jsconfig.json"
+      ],
+      "maximum_query_terms": 24,
+      "scoring_rule": "explicit path/basename or adjacent issue-term match, then git-grep inverse-document-frequency evidence, path overlap, and capped content frequency; lexical tie by path"
+    },
+    "inventory_count": 343,
+    "selected_file_count": 12,
+    "selected_character_count": 6613,
+    "files": [
+      {
+        "path": "examples/codecept.config.example.js",
+        "score": 2500,
+        "truncated": false,
+        "content": "console.log('Use JS config file');\r\n\r\nconsole.log(process.env.profile);\r\n\r\nexports.config = {\r\n  tests: './*_test.js',\r\n  timeout: 10000,\r\n  output: './output',\r\n  helpers: {\r\n    WebDriver: {\r\n      url: 'http://localhost',\r\n      browser: process.env.profile || 'firefox',\r\n      restart: true,\r\n    },\r\n  },\r\n  mocha: {\r\n    reporterOptions: {\r\n      mochaFile: './output/result.xml',\r\n    },\r\n  },\r\n  name: 'tests',\r\n  bootstrap: './bootstrap.js',\r\n  include: {\r\n    I: './custom_steps.js',\r\n    Smth: './pages/Smth.js',\r\n    loginPage: './pages/Login.js',\r\n    signinFragment: './fragments/Signin.js',\r\n  },\r\n};\r\n",
+        "content_digest": "sha256:d7fc70eae91e8b5eb8a95f44c6e6a23d4d33b47806c5454c62e5f8f454a098aa"
+      },
+      {
+        "path": "examples/codecept.config.js",
+        "score": 2500,
+        "truncated": false,
+        "content": "require('./heal_recipes')\r\n\r\nexports.config = {\r\n  output: './output',\r\n  helpers: {\r\n    Playwright: {\r\n      url: 'http://github.com',\r\n      browser: 'chromium',\r\n      // restart: 'context',\r\n      // show: false,\r\n      // timeout: 5000,\r\n      windowSize: '1600x1200',\r\n      // video: true,\r\n      chromium: {\r\n        // browserWSEndpoint: 'ws://127.0.0.1:45635/09b7aa1ac28c317e5abee7cb6d35d519',\r\n      },\r\n      show: !process.env.HEADLESS,\r\n    },\r\n    REST: {},\r\n    User: {\r\n      require: './user_helper.js',\r\n    },\r\n  },\r\n  include: {\r\n    I: './custom_steps.js',\r\n    Smth: './pages/Smth.js',\r\n    loginPage: './pages/Login.js',\r\n    signinFragment: './fragments/Signin.js',\r\n  },\r\n  mocha: {\r\n    reporterOptions: {\r\n      mochaFile: './output/result.xml',\r\n    },\r\n  },\r\n  gherkin: {\r\n    features: './features/*.feature',\r\n    steps: ['./step_definitions/steps.js'],\r\n  },\r\n  plugins: {\r\n    analyze: {\r\n      enabled: true,\r\n    },\r\n    // heal: {\r\n    //   enabled: true,\r\n    // },\r\n    // customReporter: {\r\n    //   enabled: true,\r\n    // },\r\n    wdio: {\r\n      enabled: false,\r\n      services: ['selenium-standalone'],\r\n    },\r\n    stepByStepReport: {},\r\n    autoDelay: {\r\n      enabled: false,\r\n    },\r\n    retryFailedStep: {\r\n      enabled: false,\r\n    },\r\n    subtitles: {\r\n      enabled: true,\r\n    },\r\n  },\r\n\r\n  tests: './*_test.js',\r\n  // timeout: 100,\r\n  multiple: {\r\n    parallel: {\r\n      chunks: 2,\r\n    },\r\n    default: {\r\n      grep: 'signin',\r\n      browsers: ['chrome', 'firefox'],\r\n    },\r\n  },\r\n  name: 'tests',\r\n}\r\n",
+        "content_digest": "sha256:d489818161eedc9a20272b418338b4268476b2f9008557ed5e8ea7037ab50955"
+      },
+      {
+        "path": "test/data/inject-fail-example/codecept.conf.js",
+        "score": 2500,
+        "truncated": false,
+        "content": "exports.config = {\r\n  tests: './*_test.js',\r\n  output: './output',\r\n  helpers: {\r\n  },\r\n  include: {\r\n\r\n    page: './pages/page.js',\r\n    notpage: './pages/notpage.js',\r\n    arraypage: './pages/arraypage.js',\r\n\r\n  },\r\n  bootstrap: null,\r\n  mocha: {},\r\n  name: 'inject-fail-example',\r\n};\r\n",
+        "content_digest": "sha256:68c791dce8f21d4d350cba758201d8521789570071d7e6196b3e23a17732f292"
+      },
+      {
+        "path": "typings/jsdoc.conf.js",
+        "score": 2500,
+        "truncated": false,
+        "content": "module.exports = {\r\n  source: {\r\n    include: [\r\n      './docs/build',\r\n      './lib/actor.js',\r\n      './lib/codecept.js',\r\n      './lib/config.js',\r\n      './lib/result.js',\r\n      './lib/container.js',\r\n      './lib/data/table.js',\r\n      './lib/data/dataTableArgument.js',\r\n      './lib/effects.js',\r\n      './lib/event.js',\r\n      './lib/index.js',\r\n      './lib/locator.js',\r\n      './lib/output.js',\r\n      './lib/pause.js',\r\n      './lib/recorder.js',\r\n      './lib/secret.js',\r\n      './lib/session.js',\r\n      './lib/step/config.js',\r\n      './lib/step/base.js',\r\n      './lib/step/helper.js',\r\n      './lib/step/meta.js',\r\n      './lib/store.js',\r\n      './lib/mocha/ui.js',\r\n      './lib/mocha/featureConfig.js',\r\n      './lib/mocha/scenarioConfig.js',\r\n      './lib/mocha/bdd.js',\r\n      './lib/mocha/hooks.js',\r\n      './lib/within.js',\r\n      require.resolve('@codeceptjs/detox-helper'),\r\n      require.resolve('@codeceptjs/helper'),\r\n    ],\r\n  },\r\n  opts: {\r\n    template: 'node_modules/tsd-jsdoc/dist',\r\n    recurse: true,\r\n    destination: './typings/',\r\n  },\r\n  plugins: ['jsdoc.namespace.js', 'jsdoc-typeof-plugin'],\r\n}\r\n",
+        "content_digest": "sha256:67b35bc43b8ffeb22e2cb4cffb3cc7112b32366cc689bda18830d1e3863742cb"
+      },
+      {
+        "path": "typings/jsdocPromiseBased.conf.js",
+        "score": 2500,
+        "truncated": false,
+        "content": "module.exports = {\r\n  source: {\r\n    include: [\r\n      './docs/build',\r\n    ],\r\n  },\r\n  opts: {\r\n    template: 'node_modules/tsd-jsdoc/dist',\r\n    recurse: true,\r\n    destination: './typings/',\r\n  },\r\n  plugins: ['jsdoc.promiseBased.js', 'jsdoc.namespace.js', 'jsdoc-typeof-plugin'],\r\n};\r\n",
+        "content_digest": "sha256:bf2f6f47d0e2ab28307b5b226db79ac17a1ad8a359b164e595cdfd45a7321ddf"
+      },
+      {
+        "path": "test/data/sandbox/configs/commentStep/codecept.conf.js",
+        "score": 2416.6666666666665,
+        "truncated": false,
+        "content": "exports.config = {\r\n  tests: './*_test.js',\r\n  output: './output',\r\n  helpers: {\r\n    CustomHelper: {\r\n      require: './customHelper.js',\r\n    },\r\n  },\r\n  plugins: {\r\n    commentStep: {\r\n      enabled: true,\r\n      registerGlobal: true,\r\n    },\r\n  },\r\n  name: 'pageobject-as-class',\r\n};\r\n",
+        "content_digest": "sha256:5890c22bf93b5b3dec7f0aa61bd33cc34ca3ae88e5695344a9edf2ccb05ea44f"
+      },
+      {
+        "path": "test/data/sandbox/configs/custom-reporter-plugin/codecept.conf.js",
+        "score": 2416.6666666666665,
+        "truncated": false,
+        "content": "exports.config = {\r\n  tests: './*_test.js',\r\n  output: './output',\r\n  helpers: {\r\n    FileSystem: {},\r\n  },\r\n  include: {},\r\n  bootstrap: false,\r\n  plugins: {\r\n    customReporter: {\r\n      enabled: true,\r\n      onHookFinished: hook => {\r\n        console.log(`Hook Finished: ${hook.title}`)\r\n      },\r\n      onTestBefore: test => {\r\n        console.log(`Test Started: ${test.title}`)\r\n      },\r\n      onTestPassed: test => {\r\n        console.log(`Test Passed: ${test.title}`)\r\n      },\r\n      onTestFailed: (test, err) => {\r\n        console.log(`Test Failed: ${test.title}`)\r\n        console.log(`Error: ${err.message}`)\r\n      },\r\n      onTestSkipped: test => {\r\n        console.log(`Test Skipped: ${test.title}`)\r\n      },\r\n      onTestFinished: test => {\r\n        console.log(`Test Finished: ${test.title}`)\r\n        console.log(`Test Status: ${test.state}`)\r\n        console.log(`Test Error: ${test.err}`)\r\n      },\r\n      onResult: result => {\r\n        console.log('All tests completed')\r\n        console.log(`Total: ${result.stats.tests}`)\r\n        console.log(`Passed: ${result.stats.passes}`)\r\n        console.log(`Failed: ${result.stats.failures}`)\r\n      },\r\n      save: true,\r\n    },\r\n  },\r\n  mocha: {},\r\n  name: 'custom-reporter-plugin tests',\r\n}\r\n",
+        "content_digest": "sha256:0f4e01e8ae284a9690aefeef6921a64fce94fe74ae5d26626d27ef31c541be1b"
+      },
+      {
+        "path": "test/data/sandbox/configs/retryHooks/codecept.conf.js",
+        "score": 2416.6666666666665,
+        "truncated": false,
+        "content": "exports.config = {\r\n  tests: './*_test.js',\r\n  output: './output',\r\n  helpers: {\r\n    CustomHelper: {\r\n      require: './helper.js',\r\n    },\r\n  },\r\n  bootstrap: null,\r\n  mocha: {},\r\n  name: 'retryHooks',\r\n};\r\n",
+        "content_digest": "sha256:57e118fb3a732277c75eaadc95c66bb98a85fc6be51466cd9621795c67fda834"
+      },
+      {
+        "path": "test/data/sandbox/configs/run-rerun/codecept.conf.js",
+        "score": 2416.6666666666665,
+        "truncated": false,
+        "content": "exports.config = {\r\n  tests: './*_test.js',\r\n  output: './output',\r\n  helpers: {\r\n    CustomHelper: {\r\n      require: './customHelper.js',\r\n    },\r\n  },\r\n  rerun: {\r\n    minSuccess: 3,\r\n    maxReruns: 3,\r\n  },\r\n  bootstrap: null,\r\n  mocha: {},\r\n  name: 'run-rerun',\r\n};\r\n",
+        "content_digest": "sha256:5df70e761202b36df3b2d371547e284bca857ee84cee0111bb3a62780ed5f62a"
+      },
+      {
+        "path": "test/data/sandbox/configs/skip/codecept.conf.js",
+        "score": 2416.6666666666665,
+        "truncated": false,
+        "content": "exports.config = {\r\n  tests: './*_test.js',\r\n  output: './output',\r\n  bootstrap: null,\r\n  mocha: {},\r\n  name: 'skip-test',\r\n};\r\n",
+        "content_digest": "sha256:1789c8994eb341608e0e20655b8062d65cdd0608f074727cca44d026bbf000cf"
+      },
+      {
+        "path": "test/data/sandbox/configs/step-enhancements/codecept.conf.js",
+        "score": 2416.6666666666665,
+        "truncated": false,
+        "content": "exports.config = {\r\n  tests: './*_test.js',\r\n  output: './output',\r\n  helpers: {\r\n    FileSystem: {},\r\n    CustomHelper: {\r\n      require: './custom_helper.js',\r\n    },\r\n  },\r\n  include: {},\r\n  bootstrap: false,\r\n  mocha: {},\r\n  name: 'step-enhancements tests',\r\n}\r\n",
+        "content_digest": "sha256:71067f03be7f74e53a3b00c1560dd823480bf5afb7bcf26f091e23a67cfa684e"
+      },
+      {
+        "path": "test/data/sandbox/configs/step-sections/codecept.conf.js",
+        "score": 2416.6666666666665,
+        "truncated": false,
+        "content": "exports.config = {\r\n  tests: './*_test.js',\r\n  output: './output',\r\n  helpers: {\r\n    FileSystem: {},\r\n    CustomHelper: {\r\n      require: './customHelper.js',\r\n    },\r\n  },\r\n  include: {\r\n    userPage: './userPage.js',\r\n  },\r\n  bootstrap: false,\r\n  mocha: {},\r\n  name: 'step-sections tests',\r\n}\r\n",
+        "content_digest": "sha256:b08f96f43f94930fe6569ac857a3dfa5aae48758e150ff8f66f26fa0e93af813"
+      }
+    ]
+  },
+  "prompt_digest": "sha256:188a0ba0d127fd013b816219e3bec4e88ffd509c8e64adef4c868da1c2a5f16b",
+  "output_text": "{\n  \"files\": {\n    \"codecept.conf.js\": \"exports.config = {\\n  tests: './*_test.js',\\n  output: './output',\\n  helpers: {\\n    Playwright: {\\n      url: 'http://github.com',\\n      browser: 'chromium',\\n      // restart: 'context',\\n      // show: false,\\n      // timeout: 5000,\\n      windowSize: '1600x1200',\\n      // video: true,\\n      chromium: {\\n        // browserWSEndpoint: 'ws://127.0.0.1:45635/09b7aa1ac28c317e5abee7cb6d35d519',\\n      },\\n      show: !process.env.HEADLESS,\\n    },\\n    REST: {},\\n    User: {\\n      require: './user_helper.js',\\n    },\\n  },\\n  include: {\\n    I: './custom_steps.js',\\n    Smth: './pages/Smth.js',\\n    loginPage: './pages/Login.js',\\n    signinFragment: './fragments/Signin.js',\\n  },\\n  mocha: {\\n    reporterOptions: {\\n      mochaFile: './output/result.xml',\\n    },\\n  },\\n  gherkin: {\\n    features: './features/*.feature',\\n    steps: ['./step_definitions/steps.js'],\\n  },\\n  plugins: {\\n    analyze: {\\n      enabled: true,\\n    },\\n    // heal: {\\n    //   enabled: true,\\n    // },\\n    // customReporter: {\\n    //   enabled: true,\\n    // },\\n    wdio: {\\n      enabled: false,\\n      services: ['selenium-standalone'],\\n    },\\n    stepByStepReport: {},\\n    autoDelay: {\\n      enabled: false,\\n    },\\n    retryFailedStep: {\\n      enabled: false,\\n    },\\n    subtitles: {\\n      enabled: true,\\n    },\\n  },\\n\\n  tests: './*_test.js',\\n  // timeout: 100,\\n  multiple: {\\n    parallel: {\\n      chunks: 2,\\n    },\\n    default: {\\n      grep: 'signin',\\n      browsers: ['chrome', 'firefox'],\\n    },\\n  },\\n  name: 'tests',\\n};\"\n  }\n}",
+  "output_digest": "sha256:d75c7cb5eb8986b8f9e29e30cdece3e05364cbec9cbab866c4cc9b730ed744c8",
+  "parse_status": "failed",
+  "parse_failure_code": "OUTPUT_PATH_NOT_RETRIEVED",
+  "generated_patch": "",
+  "generated_patch_digest": "sha256:12ae32cb1ec02d01eda3581b127c1fee3b0dc53572ed6baf239721a03d82e126",
+  "changed_paths": [],
+  "started_at": "2026-08-03T18:02:38.976Z",
+  "duration_ms": 20926,
+  "usage": {
+    "input_tokens": 2244,
+    "output_tokens": 588
+  },
+  "execution_evidence": {
+    "status": "verified",
+    "runtime": "ollama-chat",
+    "requested_model": "qwen2.5-coder:3b",
+    "canonical_model": "qwen2.5-coder:3b",
+    "model_digest": "sha256:f72c60cabf6237b07f6e632b2c48d533cef25eda2efbd34bed21c5e9c01e6225",
+    "response_digest": "sha256:2f26063818a7a26eb00ec2a6763d8381b48a7c61f99f0763e138c7a3e9470982",
+    "error": null
+  },
+  "economics": {
+    "comparison_cost": {
+      "status": "derived-comparison",
+      "amount_usd": 0.000152509,
+      "source": "measured-gpu-energy-plus-frozen-residual-amortization"
+    },
+    "actual_subscription_cash": {
+      "status": "not-applicable",
+      "amount_usd": 0
+    },
+    "gpu": {
+      "status": "measured",
+      "samples": 41,
+      "average_watts": 81.183902,
+      "energy_kwh": 0.000471904
+    }
+  },
+  "hidden_verification": {
+    "status": "not-run",
+    "source": "official-swe-bench-live-evaluator"
+  },
+  "pilot_freeze_id": "sha256:cfe2d091ccd01effd8cacc443986e649a9db442a828fbe20946673a9eff173c8",
+  "pilot_assignment_id": "sha256:c5fa3f2a08617b1347fa402964fb91ae422036333a92fc1f551da073e3eb765e",
+  "attestation": {
+    "algorithm": "Ed25519",
+    "payload_digest": "sha256:539c687cf7d8ab4e54864e0776c15005a2d24b3162f8319d5c89c46238105116",
+    "signature": "aw+uDFsrj6cbD1tbOWfn3SA+7pzYW9I6972XiAHJXFMIUUqloNa4Bt++SgaNX2BGVIkGils1wSmD1O0Y72YMAQ=="
+  }
+}

@@ -1,0 +1,191 @@
+{
+  "schema": 1,
+  "kind": "citadel_public_holdout_model_attempt",
+  "attempt_id": "sha256:fd1b374f8b21d4a88ca3cb75fdba24b081ac8a79ae305e2e4da410d7846314f0",
+  "instance_id": "mui__base-ui-2493",
+  "plan_id": "qwen-3b",
+  "base_commit": "3ce0fe2e9ed56513f02f2c8660ada9413ccca3db",
+  "retrieval": {
+    "schema": 1,
+    "kind": "citadel_public_holdout_retrieval",
+    "retrieval_id": "sha256:15cb9d48adbbdfa2705142f13073bd70be3c8dd5a8a1677e533d9d79bd1f0fd8",
+    "instance_id": "mui__base-ui-2493",
+    "contract": {
+      "maximum_files": 12,
+      "maximum_total_characters": 60000,
+      "maximum_file_characters": 12000,
+      "maximum_file_bytes": 100000,
+      "excluded_directories": [
+        ".git",
+        ".hg",
+        ".svn",
+        "build",
+        "coverage",
+        "dist",
+        "node_modules",
+        "vendor"
+      ],
+      "extensions": [
+        ".cjs",
+        ".js",
+        ".jsx",
+        ".json",
+        ".md",
+        ".mjs",
+        ".ts",
+        ".tsx",
+        ".yaml",
+        ".yml"
+      ],
+      "always_consider": [
+        "package.json",
+        "tsconfig.json",
+        "jsconfig.json"
+      ],
+      "maximum_query_terms": 24,
+      "scoring_rule": "explicit path/basename or adjacent issue-term match, then git-grep inverse-document-frequency evidence, path overlap, and capped content frequency; lexical tie by path"
+    },
+    "inventory_count": 383,
+    "selected_file_count": 12,
+    "selected_character_count": 19172,
+    "files": [
+      {
+        "path": "docs/reference/generated/menu-submenu-root.json",
+        "score": 2251,
+        "truncated": false,
+        "content": "{\n  \"name\": \"MenuSubmenuRoot\",\n  \"description\": \"Groups all parts of a submenu.\\nDoesn’t render its own HTML element.\",\n  \"props\": {\n    \"defaultOpen\": {\n      \"type\": \"boolean\",\n      \"default\": \"false\",\n      \"description\": \"Whether the menu is initially open.\\n\\nTo render a controlled menu, use the `open` prop instead.\",\n      \"detailedType\": \"boolean | undefined\"\n    },\n    \"open\": {\n      \"type\": \"boolean\",\n      \"description\": \"Whether the menu is currently open.\",\n      \"detailedType\": \"boolean | undefined\"\n    },\n    \"onOpenChange\": {\n      \"type\": \"((open: boolean, event: Event | undefined, reason: Menu.Root.OpenChangeReason | undefined) => void)\",\n      \"description\": \"Event handler called when the menu is opened or closed.\",\n      \"detailedType\": \"| ((\\n    open: boolean,\\n    event: Event | undefined,\\n    reason: Menu.Root.OpenChangeReason | undefined,\\n  ) => void)\\n| undefined\"\n    },\n    \"actionsRef\": {\n      \"type\": \"RefObject<Menu.Root.Actions>\",\n      \"description\": \"A ref to imperative actions.\\n- `unmount`: When specified, the menu will not be unmounted when closed.\\nInstead, the `unmount` function must be called to unmount the menu manually.\\nUseful when the menu's animation is controlled by an external library.\",\n      \"detailedType\": \"React.RefObject<Menu.Root.Actions> | undefined\"\n    },\n    \"closeParentOnEsc\": {\n      \"type\": \"boolean\",\n      \"default\": \"true\",\n      \"description\": \"When in a submenu, determines whether pressing the Escape key\\ncloses the entire menu, or only the current child menu.\",\n      \"detailedType\": \"boolean | undefined\"\n    },\n    \"onOpenChangeComplete\": {\n      \"type\": \"((open: boolean) => void)\",\n      \"description\": \"Event handler called after any animations complete when the menu is closed.\",\n      \"detailedType\": \"((open: boolean) => void) | undefined\"\n    },\n    \"disabled\": {\n      \"type\": \"boolean\",\n      \"default\": \"false\",\n      \"description\": \"Whether the component should ignore user interaction.\",\n      \"detailedType\": \"boolean | undefined\"\n    },\n    \"openOnHover\": {\n      \"type\": \"boolean\",\n      \"default\": \"true\",\n      \"description\": \"Whether the submenu should open when the trigger is hovered.\",\n      \"detailedType\": \"boolean | undefined\"\n    },\n    \"delay\": {\n      \"type\": \"number\",\n      \"default\": \"100\",\n      \"description\": \"How long to wait before the menu may be opened on hover. Specified in milliseconds.\\n\\nRequires the `openOnHover` prop.\",\n      \"detailedType\": \"number | undefined\"\n    },\n    \"closeDelay\": {\n      \"type\": \"number\",\n      \"default\": \"0\",\n      \"description\": \"How long to wait before closing the menu that was opened on hover.\\nSpecified in milliseconds.\\n\\nRequires the `openOnHover` prop.\",\n      \"detailedType\": \"number | undefined\"\n    },\n    \"loop\": {\n      \"type\": \"boolean\",\n      \"default\": \"true\",\n      \"description\": \"Whether to loop keyboard focus back to the first item\\nwhen the end of the list is reached while using the arrow keys.\",\n      \"detailedType\": \"boolean | undefined\"\n    },\n    \"orientation\": {\n      \"type\": \"Menu.Root.Orientation\",\n      \"default\": \"'vertical'\",\n      \"description\": \"The visual orientation of the menu.\\nControls whether roving focus uses up/down or left/right arrow keys.\",\n      \"detailedType\": \"'horizontal' | 'vertical' | undefined\"\n    },\n    \"children\": {\n      \"type\": \"ReactNode\",\n      \"required\": true,\n      \"detailedType\": \"React.ReactNode\"\n    }\n  },\n  \"dataAttributes\": {},\n  \"cssVariables\": {}\n}\n",
+        "content_digest": "sha256:4afedec5ccc433549409e2e607f97e8acd832ece991fe112d6cad3735fd50c14"
+      },
+      {
+        "path": "docs/reference/generated/menu-submenu-trigger.json",
+        "score": 2250,
+        "truncated": false,
+        "content": "{\n  \"name\": \"MenuSubmenuTrigger\",\n  \"description\": \"A menu item that opens a submenu.\\nRenders a `<div>` element.\",\n  \"props\": {\n    \"label\": {\n      \"type\": \"string\",\n      \"description\": \"Overrides the text label to use when the item is matched during keyboard text navigation.\",\n      \"detailedType\": \"string | undefined\"\n    },\n    \"onClick\": {\n      \"type\": \"MouseEventHandler<HTMLElement>\",\n      \"detailedType\": \"React.MouseEventHandler<HTMLElement> | undefined\"\n    },\n    \"nativeButton\": {\n      \"type\": \"boolean\",\n      \"default\": \"false\",\n      \"description\": \"Whether the component renders a native `<button>` element when replacing it\\nvia the `render` prop.\\nSet to `true` if the rendered element is a native button.\",\n      \"detailedType\": \"boolean | undefined\"\n    },\n    \"id\": {\n      \"type\": \"string\",\n      \"detailedType\": \"string | undefined\"\n    },\n    \"children\": {\n      \"type\": \"ReactNode\",\n      \"detailedType\": \"React.ReactNode\"\n    },\n    \"className\": {\n      \"type\": \"string | ((state: Menu.SubmenuTrigger.State) => string)\",\n      \"description\": \"CSS class applied to the element, or a function that\\nreturns a class based on the component’s state.\",\n      \"detailedType\": \"| string\\n| ((state: Menu.SubmenuTrigger.State) => string)\"\n    },\n    \"render\": {\n      \"type\": \"ReactElement | ((props: HTMLProps, state: Menu.SubmenuTrigger.State) => ReactElement)\",\n      \"description\": \"Allows you to replace the component’s HTML element\\nwith a different tag, or compose it with another component.\\n\\nAccepts a `ReactElement` or a function that returns the element to render.\",\n      \"detailedType\": \"| ReactElement\\n| ((\\n    props: HTMLProps,\\n    state: Menu.SubmenuTrigger.State,\\n  ) => ReactElement)\"\n    }\n  },\n  \"dataAttributes\": {\n    \"data-popup-open\": {\n      \"description\": \"Present when the corresponding submenu is open.\"\n    }\n  },\n  \"cssVariables\": {}\n}\n",
+        "content_digest": "sha256:3f8b3231f937605c605b9fa989786e5528804dee1bb34e0cc166959ebdf1c710"
+      },
+      {
+        "path": "packages/react/src/utils/useBaseUiId.ts",
+        "score": 2200,
+        "truncated": false,
+        "content": "'use client';\nimport { useId } from '@base-ui-components/utils/useId';\n\n/**\n * Wraps `useId` and prefixes generated `id`s with `base-ui-`\n * @param {string | undefined} idOverride overrides the generated id when provided\n * @returns {string | undefined}\n */\nexport function useBaseUiId(idOverride?: string): string | undefined {\n  return useId(idOverride, 'base-ui');\n}\n",
+        "content_digest": "sha256:6fb286a24156c90d6624f3ff549240262f08cb7e59cc0d378bcdfc64919a16e1"
+      },
+      {
+        "path": "packages/react/src/menu/submenu-root/MenuSubmenuRoot.tsx",
+        "score": 2166.6666666666665,
+        "truncated": false,
+        "content": "'use client';\nimport * as React from 'react';\nimport { MenuRoot } from '../root/MenuRoot';\nimport { MenuSubmenuRootContext } from './MenuSubmenuRootContext';\n\nexport { useMenuSubmenuRootContext } from './MenuSubmenuRootContext';\n\n/**\n * Groups all parts of a submenu.\n * Doesn’t render its own HTML element.\n *\n * Documentation: [Base UI Menu](https://base-ui.com/react/components/menu)\n */\nexport function MenuSubmenuRoot(props: MenuSubmenuRoot.Props) {\n  return (\n    <MenuSubmenuRootContext.Provider value>\n      <MenuRoot {...props} />\n    </MenuSubmenuRootContext.Provider>\n  );\n}\n\nexport namespace MenuSubmenuRoot {\n  export interface Props extends Omit<MenuRoot.Props, 'modal' | 'openOnHover'> {\n    /**\n     * Whether the submenu should open when the trigger is hovered.\n     * @default true\n     */\n    openOnHover?: MenuRoot.Props['openOnHover'];\n  }\n\n  export interface State {}\n}\n",
+        "content_digest": "sha256:8db736a937af08ad06ba9e3f250f3f29d6d3fe8b694acae783e16abc063cb368"
+      },
+      {
+        "path": "packages/react/src/menu/submenu-root/MenuSubmenuRootContext.ts",
+        "score": 2166.6666666666665,
+        "truncated": false,
+        "content": "import * as React from 'react';\n\nexport const MenuSubmenuRootContext = React.createContext(false);\n\nexport function useMenuSubmenuRootContext(): boolean {\n  return React.useContext(MenuSubmenuRootContext);\n}\n",
+        "content_digest": "sha256:a10490de0f9f20d53ca2dbb7c7fe0c036194559f9b8e2e3e017cf64680871baf"
+      },
+      {
+        "path": "packages/react/src/menu/submenu-trigger/MenuSubmenuTrigger.test.tsx",
+        "score": 2166.6666666666665,
+        "truncated": false,
+        "content": "import * as React from 'react';\nimport { expect } from 'chai';\nimport { fireEvent, waitFor, screen } from '@mui/internal-test-utils';\nimport { createRenderer, describeConformance } from '#test-utils';\nimport { DirectionProvider } from '@base-ui-components/react/direction-provider';\nimport { Menu } from '@base-ui-components/react/menu';\n\ntype TextDirection = 'ltr' | 'rtl';\n\ndescribe('<Menu.SubmenuTrigger />', () => {\n  const { render } = createRenderer();\n\n  describeConformance(<Menu.Trigger />, () => ({\n    refInstanceof: window.HTMLButtonElement,\n    testComponentPropWith: 'button',\n    button: true,\n    render(node) {\n      return render(\n        <Menu.Root open>\n          <Menu.SubmenuRoot>{node}</Menu.SubmenuRoot>\n        </Menu.Root>,\n      );\n    },\n  }));\n\n  function TestComponent({ direction = 'ltr' }: { direction: TextDirection }) {\n    return (\n      <DirectionProvider direction={direction}>\n        <Menu.Root open>\n          <Menu.Portal>\n            <Menu.Positioner>\n              <Menu.Popup>\n                <Menu.Item>1</Menu.Item>\n                <Menu.SubmenuRoot>\n                  <Menu.SubmenuTrigger>2</Menu.SubmenuTrigger>\n                  <Menu.Portal>\n                    <Menu.Positioner>\n                      <Menu.Popup>\n                        <Menu.Item>2.1</Menu.Item>\n                        <Menu.Item>2.2</Menu.Item>\n                      </Menu.Popup>\n                    </Menu.Positioner>\n                  </Menu.Portal>\n                </Menu.SubmenuRoot>\n              </Menu.Popup>\n            </Menu.Positioner>\n          </Menu.Portal>\n        </Menu.Root>\n      </DirectionProvider>\n    );\n  }\n\n  const testCases = [\n    { direction: 'ltr', openKey: 'ArrowRight', closeKey: 'ArrowLeft' },\n    { direction: 'rtl', openKey: 'ArrowLeft', closeKey: 'ArrowRight' },\n  ];\n\n  testCases.forEach(({ direction, openKey }) => {\n    it(`opens the submenu with ${openKey} and highlights a single item in ${direction.toUpperCase()} direction`, async () => {\n      await render(<TestComponent direction={direction as TextDirection} />);\n      const submenuTrigger = screen.getByText('2');\n\n      fireEvent.focus(submenuTrigger);\n      fireEvent.keyDown(submenuTrigger, { key: openKey });\n\n      const submenuItems = await screen.findAllByRole('menuitem');\n      const submenuItem1 = submenuItems.find((item) => item.textContent === '2.1');\n\n      await waitFor(() => {\n        expect(submenuItem1).toHaveFocus();\n      });\n\n      submenuItems.forEach((item) => {\n        if (item === submenuItem1) {\n          expect(item).to.have.attribute('data-highlighted');\n        } else {\n          expect(item).not.to.have.attribute('data-highlighted');\n        }\n      });\n\n      // Check that parent menu items are not active\n      const parentMenuItems = screen\n        .getAllByRole('menuitem')\n        .filter((item) => item.textContent !== '2.1' && item.textContent !== '2.2');\n      parentMenuItems.forEach((item) => {\n        expect(item).not.to.have.attribute('data-highlighted');\n      });\n    });\n  });\n\n  it('sets tabIndex to 0 on the submenu trigger after opening the submenu with a keydown event', async () => {\n    await render(<TestComponent direction=\"ltr\" />);\n    const submenuTrigger = screen.getByText('2');\n\n    fireEvent.focus(submenuTrigger);\n    fireEvent.keyDown(submenuTrigger, { key: 'ArrowRight' });\n\n    await waitFor(() => {\n      expect(submenuTrigger).to.have.attribute('tabIndex', '0');\n    });\n  });\n});\n",
+        "content_digest": "sha256:947ef06f509d95b198f65186374e052cfcf887c7784ff61c7e9ef13e76f6ee9c"
+      },
+      {
+        "path": "packages/react/src/menu/submenu-trigger/MenuSubmenuTrigger.tsx",
+        "score": 2166.6666666666665,
+        "truncated": false,
+        "content": "'use client';\nimport * as React from 'react';\nimport { useFloatingTree } from '../../floating-ui-react';\nimport { BaseUIComponentProps, NonNativeButtonProps } from '../../utils/types';\nimport { useMenuRootContext } from '../root/MenuRootContext';\nimport { useBaseUiId } from '../../utils/useBaseUiId';\nimport { triggerOpenStateMapping } from '../../utils/popupStateMapping';\nimport { useCompositeListItem } from '../../composite/list/useCompositeListItem';\nimport { useMenuItem } from '../item/useMenuItem';\nimport { useRenderElement } from '../../utils/useRenderElement';\nimport { useMenuPositionerContext } from '../positioner/MenuPositionerContext';\n\n/**\n * A menu item that opens a submenu.\n * Renders a `<div>` element.\n *\n * Documentation: [Base UI Menu](https://base-ui.com/react/components/menu)\n */\nexport const MenuSubmenuTrigger = React.forwardRef(function SubmenuTriggerComponent(\n  componentProps: MenuSubmenuTrigger.Props,\n  forwardedRef: React.ForwardedRef<Element>,\n) {\n  const {\n    render,\n    className,\n    label,\n    id: idProp,\n    nativeButton = false,\n    ...elementProps\n  } = componentProps;\n\n  const id = useBaseUiId(idProp);\n\n  const {\n    triggerProps: rootTriggerProps,\n    parent,\n    setTriggerElement,\n    open,\n    typingRef,\n    disabled,\n    allowMouseUpTriggerRef,\n  } = useMenuRootContext();\n  const menuPositionerContext = useMenuPositionerContext();\n\n  if (parent.type !== 'menu') {\n    throw new Error('Base UI: <Menu.SubmenuTrigger> must be placed in <Menu.SubmenuRoot>.');\n  }\n\n  const parentMenuContext = parent.context;\n\n  const { activeIndex, itemProps, setActiveIndex } = parentMenuContext;\n  const item = useCompositeListItem();\n\n  const highlighted = activeIndex === item.index;\n\n  const { events: menuEvents } = useFloatingTree()!;\n\n  const itemMetadata = React.useMemo(\n    () => ({\n      type: 'submenu-trigger' as const,\n      setActive: () => setActiveIndex(item.index),\n      allowMouseEnterEnabled: parentMenuContext.allowMouseEnter,\n    }),\n    [setActiveIndex, item.index, parentMenuContext.allowMouseEnter],\n  );\n\n  const { getItemProps, itemRef } = useMenuItem({\n    closeOnClick: false,\n    disabled,\n    highlighted,\n    id,\n    menuEvents,\n    allowMouseUpTriggerRef,\n    typingRef,\n    nativeButton,\n    itemMetadata,\n    nodeId: menuPositionerContext?.floatingContext.nodeId,\n  });\n\n  const state: MenuSubmenuTrigger.State = React.useMemo(\n    () => ({ disabled, highlighted, open }),\n    [disabled, highlighted, open],\n  );\n\n  return useRenderElement('div', componentProps, {\n    state,\n    ref: [forwardedRef, item.ref, itemRef, setTriggerElement],\n    customStyleHookMapping: triggerOpenStateMapping,\n    props: [\n      rootTriggerProps,\n      itemProps,\n      elementProps,\n      getItemProps,\n      {\n        tabIndex: open || highlighted ? 0 : -1,\n        onBlur() {\n          if (highlighted) {\n            setActiveIndex(null);\n          }\n        },\n      },\n    ],\n  });\n});\n\nexport namespace MenuSubmenuTrigger {\n  export interface Props extends NonNativeButtonProps, BaseUIComponentProps<'div', State> {\n    children?: React.ReactNode;\n    onClick?: React.MouseEventHandler<HTMLElement>;\n    /**\n     * Overrides the text label to use when the item is matched during keyboard text navigation.\n     */\n    label?: string;\n    /**\n     * @ignore\n     */\n    id?: string;\n  }\n\n  export interface State {\n    /**\n     * Whether the component should ignore user interaction.\n     */\n    disabled: boolean;\n    highlighted: boolean;\n    /**\n     * Whether the menu is currently open.\n     */\n    open: boolean;\n  }\n}\n",
+        "content_digest": "sha256:353fae3b2db92cdb2b6dffa005e9fa149945afc39de2b1c2df3de05fba651d8c"
+      },
+      {
+        "path": "packages/react/src/menu/submenu-trigger/MenuSubmenuTriggerDataAttributes.ts",
+        "score": 2166.6666666666665,
+        "truncated": false,
+        "content": "import { CommonTriggerDataAttributes } from '../../utils/popupStateMapping';\n\nexport enum MenuSubmenuTriggerDataAttributes {\n  /**\n   * Present when the corresponding submenu is open.\n   */\n  popupOpen = CommonTriggerDataAttributes.popupOpen,\n}\n",
+        "content_digest": "sha256:e61746a39d677c6795b5993d6d85acdfa980f95b19099056ddf1bb1c0642369b"
+      },
+      {
+        "path": "examples/vite-css/src/App.tsx",
+        "score": 500,
+        "truncated": false,
+        "content": "import * as React from 'react';\nimport reactLogo from './assets/react.svg';\nimport viteLogo from './assets/vite.svg';\nimport baseUILogo from './assets/base-ui.svg';\nimport { Switch } from './widgets/Switch';\nimport './App.css';\n\nfunction App() {\n  const [count, setCount] = React.useState(0);\n\n  return (\n    <React.Fragment>\n      <div>\n        <a href=\"https://vite.dev\" target=\"_blank\" rel=\"noopener noreferrer\">\n          <img src={viteLogo} className=\"logo vite\" alt=\"Vite logo\" />\n        </a>\n        <a href=\"https://react.dev\" target=\"_blank\" rel=\"noopener noreferrer\">\n          <img src={reactLogo} className=\"logo react\" alt=\"React logo\" />\n        </a>\n        <a href=\"https://base-ui.com\" target=\"_blank\" rel=\"noopener noreferrer\">\n          <img src={baseUILogo} className=\"logo base-ui\" alt=\"Base UI logo\" />\n        </a>\n      </div>\n      <h1>Vite + React + Base UI</h1>\n      <div className=\"card\">\n        <Switch onCheckedChange={() => setCount((c) => c + 1)} />\n        <p>\n          Flicked the Switch {count} time{count !== 1 ? 's' : ''}.\n        </p>\n        <p>\n          Edit <code>src/App.tsx</code> and save to test HMR.\n        </p>\n      </div>\n      <p className=\"read-the-docs\">Click on the Vite, React, and Base UI logos to learn more.</p>\n    </React.Fragment>\n  );\n}\n\nexport default App;\n",
+        "content_digest": "sha256:6b267ef9384ee769f8c974ca94359b9d5caa68f212e98f481616030abe24cd87"
+      },
+      {
+        "path": "examples/vite-css/package.json",
+        "score": 252,
+        "truncated": false,
+        "content": "{\n  \"name\": \"vite-css-base-ui-example\",\n  \"private\": true,\n  \"version\": \"0.0.0\",\n  \"type\": \"module\",\n  \"scripts\": {\n    \"dev\": \"vite\",\n    \"build\": \"tsc -b && vite build\",\n    \"lint\": \"eslint .\",\n    \"preview\": \"vite preview\"\n  },\n  \"dependencies\": {\n    \"@base-ui-components/react\": \"latest\",\n    \"clsx\": \"^2.1.1\",\n    \"react\": \"^19.1.1\",\n    \"react-dom\": \"^19.1.1\"\n  },\n  \"devDependencies\": {\n    \"@eslint/js\": \"^9.32.0\",\n    \"@types/react\": \"^19.1.9\",\n    \"@types/react-dom\": \"^19.1.7\",\n    \"@vitejs/plugin-react\": \"^5.0.0\",\n    \"eslint\": \"^9.32.0\",\n    \"eslint-plugin-react-hooks\": \"^5.2.0\",\n    \"eslint-plugin-react-refresh\": \"^0.4.20\",\n    \"globals\": \"^16.3.0\",\n    \"typescript\": \"^5.9.2\",\n    \"typescript-eslint\": \"^8.39.0\",\n    \"vite\": \"^7.1.1\"\n  }\n}\n",
+        "content_digest": "sha256:dd8bf4952eadc420b7031b98d62a64f576fce3f9d086d9cd0db179ac722d32e0"
+      },
+      {
+        "path": "examples/vite-css/tsconfig.json",
+        "score": 252,
+        "truncated": false,
+        "content": "{\n  \"files\": [],\n  \"references\": [{ \"path\": \"./tsconfig.app.json\" }, { \"path\": \"./tsconfig.node.json\" }]\n}\n",
+        "content_digest": "sha256:637b7c22150825e4cb648f361b4d79d4793dee4028a7561563955d9540f15068"
+      },
+      {
+        "path": "docs/reference/generated/context-menu-root.json",
+        "score": 251,
+        "truncated": false,
+        "content": "{\n  \"name\": \"ContextMenuRoot\",\n  \"description\": \"A component that creates a context menu activated by right clicking or long pressing.\\nDoesn’t render its own HTML element.\",\n  \"props\": {\n    \"defaultOpen\": {\n      \"type\": \"boolean\",\n      \"default\": \"false\",\n      \"description\": \"Whether the menu is initially open.\\n\\nTo render a controlled menu, use the `open` prop instead.\",\n      \"detailedType\": \"boolean | undefined\"\n    },\n    \"open\": {\n      \"type\": \"boolean\",\n      \"description\": \"Whether the menu is currently open.\",\n      \"detailedType\": \"boolean | undefined\"\n    },\n    \"onOpenChange\": {\n      \"type\": \"((open: boolean, event: Event | undefined, reason: Menu.Root.OpenChangeReason | undefined) => void)\",\n      \"description\": \"Event handler called when the menu is opened or closed.\",\n      \"detailedType\": \"| ((\\n    open: boolean,\\n    event: Event | undefined,\\n    reason: Menu.Root.OpenChangeReason | undefined,\\n  ) => void)\\n| undefined\"\n    },\n    \"actionsRef\": {\n      \"type\": \"RefObject<Menu.Root.Actions>\",\n      \"description\": \"A ref to imperative actions.\\n- `unmount`: When specified, the menu will not be unmounted when closed.\\nInstead, the `unmount` function must be called to unmount the menu manually.\\nUseful when the menu's animation is controlled by an external library.\",\n      \"detailedType\": \"React.RefObject<Menu.Root.Actions> | undefined\"\n    },\n    \"closeParentOnEsc\": {\n      \"type\": \"boolean\",\n      \"default\": \"true\",\n      \"description\": \"When in a submenu, determines whether pressing the Escape key\\ncloses the entire menu, or only the current child menu.\",\n      \"detailedType\": \"boolean | undefined\"\n    },\n    \"onOpenChangeComplete\": {\n      \"type\": \"((open: boolean) => void)\",\n      \"description\": \"Event handler called after any animations complete when the menu is closed.\",\n      \"detailedType\": \"((open: boolean) => void) | undefined\"\n    },\n    \"disabled\": {\n      \"type\": \"boolean\",\n      \"default\": \"false\",\n      \"description\": \"Whether the component should ignore user interaction.\",\n      \"detailedType\": \"boolean | undefined\"\n    },\n    \"loop\": {\n      \"type\": \"boolean\",\n      \"default\": \"true\",\n      \"description\": \"Whether to loop keyboard focus back to the first item\\nwhen the end of the list is reached while using the arrow keys.\",\n      \"detailedType\": \"boolean | undefined\"\n    },\n    \"orientation\": {\n      \"type\": \"Menu.Root.Orientation\",\n      \"default\": \"'vertical'\",\n      \"description\": \"The visual orientation of the menu.\\nControls whether roving focus uses up/down or left/right arrow keys.\",\n      \"detailedType\": \"'horizontal' | 'vertical' | undefined\"\n    },\n    \"children\": {\n      \"type\": \"ReactNode\",\n      \"required\": true,\n      \"detailedType\": \"React.ReactNode\"\n    }\n  },\n  \"dataAttributes\": {},\n  \"cssVariables\": {}\n}\n",
+        "content_digest": "sha256:19204ab659d35e7f853ccba7efacd319156330add8ec9f5295320809c832db0a"
+      }
+    ]
+  },
+  "prompt_digest": "sha256:b46b18830085b5b85357f301389df823d2c5105ff0f1c546181342232bc838e8",
+  "output_text": "{\"files\":{\"packages/react/src/menu/submenu-root/MenuSubmenuRoot.tsx\":\"import * as React from 'react';\\nimport { MenuRoot } from '../root/MenuRoot';\\nimport { MenuSubmenuRootContext } from './MenuSubmenuRootContext';\\n\\nexport { useMenuSubmenuRootContext } from './MenuSubmenuRootContext';\\n\\n/**\\n * Groups all parts of a submenu.\\n * Doesn’t render its own HTML element.\\n *\\n * Documentation: [Base UI Menu](https://base-ui.com/react/components/menu)\\n */\\nexport function MenuSubmenuRoot(props: MenuSubmenuRoot.Props) {\\n  return (\\n    <MenuSubmenuRootContext.Provider value>\\n      <MenuRoot {...props} />\\n    </MenuSubmenuRootContext.Provider>\\n  );\\n}\\n\\nexport namespace MenuSubmenuRoot {\\n  export interface Props extends Omit<MenuRoot.Props, 'modal' | 'openOnHover'> {\\n    /**\\n     * Whether the submenu should open when the trigger is hovered.\\n     * @default true\\n     */\\n    openOnHover?: MenuRoot.Props['openOnHover'];\\n  }\\n\\n  export interface State {}\\n}\"}}",
+  "output_digest": "sha256:389ef76a19c12ef006c976827eb891043956f61f6cfe970681dd1377960be098",
+  "parse_status": "passed",
+  "parse_failure_code": null,
+  "generated_patch": "diff --git a/packages/react/src/menu/submenu-root/MenuSubmenuRoot.tsx b/packages/react/src/menu/submenu-root/MenuSubmenuRoot.tsx\nindex 2568b147..58fbdeb5 100644\n--- a/packages/react/src/menu/submenu-root/MenuSubmenuRoot.tsx\n+++ b/packages/react/src/menu/submenu-root/MenuSubmenuRoot.tsx\n@@ -1,4 +1,3 @@\n-'use client';\n import * as React from 'react';\n import { MenuRoot } from '../root/MenuRoot';\n import { MenuSubmenuRootContext } from './MenuSubmenuRootContext';\n@@ -29,4 +28,4 @@ export namespace MenuSubmenuRoot {\n   }\n \n   export interface State {}\n-}\n+}\n\\ No newline at end of file\n",
+  "generated_patch_digest": "sha256:81a742b2e8f71759976aac8bfa4b9171c8d865d9db4b001e530527c85423da2d",
+  "changed_paths": [
+    "packages/react/src/menu/submenu-root/MenuSubmenuRoot.tsx"
+  ],
+  "started_at": "2026-08-03T18:06:30.712Z",
+  "duration_ms": 16636,
+  "usage": {
+    "input_tokens": 5211,
+    "output_tokens": 272
+  },
+  "execution_evidence": {
+    "status": "verified",
+    "runtime": "ollama-chat",
+    "requested_model": "qwen2.5-coder:3b",
+    "canonical_model": "qwen2.5-coder:3b",
+    "model_digest": "sha256:f72c60cabf6237b07f6e632b2c48d533cef25eda2efbd34bed21c5e9c01e6225",
+    "response_digest": "sha256:2656ce1e80cb92f5c7b8c9e6f8112c0fcda63229f22b921e42efdbadca6b5c35",
+    "error": null
+  },
+  "economics": {
+    "comparison_cost": {
+      "status": "derived-comparison",
+      "amount_usd": 0.00011852,
+      "source": "measured-gpu-energy-plus-frozen-residual-amortization"
+    },
+    "actual_subscription_cash": {
+      "status": "not-applicable",
+      "amount_usd": 0
+    },
+    "gpu": {
+      "status": "measured",
+      "samples": 33,
+      "average_watts": 78.237879,
+      "energy_kwh": 0.000361546
+    }
+  },
+  "hidden_verification": {
+    "status": "not-run",
+    "source": "official-swe-bench-live-evaluator"
+  },
+  "pilot_freeze_id": "sha256:cfe2d091ccd01effd8cacc443986e649a9db442a828fbe20946673a9eff173c8",
+  "pilot_assignment_id": "sha256:c5fa3f2a08617b1347fa402964fb91ae422036333a92fc1f551da073e3eb765e",
+  "attestation": {
+    "algorithm": "Ed25519",
+    "payload_digest": "sha256:e0b5359b31714606bb43bce0dab5bfa1cc294cfc209735ecef8b078ade3cdf75",
+    "signature": "Nfyc4KBigqYIrqZ4qZbWNOjEXbP7Z5bKYgbah95rHZ11tCDIWMnDD55q2ljhAOEW0w3IWO2iJuJXPnz2uqwYCw=="
+  }
+}
