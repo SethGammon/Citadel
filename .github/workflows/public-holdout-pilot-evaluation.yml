@@ -1,0 +1,105 @@
+name: Public holdout fast pilot evaluator
+
+on:
+  workflow_dispatch:
+    inputs:
+      prediction_path:
+        description: Frozen pilot prediction JSON
+        required: true
+        type: string
+      selection_path:
+        description: Parent frozen public selection record
+        required: true
+        default: benchmarks/public-holdout-capstone/selection.json
+      pool_path:
+        description: Parent frozen candidate pool
+        required: true
+        default: benchmarks/public-holdout-capstone/candidate-pool.json
+
+permissions:
+  contents: read
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.matrix.outputs.matrix }}
+      count: ${{ steps.matrix.outputs.count }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: matrix
+        shell: bash
+        run: node scripts/public-holdout-matrix.js prediction "${{ inputs.selection_path }}" "${{ inputs.pool_path }}" "${{ inputs.prediction_path }}" 0 0 >> "$GITHUB_OUTPUT"
+
+  evaluate:
+    needs: prepare
+    if: ${{ needs.prepare.outputs.count != '0' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      max-parallel: 10
+      matrix: ${{ fromJSON(needs.prepare.outputs.matrix) }}
+    steps:
+      - name: Check out Citadel protocol and predictions
+        uses: actions/checkout@v4
+        with:
+          path: citadel
+      - name: Check out pinned official evaluator
+        uses: actions/checkout@v4
+        with:
+          repository: microsoft/SWE-bench-Live
+          ref: 70ec57e852e3f2d195790fe71f553e272c691833
+          path: swe-bench-live
+          submodules: recursive
+      - name: Verify evaluator dependency closure
+        shell: bash
+        run: |
+          test "$(git -C swe-bench-live rev-parse HEAD)" = "70ec57e852e3f2d195790fe71f553e272c691833"
+          test "$(git -C swe-bench-live/launch rev-parse HEAD)" = "7735b1e7363dd3bbc69bd0ef80db646a2ae391fd"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: swe-bench-live/pyproject.toml
+      - name: Install official evaluator
+        run: python -m pip install -e ./swe-bench-live
+      - name: Evaluate with a graceful cell deadline
+        shell: bash
+        env:
+          INSTANCE_ID: ${{ matrix.instance_id }}
+          SPLIT: ${{ matrix.split }}
+          PREDICTION_PATH: ${{ github.workspace }}/citadel/${{ inputs.prediction_path }}
+        run: |
+          output="${{ github.workspace }}/evaluator-output/run-1"
+          mkdir -p "$output"
+          set +e
+          (
+            cd swe-bench-live
+            timeout --signal=TERM --kill-after=60s 60m \
+              python -m evaluation.evaluation \
+                --dataset SWE-bench-Live/MultiLang \
+                --split "$SPLIT" \
+                --instance_ids "$INSTANCE_ID" \
+                --platform linux \
+                --patch_dir "$PREDICTION_PATH" \
+                --output_dir "$output" \
+                --workers 1 \
+                --overwrite 1
+          )
+          status=$?
+          set -e
+          printf '%s\n' "$status" > "$output/process-exit-status.txt"
+      - name: Write content-addressed evaluator summary
+        if: always()
+        env:
+          CITADEL_TASK_REPO: ${{ matrix.repo }}
+        run: node citadel/scripts/public-holdout-evaluator-summary.js prediction "${{ matrix.instance_id }}" "${{ matrix.split }}" "${{ matrix.feature_key }}" "${{ github.workspace }}/evaluator-output" 1 "${{ github.workspace }}/evaluator-output/summary.json"
+      - name: Upload verifier evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: prediction-${{ matrix.artifact_name }}
+          path: evaluator-output
+          if-no-files-found: error
+          retention-days: 30

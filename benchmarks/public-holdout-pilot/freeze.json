@@ -1,0 +1,64 @@
+{
+  "schema": 1,
+  "kind": "citadel_public_holdout_fast_pilot_freeze",
+  "freeze_id": "sha256:cfe2d091ccd01effd8cacc443986e649a9db442a828fbe20946673a9eff173c8",
+  "frozen_at": "2026-08-03T17:44:32.478Z",
+  "parent_request_id": "sha256:404f1a5571d1dbcf27120cc750e935e6e8957e2b18653ee90faa0a7e11f36c11",
+  "parent_selection_id": "sha256:ed6ee76eee129446a6100c93fa8be9bac917dd7d990c0d8d42c6c48c8216f662",
+  "parent_preflight_id": "sha256:f850bb657050fc71dea0846332db111758cde58c47571285f70cf5c815d613bc",
+  "parent_terminal_assignment_id": "sha256:320f090a5ac6103fa006d176c5154ffd4d44317a28a0416bc4d33a0c7eb7a102",
+  "parent_terminal_status": "setup-unknown",
+  "design": {
+    "design_id": "public-holdout-fast-pilot-v1",
+    "parent_protocol": "public-holdout-capstone-v1-terminal-setup-unknown",
+    "feature_strata": [
+      "js.issue-short",
+      "js.issue-long",
+      "ts.issue-short",
+      "ts.issue-long"
+    ],
+    "calibration_per_feature_stratum": 2,
+    "evaluation_per_feature_stratum": 4,
+    "calibration_total": 8,
+    "evaluation_total": 16,
+    "maximum_tasks_per_repo": 1,
+    "required_gold_passes": 3,
+    "gold_attempts": 3,
+    "plan_ids": [
+      "qwen-3b",
+      "claude-sonnet"
+    ],
+    "assignment_rule": "within each frozen feature-stratum order, take the first two gold-valid tasks from unique repositories for calibration and the next four for untouched evaluation",
+    "stopping_rule": "if any stratum cannot fill two calibration and four evaluation tasks under the one-task-per-repository cap, stop setup-unknown before model inference",
+    "inference_scope": "bounded paired descriptive pilot; no population-wide noninferiority or universal savings claim"
+  },
+  "source_digests": {
+    ".github/workflows/public-holdout-pilot-evaluation.yml": "sha256:48427908ec4921e005a062ca4dcbb4242955d4a3c9888e4c261e5e1dadaf008d",
+    "benchmarks/public-holdout-pilot/METHOD.md": "sha256:b398c8132c1e20983fe3d57ab7ea92ef63723940287b40fa967fa982bf55ba69",
+    "core/operation-control/contracts.js": "sha256:d91adea8e5f5649dd38712e0fe244a0beb7dbe6e221e308ee975fd152f2fb5be",
+    "core/operation-control/receipt.js": "sha256:3ef5cfce5e17d22f5dbd68ff69cadf9138e95fa6b952c6ac26b29f4e7dc5aa66",
+    "core/operation-controller/contracts.js": "sha256:c7d6c4d25a45d9e153382a6e9e15919b134bb2a83397b7703f42235abcecb6a1",
+    "core/operation-controller/controller.js": "sha256:1c020300887916b7a73cf3cb01a06ab9d94a1036fe91529b9603bfd028923e53",
+    "core/public-holdout/artifacts.js": "sha256:745014481a8c2fe75ab878aed9a47de677c2b71446536ae5062fe615ac475051",
+    "core/public-holdout/dataset.js": "sha256:3457d10311d575357cda8b038cf2c649a11c803ecc516c6a2dfe3e38a1fa429d",
+    "core/public-holdout/retrieval.js": "sha256:47a2604ad57f5a171e82fe7f59e2fd8f6bd16ef3a8f36d679c3a3be40570c0e9",
+    "core/public-holdout/runner.js": "sha256:790d23fb3b17e377270cc9327a34952d7eff2d3ea01a6518018725b83b278768",
+    "core/public-holdout/selection.js": "sha256:e8049c9c77c21c97bc54f4f118d6990a7ccccf74ac81a672e05ebaebc8ede887",
+    "core/public-holdout/statistics.js": "sha256:7808172b494f0b05ba5285e94be28bb05ddff648c33213c8efdac2f83f676246",
+    "core/public-holdout-pilot/artifacts.js": "sha256:c8c6a0be449fd73caeaf92c6338ab3eff2a01fd78cfdcf48380926217e425dd7",
+    "core/public-holdout-pilot/design.js": "sha256:ed8524454832f3a66929e7c73a6359217090eab5ab7978f46625afa3f1e9924d",
+    "core/public-holdout-pilot/router.js": "sha256:0f656293a281f7ce3d2cd4ac24415ef80cf1e0d6dbc01274d7c0ac0e34c779eb",
+    "core/public-holdout-pilot/statistics.js": "sha256:29973cb6b36d236466d91e9ec3bad5a281d3427acdc91df24be3cd64d75998d8",
+    "scripts/public-holdout-capstone.js": "sha256:6dc552ef0d5637eab37df3535feaeed1e666612c576d35fda8b657db67918002",
+    "scripts/public-holdout-evaluator-summary.js": "sha256:24031b3f1c0b971a24f79e3b5c6193aeacdda51e6147cf92fd436b9ea9b22655",
+    "scripts/public-holdout-matrix.js": "sha256:2a9df25c9053bbf53479066301c379992fbc28c2fa3d457fce56b96cc541e469",
+    "scripts/public-holdout-pilot.js": "sha256:5158da4c8cdd9a1913d46865308d96c5acdfcfa9d1539b4dcd8ebb8339ada7ad",
+    "scripts/test-public-holdout-pilot.js": "sha256:ab0cbfa80dee3dc73da40549264dd5b2bfa438863aa8b99e8aab50ea6413ac03"
+  },
+  "attestation_public_key": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAttWhQcx2y2SU1nrcHD82MM3tDuwS0Lvz9w/mmByC/rQ=\n-----END PUBLIC KEY-----\n",
+  "attestation": {
+    "algorithm": "Ed25519",
+    "payload_digest": "sha256:0eef5494980bbeefe098f0a736c113f4b53182889bf7a02d3930322eba1e4ddb",
+    "signature": "XTVB+neFqaJFq5lHGAMhZABhR3dNwbt3UPryiJQWLV/tsW0lYWkUCdVj1KgQOK1K6JbioQCw7ZLd/8/FJTIPBg=="
+  }
+}

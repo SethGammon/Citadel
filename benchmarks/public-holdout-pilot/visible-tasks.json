@@ -1,0 +1,590 @@
+{
+  "schema": 1,
+  "kind": "citadel_public_holdout_fast_pilot_visible_tasks",
+  "artifact_id": "sha256:184f1ff0ac26379a46587723fb432097f330c091b79383692764f624795662c5",
+  "freeze_id": "sha256:cfe2d091ccd01effd8cacc443986e649a9db442a828fbe20946673a9eff173c8",
+  "assignment_id": "sha256:c5fa3f2a08617b1347fa402964fb91ae422036333a92fc1f551da073e3eb765e",
+  "tasks": [
+    {
+      "schema": 1,
+      "instance_id": "rollup__rollup-6041",
+      "split": "js",
+      "row_index": 24,
+      "repo": "rollup/rollup",
+      "pull_number": "6041",
+      "base_commit": "244dc20bab1cd59221b70cd759e0a0ec15044c2e",
+      "created_at": "2025-07-29T13:29:57Z",
+      "docker_image": "starryzhang/sweb.eval.x86_64.rollup_1776_rollup-6041",
+      "problem_statement": "4.46 breaks `styled-components` with new `in` optimization\n### Rollup Version\n\n4.46.1\n\n### Operating System (or Browser)\n\nall\n\n### Node Version (if applicable)\n\n_No response_\n\n### Link To Reproduction\n\nhttps://rollupjs.org/repl/?version=4.46.1&shareable=JTdCJTIyZXhhbXBsZSUyMiUzQW51bGwlMkMlMjJtb2R1bGVzJTIyJTNBJTVCJTdCJTIyY29kZSUyMiUzQSUyMiUyRiUyRiUyMGltcG9ydCUyMHVuaXRsZXNzJTIwZnJvbSUyMCclNDBlbW90aW9uJTJGdW5pdGxlc3MnJTNCJTVDbmltcG9ydCUyMHVuaXRsZXNzJTIwZnJvbSUyMCcuJTJGdW5pdGxlc3MnJTVDbiU1Q24lMkYlMkYlMjBPcmlnaW5hbCUyMGZ1bmN0aW9uJTIwaW4lMjAlNjBzdHlsZWQtY29tcG9uZW50cyU2MCUyQyUyMHN0cmlwcGVkJTIwZm9yJTIwVHlwZVNjcmlwdCUzQSUyMGh0dHBzJTNBJTJGJTJGZ2l0aHViLmNvbSUyRnN0eWxlZC1jb21wb25lbnRzJTJGc3R5bGVkLWNvbXBvbmVudHMlMkZibG9iJTJGZDBiNzNhY2Q5MzFkYWVmOWVlYmI5N2UzNGZlNDU1MmZmYzU3ZDYzZSUyRnBhY2thZ2VzJTJGc3R5bGVkLWNvbXBvbmVudHMlMkZzcmMlMkZ1dGlscyUyRmFkZFVuaXRJZk5lZWRlZC50cyUyM0wxMCU1Q25leHBvcnQlMjBkZWZhdWx0JTIwZnVuY3Rpb24lMjBhZGRVbml0SWZOZWVkZWQobmFtZSUyQyUyMHZhbHVlKSUyMCU3QiU1Q24lMjAlMjAlMkYlMkYlMjBodHRwcyUzQSUyRiUyRmdpdGh1Yi5jb20lMkZhbWlsYWphY2slMkZlc2xpbnQtcGx1Z2luLWZsb3d0eXBlLWVycm9ycyUyRmlzc3VlcyUyRjEzMyU1Q24lMjAlMjBpZiUyMCh2YWx1ZSUyMCUzRCUzRCUyMG51bGwlMjAlN0MlN0MlMjB0eXBlb2YlMjB2YWx1ZSUyMCUzRCUzRCUzRCUyMCdib29sZWFuJyUyMCU3QyU3QyUyMHZhbHVlJTIwJTNEJTNEJTNEJTIwJycpJTIwJTdCJTVDbiUyMCUyMCUyMCUyMHJldHVybiUyMCcnJTNCJTVDbiUyMCUyMCU3RCU1Q24lNUNuJTIwJTIwaWYlMjAodHlwZW9mJTIwdmFsdWUlMjAlM0QlM0QlM0QlMjAnbnVtYmVyJyUyMCUyNiUyNiUyMHZhbHVlJTIwISUzRCUzRCUyMDAlMjAlMjYlMjYlMjAhKG5hbWUlMjBpbiUyMHVuaXRsZXNzKSUyMCUyNiUyNiUyMCFuYW1lLnN0YXJ0c1dpdGgoJy0tJykpJTIwJTdCJTVDbiUyMCUyMCUyMCUyMHJldHVybiUyMCU2MCUyNCU3QnZhbHVlJTdEcHglNjAlM0IlMjAlMkYlMkYlMjBQcmVzdW1lcyUyMGltcGxpY2l0JTIwJ3B4JyUyMHN1ZmZpeCUyMGZvciUyMHVuaXRsZXNzJTIwbnVtYmVycyUyMGV4Y2VwdCUyMGZvciUyMENTUyUyMHZhcmlhYmxlcyU1Q24lMjAlMjAlN0QlNUNuJTVDbiUyMCUyMHJldHVybiUyMFN0cmluZyh2YWx1ZSkudHJpbSgpJTNCJTVDbiU3RCUyMiUyQyUyMmlzRW50cnklMjIlM0F0cnVlJTJDJTIybmFtZSUyMiUzQSUyMm1haW4uanMlMjIlN0QlMkMlN0IlMjJjb2RlJTIyJTNBJTIyJTJGJTJGJTIwRnJvbSUyMGh0dHBzJTNBJTJGJTJGZ2l0aHViLmNvbSUyRmVtb3Rpb24tanMlMkZlbW90aW9uJTJGYmxvYiUyRjQ5MjI5NTUzOTY3YjYwNTBjOTJkOTYwMmViNTc3YmRjNDgxNjdlOTElMkZwYWNrYWdlcyUyRnVuaXRsZXNzJTJGc3JjJTJGaW5kZXgudHMlMjBzdHJpcHBlZCUyMGZyb20lMjBUUyU1Q24lNUNubGV0JTIwdW5pdGxlc3NLZXlzJTIwJTNEJTIwJTdCJTVDbiUyMCUyMGFuaW1hdGlvbkl0ZXJhdGlvbkNvdW50JTNBJTIwMSUyQyU1Q24lMjAlMjBhc3BlY3RSYXRpbyUzQSUyMDElMkMlNUNuJTIwJTIwYm9yZGVySW1hZ2VPdXRzZXQlM0ElMjAxJTJDJTVDbiUyMCUyMGJvcmRlckltYWdlU2xpY2UlM0ElMjAxJTJDJTVDbiUyMCUyMGJvcmRlckltYWdlV2lkdGglM0ElMjAxJTJDJTVDbiUyMCUyMGJveEZsZXglM0ElMjAxJTJDJTVDbiUyMCUyMGJveEZsZXhHcm91cCUzQSUyMDElMkMlNUNuJTIwJTIwYm94T3JkaW5hbEdyb3VwJTNBJTIwMSUyQyU1Q24lMjAlMjBjb2x1bW5Db3VudCUzQSUyMDElMkMlNUNuJTIwJTIwY29sdW1ucyUzQSUyMDElMkMlNUNuJTIwJTIwZmxleCUzQSUyMDElMkMlNUNuJTIwJTIwZmxleEdyb3clM0ElMjAxJTJDJTVDbiUyMCUyMGZsZXhQb3NpdGl2ZSUzQSUyMDElMkMlNUNuJTIwJTIwZmxleFNocmluayUzQSUyMDElMkMlNUNuJTIwJTIwZmxleE5lZ2F0aXZlJTNBJTIwMSUyQyU1Q24lMjAlMjBmbGV4T3JkZXIlM0ElMjAxJTJDJTVDbiUyMCUyMGdyaWRSb3clM0ElMjAxJTJDJTVDbiUyMCUyMGdyaWRSb3dFbmQlM0ElMjAxJTJDJTVDbiUyMCUyMGdyaWRSb3dTcGFuJTNBJTIwMSUyQyU1Q24lMjAlMjBncmlkUm93U3RhcnQlM0ElMjAxJTJDJTVDbiUyMCUyMGdyaWRDb2x1bW4lM0ElMjAxJTJDJTVDbiUyMCUyMGdyaWRDb2x1bW5FbmQlM0ElMjAxJTJDJTVDbiUyMCUyMGdyaWRDb2x1bW5TcGFuJTNBJTIwMSUyQyU1Q24lMjAlMjBncmlkQ29sdW1uU3RhcnQlM0ElMjAxJTJDJTVDbiUyMCUyMG1zR3JpZFJvdyUzQSUyMDElMkMlNUNuJTIwJTIwbXNHcmlkUm93U3BhbiUzQSUyMDElMkMlNUNuJTIwJTIwbXNHcmlkQ29sdW1uJTNBJTIwMSUyQyU1Q24lMjAlMjBtc0dyaWRDb2x1bW5TcGFuJTNBJTIwMSUyQyU1Q24lMjAlMjBmb250V2VpZ2h0JTNBJTIwMSUyQyU1Q24lMjAlMjBsaW5lSGVpZ2h0JTNBJTIwMSUyQyU1Q24lMjAlMjBvcGFjaXR5JTNBJTIwMSUyQyU1Q24lMjAlMjBvcmRlciUzQSUyMDElMkMlNUNuJTIwJTIwb3JwaGFucyUzQSUyMDElMkMlNUNuJTIwJTIwc2NhbGUlM0ElMjAxJTJDJTVDbiUyMCUyMHRhYlNpemUlM0ElMjAxJTJDJTVDbiUyMCUyMHdpZG93cyUzQSUyMDElMkMlNUNuJTIwJTIwekluZGV4JTNBJTIwMSUyQyU1Q24lMjAlMjB6b29tJTNBJTIwMSUyQyU1Q24lMjAlMjBXZWJraXRMaW5lQ2xhbXAlM0ElMjAxJTJDJTVDbiU1Q24lMjAlMjAlMkYlMkYlMjBTVkctcmVsYXRlZCUyMHByb3BlcnRpZXMlNUNuJTIwJTIwZmlsbE9wYWNpdHklM0ElMjAxJTJDJTVDbiUyMCUyMGZsb29kT3BhY2l0eSUzQSUyMDElMkMlNUNuJTIwJTIwc3RvcE9wYWNpdHklM0ElMjAxJTJDJTVDbiUyMCUyMHN0cm9rZURhc2hhcnJheSUzQSUyMDElMkMlNUNuJTIwJTIwc3Ryb2tlRGFzaG9mZnNldCUzQSUyMDElMkMlNUNuJTIwJTIwc3Ryb2tlTWl0ZXJsaW1pdCUzQSUyMDElMkMlNUNuJTIwJTIwc3Ryb2tlT3BhY2l0eSUzQSUyMDElMkMlNUNuJTIwJTIwc3Ryb2tlV2lkdGglM0ElMjAxJTVDbiU3RCU1Q24lNUNuZXhwb3J0JTIwZGVmYXVsdCUyMHVuaXRsZXNzS2V5cyUyMiUyQyUyMmlzRW50cnklMjIlM0FmYWxzZSUyQyUyMm5hbWUlMjIlM0ElMjJ1bml0bGVzcy5qcyUyMiU3RCU1RCUyQyUyMm9wdGlvbnMlMjIlM0ElN0IlN0QlN0Q=\n\n### Expected Behaviour\n\n[Expected behavior is here](https://rollupjs.org/repl/?version=4.45.3&shareable=JTdCJTIyZXhhbXBsZSUyMiUzQW51bGwlMkMlMjJtb2R1bGVzJTIyJTNBJTVCJTdCJTIyY29kZSUyMiUzQSUyMiUyRiUyRiUyMGltcG9ydCUyMHVuaXRsZXNzJTIwZnJvbSUyMCclNDBlbW90aW9uJTJGdW5pdGxlc3MnJTNCJTVDbmltcG9ydCUyMHVuaXRsZXNzJTIwZnJvbSUyMCcuJTJGdW5pdGxlc3MnJTVDbiU1Q24lMkYlMkYlMjBPcmlnaW5hbCUyMGZ1bmN0aW9uJTIwaW4lMjAlNjBzdHlsZWQtY29tcG9uZW50cyU2MCUyQyUyMHN0cmlwcGVkJTIwZm9yJTIwVHlwZVNjcmlwdCUzQSUyMGh0dHBzJTNBJTJGJTJGZ2l0aHViLmNvbSUyRnN0eWxlZC1jb21wb25lbnRzJTJGc3R5bGVkLWNvbXBvbmVudHMlMkZibG9iJTJGZDBiNzNhY2Q5MzFkYWVmOWVlYmI5N2UzNGZlNDU1MmZmYzU3ZDYzZSUyRnBhY2thZ2VzJTJGc3R5bGVkLWNvbXBvbmVudHMlMkZzcmMlMkZ1dGlscyUyRmFkZFVuaXRJZk5lZWRlZC50cyUyM0wxMCU1Q25leHBvcnQlMjBkZWZhdWx0JTIwZnVuY3Rpb24lMjBhZGRVbml0SWZOZWVkZWQobmFtZSUyQyUyMHZhbHVlKSUyMCU3QiU1Q24lMjAlMjAlMkYlMkYlMjBodHRwcyUzQSUyRiUyRmdpdGh1Yi5jb20lMkZhbWlsYWphY2slMkZlc2xpbnQtcGx1Z2luLWZsb3d0eXBlLWVycm9ycyUyRmlzc3VlcyUyRjEzMyU1Q24lMjAlMjBpZiUyMCh2YWx1ZSUyMCUzRCUzRCUyMG51bGwlMjAlN0MlN0MlMjB0eXBlb2YlMjB2YWx1ZSUyMCUzRCUzRCUzRCUyMCdib29sZWFuJyUyMCU3QyU3QyUyMHZhbHVlJTIwJTNEJTNEJTNEJTIwJycpJTIwJTdCJTVDbiUyMCUyMCUyMCUyMHJldHVybiUyMCcnJTNCJTVDbiUyMCUyMCU3RCU1Q24lNUNuJTIwJTIwaWYlMjAodHlwZW9mJTIwdmFsdWUlMjAlM0QlM0QlM0QlMjAnbnVtYmVyJyUyMCUyNiUyNiUyMHZhbHVlJTIwISUzRCUzRCUyMDAlMjAlMjYlMjYlMjAhKG5hbWUlMjBpbiUyMHVuaXRsZXNzKSUyMCUyNiUyNiUyMCFuYW1lLnN0YXJ0c1dpdGgoJy0tJykpJTIwJTdCJTVDbiUyMCUyMCUyMCUyMHJldHVybiUyMCU2MCUyNCU3QnZhbHVlJTdEcHglNjAlM0IlMjAlMkYlMkYlMjBQcmVzdW1lcyUyMGltcGxpY2l0JTIwJ3B4JyUyMHN1ZmZpeCUyMGZvciUyMHVuaXRsZXNzJTIwbnVtYmVycyUyMGV4Y2VwdCUyMGZvciUyMENTUyUyMHZhcmlhYmxlcyU1Q24lMjAlMjAlN0QlNUNuJTVDbiUyMCUyMHJldHVybiUyMFN0cmluZyh2YWx1ZSkudHJpbSgpJTNCJTVDbiU3RCUyMiUyQyUyMmlzRW50cnklMjIlM0F0cnVlJTJDJTIybmFtZSUyMiUzQSUyMm1haW4uanMlMjIlN0QlMkMlN0IlMjJjb2RlJTIyJTNBJTIyJTJGJTJGJTIwRnJvbSUyMGh0dHBzJTNBJTJGJTJGZ2l0aHViLmNvbSUyRmVtb3Rpb24tanMlMkZlbW90aW9uJTJGYmxvYiUyRjQ5MjI5NTUzOTY3YjYwNTBjOTJkOTYwMmViNTc3YmRjNDgxNjdlOTElMkZwYWNrYWdlcyUyRnVuaXRsZXNzJTJGc3JjJTJGaW5kZXgudHMlMjBzdHJpcHBlZCUyMGZyb20lMjBUUyU1Q24lNUNubGV0JTIwdW5pdGxlc3NLZXlzJTIwJTNEJTIwJTdCJTVDbiUyMCUyMGFuaW1hdGlvbkl0ZXJhdGlvbkNvdW50JTNBJTIwMSUyQyU1Q24lMjAlMjBhc3BlY3RSYXRpbyUzQSUyMDElMkMlNUNuJTIwJTIwYm9yZGVySW1hZ2VPdXRzZXQlM0ElMjAxJTJDJTVDbiUyMCUyMGJvcmRlckltYWdlU2xpY2UlM0ElMjAxJTJDJTVDbiUyMCUyMGJvcmRlckltYWdlV2lkdGglM0ElMjAxJTJDJTVDbiUyMCUyMGJveEZsZXglM0ElMjAxJTJDJTVDbiUyMCUyMGJveEZsZXhHcm91cCUzQSUyMDElMkMlNUNuJTIwJTIwYm94T3JkaW5hbEdyb3VwJTNBJTIwMSUyQyU1Q24lMjAlMjBjb2x1bW5Db3VudCUzQSUyMDElMkMlNUNuJTIwJTIwY29sdW1ucyUzQSUyMDElMkMlNUNuJTIwJTIwZmxleCUzQSUyMDElMkMlNUNuJTIwJTIwZmxleEdyb3clM0ElMjAxJTJDJTVDbiUyMCUyMGZsZXhQb3NpdGl2ZSUzQSUyMDElMkMlNUNuJTIwJTIwZmxleFNocmluayUzQSUyMDElMkMlNUNuJTIwJTIwZmxleE5lZ2F0aXZlJTNBJTIwMSUyQyU1Q24lMjAlMjBmbGV4T3JkZXIlM0ElMjAxJTJDJTVDbiUyMCUyMGdyaWRSb3clM0ElMjAxJTJDJTVDbiUyMCUyMGdyaWRSb3dFbmQlM0ElMjAxJTJDJTVDbiUyMCUyMGdyaWRSb3dTcGFuJTNBJTIwMSUyQyU1Q24lMjAlMjBncmlkUm93U3RhcnQlM0ElMjAxJTJDJTVDbiUyMCUyMGdyaWRDb2x1bW4lM0ElMjAxJTJDJTVDbiUyMCUyMGdyaWRDb2x1bW5FbmQlM0ElMjAxJTJDJTVDbiUyMCUyMGdyaWRDb2x1bW5TcGFuJTNBJTIwMSUyQyU1Q24lMjAlMjBncmlkQ29sdW1uU3RhcnQlM0ElMjAxJTJDJTVDbiUyMCUyMG1zR3JpZFJvdyUzQSUyMDElMkMlNUNuJTIwJTIwbXNHcmlkUm93U3BhbiUzQSUyMDElMkMlNUNuJTIwJTIwbXNHcmlkQ29sdW1uJTNBJTIwMSUyQyU1Q24lMjAlMjBtc0dyaWRDb2x1bW5TcGFuJTNBJTIwMSUyQyU1Q24lMjAlMjBmb250V2VpZ2h0JTNBJTIwMSUyQyU1Q24lMjAlMjBsaW5lSGVpZ2h0JTNBJTIwMSUyQyU1Q24lMjAlMjBvcGFjaXR5JTNBJTIwMSUyQyU1Q24lMjAlMjBvcmRlciUzQSUyMDElMkMlNUNuJTIwJTIwb3JwaGFucyUzQSUyMDElMkMlNUNuJTIwJTIwc2NhbGUlM0ElMjAxJTJDJTVDbiUyMCUyMHRhYlNpemUlM0ElMjAxJTJDJTVDbiUyMCUyMHdpZG93cyUzQSUyMDElMkMlNUNuJTIwJTIwekluZGV4JTNBJTIwMSUyQyU1Q24lMjAlMjB6b29tJTNBJTIwMSUyQyU1Q24lMjAlMjBXZWJraXRMaW5lQ2xhbXAlM0ElMjAxJTJDJTVDbiU1Q24lMjAlMjAlMkYlMkYlMjBTVkctcmVsYXRlZCUyMHByb3BlcnRpZXMlNUNuJTIwJTIwZmlsbE9wYWNpdHklM0ElMjAxJTJDJTVDbiUyMCUyMGZsb29kT3BhY2l0eSUzQSUyMDElMkMlNUNuJTIwJTIwc3RvcE9wYWNpdHklM0ElMjAxJTJDJTVDbiUyMCUyMHN0cm9rZURhc2hhcnJheSUzQSUyMDElMkMlNUNuJTIwJTIwc3Ryb2tlRGFzaG9mZnNldCUzQSUyMDElMkMlNUNuJTIwJTIwc3Ryb2tlTWl0ZXJsaW1pdCUzQSUyMDElMkMlNUNuJTIwJTIwc3Ryb2tlT3BhY2l0eSUzQSUyMDElMkMlNUNuJTIwJTIwc3Ryb2tlV2lkdGglM0ElMjAxJTVDbiU3RCU1Q24lNUNuZXhwb3J0JTIwZGVmYXVsdCUyMHVuaXRsZXNzS2V5cyUyMiUyQyUyMmlzRW50cnklMjIlM0FmYWxzZSUyQyUyMm5hbWUlMjIlM0ElMjJ1bml0bGVzcy5qcyUyMiU3RCU1RCUyQyUyMm9wdGlvbnMlMjIlM0ElN0IlN0QlN0Q=),\n[the `unitlessKeys` object shouldn't be emptied (see the `name in unitless` check), as is the case in 4.45.3 and earlier.\n`styled-components` uses this to determine wether to add `px` units to CSS like `flex: 1`.](https://github.com/styled-components/styled-components/blob/d0b73acd931daef9eebb97e34fe4552ffc57d63e/packages/styled-components/src/utils/addUnitIfNeeded.ts#L10-L12)\n\n### Actual Behaviour\n\n[It removes all properties and this breaks projects that use `styled-components` with `vite`.](https://rollupjs.org/repl/?version=4.46.1&shareable=JTdCJTIyZXhhbXBsZSUyMiUzQW51bGwlMkMlMjJtb2R1bGVzJTIyJTNBJTVCJTdCJTIyY29kZSUyMiUzQSUyMiUyRiUyRiUyMGltcG9ydCUyMHVuaXRsZXNzJTIwZnJvbSUyMCclNDBlbW90aW9uJTJGdW5pdGxlc3MnJTNCJTVDbmltcG9ydCUyMHVuaXRsZXNzJTIwZnJvbSUyMCcuJTJGdW5pdGxlc3MnJTVDbiU1Q24lMkYlMkYlMjBPcmlnaW5hbCUyMGZ1bmN0aW9uJTIwaW4lMjAlNjBzdHlsZWQtY29tcG9uZW50cyU2MCUyQyUyMHN0cmlwcGVkJTIwZm9yJTIwVHlwZVNjcmlwdCUzQSUyMGh0dHBzJTNBJTJGJTJGZ2l0aHViLmNvbSUyRnN0eWxlZC1jb21wb25lbnRzJTJGc3R5bGVkLWNvbXBvbmVudHMlMkZibG9iJTJGZDBiNzNhY2Q5MzFkYWVmOWVlYmI5N2UzNGZlNDU1MmZmYzU3ZDYzZSUyRnBhY2thZ2VzJTJGc3R5bGVkLWNvbXBvbmVudHMlMkZzcmMlMkZ1dGlscyUyRmFkZFVuaXRJZk5lZWRlZC50cyUyM0wxMCU1Q25leHBvcnQlMjBkZWZhdWx0JTIwZnVuY3Rpb24lMjBhZGRVbml0SWZOZWVkZWQobmFtZSUyQyUyMHZhbHVlKSUyMCU3QiU1Q24lMjAlMjAlMkYlMkYlMjBodHRwcyUzQSUyRiUyRmdpdGh1Yi5jb20lMkZhbWlsYWphY2slMkZlc2xpbnQtcGx1Z2luLWZsb3d0eXBlLWVycm9ycyUyRmlzc3VlcyUyRjEzMyU1Q24lMjAlMjBpZiUyMCh2YWx1ZSUyMCUzRCUzRCUyMG51bGwlMjAlN0MlN0MlMjB0eXBlb2YlMjB2YWx1ZSUyMCUzRCUzRCUzRCUyMCdib29sZWFuJyUyMCU3QyU3QyUyMHZhbHVlJTIwJTNEJTNEJTNEJTIwJycpJTIwJTdCJTVDbiUyMCUyMCUyMCUyMHJldHVybiUyMCcnJTNCJTVDbiUyMCUyMCU3RCU1Q24lNUNuJTIwJTIwaWYlMjAodHlwZW9mJTIwdmFsdWUlMjAlM0QlM0QlM0QlMjAnbnVtYmVyJyUyMCUyNiUyNiUyMHZhbHVlJTIwISUzRCUzRCUyMDAlMjAlMjYlMjYlMjAhKG5hbWUlMjBpbiUyMHVuaXRsZXNzKSUyMCUyNiUyNiUyMCFuYW1lLnN0YXJ0c1dpdGgoJy0tJykpJTIwJTdCJTVDbiUyMCUyMCUyMCUyMHJldHVybiUyMCU2MCUyNCU3QnZhbHVlJTdEcHglNjAlM0IlMjAlMkYlMkYlMjBQcmVzdW1lcyUyMGltcGxpY2l0JTIwJ3B4JyUyMHN1ZmZpeCUyMGZvciUyMHVuaXRsZXNzJTIwbnVtYmVycyUyMGV4Y2VwdCUyMGZvciUyMENTUyUyMHZhcmlhYmxlcyU1Q24lMjAlMjAlN0QlNUNuJTVDbiUyMCUyMHJldHVybiUyMFN0cmluZyh2YWx1ZSkudHJpbSgpJTNCJTVDbiU3RCUyMiUyQyUyMmlzRW50cnklMjIlM0F0cnVlJTJDJTIybmFtZSUyMiUzQSUyMm1haW4uanMlMjIlN0QlMkMlN0IlMjJjb2RlJTIyJTNBJTIyJTJGJTJGJTIwRnJvbSUyMGh0dHBzJTNBJTJGJTJGZ2l0aHViLmNvbSUyRmVtb3Rpb24tanMlMkZlbW90aW9uJTJGYmxvYiUyRjQ5MjI5NTUzOTY3YjYwNTBjOTJkOTYwMmViNTc3YmRjNDgxNjdlOTElMkZwYWNrYWdlcyUyRnVuaXRsZXNzJTJGc3JjJTJGaW5kZXgudHMlMjBzdHJpcHBlZCUyMGZyb20lMjBUUyU1Q24lNUNubGV0JTIwdW5pdGxlc3NLZXlzJTIwJTNEJTIwJTdCJTVDbiUyMCUyMGFuaW1hdGlvbkl0ZXJhdGlvbkNvdW50JTNBJTIwMSUyQyU1Q24lMjAlMjBhc3BlY3RSYXRpbyUzQSUyMDElMkMlNUNuJTIwJTIwYm9yZGVySW1hZ2VPdXRzZXQlM0ElMjAxJTJDJTVDbiUyMCUyMGJvcmRlckltYWdlU2xpY2UlM0ElMjAxJTJDJTVDbiUyMCUyMGJvcmRlckltYWdlV2lkdGglM0ElMjAxJTJDJTVDbiUyMCUyMGJveEZsZXglM0ElMjAxJTJDJTVDbiUyMCUyMGJveEZsZXhHcm91cCUzQSUyMDElMkMlNUNuJTIwJTIwYm94T3JkaW5hbEdyb3VwJTNBJTIwMSUyQyU1Q24lMjAlMjBjb2x1bW5Db3VudCUzQSUyMDElMkMlNUNuJTIwJTIwY29sdW1ucyUzQSUyMDElMkMlNUNuJTIwJTIwZmxleCUzQSUyMDElMkMlNUNuJTIwJTIwZmxleEdyb3clM0ElMjAxJTJDJTVDbiUyMCUyMGZsZXhQb3NpdGl2ZSUzQSUyMDElMkMlNUNuJTIwJTIwZmxleFNocmluayUzQSUyMDElMkMlNUNuJTIwJTIwZmxleE5lZ2F0aXZlJTNBJTIwMSUyQyU1Q24lMjAlMjBmbGV4T3JkZXIlM0ElMjAxJTJDJTVDbiUyMCUyMGdyaWRSb3clM0ElMjAxJTJDJTVDbiUyMCUyMGdyaWRSb3dFbmQlM0ElMjAxJTJDJTVDbiUyMCUyMGdyaWRSb3dTcGFuJTNBJTIwMSUyQyU1Q24lMjAlMjBncmlkUm93U3RhcnQlM0ElMjAxJTJDJTVDbiUyMCUyMGdyaWRDb2x1bW4lM0ElMjAxJTJDJTVDbiUyMCUyMGdyaWRDb2x1bW5FbmQlM0ElMjAxJTJDJTVDbiUyMCUyMGdyaWRDb2x1bW5TcGFuJTNBJTIwMSUyQyU1Q24lMjAlMjBncmlkQ29sdW1uU3RhcnQlM0ElMjAxJTJDJTVDbiUyMCUyMG1zR3JpZFJvdyUzQSUyMDElMkMlNUNuJTIwJTIwbXNHcmlkUm93U3BhbiUzQSUyMDElMkMlNUNuJTIwJTIwbXNHcmlkQ29sdW1uJTNBJTIwMSUyQyU1Q24lMjAlMjBtc0dyaWRDb2x1bW5TcGFuJTNBJTIwMSUyQyU1Q24lMjAlMjBmb250V2VpZ2h0JTNBJTIwMSUyQyU1Q24lMjAlMjBsaW5lSGVpZ2h0JTNBJTIwMSUyQyU1Q24lMjAlMjBvcGFjaXR5JTNBJTIwMSUyQyU1Q24lMjAlMjBvcmRlciUzQSUyMDElMkMlNUNuJTIwJTIwb3JwaGFucyUzQSUyMDElMkMlNUNuJTIwJTIwc2NhbGUlM0ElMjAxJTJDJTVDbiUyMCUyMHRhYlNpemUlM0ElMjAxJTJDJTVDbiUyMCUyMHdpZG93cyUzQSUyMDElMkMlNUNuJTIwJTIwekluZGV4JTNBJTIwMSUyQyU1Q24lMjAlMjB6b29tJTNBJTIwMSUyQyU1Q24lMjAlMjBXZWJraXRMaW5lQ2xhbXAlM0ElMjAxJTJDJTVDbiU1Q24lMjAlMjAlMkYlMkYlMjBTVkctcmVsYXRlZCUyMHByb3BlcnRpZXMlNUNuJTIwJTIwZmlsbE9wYWNpdHklM0ElMjAxJTJDJTVDbiUyMCUyMGZsb29kT3BhY2l0eSUzQSUyMDElMkMlNUNuJTIwJTIwc3RvcE9wYWNpdHklM0ElMjAxJTJDJTVDbiUyMCUyMHN0cm9rZURhc2hhcnJheSUzQSUyMDElMkMlNUNuJTIwJTIwc3Ryb2tlRGFzaG9mZnNldCUzQSUyMDElMkMlNUNuJTIwJTIwc3Ryb2tlTWl0ZXJsaW1pdCUzQSUyMDElMkMlNUNuJTIwJTIwc3Ryb2tlT3BhY2l0eSUzQSUyMDElMkMlNUNuJTIwJTIwc3Ryb2tlV2lkdGglM0ElMjAxJTVDbiU3RCU1Q24lNUNuZXhwb3J0JTIwZGVmYXVsdCUyMHVuaXRsZXNzS2V5cyUyMiUyQyUyMmlzRW50cnklMjIlM0FmYWxzZSUyQyUyMm5hbWUlMjIlM0ElMjJ1bml0bGVzcy5qcyUyMiU3RCU1RCUyQyUyMm9wdGlvbnMlMjIlM0ElN0IlN0QlN0Q=) Projects that use `rollup` to build npm libraries are unaffected, since `styled-components` is typically a peer dependency and thus marked as `external` in those cases.\n",
+      "public_features": {
+        "language": "js",
+        "issue_word_count": 112,
+        "issue_size": "short",
+        "feature_key": "js.issue-short"
+      },
+      "source_row_digest": "sha256:2bbc49d8de392038e55c9d930fc2db698e1af8634569d25e1757f4a45f2386b7",
+      "problem_statement_digest": "sha256:de7c58162a7ae4bb7558da7a80b1e5f7b1f696982d6347aaa148028f52c97eb2",
+      "hidden_artifact_digests": {
+        "gold_patch": "sha256:1fd8a2b29542066175c2fdd4b11e16831e9270ab276bc8da97cfa11d746d6380",
+        "test_patch": "sha256:b27d88ff47014afcda68a1544165243a6ccb17eff2861321a90727153a147cc3"
+      }
+    },
+    {
+      "schema": 1,
+      "instance_id": "nodejs__undici-5011",
+      "split": "js",
+      "row_index": 86,
+      "repo": "nodejs/undici",
+      "pull_number": "5011",
+      "base_commit": "0143e1bae27ef6f6eb0225dc0934d69719d55c09",
+      "created_at": "2026-04-09T15:02:43Z",
+      "docker_image": "starryzhang/sweb.eval.x86_64.nodejs_1776_undici-5011",
+      "problem_statement": "Proxies don't accept my timeout and always have a static 10_000 ms.\n```\nconst options = { ... };\noptions.dispatcher = new ProxyAgent({\n\turi: origin,\n\theadersTimeout: 600000,\n\tbodyTimeout: 600000,\n\tconnectTimeout: 600000\n})\nconst response = await fetch(url, options);\n```\n\nProxies don't accept my timeout and always have a static 10_000 ms.\n\nv23.3.0 and 8.0.2\n",
+      "public_features": {
+        "language": "js",
+        "issue_word_count": 54,
+        "issue_size": "short",
+        "feature_key": "js.issue-short"
+      },
+      "source_row_digest": "sha256:01bba553f3f64f1d8c756d52e17b571312d73b9bb11ca53010be67b1c61c1adf",
+      "problem_statement_digest": "sha256:4b5dd32b1f03dd5c51496b5428969bf3b5f3c0ec3a1f31f07e7e31727efbfbf1",
+      "hidden_artifact_digests": {
+        "gold_patch": "sha256:3cfbb94d6d4a61aff4fa3cfcca76c6439e9bf4d822bd7b127f1e4877c9a79e5b",
+        "test_patch": "sha256:351c044e55111e1b7e22af5f21001e4474b891021f9c959b66d951de06f0ccef"
+      }
+    },
+    {
+      "schema": 1,
+      "instance_id": "codeceptjs__CodeceptJS-5072",
+      "split": "js",
+      "row_index": 57,
+      "repo": "codeceptjs/CodeceptJS",
+      "pull_number": "5072",
+      "base_commit": "a27b99eb23d89764b9ec7c79a25a7dc5781f6258",
+      "created_at": "2025-08-19T08:50:21Z",
+      "docker_image": "starryzhang/sweb.eval.x86_64.codeceptjs_1776_codeceptjs-5072",
+      "problem_statement": "unable to inject data between workers because of proxy object\nI am using Codeceptjs with Playwright along with Mochawesome\n\n\nI had my custom parallel runner following the example provided in Codeceptjs website. But with recent changes in 3.7.0 , when I try to inject data between workers, it is coming as proxy object. Can any one tell me if anything that we need to do differently to get the data flowing between workers. Below is my setup in config file and parallel runner.js \n\ncodecept.conf.js\n\nbootstrap() {\n   share({ testData: false})\n}\n\n\n\nInside my custom parallels runner file, I was reading the testData and then assigning values to it , so that I can read the same from any worker\nconst testDataJson = require ('../testDataModel')\n\n\nlet testData = inject()\nif(! testData) {\n testData = testDataJson\n\n\nNow with recent changes from 3.7.0, testData becomes proxy object and unable to assign anything. Any workaround to do this?\n\n\n\n",
+      "public_features": {
+        "language": "js",
+        "issue_word_count": 153,
+        "issue_size": "long",
+        "feature_key": "js.issue-long"
+      },
+      "source_row_digest": "sha256:1af4adfe592817010ea6bc6cde102fa26fb3306edb2fcdf6adec514f056eec02",
+      "problem_statement_digest": "sha256:58cc5f9df6767a11310f1dcdc32b6d9f5930f2ff43b90636a0f9b96d13167075",
+      "hidden_artifact_digests": {
+        "gold_patch": "sha256:4aee0e564ecbdcd6e9cde1ebe9db790bb03f35ab0c9a683c89493245a9335214",
+        "test_patch": "sha256:dca84c4108ce9365dac362da50e5771fd3525dd7c6f9e90673da59a40835adbf"
+      }
+    },
+    {
+      "schema": 1,
+      "instance_id": "siimon__prom-client-679",
+      "split": "js",
+      "row_index": 34,
+      "repo": "siimon/prom-client",
+      "pull_number": "679",
+      "base_commit": "4c6224db43c6cd9c82b4bccfb6b8a8fb09580d44",
+      "created_at": "2025-07-05T13:09:04Z",
+      "docker_image": "starryzhang/sweb.eval.x86_64.siimon_1776_prom-client-679",
+      "problem_statement": "Cluster mode does not handle load shedding properly if timeouts are exceeded.\nWhile looking at #628, I noticed a few other problems with the cluster mode.\n\nThe request is not deleted from the requests map until all responses are returned, which may not happen if a child is restarted.\n\nIt is also processing messages from the workers even if the request is done\n\n```\n\tif (message.error) {\n\t\trequest.done(new Error(message.error));\n\t\treturn;\n\t}\n\n\tmessage.metrics.forEach(registry => request.responses.push(registry));\n\trequest.pending--;\n\n\tif (request.pending === 0) {\n\t\t// finalize\n\t\trequests.delete(message.requestId);\n\t\tclearTimeout(request.errorTimeout);\n```\n\nWhich means all responses from workers are processed regardless of whether another request has already sent.\n\nThe clients also aren't given a deadline, which means they have no way to abort the work if it is not processed in time.\n\nI don't recall if there's a way to avoid the `JSON.parse()` call.  Given the structure of the response that is unlikely.  \n\nPerhaps more importantly: every time a worker fails to deliver a response at all, the responses from its siblings are left in the lookup table in perpetuity, representing a memory leak, and a rather substantial one.\n\nThis also has implications for #645 \n\nAdditionally, cluster mode does not handle benchmarking well. Multiple calls to `new AggregatorRegistry()` leads to `addListeners()` calls if more than one instance of the module is loaded - which is a frequent if unfortunate occurrence in benchmarking code. \n",
+      "public_features": {
+        "language": "js",
+        "issue_word_count": 226,
+        "issue_size": "long",
+        "feature_key": "js.issue-long"
+      },
+      "source_row_digest": "sha256:9e811e293616301ebf9add42bdd4d1f7191f767809069d82669cbd8430359399",
+      "problem_statement_digest": "sha256:b30cd2fea38f18bafc8681e5befc1d18649b7473308bb66ff7a2b0b1830122d1",
+      "hidden_artifact_digests": {
+        "gold_patch": "sha256:8c9946648c4fab3767ca17a36b19d8a09613af7785cc7168c03496cf85acd8c9",
+        "test_patch": "sha256:293ace50ede650b636fe9d091d6fec7cb820df8e8dff883c0de55b980a7fbcde"
+      }
+    },
+    {
+      "schema": 1,
+      "instance_id": "excalidraw__excalidraw-9760",
+      "split": "ts",
+      "row_index": 7,
+      "repo": "excalidraw/excalidraw",
+      "pull_number": "9760",
+      "base_commit": "8492b144b05b56634fa020ec278adc7936fbfc4e",
+      "created_at": "2025-07-18T18:37:52Z",
+      "docker_image": "starryzhang/sweb.eval.x86_64.excalidraw_1776_excalidraw-9760",
+      "problem_statement": "deleting all points from within line editor throws\n1. create line\n2. enter line editor\n3. box-select all points\n4. delete\nBug: [regression in master] Line editor point remains hovered\nSeems to be a regression from #9642. Happens because `handleHoverSelectedLinearElement` was used to handle pointer away and now it doesn't fire when the pointer is away while line-editing.\n\nhttps://github.com/user-attachments/assets/b9297af2-c1a5-4637-9e74-0ad895a3d984\nExcessive re-renders on pointer move during line editing\nThere are two things that cause unnecessary re-renders while moving the pointer while in the line editor:\n- A new `editingLinearElement` is returned each time [here](https://github.com/excalidraw/excalidraw/blob/678dff25eddfc43319299495556ab9f6029bc719/packages/element/src/linearElementEditor.ts#L1043-L1047) even if nothing's changed. The new reference of `editingLinearElement` is then checked against the one in appState [here](https://github.com/excalidraw/excalidraw/blob/678dff25eddfc43319299495556ab9f6029bc719/packages/excalidraw/components/App.tsx#L5860-L5863).\n- Always executing `setState` [here](https://github.com/excalidraw/excalidraw/blob/678dff25eddfc43319299495556ab9f6029bc719/packages/excalidraw/components/App.tsx#L5878-L5883) even if nothing's changed.\nBug: \"suggested bindings box\" shows in line editor (not arrow) while pressing alt to add a point\nThe type of the element is not checked [here](https://github.com/excalidraw/excalidraw/blob/678dff25eddfc43319299495556ab9f6029bc719/packages/excalidraw/components/App.tsx#L5873-L5877)\n\nhttps://github.com/user-attachments/assets/140aa0a0-050c-44f4-8983-3234b33fea78\n",
+      "public_features": {
+        "language": "ts",
+        "issue_word_count": 147,
+        "issue_size": "short",
+        "feature_key": "ts.issue-short"
+      },
+      "source_row_digest": "sha256:f763f41930a3992f30c726375bb5da28d0fcb592afdac0c4b84a897647954b73",
+      "problem_statement_digest": "sha256:93996120247488ce02fdfcd367cd17b881de8388e465902fbb00f1f2fdd0173d",
+      "hidden_artifact_digests": {
+        "gold_patch": "sha256:d23353959e0ae3ddcb9da87443699904e9d5beb410f435d3db04dbf80cf0df3c",
+        "test_patch": "sha256:51792ded38c4bc48bb993e8a66d706a5ca133ed57328ffa5d3dc273607a8fade"
+      }
+    },
+    {
+      "schema": 1,
+      "instance_id": "mui__base-ui-2493",
+      "split": "ts",
+      "row_index": 79,
+      "repo": "mui/base-ui",
+      "pull_number": "2493",
+      "base_commit": "3ce0fe2e9ed56513f02f2c8660ada9413ccca3db",
+      "created_at": "2025-08-14T11:25:48Z",
+      "docker_image": "starryzhang/sweb.eval.x86_64.mui_1776_base-ui-2493",
+      "problem_statement": "[menu] Focus is lost when `closeParentOnEsc: false`\n# Bug report\n\n## Current behavior\n\nCurrently, when `closeParentOnEsc: false` is set on Menu.Submenu, pressing the ESC key causes the Submenu to disappear and the focus to be lost as well.\n\nhttps://github.com/user-attachments/assets/49c7d86f-e4b5-439a-baf8-f7f10c5bfa90\n\n## Expected behavior\n\nAccording to the [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Reference/Roles/menu_role#escape), when the focus is on a submenu, pressing the ESC key should close the submenu and move focus to the submenu trigger.\n\n## Reproducible example\n\nhttps://codesandbox.io/p/sandbox/silent-sound-x4fghr?file=%2Fsrc%2FApp.tsx%3A23%2C37\n\n## Base UI version\n\nv1.0.0-beta.2\n\n## Which browser are you using?\n\nChrome\n\n## Which OS are you using?\n\nMac OS\n\n## Which assistive tech are you using (if applicable)?\n\nX\n\n## Additional context\n\n",
+      "public_features": {
+        "language": "ts",
+        "issue_word_count": 106,
+        "issue_size": "short",
+        "feature_key": "ts.issue-short"
+      },
+      "source_row_digest": "sha256:95302db7a9ee1ea9c257fbdc3e19b90852db5c3fc294b26037a4b66253b35e4a",
+      "problem_statement_digest": "sha256:f0303fe25e6f891f7f1afc14e211b7e92c7e704d57016c3a60a3282610079027",
+      "hidden_artifact_digests": {
+        "gold_patch": "sha256:e6191aba32ddfeef5c77a03dede8991aff2309bc68bc355dbaeee4508ef1b67d",
+        "test_patch": "sha256:4e42268abdadfce9b75cd81bdfcd274cae665fb34b75204cb44e81c7dd3b68fa"
+      }
+    },
+    {
+      "schema": 1,
+      "instance_id": "QwenLM__qwen-code-349",
+      "split": "ts",
+      "row_index": 52,
+      "repo": "QwenLM/qwen-code",
+      "pull_number": "349",
+      "base_commit": "df1479f8644efd20bfe58548d74363631fd0d95a",
+      "created_at": "2025-08-16T00:40:01Z",
+      "docker_image": "starryzhang/sweb.eval.x86_64.qwenlm_1776_qwen-code-349",
+      "problem_statement": "Unexpectedly scanned entire `.venv` directory, sending ~100M tokens from 5,000 files\n### What happened?\n\nWhile using Qwen Code, I noticed that it automatically scanned the entire `.venv` directory—even though I didn’t instruct it to do so. This resulted in nearly 100 million tokens being sent from approximately 5,000 files. These files are mostly irrelevant to the task and should not have been included.\n\n```\nSuccessfully read and concatenated content from **5472 file(s)**.\n\n**Processed Files (first 10 shown):**\n- `scripts/.gitignore`\n- `scripts/.venv/.gitignore`\n- `scripts/.venv/CACHEDIR.TAG`\n- `scripts/.venv/bin/activate`\n- `scripts/.venv/bin/activate.bat`\n- `scripts/.venv/bin/activate.csh`\n- `scripts/.venv/bin/activate.fish`\n- `scripts/.venv/bin/activate.nu`\n- ...and 5462 more.\n```\n\nI canceled the operation when I noticed something was wrong, but the final screen revealed that nearly 100 million tokens had already been processed.\n\n```\n╭────────────────────────────────────────────────────────────────────────────────────────────────╮\n│                                                                                                │\n│  Agent powering down. Goodbye!                                                                 │\n│                                                                                                │\n│  Performance                                                                                   │\n│  Wall Time:                  14m 18s                                                           │\n│  Agent Active:               3m 2s                                                             │\n│    » API Time:               3m 2s (100.0%)                                                    │\n│    » Tool Time:              0s (0.0%)                                                         │\n│                                                                                                │\n│                                                                                                │\n│  Model Usage                  Reqs   Input Tokens  Output Tokens                               │\n│  ───────────────────────────────────────────────────────────────                               │\n│  qwen3-coder-plus               11    102,939,617            113                               │\n│                                                                                                │\n│  Savings Highlight: 11,008 (0.0%) of input tokens were served from the cache, reducing costs.  │\n│                                                                                                │\n│  » Tip: For a full token breakdown, run `/stats model`.                                        │\n│                                                                                                │\n╰────────────────────────────────────────────────────────────────────────────────────────────────╯\n```\n\n\n### What did you expect to happen?\n\nI expected Qwen Code to ignore large directories like `.venv` by default, or at least prompt the user before scanning and sending such a massive number of files. Ideally, it should have safeguards to avoid reading directories with excessive file counts or known irrelevant content (e.g., virtual environments, build artifacts).\n\n### Client information\n\n\n* **CLI Version:** 0.0.5\n* **Git Commit:** c09abb81 (local modifications)\n* **Operating System:** linux v24.4.1\n* **Sandbox Environment:** no sandbox\n* **Model Version:** qwen3-coder-plus\n* **Memory Usage:** 257.0 MB\n\n\n### Login information\n\n_No response_\n\n### Anything else we need to know?\n\n_No response_\n",
+      "public_features": {
+        "language": "ts",
+        "issue_word_count": 325,
+        "issue_size": "long",
+        "feature_key": "ts.issue-long"
+      },
+      "source_row_digest": "sha256:4041190eb817d1cff7cac6e0a2ccca0886709c8f62ef9bfd21daed468f6f2d7b",
+      "problem_statement_digest": "sha256:4bfe963e1cda82563da2fa4877f1be825843c5f142c340a79f3a6f4f6466e464",
+      "hidden_artifact_digests": {
+        "gold_patch": "sha256:41caa3bd2666801ad79c181f2c210772f587c859a38be047eb67176c9d73b22d",
+        "test_patch": "sha256:e51dcd3fb63c73f6d41b96617b60b703193795cc5e4fc15e127b454cd25309fa"
+      }
+    },
+    {
+      "schema": 1,
+      "instance_id": "TypeCellOS__BlockNote-2629",
+      "split": "ts",
+      "row_index": 108,
+      "repo": "TypeCellOS/BlockNote",
+      "pull_number": "2629",
+      "base_commit": "38be5fd2ddab06977a663ac8b5077042a0a5eac7",
+      "created_at": "2026-04-07T08:35:41Z",
+      "docker_image": "starryzhang/sweb.eval.x86_64.typecellos_1776_blocknote-2629",
+      "problem_statement": "RangeError: Position out of range when deleting after multi-column block\n### What’s broken?\n\nWhen using the multi-column feature, continuously pressing Backspace after typing in a block following a multi-column layout causes a runtime error:\n\n```RangeError: Position X out of range```\n\nThis crashes the editor and breaks further interaction.\n\n<img width=\"1225\" height=\"838\" alt=\"Image\" src=\"https://github.com/user-attachments/assets/de3d5796-0967-40e8-bbd3-98c4147efaec\" />\n\n<img width=\"592\" height=\"174\" alt=\"Image\" src=\"https://github.com/user-attachments/assets/3ccd0b6d-4eed-46c0-8193-34692e7e225f\" />\n\n### What did you expect to happen?\n\n- Text should be deleted normally\n- Editor should remain stable\n- No runtime errors should occur\n\n\n### Steps to reproduce\n\n1. Insert a multi-column block (e.g., 3 columns)\n2. Move cursor to the next block (below the columns)\n3. Type some text (e.g., aaa)\n4. Press and hold Backspace to delete continuously\n\n### BlockNote version\n\n\"@blocknote/xl-multi-column\": \"0.47.1\"\n\n### Environment\n\nChrome\n\n### Additional context\n\n- This issue appears to be related to how the multi-column structure interacts with deletion logic.\n- Likely caused by an invalid ProseMirror transaction when deleting across structural boundaries.\n- Happens more frequently when holding down Backspace (rapid consecutive deletes).\n\n### Contribution\n\n- [ ] I'd be interested in contributing a fix for this issue\n\n### Sponsor\n\n- [ ] I'm a [sponsor](https://www.blocknotejs.org/pricing) and would appreciate if you could look into this sooner than later 💖\n",
+      "public_features": {
+        "language": "ts",
+        "issue_word_count": 207,
+        "issue_size": "long",
+        "feature_key": "ts.issue-long"
+      },
+      "source_row_digest": "sha256:ee816b8ac36a3dbbd4ea1e7c5b85e7126a69befb60ebe3410dbb9bf35c2149a3",
+      "problem_statement_digest": "sha256:868347f9b4fed9ccfb7ae1d65b99bbd2b33bf3f5250bfc9b78774742bd3b8b35",
+      "hidden_artifact_digests": {
+        "gold_patch": "sha256:0bbab6e962054f392ebe25602101f7e3ab9eabe66009933dd7b724ffe18816d0",
+        "test_patch": "sha256:a8641bcf4cb0d87cc50cc3bf2c19c74b21039300c5841fb6e75fa163330f95f1"
+      }
+    },
+    {
+      "schema": 1,
+      "instance_id": "preactjs__preact-4880",
+      "split": "js",
+      "row_index": 29,
+      "repo": "preactjs/preact",
+      "pull_number": "4880",
+      "base_commit": "aeb59e0cbb90fb1baf976cd29cd2d99d9faa9870",
+      "created_at": "2025-08-08T15:17:31Z",
+      "docker_image": "starryzhang/sweb.eval.x86_64.preactjs_1776_preact-4880",
+      "problem_statement": "the child component of ErrorBoundary, wrapped by memo function failed to recover from the last error\n- [x] Check if updating to the latest Preact version resolves the issue\r\n\r\n**Describe the bug**\r\nthe child componet wrapped by memo function caused an error in the first render, then it's parent component caught the error and solved the error, but this child component disappears in the next render.\r\n\r\n**To Reproduce**\r\n\r\nThe second Test component disappeared.\r\n[https://codesandbox.io/s/charming-curie-to3te?file=/src/index.js](https://codesandbox.io/s/charming-curie-to3te?file=/src/index.js)\r\n\r\nSteps to reproduce the behavior:\r\n\r\nPlease see the demo above. It's not difficult to reproduce.\r\n\r\n**Expected behavior**\r\n\r\nall Test component should be rendered.\r\n\n",
+      "public_features": {
+        "language": "js",
+        "issue_word_count": 97,
+        "issue_size": "short",
+        "feature_key": "js.issue-short"
+      },
+      "source_row_digest": "sha256:ab0908830d9216b571d9bd9c3db8edb6bced60427d9dd34151490cfa30fcba55",
+      "problem_statement_digest": "sha256:a15e5664d8852cc552c1c07d9b5ef36905565f6dfe87264a86a2d906590d4668",
+      "hidden_artifact_digests": {
+        "gold_patch": "sha256:cf10443e7ea31c39c3baaf214e32903df18520ed2723a4631a6bdc2aefe85541",
+        "test_patch": "sha256:62cc05d8803198c60639ef49eae9d50089dd211f97a27e08cf0eff91619da9b2"
+      }
+    },
+    {
+      "schema": 1,
+      "instance_id": "GladysAssistant__Gladys-2504",
+      "split": "js",
+      "row_index": 88,
+      "repo": "GladysAssistant/Gladys",
+      "pull_number": "2504",
+      "base_commit": "b32900c920e000491c817d33e748f6b57ffa2569",
+      "created_at": "2026-03-23T14:32:01Z",
+      "docker_image": "starryzhang/sweb.eval.x86_64.gladysassistant_1776_gladys-2504",
+      "problem_statement": "Zigbee2mqtt : Error on discover page when energy monitoring has a missing energy meter id\n<img width=\"2912\" height=\"770\" alt=\"Image\" src=\"https://github.com/user-attachments/assets/c7bc2939-f76d-44ac-b6db-8cd072e56632\" />\n",
+      "public_features": {
+        "language": "js",
+        "issue_word_count": 21,
+        "issue_size": "short",
+        "feature_key": "js.issue-short"
+      },
+      "source_row_digest": "sha256:1d5c54e1a15bc74ce6f775bc1d73c40abe9783ec7b5cb05ff041743f2d91ad08",
+      "problem_statement_digest": "sha256:2c905fcec19df8c8538eb69796a5abd4d41694fdf68bb65ac5fb83b48ce9d09b",
+      "hidden_artifact_digests": {
+        "gold_patch": "sha256:9ac59e7429e5a8dc6f0767fcf04e2810c13620bacaa360dd80523515e318865e",
+        "test_patch": "sha256:a9df344f7b7e90ee96318142a770c8c31755f5ed5388e0db42a98f9bd88602a0"
+      }
+    },
+    {
+      "schema": 1,
+      "instance_id": "simple-icons__simple-icons-13659",
+      "split": "js",
+      "row_index": 61,
+      "repo": "simple-icons/simple-icons",
+      "pull_number": "13659",
+      "base_commit": "6c8f4377578ea1a4d6f22a35da31a279a0b9f7fe",
+      "created_at": "2025-07-25T02:02:39Z",
+      "docker_image": "starryzhang/sweb.eval.x86_64.simple-icons_1776_simple-icons-13659",
+      "problem_statement": "Request: Suitest\n### Brand Name\n\nSuitest\n\n### Website\n\nhttps://www.suite.st/\n\n### Popularity Metric\n\nhttps://www.similarweb.com/website/suite.st/\n\n### Forbidden Brands\n\n- [x] I have reviewed the list of [forbidden brands](https://github.com/simple-icons/simple-icons/blob/develop/CONTRIBUTING.md#forbidden-brands) and can confirm the brand I am requesting is not one of them, nor is it a subsidiary of one of them.\n\n### Terms of Service\n\n_No response_\n\n### Official Resources for Icon and Color\n\nSVG: https://suite.st/img/suitest-logo-mobile.svg\nColor: #f06060\n\n### Additional Comments\n\n_No response_\n",
+      "public_features": {
+        "language": "js",
+        "issue_word_count": 70,
+        "issue_size": "short",
+        "feature_key": "js.issue-short"
+      },
+      "source_row_digest": "sha256:9bfc894da9127fe59c0ef80a2616d60f650180b5d95e7380ca24760075b73327",
+      "problem_statement_digest": "sha256:55f8a48d933f1c59779137ef905405512ddd40c017a293d1f53ac0416f5f8772",
+      "hidden_artifact_digests": {
+        "gold_patch": "sha256:d5fb73838347a45e46889157557d23456ece7e60024603fbb68d9f845bf322b4",
+        "test_patch": "sha256:24eea23377437b8879fb9b40a36f132dc79e0914b04d7773be6fcac1e8802e2e"
+      }
+    },
+    {
+      "schema": 1,
+      "instance_id": "moment__luxon-1720",
+      "split": "js",
+      "row_index": 14,
+      "repo": "moment/luxon",
+      "pull_number": "1720",
+      "base_commit": "4cc03e5b71240ece26ba1424cabcf35b8a939c56",
+      "created_at": "2025-07-29T21:55:04Z",
+      "docker_image": "starryzhang/sweb.eval.x86_64.moment_1776_luxon-1720",
+      "problem_statement": "Interval.fromISO not following standard for start/end notation\nActual behavior:\r\n`Interval.fromISO(\"1988-04-15T09/15\").toString()`\r\n> '[1988-04-15T09:00:00.000+01:00 – 2021-03-23T15:00:00.000+01:00)'\r\n\r\nExpected behavior:\r\n`Interval.fromISO(\"1988-04-15T09/15\").toString()`\r\n> '[1988-04-15T09:00:00.000+01:00 – 1988-04-15T15:00:00.000+01:00)'\r\n\r\nas described in:\r\nhttps://en.wikipedia.org/wiki/ISO_8601#Time_intervals\r\n> For <start>/<end> expressions, if any elements are missing from the end value, they are assumed to be the same as for the start value including the time zone.\r\n\r\nIn node 12.21.0 with luxon 1.25.0, 1.26.0.\n",
+      "public_features": {
+        "language": "js",
+        "issue_word_count": 61,
+        "issue_size": "short",
+        "feature_key": "js.issue-short"
+      },
+      "source_row_digest": "sha256:756f8706beaa3f192b59d7fe1739c184829e5e2fe070bf65aeaac957ea7bf63e",
+      "problem_statement_digest": "sha256:ab7a5ad55c98e0753a0cf0a699bd1e6900140bb2c8b4ec05e6e211f33ec6d3f0",
+      "hidden_artifact_digests": {
+        "gold_patch": "sha256:2e12a8caaed93c95e40a1a85501c5e78001f5a9d4e834976f96cc38b339715e6",
+        "test_patch": "sha256:8352a5a9a4f777a5b70f53672647931404e2b0b762b0238c129aa6ab83029621"
+      }
+    },
+    {
+      "schema": 1,
+      "instance_id": "gsd-build__get-shit-done-2186",
+      "split": "js",
+      "row_index": 78,
+      "repo": "gsd-build/get-shit-done",
+      "pull_number": "2186",
+      "base_commit": "c11ec0555451338c3ef666753ec2b24731d7a2c7",
+      "created_at": "2026-04-13T11:48:41Z",
+      "docker_image": "starryzhang/sweb.eval.x86_64.gsd-build_1776_get-shit-done-2186",
+      "problem_statement": "init plan-phase / execute-phase return archived phase when current milestone reuses the same phase number\n## GSD Version\n1.34.2 (reproduced on `main` at 1.35.0-dev)\n\n## Runtime\nClaude Code\n\n## OS / Node / Shell\nmacOS, Node v22.22.1, zsh\n\n## Installation Method\nLocal (`~/.claude/get-shit-done/`)\n\n## Summary\n\n`node gsd-tools.cjs init plan-phase <N>` returns the wrong phase when the current milestone reuses a phase number that also exists in an archived milestone's `.planning/milestones/v*-phases/` directory.\n\n`phase_dir`, `phase_slug`, `phase_name`, `has_context`, `has_research`, `context_path`, `research_path` all point at the archived phase from the prior milestone, while `phase_req_ids` correctly comes from the current ROADMAP. The mismatch silently steers downstream agents (gsd-planner, gsd-phase-researcher) at shipped work from a previous milestone.\n\n## Reproduction\n\nDirectory layout (a project on v2.0 where v1.0 shipped and was archived):\n\n```\n.planning/\n  ROADMAP.md                         # current v2.0 roadmap, has \"Phase 2: New Feature\"\n  phases/                            # (empty — Phase 2 not started yet)\n  milestones/\n    v1.0-phases/\n      02-old-feature/\n        2-CONTEXT.md                 # old v1.0 artifacts\n        2-RESEARCH.md\n```\n\nRunning:\n\n```\nnode gsd-tools.cjs init plan-phase 2\n```\n\nreturns:\n\n```json\n{\n  \"phase_found\": true,\n  \"phase_dir\": \".planning/milestones/v1.0-phases/02-old-feature\",\n  \"phase_name\": \"old-feature\",\n  \"phase_slug\": \"old-feature\",\n  \"has_context\": true,\n  \"has_research\": true,\n  \"context_path\": \".planning/milestones/v1.0-phases/02-old-feature/2-CONTEXT.md\",\n  \"research_path\": \".planning/milestones/v1.0-phases/02-old-feature/2-RESEARCH.md\",\n  \"phase_req_ids\": \"NEW-01, NEW-02\"\n}\n```\n\n`phase_req_ids` is correctly scoped to the current milestone (via `getRoadmapPhaseInternal`'s `extractCurrentMilestone`), but everything coming from `findPhaseInternal` points at the archived phase. The result is internally inconsistent.\n\n## Expected\n\nSince `ROADMAP.md` has Phase 2 in the current milestone and `.planning/phases/` has no Phase 2 directory yet, init should return the ROADMAP fallback (no directory, clean slate) — same behavior `cmdInitPhaseOp` already implements for discuss-phase.\n\n```json\n{\n  \"phase_found\": true,\n  \"phase_dir\": null,\n  \"phase_name\": \"New Feature\",\n  \"phase_slug\": \"new-feature\",\n  \"has_context\": false,\n  \"has_research\": false,\n  \"phase_req_ids\": \"NEW-01, NEW-02\"\n}\n```\n\n## Root Cause\n\n`findPhaseInternal` (in `get-shit-done/bin/lib/core.cjs`) falls through to archived milestone directories when nothing is found in `.planning/phases/`. The archived match's `archived: version` flag is set but never checked by `cmdInitPlanPhase` / `cmdInitExecutePhase` / `cmdInitVerifyWork`, so an archived phase silently masquerades as the current one.\n\n`cmdInitPhaseOp` already guards against this (lines 621–642 in `get-shit-done/bin/lib/init.cjs` on current main). The three other init entry points do not.\n\n## Impact\n\nHit in real use while running `/gsd-plan-phase 2` on a project where v1.0 was archived and v2.0's Phase 2 started — the orchestrator was routed at `.planning/milestones/v1.0-phases/02-session-context-pool/` artifacts (a shipped browser-service phase) instead of the current milestone's UI theming phase. Had to manually override `phase_dir`.\n\n## Fix\n\nPR: #TBD (linked once opened from fork).\n",
+      "public_features": {
+        "language": "js",
+        "issue_word_count": 392,
+        "issue_size": "long",
+        "feature_key": "js.issue-long"
+      },
+      "source_row_digest": "sha256:fe9f40b5b110f96fdba78d538b7640464927fa063c6ae9ca95f93f43262225f4",
+      "problem_statement_digest": "sha256:b5904919950ec093134ce3f747a4bf2fee8c9b63223f0bc31abb60f77d003e26",
+      "hidden_artifact_digests": {
+        "gold_patch": "sha256:aaa5a440f43192d086370a328a2892df11ae6e758f65c3e07703ebfba471ad3f",
+        "test_patch": "sha256:1d8e3aa444697cc28c6a0a31fdc44d8bc1f5217aafb9ecf729b82dc55357595d"
+      }
+    },
+    {
+      "schema": 1,
+      "instance_id": "docsifyjs__docsify-2595",
+      "split": "js",
+      "row_index": 67,
+      "repo": "docsifyjs/docsify",
+      "pull_number": "2595",
+      "base_commit": "32aa74e0d2fcd89705e5c30fc8b8e2562e7b774e",
+      "created_at": "2025-08-08T04:51:56Z",
+      "docker_image": "starryzhang/sweb.eval.x86_64.docsifyjs_1776_docsify-2595",
+      "problem_statement": "Use of Coverpage H1 (Title) as link to start of content not working as expected in v5 Preview\n### Description\n\nAs mentioned in #2593 , the use of a Coverpage Title as a link to the main content of a Docsify site can be problematic due to the repeated use of the same id, however in v5 RC-1 this seemed to be supported (as expected).\n\n### Expected behavior\n\nWhen there is  H1 (title) in the Coverpage, this link when clicked should go to the first matching id in the main content area of Docsify, and not on the matching id within the Coverpage itself. The coverpage will always be displayed as the landing page for a Docsify site, so navigating to an id within the one screen long Coverpage is highly unlikely.\n\n### Actual behavior\n\nCurrently, clicking on the H1 (title) of the Coverpage scrolls the Coverpage halfway up to where the H1 link is.\n\nDocsify v5 preview codsandbox, click on coverpage title:\nhttps://codesandbox.io/p/sandbox/docsify-v5-preview-coverpage-2d82hj\n\nHowever, in Docsify v5 RC-1 this issue did not seem to be present, and works as expected:\n\nDocsify v5 RC 1 codsandbox, click on coverpage title:\nhttps://codesandbox.io/p/sandbox/docsify-v5-rc-1-coverpage-jx2rl3\n\nThe same logic seems to hold true when using a direct URL with the id which results in targeting the main content (which has the same id on the Coverpage):\nhttps://paulhibbitts.github.io/docsify-v5-rc-1-coverpage/#/?id=docsify-template\n\n### Steps to reproduce\n\n1. Create Coverpage with H1 (title) such as \"Quick start\"\n2. Create a main content Markdown file, with # Quick start as the content title\n3. View the site, and click on the Coverpage H1 (title) link\n\nHappy to help test/try possible approaches to this issue, thank you!\n\n### Environment\n\nDocsify v5 Preview\n\n### Additional Information\n\n- [x] Bug still occurs when all/other plugins are disabled?\n",
+      "public_features": {
+        "language": "js",
+        "issue_word_count": 292,
+        "issue_size": "long",
+        "feature_key": "js.issue-long"
+      },
+      "source_row_digest": "sha256:bbf7ac7d78c2b875a46fba81a5884bb7785a954e8756a21ea13cde7c7ed8e507",
+      "problem_statement_digest": "sha256:a34338f7164ffe6bb708bd034f21bd839e60a4c019b5073e1cf3421c7ca41759",
+      "hidden_artifact_digests": {
+        "gold_patch": "sha256:8bb536ffd7490e1e5d21341b415ec9412f05129e1215a0dc52709d9d7737ff62",
+        "test_patch": "sha256:481c04593a542f143a8850bf3212c55ab684cc66ed5dafd2df1fbb063feb779f"
+      }
+    },
+    {
+      "schema": 1,
+      "instance_id": "openai__codex-plugin-cc-83",
+      "split": "js",
+      "row_index": 87,
+      "repo": "openai/codex-plugin-cc",
+      "pull_number": "83",
+      "base_commit": "8e403f9d4b496b0b0aff50fa3673f889f6a22cb1",
+      "created_at": "2026-04-01T08:09:41Z",
+      "docker_image": "starryzhang/sweb.eval.x86_64.openai_1776_codex-plugin-cc-83",
+      "problem_statement": "task --resume-last ignores current-session scoping and can resume another Claude session's task\n## Summary\n\n`task-resume-candidate --json` is scoped to the current Claude session, but `task --resume-last` is not. In a multi-session workspace, the CLI can report that there is no resumable task for the current session and then still resume a different session's persisted Codex thread.\n\nThe same helper also lets an active task from another Claude session block `--resume-last`, even when `/codex:status` for the current session shows no running jobs.\n\n## Reproduction\n\n1. Start a repository with the plugin state directory available.\n2. Run one successful `task` command under Claude session `sess-other` so it persists a completed task thread.\n3. In a separate Claude session `sess-current`, run:\n   - `node scripts/codex-companion.mjs task-resume-candidate --json`\n   - `node scripts/codex-companion.mjs task --resume-last \"follow up\"`\n4. Observe that `task-resume-candidate` reports `available: false`, but `--resume-last` still resumes the older thread from `sess-other`.\n5. Alternatively, leave a `running` task owned by `sess-other` in state and run `task --resume-last` from `sess-current`.\n\n## Expected\n\n- Implicit resume selection should use the same current-session visibility rules as `task-resume-candidate`.\n- If `CODEX_COMPANION_SESSION_ID` is set and the current session has no resumable task, `task --resume-last` should fail with \"No previous Codex task thread was found for this repository.\".\n- A running task from another session should not block `--resume-last` for the current session.\n\n## Actual\n\n- `task-resume-candidate` says there is no resumable task in the current session.\n- `task --resume-last` still resumes another session's completed thread.\n- A running task from another session can also block `--resume-last` with `Task ... is still running. Use /codex:status before continuing it.` even though `/codex:status` for the current session shows no running jobs.\n\n## Suspected Cause\n\n`resolveLatestTrackedTaskThread(...)` scans all persisted task jobs in the workspace and only excludes the current job id. It does not apply current-session filtering before choosing a completed thread or before checking for active tasks.\n\n## Suggested Fix\n\nThread the same session-aware filtering used by `task-resume-candidate` into the implicit `--resume-last` path, and only fall back to `findLatestTaskThread(...)` when there is no Claude session id in scope.\n\n",
+      "public_features": {
+        "language": "js",
+        "issue_word_count": 344,
+        "issue_size": "long",
+        "feature_key": "js.issue-long"
+      },
+      "source_row_digest": "sha256:54f3454ab284e822e55a39d47c0e3f6b8f1ee75dcfd33c31f59da03cb1f51e86",
+      "problem_statement_digest": "sha256:4abb1b12fd8fe85e030ac12737bc02d91f1c166c09332e21819faf1a2912e9d0",
+      "hidden_artifact_digests": {
+        "gold_patch": "sha256:463728ac65b14c90ad622973139ddbedb9d8a6af45e1bfe6c7e534676d6adce8",
+        "test_patch": "sha256:06524c6ffea8de5dc0efca91e7da14c285cc6155de24951da904369847503c24"
+      }
+    },
+    {
+      "schema": 1,
+      "instance_id": "aralroca__next-translate-1259",
+      "split": "js",
+      "row_index": 89,
+      "repo": "aralroca/next-translate",
+      "pull_number": "1259",
+      "base_commit": "f1fbf473b42cf795ae8eb996003222625bfc58ac",
+      "created_at": "2026-03-22T06:21:20Z",
+      "docker_image": "starryzhang/sweb.eval.x86_64.aralroca_1776_next-translate-1259",
+      "problem_statement": "I18nProvider ignores lang after upgrade from 3.0.0 to 3.0.2\nAfter upgrading next-translate from 3.0.0 to 3.0.2 I can no longer change my app's language. Regardless of which language I pass to I18nProvider, the app always renders using the default language. Rolling back to 3.0.0 restores expected behavior.\n\nEnvironment:\nnext: 16.1.6 (webpack)\nreact: 19.2.4\nnext-translate-plugin: 2.6.2 (also tried 3.0.2)\nnext-translate: 3.0.2 (next-translate-plugin peer dependecy)\n\nReproduction:\n\n```ts\nexport default function App({ Component, pageProps }: AppProps) {\n  const [lang, setLang] = useState('en')\n\n  return (\n    <I18nProvider key={lang} lang={lang}>\n      <DynamicNamespaces namespaces={['common']}>\n        <Component {...pageProps} onLanguageChange={setLang} />\n      </DynamicNamespaces>\n    </I18nProvider>\n  )\n}\n```\n\n```ts\nexport default function Home({ onLanguageChange }: HomeProps) {\n  const { t, lang } = useTranslation('common')\n  return (\n    <div className=\"h-svh flex flex-col items-center justify-center\">\n      <LanguageSelector onLanguageChange={onLanguageChange} />\n      <strong className=\"mt-4 text-2xl\">Current Language:</strong>{' '}\n      {t('languageName')} ({lang})\n    </div>\n  )\n}\n```\n```ts\nexport const LanguageSelector: React.FC<LanguageSelectorProps> = ({\n  onLanguageChange,\n}) => {\n  const { t, lang } = useTranslation('common')\n\n  const LANGUAGES = [\n  { code: 'en', name: 'English' },\n  { code: 'es', name: 'Español' },\n  { code: 'fr', name: 'Français' },\n  { code: 'pt', name: 'Português' },\n]\n\n  const handleLanguageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {\n    const newLang = e.target.value\n    if (onLanguageChange) {\n      onLanguageChange(newLang)\n    }\n  }\n\n  return (\n    <div>\n      <label htmlFor=\"language-select\">\n        {t('selectLabel')}\n      </label>\n      <select\n        id=\"language-select\"\n        value={lang}\n        onChange={handleLanguageChange}\n      >\n        {LANGUAGES.map((language) => (\n          <option key={language.code} value={language.code}>\n            {language.name}\n          </option>\n        ))}\n      </select>\n    </div>\n  )\n}\n```\nOr clone this project: https://github.com/dmg-vicente/next-language-bug (uses 3.0.0 by default)\n\n",
+      "public_features": {
+        "language": "js",
+        "issue_word_count": 232,
+        "issue_size": "long",
+        "feature_key": "js.issue-long"
+      },
+      "source_row_digest": "sha256:545dba140b1864794974499042571d905660c5bf93b8e8043b03f7b468ee899f",
+      "problem_statement_digest": "sha256:8191eb84398517ae59a1dc73bf41c789099db2b81dadabe52ce7d3c6f2b1dbe8",
+      "hidden_artifact_digests": {
+        "gold_patch": "sha256:edfc197b29fddfa60f332966043b69fc387e8e32e6b1f5d6e1db5aa742dd7f22",
+        "test_patch": "sha256:f43ce8c65d6bd38403ef7e02c897351438d3683456bb79c432a429616cdd6e9d"
+      }
+    },
+    {
+      "schema": 1,
+      "instance_id": "MetaMask__metamask-mobile-17294",
+      "split": "ts",
+      "row_index": 44,
+      "repo": "MetaMask/metamask-mobile",
+      "pull_number": "17294",
+      "base_commit": "67e871cc994621f15dac7a662275ae3cc5af594e",
+      "created_at": "2025-07-16T17:30:19Z",
+      "docker_image": "starryzhang/sweb.eval.x86_64.metamask_1776_metamask-mobile-17294",
+      "problem_statement": "[Bug]: Request Payment button for Solana should be disabled and hidden\n### Describe the bug\n\nRequest Payment button for Solana should be disabled and hidden\n\n### Expected behavior\n\n_No response_\n\n### Screenshots/Recordings\n\nhttps://github.com/user-attachments/assets/698242d2-b727-4b22-a843-e1b7c925cc5f\n\n### Steps to reproduce\n\n1. Switch to Solana network\n2. Click receive\n3. See request payment button is displayed and enabled \n\n### Error messages or log output\n\n```shell\n\n```\n\n### Detection stage\n\nDuring release testing\n\n### Version\n\n7.51.0\n\n### Build type\n\nNone\n\n### Device\n\nIphone 16\n\n### Operating system\n\niOS\n\n### Additional context\n\n_No response_\n\n### Severity\n\n_No response_\n",
+      "public_features": {
+        "language": "ts",
+        "issue_word_count": 92,
+        "issue_size": "short",
+        "feature_key": "ts.issue-short"
+      },
+      "source_row_digest": "sha256:8cb7b11f2e449de71a65276343620a13fd779d5c113e1a771129b00ca1d5142f",
+      "problem_statement_digest": "sha256:40a80b29eae2aa4b8504a8d81c3012bfd5e6aefa6be6a848bd99689a5ef5fd67",
+      "hidden_artifact_digests": {
+        "gold_patch": "sha256:edabe2bf9071f006dbfffd32ddbb304df6395f1f84ccda99ebbe4189b6e70794",
+        "test_patch": "sha256:41e70b24b89f9d64e8370f5363360d455fe308d809c85d4eef3c5dcb117291a1"
+      }
+    },
+    {
+      "schema": 1,
+      "instance_id": "denoland__std-6775",
+      "split": "ts",
+      "row_index": 67,
+      "repo": "denoland/std",
+      "pull_number": "6775",
+      "base_commit": "5aa2bf1280b24e921e1b7cc610bbc3196311d95a",
+      "created_at": "2025-07-27T09:20:49Z",
+      "docker_image": "starryzhang/sweb.eval.x86_64.denoland_1776_std-6775",
+      "problem_statement": "`@std/async` `delay(Infinity)` or `delay(0x80000000)` resolve immediately\n**Describe the bug**\n\n`@std/async` `delay(Infinity)` or `delay(0x80000000)` resolve immediately. This is due to the value passed to `setTimeout` being coerced to an i32, with a [max value of `0x7fffffff`](https://developer.mozilla.org/en-US/docs/Web/API/Window/setTimeout#maximum_delay_value).\n\n**Steps to Reproduce**\n\n```ts\nimport { delay } from '@std/async'\ndelay(0x80000000).then(() => console.log('done')) // logs immediately\n\nawait Promise.race([1, Infinity].map((n) => delay(n).then(() => n)))\n// returns Infinity\n```\n\n**Expected behavior**\n\n`delay` not to resolve until the time specified has elapsed (never resolve if `Infinity`).\n\nThis probably isn't important for most use cases, as `Deno.cron` is a much better solution for scheduling tasks etc, but `delay(Infinity)` (maybe also passing an abort signal etc) would be a handy shorthand for \"never resolve\" for cases like long-polling to implement simple dev server watch/reload logic.\n\n**Environment**\n\n- OS: WSL\n- deno version: 2.4.0\n- std version: @std/async@1.0.13\n\n",
+      "public_features": {
+        "language": "ts",
+        "issue_word_count": 137,
+        "issue_size": "short",
+        "feature_key": "ts.issue-short"
+      },
+      "source_row_digest": "sha256:9f4cbce1242e7d0bd766ddc80dfe91d36d9100363cf832f2867615b28cdc63bf",
+      "problem_statement_digest": "sha256:924ce0cc1020957af42c8a324a69150a96e6b3694b653ed07e28d9cc5baa4446",
+      "hidden_artifact_digests": {
+        "gold_patch": "sha256:7b9ccf3d37c88d7a6d814d19eebf0f94dd574e5b1c138e966425fce370b2d6af",
+        "test_patch": "sha256:331db371a952a2be280e0c0710cb71154392a7181c04f3f3221f2db20798977d"
+      }
+    },
+    {
+      "schema": 1,
+      "instance_id": "RocketChat__Rocket.Chat.ReactNative-6382",
+      "split": "ts",
+      "row_index": 40,
+      "repo": "RocketChat/Rocket.Chat.ReactNative",
+      "pull_number": "6382",
+      "base_commit": "05a0b498e88de4a10ca0a22d8049de0740e8bfb0",
+      "created_at": "2025-05-25T12:32:44Z",
+      "docker_image": "starryzhang/sweb.eval.x86_64.rocketchat_1776_rocket.chat.reactnative-6382",
+      "problem_statement": "Mobile apps show colons around the emoji when sent by webhook\n```bash\ncurl -H 'Content-Type: application/json' \\\n                                                      --data '{\n                                                      \"emoji\": \":smirk:\",\n                                                      \"text\": \"Example message\"}' https://<server>/hooks/***/***\n```\nRenders as \"\\:😏\\:\" on mobile apps, but correctly (\"😏\") in desktop.\n\nRemoving the colons from the message renders as \"😏\" on mobile, but blank on desktop\n\niOS: 4.60.79286\nAndroid: 4.60.79290\nDesktop: 4.4.0\nServer : 7.3.1\n\nMobile:\n![Image](https://github.com/user-attachments/assets/545ef7dc-3f55-4162-b6fa-e42f937fe838)\n\nDesktop:\n![Image](https://github.com/user-attachments/assets/5a0c5d22-04ea-426c-887b-922f4d598890)\n\n\n\n",
+      "public_features": {
+        "language": "ts",
+        "issue_word_count": 65,
+        "issue_size": "short",
+        "feature_key": "ts.issue-short"
+      },
+      "source_row_digest": "sha256:cc24cda86233229539f5ac2dc810a88dbef0cf8920d7e5d4f472eb74a6f7ef1a",
+      "problem_statement_digest": "sha256:bf4e4d3b96108085ca60a886404c7a86f458da9711a322c4e69c78d36325f0c2",
+      "hidden_artifact_digests": {
+        "gold_patch": "sha256:33193468659cdd84b6b3a9c3d5264e72e2c7724f6ac53d48f14280b3ae4a5534",
+        "test_patch": "sha256:e16825488204faa59e8fef818b30489292fc5e1bda82cd8922c1ebcab708cc39"
+      }
+    },
+    {
+      "schema": 1,
+      "instance_id": "jhlywa__chess.js-546",
+      "split": "ts",
+      "row_index": 15,
+      "repo": "jhlywa/chess.js",
+      "pull_number": "546",
+      "base_commit": "c57231d6416ed3e1aaf94ddb90cfbb914889263f",
+      "created_at": "2025-07-08T19:34:02Z",
+      "docker_image": "starryzhang/sweb.eval.x86_64.jhlywa_1776_chess.js-546",
+      "problem_statement": ".fen({ forceEnpassantSquare = true)) not working\n```typescript\nimport {Chess} from 'chess.js'\n\nconst chess = new Chess()\n\n\nchess.move(\"h2h4\");\n\nconsole.log(chess.fen({forceEnpassantSquare: true}));\n// returns:\n// rnbqkbnr/pppppppp/8/8/7P/8/PPPPPPP1/RNBQKBNR b KQkq - 0 1\n// expected\n// rnbqkbnr/pppppppp/8/8/7P/8/PPPPPPP1/RNBQKBNR b KQkq h3 0 1\n```\n",
+      "public_features": {
+        "language": "ts",
+        "issue_word_count": 38,
+        "issue_size": "short",
+        "feature_key": "ts.issue-short"
+      },
+      "source_row_digest": "sha256:466f53871e767fc7c1baaa860295d36bc2c460a9e6f1aee0485fb39abc28ceb3",
+      "problem_statement_digest": "sha256:892ece94abee3c7b911ec4a67e6ec5fdf5ab913838748909a1137c0404511f70",
+      "hidden_artifact_digests": {
+        "gold_patch": "sha256:803ca27d8a33e43ee9b6b6b9930d9bd10ea99c73d3da27463c382b292093941e",
+        "test_patch": "sha256:80414c35f3829ebb313fd000cf47f8995d0a7fed6154d52d2a0d7536dccf1cb6"
+      }
+    },
+    {
+      "schema": 1,
+      "instance_id": "code-yeongyu__oh-my-openagent-3013",
+      "split": "ts",
+      "row_index": 102,
+      "repo": "code-yeongyu/oh-my-openagent",
+      "pull_number": "3013",
+      "base_commit": "941e265aa15281445ee2953aa435a1c4010214a6",
+      "created_at": "2026-04-02T01:40:24Z",
+      "docker_image": "starryzhang/sweb.eval.x86_64.code-yeongyu_1776_oh-my-openagent-3013",
+      "problem_statement": "[Bug]: Skill short names are exposed but not resolvable by the skill resolver\n## Prerequisites\n- [x] I will write this issue in English (see the Language Policy)\n- [x] I have searched existing issues to avoid duplicates\n- [x] I am using the latest version of oh-my-opencode\n- [x] I have read the documentation or asked an AI coding agent with this project's GitHub URL loaded and couldn't find the answer\n\n## Bug Description\nIn an OpenCode environment with oh-my-opencode installed, some superpowers skills are surfaced to the user by their short names (for example `systematic-debugging`), but the `skill` resolver does not actually accept those short names.\n\nCalling the visible short name fails with a `not found` error, and the error message then suggests using the fully qualified name such as `superpowers/systematic-debugging` or the slash-command form `/superpowers:systematic-debugging`.\n\nFrom a user perspective, this looks like a product bug rather than user error, because the visible skill name is not the same as the executable identifier.\n\n## Steps to Reproduce\n1. In the current environment, invoke the skill using the visible short name:\n   ```text\n   systematic-debugging\n   ```\n   or call the skill resolver/tool with that same short name.\n2. Observe the error:\n   ```text\n   Skill or command \"systematic-debugging\" not found. Did you mean: superpowers/systematic-debugging, /superpowers:systematic-debugging?\n   ```\n3. Retry with the fully qualified name:\n   ```text\n   superpowers/systematic-debugging\n   ```\n4. The invocation succeeds.\n\n## Expected Behavior\nIf a skill is exposed in the available-skills list / UI / context as `systematic-debugging`, that short name should be directly resolvable by the `skill` mechanism.\n\nIf short names are intentionally unsupported, then the system should consistently expose only the fully qualified name, so users are not guided toward an invalid invocation.\n\n## Actual Behavior\n- The skill is surfaced to the user as a short name like `systematic-debugging`\n- The resolver rejects that short name\n- The resolver only accepts the fully qualified form such as `superpowers/systematic-debugging`\n- The error message teaches the workaround only after the failure happens\n\n## Doctor Output\n```shell\n$ bunx oh-my-opencode doctor\n\n oMoMoMoMo Doctor \n\n ⚠ 3 issues found:\n\n1. Model override uses unavailable provider\n   Provider(s) not found in OpenCode model cache: axonhub, Custom:Nvidia Nim\n   Affects: model resolution\n\n2. Comment checker unavailable\n   Comment checker binary is not installed.\n   Fix: Install @code-yeongyu/comment-checker\n   Affects: comment-checker hook\n\n3. Configured models rely on compatibility fallback\n   multimodal-looker=google/antigravity-gemini-3-flash (heuristic-backed)\n   Affects: multimodal-looker\n```\n\n## Error Logs\n```shell\nSkill or command \"systematic-debugging\" not found. Did you mean: superpowers/systematic-debugging, /superpowers:systematic-debugging?\n```\n\n## Configuration\n```json\n{\n  \"note\": \"No minimal config snippet isolated yet. The issue appears to be in skill name exposure vs resolver namespace handling rather than a user-specific config mistake.\"\n}\n```\n\n## Additional Context\nMy current guess is that the short-name alias is being displayed but not registered in the runtime resolver, or that the resolver is not expanding short names back to the canonical `superpowers/...` identifier.\n\nIn other words, the presentation layer and the execution layer seem to disagree about the valid skill identifier.\n\nCurrent workaround:\n- `superpowers/systematic-debugging`\n- `/superpowers:systematic-debugging`\n\n## Operating System\nmacOS\n\n## OpenCode Version\n1.3.9\n\n",
+      "public_features": {
+        "language": "ts",
+        "issue_word_count": 506,
+        "issue_size": "long",
+        "feature_key": "ts.issue-long"
+      },
+      "source_row_digest": "sha256:75b857583d29be2e29cb841a38d2ce998d236248c779cb83aa400ca507ec8148",
+      "problem_statement_digest": "sha256:8c3827b7454520c6609238a13028cb3b40ba11955847ca23c9a28bef179f4be0",
+      "hidden_artifact_digests": {
+        "gold_patch": "sha256:ecd483f8e8125a12212265c2359dbf9e0b39200b88c12a820a70b17b31b742ed",
+        "test_patch": "sha256:cd399df9ecd4bf3d0a266fdf87bd3018bdea0a8d56bad96e1ed68abf1cdfe34c"
+      }
+    },
+    {
+      "schema": 1,
+      "instance_id": "honojs__hono-4269",
+      "split": "ts",
+      "row_index": 23,
+      "repo": "honojs/hono",
+      "pull_number": "4269",
+      "base_commit": "0432f81c376a3854d5a00da350b6f8f74a6ad9f2",
+      "created_at": "2025-07-03T14:03:12Z",
+      "docker_image": "starryzhang/sweb.eval.x86_64.honojs_1776_hono-4269",
+      "problem_statement": "TypeError: Body is unusable\n### What version of Hono are you using?\n\n4.8.3\n\n### What runtime/platform is your app running on? (with version if possible)\n\nNode\n\n### What steps can reproduce the bug?\n\nAdd 2x `zValidators` for path/middleware for json, header and try to access raw body text in route handler.\n\nFrom my investigations, [this](https://github.com/honojs/hono/blob/main/src/validator/validator.ts#L78) is causing the error. If we clone the json using `await c.req.raw.clone().json()`, it works fine.\n\nExample using create hono app:\n```\nimport { serve } from \"@hono/node-server\";\nimport { Hono } from \"hono\";\nimport { z } from \"zod\";\nimport { zValidator } from \"@hono/zod-validator\";\n\nconst schema = z.object({  mock: z.string() });\n\nconst app = new Hono();\n\napp\n  .get(\"/\", (c) => {\n    return c.text(\"Hello Hono!\");\n  })\n  .post(\n    \"/\",\n    zValidator(\"header\", schema),\n    zValidator(\"json\", schema),\n    async (c) => {\n      // causes error\n      console.log(await c.req.raw.clone().text());\n\n      return c.text(\"Hello Hono!\");\n    }\n  );\n\nserve(\n  {\n    fetch: app.fetch,\n    port: 3000,\n  },\n  (info) => {\n    console.log(`Server is running on http://localhost:${info.port}`);\n  }\n);\n```\n\n### What is the expected behavior?\n\nI'm able to use multiple zValidators - especially for json & header - and still access the raw body.\n\n### What do you see instead?\n\n```\nTypeError: unusable\n    at Request.clone (node:internal/deps/undici/undici:9942:17)\n    at Request.value (file:///Users/pete/Development/poc/hono-bug/node_modules/.pnpm/@hono+node-server@1.14.4_hono@4.8.3/node_modules/@hono/node-server/dist/index.mjs:122:40)\n    at <anonymous> (/Users/pete/Development/poc/hono-bug/src/index.ts:21:35)\n    at dispatch (file:///Users/pete/Development/poc/hono-bug/node_modules/.pnpm/hono@4.8.3/node_modules/hono/dist/compose.js:22:23)\n    at file:///Users/pete/Development/poc/hono-bug/node_modules/.pnpm/hono@4.8.3/node_modules/hono/dist/compose.js:22:46\n    at file:///Users/pete/Development/poc/hono-bug/node_modules/.pnpm/hono@4.8.3/node_modules/hono/dist/validator/validator.js:81:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async dispatch (file:///Users/pete/Development/poc/hono-bug/node_modules/.pnpm/hono@4.8.3/node_modules/hono/dist/compose.js:22:17)\n    at async file:///Users/pete/Development/poc/hono-bug/node_modules/.pnpm/hono@4.8.3/node_modules/hono/dist/validator/validator.js:81:5\n    at async dispatch (file:///Users/pete/Development/poc/hono-bug/node_modules/.pnpm/hono@4.8.3/node_modules/hono/dist/compose.js:22:17)\n```\n\n### Additional information\n\n_No response_\n",
+      "public_features": {
+        "language": "ts",
+        "issue_word_count": 229,
+        "issue_size": "long",
+        "feature_key": "ts.issue-long"
+      },
+      "source_row_digest": "sha256:382cbb786226847b5316f8064b72ede5e885c4982d2fc99c6300782c1638a90b",
+      "problem_statement_digest": "sha256:0cfe71d26328d5b1110377d4a21a4dfa92630d9838e4ca62538ea899541e847b",
+      "hidden_artifact_digests": {
+        "gold_patch": "sha256:c8875f7ba4f4e75fd40c1cdf7103d585ac86ef3f7672f55ed5adc8bd927f6f47",
+        "test_patch": "sha256:fa581aac9609d1ce29d6cf085c0f6c376bba649f93598450434786eebc7a89a9"
+      }
+    },
+    {
+      "schema": 1,
+      "instance_id": "TanStack__router-4611",
+      "split": "ts",
+      "row_index": 82,
+      "repo": "TanStack/router",
+      "pull_number": "4611",
+      "base_commit": "4124583bce47cd19a2f57439f939c0ad736cacb1",
+      "created_at": "2025-07-10T02:23:20Z",
+      "docker_image": "starryzhang/sweb.eval.x86_64.tanstack_1776_router-4611",
+      "problem_statement": "[Start] Pages with non-Latin characters in the route path are not rendered in TanStack Start\n### Which project does this relate to?\n\nStart\n\n### Describe the bug\n\nI’m building a project in Persian, which is a non-English language that uses a non-Latin alphabet. Today I noticed that pages with non-Latin characters in their route paths — like the example below:\n\n```tsx\nimport { createFileRoute } from '@tanstack/react-router'\n\nexport const Route = createFileRoute('/تست')({\n  component: RouteComponent,\n})\n\nfunction RouteComponent() {\n  return <div>Hello \"/تست\"!</div>\n}\n\n```\nare not being rendered.\n\nAnd in the browser console, only this code/message is shown:\n\n```html\n<html><head></head><body></body></html>\n```\n\n### Your Example Website or App\n\nhttps://github.com/Mrahmani71/test-tanstack-start\n\n### Steps to Reproduce the Bug or Issue\n\nAfter installing the packages and running the project, go to the following link — you’ll see that the page doesn’t render.\n\n[http://localhost:3000/%D8%AA%D8%B3%D8%AA](http://localhost:3000/تست)\n\n### Expected behavior\n\nI expected this page to render just like other pages with Latin characters and display its content correctly.\n\n### Screenshots or Videos\n\n_No response_\n\n### Platform\n\n- Start Version: 1.125.6\n- OS: Windows\n- Browser: Brave \n- Browser Version: 1.80.120 / Chromium: 138.0.7204.101\n- Bundler: Vite\n- Bundler Version: 6.3.5\n\n\n### Additional context\n\nI didn’t have this issue with tanstack-router — the page was displayed correctly.\n",
+      "public_features": {
+        "language": "ts",
+        "issue_word_count": 206,
+        "issue_size": "long",
+        "feature_key": "ts.issue-long"
+      },
+      "source_row_digest": "sha256:491d4627ed058e44307bb542b4b8fe64b7073fada027045731df21e47d3bba32",
+      "problem_statement_digest": "sha256:af0578f90448fde91edfd737773eced91d3ddf791795628f8d2c206dda4f99e7",
+      "hidden_artifact_digests": {
+        "gold_patch": "sha256:cc76945838f1ace1e7b690d65cf79dbbebfcecbbfe4bae3365073febe70146cf",
+        "test_patch": "sha256:222e1c03b8e0f5bb7c5fd08635b88468344d9549cce35bc241abae738f2274fb"
+      }
+    },
+    {
+      "schema": 1,
+      "instance_id": "openai__openai-agents-js-156",
+      "split": "ts",
+      "row_index": 74,
+      "repo": "openai/openai-agents-js",
+      "pull_number": "156",
+      "base_commit": "07939c0f7fb5b6d7a6da819931d052fc0d5177d5",
+      "created_at": "2025-06-25T09:47:16Z",
+      "docker_image": "starryzhang/sweb.eval.x86_64.openai_1776_openai-agents-js-156",
+      "problem_statement": "Human in the Loop MCP approval fails\n### Please read this first\n\n- **Have you read the docs?** [Agents SDK docs](https://openai.github.io/openai-agents-js/) ✅ \n- **Have you searched for related issues?** Others may have faced similar issues. ✅ \n\n### Describe the bug\n\nThere is a bug in the serialization logic for `RunState` that causes data loss for MCP approval items when an agent run is interrupted and resumed. Specifically, the Zod schema for `lastProcessedResponse.mcpApprovalRequests` is incomplete, causing essential properties like `id` and `providerData` to be stripped from the rawItem during serialization.\nThis leads to a corrupted state upon deserialization, where subsequent logic that relies on these properties fails, making it impossible to correctly handle MCP tool approvals across agent turns.\n\nThis results to an `400 The following MCP approval requests do not have an approval: mcpr_...` error.\n\n[This](https://github.com/openai/openai-agents-js/blob/main/packages/agents-core/src/runImplementation.ts#L330) filter returns an empty array, because `providerData` is not there.\n\nSolution:\nAdd `id` and `providerData` to [rawItem](https://github.com/openai/openai-agents-js/blob/main/packages/agents-core/src/runState.ts#L162)\n\n### Debug information\n\n- Agents SDK version: (e.g. `v0.0.8`)\n- Runtime environment (e.g. `Node.js 22.16.0`)\n\n### Repro steps\n\n```ts\nexport const agent = new Agent({\n  name: \"Assistant\",\n  model: \"gpt-4.1-2025-04-14\",\n  instructions: \"You are a helpful assistant.\",\n  tools: [\n    hostedMcpTool({\n      serverLabel: \"deepwiki\",\n      serverUrl: \"https://mcp.deepwiki.com/mcp\",\n      requireApproval: \"always\",\n    }),\n  ],\n});\n\n// Serialization:\nlet result = await run(agent, [\n    { role: \"system\", content: systemContent },\n    { role: \"user\", content: prompt },\n  ]);\n\n  const hasInterruptions = result.interruptions?.length > 0;\n\n  if (hasInterruptions) {\n    const uuid = crypto.randomUUID();\n    const statePath = path.join(\"./agent_states\", `${uuid}.json`);\n    await fs.mkdir(path.dirname(statePath), { recursive: true });\n    await fs.writeFile(statePath, JSON.stringify(result.state, null, 2), \"utf-8\");\n}\n\n // Deserealization:\n    const stored = await fs.readFile(statePath, \"utf-8\");\n\n    const state = await RunState.fromString(agent, stored); // rawItem providerData is no longer there\n    const interruptions = state.getInterruptions();\n\n    for (const interruption of interruptions) {\n      if (approve) {\n        console.log(\"Approving interruption:\", interruption);\n        state.approve(interruption, { alwaysApprove: true });\n      } else {\n        state.reject(interruption);\n      }\n    }\n\n   let result = await run(agent, state); // error\n```\n\n### Expected behavior\n\nNo approval error.\n\n\nI'm happy to open a PR, if it's verified by your side.\n\n",
+      "public_features": {
+        "language": "ts",
+        "issue_word_count": 327,
+        "issue_size": "long",
+        "feature_key": "ts.issue-long"
+      },
+      "source_row_digest": "sha256:8832a7354625150f1a7e62d49506079c8a6ab19e176f0d46baae0be86249a7eb",
+      "problem_statement_digest": "sha256:1c589b5db8b3b9534f693a174740d7c6e2a502a39307064431ae1f70757fd026",
+      "hidden_artifact_digests": {
+        "gold_patch": "sha256:719bf81ff5db42eb6dd28075335a1a2bad8caf6043a113e8c748e5e9160d991c",
+        "test_patch": "sha256:7538ef9457f25af61f3c4dee3eb3310ac633f2d4ad61ea6d4b3d6f347e566817"
+      }
+    }
+  ],
+  "attestation": {
+    "algorithm": "Ed25519",
+    "payload_digest": "sha256:f85a9abab520395568f8e139f2c694d9c24e58f35bc9ad57e56b4844d6bc9862",
+    "signature": "wG/T0cSkJ4grT6dOV/GuPSjHD8pR2C1NdyM26PVUZzTHCZeI/Et8pstqR/YIITYn60QXYg97fSN7hTPdOqJ7CA=="
+  }
+}

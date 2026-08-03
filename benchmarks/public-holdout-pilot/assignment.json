@@ -1,0 +1,425 @@
+{
+  "schema": 1,
+  "kind": "citadel_public_holdout_fast_pilot_assignment",
+  "assignment_id": "sha256:c5fa3f2a08617b1347fa402964fb91ae422036333a92fc1f551da073e3eb765e",
+  "freeze_id": "sha256:cfe2d091ccd01effd8cacc443986e649a9db442a828fbe20946673a9eff173c8",
+  "parent_selection_id": "sha256:ed6ee76eee129446a6100c93fa8be9bac917dd7d990c0d8d42c6c48c8216f662",
+  "parent_preflight_id": "sha256:f850bb657050fc71dea0846332db111758cde58c47571285f70cf5c815d613bc",
+  "status": "ready",
+  "assignments": {
+    "calibration": [
+      "rollup__rollup-6041",
+      "nodejs__undici-5011",
+      "codeceptjs__CodeceptJS-5072",
+      "siimon__prom-client-679",
+      "excalidraw__excalidraw-9760",
+      "mui__base-ui-2493",
+      "QwenLM__qwen-code-349",
+      "TypeCellOS__BlockNote-2629"
+    ],
+    "evaluation": [
+      "preactjs__preact-4880",
+      "GladysAssistant__Gladys-2504",
+      "simple-icons__simple-icons-13659",
+      "moment__luxon-1720",
+      "gsd-build__get-shit-done-2186",
+      "docsifyjs__docsify-2595",
+      "openai__codex-plugin-cc-83",
+      "aralroca__next-translate-1259",
+      "MetaMask__metamask-mobile-17294",
+      "denoland__std-6775",
+      "RocketChat__Rocket.Chat.ReactNative-6382",
+      "jhlywa__chess.js-546",
+      "code-yeongyu__oh-my-openagent-3013",
+      "honojs__hono-4269",
+      "TanStack__router-4611",
+      "openai__openai-agents-js-156"
+    ]
+  },
+  "decisions": [
+    {
+      "split": "js",
+      "feature_key": "js.issue-short",
+      "rank": 1,
+      "instance_id": "grommet__grommet-7719",
+      "repo": "grommet/grommet",
+      "gold_disposition": "gold-invalid",
+      "disposition": "gold-invalid"
+    },
+    {
+      "split": "js",
+      "feature_key": "js.issue-short",
+      "rank": 11,
+      "instance_id": "rollup__rollup-6041",
+      "repo": "rollup/rollup",
+      "gold_disposition": "gold-valid",
+      "disposition": "calibration"
+    },
+    {
+      "split": "js",
+      "feature_key": "js.issue-short",
+      "rank": 12,
+      "instance_id": "hotwired__turbo-1421",
+      "repo": "hotwired/turbo",
+      "gold_disposition": "gold-invalid",
+      "disposition": "gold-invalid"
+    },
+    {
+      "split": "js",
+      "feature_key": "js.issue-short",
+      "rank": 13,
+      "instance_id": "rollup__rollup-6071",
+      "repo": "rollup/rollup",
+      "gold_disposition": "gold-valid",
+      "disposition": "repo-cap"
+    },
+    {
+      "split": "js",
+      "feature_key": "js.issue-short",
+      "rank": 15,
+      "instance_id": "nodejs__undici-5011",
+      "repo": "nodejs/undici",
+      "gold_disposition": "gold-valid",
+      "disposition": "calibration"
+    },
+    {
+      "split": "js",
+      "feature_key": "js.issue-short",
+      "rank": 16,
+      "instance_id": "preactjs__preact-4880",
+      "repo": "preactjs/preact",
+      "gold_disposition": "gold-valid",
+      "disposition": "evaluation"
+    },
+    {
+      "split": "js",
+      "feature_key": "js.issue-short",
+      "rank": 17,
+      "instance_id": "GladysAssistant__Gladys-2504",
+      "repo": "GladysAssistant/Gladys",
+      "gold_disposition": "gold-valid",
+      "disposition": "evaluation"
+    },
+    {
+      "split": "js",
+      "feature_key": "js.issue-short",
+      "rank": 19,
+      "instance_id": "stdlib-js__stdlib-7672",
+      "repo": "stdlib-js/stdlib",
+      "gold_disposition": "setup-unknown",
+      "disposition": "setup-unknown"
+    },
+    {
+      "split": "js",
+      "feature_key": "js.issue-short",
+      "rank": 22,
+      "instance_id": "rollup__rollup-6051",
+      "repo": "rollup/rollup",
+      "gold_disposition": "gold-invalid",
+      "disposition": "gold-invalid"
+    },
+    {
+      "split": "js",
+      "feature_key": "js.issue-short",
+      "rank": 25,
+      "instance_id": "simple-icons__simple-icons-13659",
+      "repo": "simple-icons/simple-icons",
+      "gold_disposition": "gold-valid",
+      "disposition": "evaluation"
+    },
+    {
+      "split": "js",
+      "feature_key": "js.issue-short",
+      "rank": 26,
+      "instance_id": "TryGhost__Ghost-24345",
+      "repo": "TryGhost/Ghost",
+      "gold_disposition": "gold-invalid",
+      "disposition": "gold-invalid"
+    },
+    {
+      "split": "js",
+      "feature_key": "js.issue-short",
+      "rank": 29,
+      "instance_id": "moment__luxon-1720",
+      "repo": "moment/luxon",
+      "gold_disposition": "gold-valid",
+      "disposition": "evaluation"
+    },
+    {
+      "split": "js",
+      "feature_key": "js.issue-long",
+      "rank": 2,
+      "instance_id": "nodejs__undici-5000",
+      "repo": "nodejs/undici",
+      "gold_disposition": "gold-valid",
+      "disposition": "repo-cap"
+    },
+    {
+      "split": "js",
+      "feature_key": "js.issue-long",
+      "rank": 3,
+      "instance_id": "shaka-project__shaka-player-8835",
+      "repo": "shaka-project/shaka-player",
+      "gold_disposition": "gold-invalid",
+      "disposition": "gold-invalid"
+    },
+    {
+      "split": "js",
+      "feature_key": "js.issue-long",
+      "rank": 4,
+      "instance_id": "nodejs__undici-4453",
+      "repo": "nodejs/undici",
+      "gold_disposition": "gold-valid",
+      "disposition": "repo-cap"
+    },
+    {
+      "split": "js",
+      "feature_key": "js.issue-long",
+      "rank": 5,
+      "instance_id": "codeceptjs__CodeceptJS-5072",
+      "repo": "codeceptjs/CodeceptJS",
+      "gold_disposition": "gold-valid",
+      "disposition": "calibration"
+    },
+    {
+      "split": "js",
+      "feature_key": "js.issue-long",
+      "rank": 6,
+      "instance_id": "rollup__rollup-6038",
+      "repo": "rollup/rollup",
+      "gold_disposition": "gold-valid",
+      "disposition": "repo-cap"
+    },
+    {
+      "split": "js",
+      "feature_key": "js.issue-long",
+      "rank": 7,
+      "instance_id": "siimon__prom-client-679",
+      "repo": "siimon/prom-client",
+      "gold_disposition": "gold-valid",
+      "disposition": "calibration"
+    },
+    {
+      "split": "js",
+      "feature_key": "js.issue-long",
+      "rank": 8,
+      "instance_id": "gsd-build__get-shit-done-2186",
+      "repo": "gsd-build/get-shit-done",
+      "gold_disposition": "gold-valid",
+      "disposition": "evaluation"
+    },
+    {
+      "split": "js",
+      "feature_key": "js.issue-long",
+      "rank": 9,
+      "instance_id": "Automattic__mongoose-16153",
+      "repo": "Automattic/mongoose",
+      "gold_disposition": "setup-unknown",
+      "disposition": "setup-unknown"
+    },
+    {
+      "split": "js",
+      "feature_key": "js.issue-long",
+      "rank": 10,
+      "instance_id": "docsifyjs__docsify-2595",
+      "repo": "docsifyjs/docsify",
+      "gold_disposition": "gold-valid",
+      "disposition": "evaluation"
+    },
+    {
+      "split": "js",
+      "feature_key": "js.issue-long",
+      "rank": 14,
+      "instance_id": "openai__codex-plugin-cc-83",
+      "repo": "openai/codex-plugin-cc",
+      "gold_disposition": "gold-valid",
+      "disposition": "evaluation"
+    },
+    {
+      "split": "js",
+      "feature_key": "js.issue-long",
+      "rank": 18,
+      "instance_id": "facebook__stylex-1209",
+      "repo": "facebook/stylex",
+      "gold_disposition": "gold-invalid",
+      "disposition": "gold-invalid"
+    },
+    {
+      "split": "js",
+      "feature_key": "js.issue-long",
+      "rank": 20,
+      "instance_id": "aralroca__next-translate-1259",
+      "repo": "aralroca/next-translate",
+      "gold_disposition": "gold-valid",
+      "disposition": "evaluation"
+    },
+    {
+      "split": "ts",
+      "feature_key": "ts.issue-short",
+      "rank": 2,
+      "instance_id": "excalidraw__excalidraw-9760",
+      "repo": "excalidraw/excalidraw",
+      "gold_disposition": "gold-valid",
+      "disposition": "calibration"
+    },
+    {
+      "split": "ts",
+      "feature_key": "ts.issue-short",
+      "rank": 5,
+      "instance_id": "mui__base-ui-2493",
+      "repo": "mui/base-ui",
+      "gold_disposition": "gold-valid",
+      "disposition": "calibration"
+    },
+    {
+      "split": "ts",
+      "feature_key": "ts.issue-short",
+      "rank": 7,
+      "instance_id": "MetaMask__metamask-mobile-17294",
+      "repo": "MetaMask/metamask-mobile",
+      "gold_disposition": "gold-valid",
+      "disposition": "evaluation"
+    },
+    {
+      "split": "ts",
+      "feature_key": "ts.issue-short",
+      "rank": 8,
+      "instance_id": "MetaMask__metamask-mobile-17208",
+      "repo": "MetaMask/metamask-mobile",
+      "gold_disposition": "gold-invalid",
+      "disposition": "gold-invalid"
+    },
+    {
+      "split": "ts",
+      "feature_key": "ts.issue-short",
+      "rank": 9,
+      "instance_id": "denoland__std-6775",
+      "repo": "denoland/std",
+      "gold_disposition": "gold-valid",
+      "disposition": "evaluation"
+    },
+    {
+      "split": "ts",
+      "feature_key": "ts.issue-short",
+      "rank": 10,
+      "instance_id": "lightdash__lightdash-15838",
+      "repo": "lightdash/lightdash",
+      "gold_disposition": "gold-invalid",
+      "disposition": "gold-invalid"
+    },
+    {
+      "split": "ts",
+      "feature_key": "ts.issue-short",
+      "rank": 11,
+      "instance_id": "RocketChat__Rocket.Chat.ReactNative-6382",
+      "repo": "RocketChat/Rocket.Chat.ReactNative",
+      "gold_disposition": "gold-valid",
+      "disposition": "evaluation"
+    },
+    {
+      "split": "ts",
+      "feature_key": "ts.issue-short",
+      "rank": 12,
+      "instance_id": "jhlywa__chess.js-546",
+      "repo": "jhlywa/chess.js",
+      "gold_disposition": "gold-valid",
+      "disposition": "evaluation"
+    },
+    {
+      "split": "ts",
+      "feature_key": "ts.issue-long",
+      "rank": 1,
+      "instance_id": "QwenLM__qwen-code-349",
+      "repo": "QwenLM/qwen-code",
+      "gold_disposition": "gold-valid",
+      "disposition": "calibration"
+    },
+    {
+      "split": "ts",
+      "feature_key": "ts.issue-long",
+      "rank": 3,
+      "instance_id": "TypeCellOS__BlockNote-2629",
+      "repo": "TypeCellOS/BlockNote",
+      "gold_disposition": "gold-valid",
+      "disposition": "calibration"
+    },
+    {
+      "split": "ts",
+      "feature_key": "ts.issue-long",
+      "rank": 4,
+      "instance_id": "code-yeongyu__oh-my-openagent-3013",
+      "repo": "code-yeongyu/oh-my-openagent",
+      "gold_disposition": "gold-valid",
+      "disposition": "evaluation"
+    },
+    {
+      "split": "ts",
+      "feature_key": "ts.issue-long",
+      "rank": 6,
+      "instance_id": "maplibre__maplibre-gl-js-6216",
+      "repo": "maplibre/maplibre-gl-js",
+      "gold_disposition": "setup-unknown",
+      "disposition": "setup-unknown"
+    },
+    {
+      "split": "ts",
+      "feature_key": "ts.issue-long",
+      "rank": 13,
+      "instance_id": "honojs__hono-4269",
+      "repo": "honojs/hono",
+      "gold_disposition": "gold-valid",
+      "disposition": "evaluation"
+    },
+    {
+      "split": "ts",
+      "feature_key": "ts.issue-long",
+      "rank": 14,
+      "instance_id": "TanStack__router-4611",
+      "repo": "TanStack/router",
+      "gold_disposition": "gold-valid",
+      "disposition": "evaluation"
+    },
+    {
+      "split": "ts",
+      "feature_key": "ts.issue-long",
+      "rank": 16,
+      "instance_id": "MetaMask__metamask-mobile-17623",
+      "repo": "MetaMask/metamask-mobile",
+      "gold_disposition": "gold-invalid",
+      "disposition": "gold-invalid"
+    },
+    {
+      "split": "ts",
+      "feature_key": "ts.issue-long",
+      "rank": 17,
+      "instance_id": "mui__base-ui-2231",
+      "repo": "mui/base-ui",
+      "gold_disposition": "gold-valid",
+      "disposition": "repo-cap"
+    },
+    {
+      "split": "ts",
+      "feature_key": "ts.issue-long",
+      "rank": 19,
+      "instance_id": "maplibre__maplibre-gl-js-6266",
+      "repo": "maplibre/maplibre-gl-js",
+      "gold_disposition": "setup-unknown",
+      "disposition": "setup-unknown"
+    },
+    {
+      "split": "ts",
+      "feature_key": "ts.issue-long",
+      "rank": 20,
+      "instance_id": "openai__openai-agents-js-156",
+      "repo": "openai/openai-agents-js",
+      "gold_disposition": "gold-valid",
+      "disposition": "evaluation"
+    }
+  ],
+  "unique_repository_count": 24,
+  "attestation": {
+    "algorithm": "Ed25519",
+    "payload_digest": "sha256:c71a6525b3774edca275e8104571f85e2f9eee82da61d709b84bdbee45401a67",
+    "signature": "7zdtSDyQacR8DSwVsGz60PaVZG4M9jERATgZnEuZ6hxRWE6NoNKVe31zGNO2w8UtiuJfKaSUxoeYTcIhZUAQCw=="
+  }
+}
