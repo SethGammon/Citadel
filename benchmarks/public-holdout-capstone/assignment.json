@@ -1,0 +1,1186 @@
+{
+  "schema": 1,
+  "kind": "citadel_public_holdout_assignment",
+  "assignment_id": "sha256:320f090a5ac6103fa006d176c5154ffd4d44317a28a0416bc4d33a0c7eb7a102",
+  "selection_id": "sha256:ed6ee76eee129446a6100c93fa8be9bac917dd7d990c0d8d42c6c48c8216f662",
+  "preflight_id": "sha256:f850bb657050fc71dea0846332db111758cde58c47571285f70cf5c815d613bc",
+  "status": "setup-unknown",
+  "assignments": {
+    "calibration": [
+      "rollup__rollup-6041",
+      "rollup__rollup-6071",
+      "nodejs__undici-5011",
+      "preactjs__preact-4880",
+      "GladysAssistant__Gladys-2504",
+      "nodejs__undici-5000",
+      "nodejs__undici-4453",
+      "codeceptjs__CodeceptJS-5072",
+      "rollup__rollup-6038",
+      "siimon__prom-client-679",
+      "excalidraw__excalidraw-9760",
+      "mui__base-ui-2493",
+      "MetaMask__metamask-mobile-17294",
+      "denoland__std-6775",
+      "RocketChat__Rocket.Chat.ReactNative-6382",
+      "QwenLM__qwen-code-349",
+      "TypeCellOS__BlockNote-2629",
+      "code-yeongyu__oh-my-openagent-3013",
+      "honojs__hono-4269",
+      "TanStack__router-4611"
+    ],
+    "evaluation": [
+      "simple-icons__simple-icons-13659",
+      "moment__luxon-1720",
+      "rollup__rollup-6009",
+      "grommet__grommet-7709",
+      "grommet__grommet-7718",
+      "codeceptjs__CodeceptJS-5106",
+      "thlorenz__doctoc-328",
+      "less__less.js-4349",
+      "gsd-build__get-shit-done-2186",
+      "docsifyjs__docsify-2595",
+      "openai__codex-plugin-cc-83",
+      "aralroca__next-translate-1259",
+      "MultiQC__MultiQC-3300",
+      "Automattic__mongoose-15485",
+      "Automattic__mongoose-15492",
+      "usebruno__bruno-7620",
+      "jhlywa__chess.js-546",
+      "lightdash__lightdash-16521",
+      "recharts__recharts-6068",
+      "formbricks__formbricks-6302",
+      "unocss__unocss-4827",
+      "surveyjs__survey-library-11137",
+      "TanStack__form-1620",
+      "NVIDIA__NemoClaw-330",
+      "mui__base-ui-2231",
+      "openai__openai-agents-js-156",
+      "recharts__recharts-6070",
+      "gsd-build__gsd-2-4400",
+      "dsherret__ts-morph-1663",
+      "unplugin__unplugin-vue-components-858",
+      "QwenLM__qwen-code-3310",
+      "RooCodeInc__Roo-Code-12135",
+      "mui__base-ui-2290",
+      "formbricks__formbricks-6270",
+      "TanStack__router-5033",
+      "code-charity__youtube-3708",
+      "firefox-devtools__profiler-5512",
+      "gsd-build__get-shit-done-2107",
+      "haraka__Haraka-3535",
+      "thlorenz__doctoc-329",
+      "decaporg__decap-cms-7495"
+    ]
+  },
+  "decisions": [
+    {
+      "split": "js",
+      "feature_key": "js.issue-short",
+      "rank": 1,
+      "instance_id": "grommet__grommet-7719",
+      "repo": "grommet/grommet",
+      "disposition": "gold-invalid"
+    },
+    {
+      "split": "js",
+      "feature_key": "js.issue-short",
+      "rank": 11,
+      "instance_id": "rollup__rollup-6041",
+      "repo": "rollup/rollup",
+      "disposition": "calibration"
+    },
+    {
+      "split": "js",
+      "feature_key": "js.issue-short",
+      "rank": 12,
+      "instance_id": "hotwired__turbo-1421",
+      "repo": "hotwired/turbo",
+      "disposition": "gold-invalid"
+    },
+    {
+      "split": "js",
+      "feature_key": "js.issue-short",
+      "rank": 13,
+      "instance_id": "rollup__rollup-6071",
+      "repo": "rollup/rollup",
+      "disposition": "calibration"
+    },
+    {
+      "split": "js",
+      "feature_key": "js.issue-short",
+      "rank": 15,
+      "instance_id": "nodejs__undici-5011",
+      "repo": "nodejs/undici",
+      "disposition": "calibration"
+    },
+    {
+      "split": "js",
+      "feature_key": "js.issue-short",
+      "rank": 16,
+      "instance_id": "preactjs__preact-4880",
+      "repo": "preactjs/preact",
+      "disposition": "calibration"
+    },
+    {
+      "split": "js",
+      "feature_key": "js.issue-short",
+      "rank": 17,
+      "instance_id": "GladysAssistant__Gladys-2504",
+      "repo": "GladysAssistant/Gladys",
+      "disposition": "calibration"
+    },
+    {
+      "split": "js",
+      "feature_key": "js.issue-short",
+      "rank": 19,
+      "instance_id": "stdlib-js__stdlib-7672",
+      "repo": "stdlib-js/stdlib",
+      "disposition": "gold-invalid"
+    },
+    {
+      "split": "js",
+      "feature_key": "js.issue-short",
+      "rank": 22,
+      "instance_id": "rollup__rollup-6051",
+      "repo": "rollup/rollup",
+      "disposition": "gold-invalid"
+    },
+    {
+      "split": "js",
+      "feature_key": "js.issue-short",
+      "rank": 25,
+      "instance_id": "simple-icons__simple-icons-13659",
+      "repo": "simple-icons/simple-icons",
+      "disposition": "evaluation"
+    },
+    {
+      "split": "js",
+      "feature_key": "js.issue-short",
+      "rank": 26,
+      "instance_id": "TryGhost__Ghost-24345",
+      "repo": "TryGhost/Ghost",
+      "disposition": "gold-invalid"
+    },
+    {
+      "split": "js",
+      "feature_key": "js.issue-short",
+      "rank": 29,
+      "instance_id": "moment__luxon-1720",
+      "repo": "moment/luxon",
+      "disposition": "evaluation"
+    },
+    {
+      "split": "js",
+      "feature_key": "js.issue-short",
+      "rank": 30,
+      "instance_id": "rollup__rollup-6009",
+      "repo": "rollup/rollup",
+      "disposition": "evaluation"
+    },
+    {
+      "split": "js",
+      "feature_key": "js.issue-short",
+      "rank": 32,
+      "instance_id": "grommet__grommet-7709",
+      "repo": "grommet/grommet",
+      "disposition": "evaluation"
+    },
+    {
+      "split": "js",
+      "feature_key": "js.issue-short",
+      "rank": 34,
+      "instance_id": "grommet__grommet-7718",
+      "repo": "grommet/grommet",
+      "disposition": "evaluation"
+    },
+    {
+      "split": "js",
+      "feature_key": "js.issue-short",
+      "rank": 35,
+      "instance_id": "codeceptjs__CodeceptJS-5106",
+      "repo": "codeceptjs/CodeceptJS",
+      "disposition": "evaluation"
+    },
+    {
+      "split": "js",
+      "feature_key": "js.issue-short",
+      "rank": 36,
+      "instance_id": "thlorenz__doctoc-328",
+      "repo": "thlorenz/doctoc",
+      "disposition": "evaluation"
+    },
+    {
+      "split": "js",
+      "feature_key": "js.issue-short",
+      "rank": 38,
+      "instance_id": "less__less.js-4349",
+      "repo": "less/less.js",
+      "disposition": "evaluation"
+    },
+    {
+      "split": "js",
+      "feature_key": "js.issue-long",
+      "rank": 2,
+      "instance_id": "nodejs__undici-5000",
+      "repo": "nodejs/undici",
+      "disposition": "calibration"
+    },
+    {
+      "split": "js",
+      "feature_key": "js.issue-long",
+      "rank": 3,
+      "instance_id": "shaka-project__shaka-player-8835",
+      "repo": "shaka-project/shaka-player",
+      "disposition": "gold-invalid"
+    },
+    {
+      "split": "js",
+      "feature_key": "js.issue-long",
+      "rank": 4,
+      "instance_id": "nodejs__undici-4453",
+      "repo": "nodejs/undici",
+      "disposition": "calibration"
+    },
+    {
+      "split": "js",
+      "feature_key": "js.issue-long",
+      "rank": 5,
+      "instance_id": "codeceptjs__CodeceptJS-5072",
+      "repo": "codeceptjs/CodeceptJS",
+      "disposition": "calibration"
+    },
+    {
+      "split": "js",
+      "feature_key": "js.issue-long",
+      "rank": 6,
+      "instance_id": "rollup__rollup-6038",
+      "repo": "rollup/rollup",
+      "disposition": "calibration"
+    },
+    {
+      "split": "js",
+      "feature_key": "js.issue-long",
+      "rank": 7,
+      "instance_id": "siimon__prom-client-679",
+      "repo": "siimon/prom-client",
+      "disposition": "calibration"
+    },
+    {
+      "split": "js",
+      "feature_key": "js.issue-long",
+      "rank": 8,
+      "instance_id": "gsd-build__get-shit-done-2186",
+      "repo": "gsd-build/get-shit-done",
+      "disposition": "evaluation"
+    },
+    {
+      "split": "js",
+      "feature_key": "js.issue-long",
+      "rank": 9,
+      "instance_id": "Automattic__mongoose-16153",
+      "repo": "Automattic/mongoose",
+      "disposition": "gold-invalid"
+    },
+    {
+      "split": "js",
+      "feature_key": "js.issue-long",
+      "rank": 10,
+      "instance_id": "docsifyjs__docsify-2595",
+      "repo": "docsifyjs/docsify",
+      "disposition": "evaluation"
+    },
+    {
+      "split": "js",
+      "feature_key": "js.issue-long",
+      "rank": 14,
+      "instance_id": "openai__codex-plugin-cc-83",
+      "repo": "openai/codex-plugin-cc",
+      "disposition": "evaluation"
+    },
+    {
+      "split": "js",
+      "feature_key": "js.issue-long",
+      "rank": 18,
+      "instance_id": "facebook__stylex-1209",
+      "repo": "facebook/stylex",
+      "disposition": "gold-invalid"
+    },
+    {
+      "split": "js",
+      "feature_key": "js.issue-long",
+      "rank": 20,
+      "instance_id": "aralroca__next-translate-1259",
+      "repo": "aralroca/next-translate",
+      "disposition": "evaluation"
+    },
+    {
+      "split": "js",
+      "feature_key": "js.issue-long",
+      "rank": 21,
+      "instance_id": "MultiQC__MultiQC-3300",
+      "repo": "MultiQC/MultiQC",
+      "disposition": "evaluation"
+    },
+    {
+      "split": "js",
+      "feature_key": "js.issue-long",
+      "rank": 23,
+      "instance_id": "Automattic__mongoose-15485",
+      "repo": "Automattic/mongoose",
+      "disposition": "evaluation"
+    },
+    {
+      "split": "js",
+      "feature_key": "js.issue-long",
+      "rank": 24,
+      "instance_id": "Automattic__mongoose-15492",
+      "repo": "Automattic/mongoose",
+      "disposition": "evaluation"
+    },
+    {
+      "split": "js",
+      "feature_key": "js.issue-long",
+      "rank": 27,
+      "instance_id": "usebruno__bruno-7620",
+      "repo": "usebruno/bruno",
+      "disposition": "evaluation"
+    },
+    {
+      "split": "ts",
+      "feature_key": "ts.issue-short",
+      "rank": 2,
+      "instance_id": "excalidraw__excalidraw-9760",
+      "repo": "excalidraw/excalidraw",
+      "disposition": "calibration"
+    },
+    {
+      "split": "ts",
+      "feature_key": "ts.issue-short",
+      "rank": 5,
+      "instance_id": "mui__base-ui-2493",
+      "repo": "mui/base-ui",
+      "disposition": "calibration"
+    },
+    {
+      "split": "ts",
+      "feature_key": "ts.issue-short",
+      "rank": 7,
+      "instance_id": "MetaMask__metamask-mobile-17294",
+      "repo": "MetaMask/metamask-mobile",
+      "disposition": "calibration"
+    },
+    {
+      "split": "ts",
+      "feature_key": "ts.issue-short",
+      "rank": 8,
+      "instance_id": "MetaMask__metamask-mobile-17208",
+      "repo": "MetaMask/metamask-mobile",
+      "disposition": "gold-invalid"
+    },
+    {
+      "split": "ts",
+      "feature_key": "ts.issue-short",
+      "rank": 9,
+      "instance_id": "denoland__std-6775",
+      "repo": "denoland/std",
+      "disposition": "calibration"
+    },
+    {
+      "split": "ts",
+      "feature_key": "ts.issue-short",
+      "rank": 10,
+      "instance_id": "lightdash__lightdash-15838",
+      "repo": "lightdash/lightdash",
+      "disposition": "gold-invalid"
+    },
+    {
+      "split": "ts",
+      "feature_key": "ts.issue-short",
+      "rank": 11,
+      "instance_id": "RocketChat__Rocket.Chat.ReactNative-6382",
+      "repo": "RocketChat/Rocket.Chat.ReactNative",
+      "disposition": "calibration"
+    },
+    {
+      "split": "ts",
+      "feature_key": "ts.issue-short",
+      "rank": 12,
+      "instance_id": "jhlywa__chess.js-546",
+      "repo": "jhlywa/chess.js",
+      "disposition": "evaluation"
+    },
+    {
+      "split": "ts",
+      "feature_key": "ts.issue-short",
+      "rank": 15,
+      "instance_id": "lightdash__lightdash-16521",
+      "repo": "lightdash/lightdash",
+      "disposition": "evaluation"
+    },
+    {
+      "split": "ts",
+      "feature_key": "ts.issue-short",
+      "rank": 18,
+      "instance_id": "recharts__recharts-6068",
+      "repo": "recharts/recharts",
+      "disposition": "evaluation"
+    },
+    {
+      "split": "ts",
+      "feature_key": "ts.issue-short",
+      "rank": 25,
+      "instance_id": "formbricks__formbricks-6302",
+      "repo": "formbricks/formbricks",
+      "disposition": "evaluation"
+    },
+    {
+      "split": "ts",
+      "feature_key": "ts.issue-short",
+      "rank": 26,
+      "instance_id": "unocss__unocss-4827",
+      "repo": "unocss/unocss",
+      "disposition": "evaluation"
+    },
+    {
+      "split": "ts",
+      "feature_key": "ts.issue-short",
+      "rank": 27,
+      "instance_id": "antvis__G2-7076",
+      "repo": "antvis/G2",
+      "disposition": "gold-invalid"
+    },
+    {
+      "split": "ts",
+      "feature_key": "ts.issue-short",
+      "rank": 28,
+      "instance_id": "TanStack__router-4751",
+      "repo": "TanStack/router",
+      "disposition": "gold-invalid"
+    },
+    {
+      "split": "ts",
+      "feature_key": "ts.issue-short",
+      "rank": 29,
+      "instance_id": "surveyjs__survey-library-11137",
+      "repo": "surveyjs/survey-library",
+      "disposition": "evaluation"
+    },
+    {
+      "split": "ts",
+      "feature_key": "ts.issue-short",
+      "rank": 35,
+      "instance_id": "reown-com__appkit-4542",
+      "repo": "reown-com/appkit",
+      "disposition": "gold-invalid"
+    },
+    {
+      "split": "ts",
+      "feature_key": "ts.issue-short",
+      "rank": 36,
+      "instance_id": "TanStack__form-1620",
+      "repo": "TanStack/form",
+      "disposition": "evaluation"
+    },
+    {
+      "split": "ts",
+      "feature_key": "ts.issue-short",
+      "rank": 37,
+      "instance_id": "NVIDIA__NemoClaw-330",
+      "repo": "NVIDIA/NemoClaw",
+      "disposition": "evaluation"
+    },
+    {
+      "split": "ts",
+      "feature_key": "ts.issue-long",
+      "rank": 1,
+      "instance_id": "QwenLM__qwen-code-349",
+      "repo": "QwenLM/qwen-code",
+      "disposition": "calibration"
+    },
+    {
+      "split": "ts",
+      "feature_key": "ts.issue-long",
+      "rank": 3,
+      "instance_id": "TypeCellOS__BlockNote-2629",
+      "repo": "TypeCellOS/BlockNote",
+      "disposition": "calibration"
+    },
+    {
+      "split": "ts",
+      "feature_key": "ts.issue-long",
+      "rank": 4,
+      "instance_id": "code-yeongyu__oh-my-openagent-3013",
+      "repo": "code-yeongyu/oh-my-openagent",
+      "disposition": "calibration"
+    },
+    {
+      "split": "ts",
+      "feature_key": "ts.issue-long",
+      "rank": 6,
+      "instance_id": "maplibre__maplibre-gl-js-6216",
+      "repo": "maplibre/maplibre-gl-js",
+      "disposition": "gold-invalid"
+    },
+    {
+      "split": "ts",
+      "feature_key": "ts.issue-long",
+      "rank": 13,
+      "instance_id": "honojs__hono-4269",
+      "repo": "honojs/hono",
+      "disposition": "calibration"
+    },
+    {
+      "split": "ts",
+      "feature_key": "ts.issue-long",
+      "rank": 14,
+      "instance_id": "TanStack__router-4611",
+      "repo": "TanStack/router",
+      "disposition": "calibration"
+    },
+    {
+      "split": "ts",
+      "feature_key": "ts.issue-long",
+      "rank": 16,
+      "instance_id": "MetaMask__metamask-mobile-17623",
+      "repo": "MetaMask/metamask-mobile",
+      "disposition": "gold-invalid"
+    },
+    {
+      "split": "ts",
+      "feature_key": "ts.issue-long",
+      "rank": 17,
+      "instance_id": "mui__base-ui-2231",
+      "repo": "mui/base-ui",
+      "disposition": "evaluation"
+    },
+    {
+      "split": "ts",
+      "feature_key": "ts.issue-long",
+      "rank": 19,
+      "instance_id": "maplibre__maplibre-gl-js-6266",
+      "repo": "maplibre/maplibre-gl-js",
+      "disposition": "gold-invalid"
+    },
+    {
+      "split": "ts",
+      "feature_key": "ts.issue-long",
+      "rank": 20,
+      "instance_id": "openai__openai-agents-js-156",
+      "repo": "openai/openai-agents-js",
+      "disposition": "evaluation"
+    },
+    {
+      "split": "ts",
+      "feature_key": "ts.issue-long",
+      "rank": 21,
+      "instance_id": "recharts__recharts-6070",
+      "repo": "recharts/recharts",
+      "disposition": "evaluation"
+    },
+    {
+      "split": "ts",
+      "feature_key": "ts.issue-long",
+      "rank": 22,
+      "instance_id": "gsd-build__gsd-2-4400",
+      "repo": "gsd-build/gsd-2",
+      "disposition": "evaluation"
+    },
+    {
+      "split": "ts",
+      "feature_key": "ts.issue-long",
+      "rank": 23,
+      "instance_id": "dsherret__ts-morph-1663",
+      "repo": "dsherret/ts-morph",
+      "disposition": "evaluation"
+    },
+    {
+      "split": "ts",
+      "feature_key": "ts.issue-long",
+      "rank": 24,
+      "instance_id": "unplugin__unplugin-vue-components-858",
+      "repo": "unplugin/unplugin-vue-components",
+      "disposition": "evaluation"
+    },
+    {
+      "split": "ts",
+      "feature_key": "ts.issue-long",
+      "rank": 30,
+      "instance_id": "QwenLM__qwen-code-3310",
+      "repo": "QwenLM/qwen-code",
+      "disposition": "evaluation"
+    },
+    {
+      "split": "ts",
+      "feature_key": "ts.issue-long",
+      "rank": 31,
+      "instance_id": "RooCodeInc__Roo-Code-12135",
+      "repo": "RooCodeInc/Roo-Code",
+      "disposition": "evaluation"
+    },
+    {
+      "split": "js",
+      "feature_key": "js.issue-short",
+      "rank": 1,
+      "instance_id": "grommet__grommet-7719",
+      "repo": "grommet/grommet",
+      "disposition": "gold-invalid"
+    },
+    {
+      "split": "js",
+      "feature_key": "js.issue-long",
+      "rank": 3,
+      "instance_id": "shaka-project__shaka-player-8835",
+      "repo": "shaka-project/shaka-player",
+      "disposition": "gold-invalid"
+    },
+    {
+      "split": "ts",
+      "feature_key": "ts.issue-long",
+      "rank": 6,
+      "instance_id": "maplibre__maplibre-gl-js-6216",
+      "repo": "maplibre/maplibre-gl-js",
+      "disposition": "gold-invalid"
+    },
+    {
+      "split": "ts",
+      "feature_key": "ts.issue-short",
+      "rank": 8,
+      "instance_id": "MetaMask__metamask-mobile-17208",
+      "repo": "MetaMask/metamask-mobile",
+      "disposition": "gold-invalid"
+    },
+    {
+      "split": "ts",
+      "feature_key": "ts.issue-short",
+      "rank": 10,
+      "instance_id": "lightdash__lightdash-15838",
+      "repo": "lightdash/lightdash",
+      "disposition": "gold-invalid"
+    },
+    {
+      "split": "js",
+      "feature_key": "js.issue-long",
+      "rank": 9,
+      "instance_id": "Automattic__mongoose-16153",
+      "repo": "Automattic/mongoose",
+      "disposition": "gold-invalid"
+    },
+    {
+      "split": "js",
+      "feature_key": "js.issue-short",
+      "rank": 12,
+      "instance_id": "hotwired__turbo-1421",
+      "repo": "hotwired/turbo",
+      "disposition": "gold-invalid"
+    },
+    {
+      "split": "ts",
+      "feature_key": "ts.issue-long",
+      "rank": 16,
+      "instance_id": "MetaMask__metamask-mobile-17623",
+      "repo": "MetaMask/metamask-mobile",
+      "disposition": "gold-invalid"
+    },
+    {
+      "split": "ts",
+      "feature_key": "ts.issue-long",
+      "rank": 19,
+      "instance_id": "maplibre__maplibre-gl-js-6266",
+      "repo": "maplibre/maplibre-gl-js",
+      "disposition": "gold-invalid"
+    },
+    {
+      "split": "ts",
+      "feature_key": "ts.issue-short",
+      "rank": 27,
+      "instance_id": "antvis__G2-7076",
+      "repo": "antvis/G2",
+      "disposition": "gold-invalid"
+    },
+    {
+      "split": "ts",
+      "feature_key": "ts.issue-short",
+      "rank": 28,
+      "instance_id": "TanStack__router-4751",
+      "repo": "TanStack/router",
+      "disposition": "gold-invalid"
+    },
+    {
+      "split": "ts",
+      "feature_key": "ts.issue-long",
+      "rank": 32,
+      "instance_id": "mui__base-ui-2290",
+      "repo": "mui/base-ui",
+      "disposition": "evaluation-fill"
+    },
+    {
+      "split": "js",
+      "feature_key": "js.issue-long",
+      "rank": 18,
+      "instance_id": "facebook__stylex-1209",
+      "repo": "facebook/stylex",
+      "disposition": "gold-invalid"
+    },
+    {
+      "split": "js",
+      "feature_key": "js.issue-short",
+      "rank": 19,
+      "instance_id": "stdlib-js__stdlib-7672",
+      "repo": "stdlib-js/stdlib",
+      "disposition": "gold-invalid"
+    },
+    {
+      "split": "ts",
+      "feature_key": "ts.issue-long",
+      "rank": 33,
+      "instance_id": "formbricks__formbricks-6270",
+      "repo": "formbricks/formbricks",
+      "disposition": "evaluation-fill"
+    },
+    {
+      "split": "ts",
+      "feature_key": "ts.issue-long",
+      "rank": 34,
+      "instance_id": "TanStack__router-5033",
+      "repo": "TanStack/router",
+      "disposition": "evaluation-fill"
+    },
+    {
+      "split": "ts",
+      "feature_key": "ts.issue-short",
+      "rank": 35,
+      "instance_id": "reown-com__appkit-4542",
+      "repo": "reown-com/appkit",
+      "disposition": "gold-invalid"
+    },
+    {
+      "split": "js",
+      "feature_key": "js.issue-short",
+      "rank": 22,
+      "instance_id": "rollup__rollup-6051",
+      "repo": "rollup/rollup",
+      "disposition": "gold-invalid"
+    },
+    {
+      "split": "js",
+      "feature_key": "js.issue-short",
+      "rank": 26,
+      "instance_id": "TryGhost__Ghost-24345",
+      "repo": "TryGhost/Ghost",
+      "disposition": "gold-invalid"
+    },
+    {
+      "split": "ts",
+      "feature_key": "ts.issue-short",
+      "rank": 38,
+      "instance_id": "TanStack__router-4915",
+      "repo": "TanStack/router",
+      "disposition": "gold-invalid"
+    },
+    {
+      "split": "ts",
+      "feature_key": "ts.issue-long",
+      "rank": 39,
+      "instance_id": "honojs__hono-4249",
+      "repo": "honojs/hono",
+      "disposition": "gold-invalid"
+    },
+    {
+      "split": "ts",
+      "feature_key": "ts.issue-long",
+      "rank": 40,
+      "instance_id": "TanStack__form-1664",
+      "repo": "TanStack/form",
+      "disposition": "not-preflighted"
+    },
+    {
+      "split": "ts",
+      "feature_key": "ts.issue-long",
+      "rank": 41,
+      "instance_id": "webdriverio__webdriverio-14672",
+      "repo": "webdriverio/webdriverio",
+      "disposition": "not-preflighted"
+    },
+    {
+      "split": "ts",
+      "feature_key": "ts.issue-long",
+      "rank": 42,
+      "instance_id": "gpbl__react-day-picker-2815",
+      "repo": "gpbl/react-day-picker",
+      "disposition": "not-preflighted"
+    },
+    {
+      "split": "js",
+      "feature_key": "js.issue-long",
+      "rank": 28,
+      "instance_id": "code-charity__youtube-3708",
+      "repo": "code-charity/youtube",
+      "disposition": "evaluation-fill"
+    },
+    {
+      "split": "ts",
+      "feature_key": "ts.issue-short",
+      "rank": 43,
+      "instance_id": "firefox-devtools__profiler-5512",
+      "repo": "firefox-devtools/profiler",
+      "disposition": "evaluation-fill"
+    },
+    {
+      "split": "ts",
+      "feature_key": "ts.issue-short",
+      "rank": 44,
+      "instance_id": "MetaMask__metamask-mobile-17409",
+      "repo": "MetaMask/metamask-mobile",
+      "disposition": "not-preflighted"
+    },
+    {
+      "split": "js",
+      "feature_key": "js.issue-long",
+      "rank": 31,
+      "instance_id": "gsd-build__get-shit-done-2107",
+      "repo": "gsd-build/get-shit-done",
+      "disposition": "evaluation-fill"
+    },
+    {
+      "split": "ts",
+      "feature_key": "ts.issue-short",
+      "rank": 45,
+      "instance_id": "kepano__defuddle-243",
+      "repo": "kepano/defuddle",
+      "disposition": "not-preflighted"
+    },
+    {
+      "split": "ts",
+      "feature_key": "ts.issue-short",
+      "rank": 46,
+      "instance_id": "Milkdown__milkdown-2041",
+      "repo": "Milkdown/milkdown",
+      "disposition": "not-preflighted"
+    },
+    {
+      "split": "js",
+      "feature_key": "js.issue-long",
+      "rank": 33,
+      "instance_id": "Mintplex-Labs__anything-llm-5252",
+      "repo": "Mintplex-Labs/anything-llm",
+      "disposition": "gold-invalid"
+    },
+    {
+      "split": "ts",
+      "feature_key": "ts.issue-short",
+      "rank": 47,
+      "instance_id": "antvis__G2-7021",
+      "repo": "antvis/G2",
+      "disposition": "not-preflighted"
+    },
+    {
+      "split": "ts",
+      "feature_key": "ts.issue-short",
+      "rank": 48,
+      "instance_id": "tailwindlabs__tailwindcss-18718",
+      "repo": "tailwindlabs/tailwindcss",
+      "disposition": "not-preflighted"
+    },
+    {
+      "split": "ts",
+      "feature_key": "ts.issue-long",
+      "rank": 49,
+      "instance_id": "honojs__hono-4329",
+      "repo": "honojs/hono",
+      "disposition": "not-preflighted"
+    },
+    {
+      "split": "ts",
+      "feature_key": "ts.issue-long",
+      "rank": 50,
+      "instance_id": "mui__mui-x-22062",
+      "repo": "mui/mui-x",
+      "disposition": "not-preflighted"
+    },
+    {
+      "split": "ts",
+      "feature_key": "ts.issue-long",
+      "rank": 51,
+      "instance_id": "ChainSafe__lodestar-8203",
+      "repo": "ChainSafe/lodestar",
+      "disposition": "not-preflighted"
+    },
+    {
+      "split": "ts",
+      "feature_key": "ts.issue-long",
+      "rank": 52,
+      "instance_id": "ether__etherpad-7445",
+      "repo": "ether/etherpad",
+      "disposition": "not-preflighted"
+    },
+    {
+      "split": "js",
+      "feature_key": "js.issue-long",
+      "rank": 37,
+      "instance_id": "haraka__Haraka-3535",
+      "repo": "haraka/Haraka",
+      "disposition": "evaluation-fill"
+    },
+    {
+      "split": "js",
+      "feature_key": "js.issue-short",
+      "rank": 39,
+      "instance_id": "thlorenz__doctoc-329",
+      "repo": "thlorenz/doctoc",
+      "disposition": "evaluation-fill"
+    },
+    {
+      "split": "ts",
+      "feature_key": "ts.issue-long",
+      "rank": 53,
+      "instance_id": "TanStack__router-4716",
+      "repo": "TanStack/router",
+      "disposition": "not-preflighted"
+    },
+    {
+      "split": "ts",
+      "feature_key": "ts.issue-short",
+      "rank": 54,
+      "instance_id": "mui__base-ui-2591",
+      "repo": "mui/base-ui",
+      "disposition": "not-preflighted"
+    },
+    {
+      "split": "js",
+      "feature_key": "js.issue-short",
+      "rank": 40,
+      "instance_id": "decaporg__decap-cms-7495",
+      "repo": "decaporg/decap-cms",
+      "disposition": "evaluation-fill"
+    },
+    {
+      "split": "ts",
+      "feature_key": "ts.issue-long",
+      "rank": 55,
+      "instance_id": "react-hook-form__react-hook-form-12983",
+      "repo": "react-hook-form/react-hook-form",
+      "disposition": "not-preflighted"
+    },
+    {
+      "split": "js",
+      "feature_key": "js.issue-long",
+      "rank": 41,
+      "instance_id": "nock__nock-2880",
+      "repo": "nock/nock",
+      "disposition": "not-preflighted"
+    },
+    {
+      "split": "ts",
+      "feature_key": "ts.issue-long",
+      "rank": 56,
+      "instance_id": "vueuse__vueuse-5336",
+      "repo": "vueuse/vueuse",
+      "disposition": "not-preflighted"
+    },
+    {
+      "split": "ts",
+      "feature_key": "ts.issue-long",
+      "rank": 57,
+      "instance_id": "monkeytypegame__monkeytype-6830",
+      "repo": "monkeytypegame/monkeytype",
+      "disposition": "not-preflighted"
+    },
+    {
+      "split": "js",
+      "feature_key": "js.issue-long",
+      "rank": 42,
+      "instance_id": "cytoscape__cytoscape.js-3396",
+      "repo": "cytoscape/cytoscape.js",
+      "disposition": "not-preflighted"
+    },
+    {
+      "split": "ts",
+      "feature_key": "ts.issue-long",
+      "rank": 58,
+      "instance_id": "wxt-dev__wxt-2267",
+      "repo": "wxt-dev/wxt",
+      "disposition": "not-preflighted"
+    },
+    {
+      "split": "ts",
+      "feature_key": "ts.issue-long",
+      "rank": 59,
+      "instance_id": "getsentry__sentry-javascript-17013",
+      "repo": "getsentry/sentry-javascript",
+      "disposition": "not-preflighted"
+    },
+    {
+      "split": "ts",
+      "feature_key": "ts.issue-short",
+      "rank": 60,
+      "instance_id": "mikro-orm__mikro-orm-7464",
+      "repo": "mikro-orm/mikro-orm",
+      "disposition": "not-preflighted"
+    },
+    {
+      "split": "ts",
+      "feature_key": "ts.issue-long",
+      "rank": 61,
+      "instance_id": "owid__owid-grapher-5115",
+      "repo": "owid/owid-grapher",
+      "disposition": "not-preflighted"
+    },
+    {
+      "split": "ts",
+      "feature_key": "ts.issue-long",
+      "rank": 62,
+      "instance_id": "can1357__oh-my-pi-489",
+      "repo": "can1357/oh-my-pi",
+      "disposition": "not-preflighted"
+    },
+    {
+      "split": "js",
+      "feature_key": "js.issue-long",
+      "rank": 43,
+      "instance_id": "mozilla__pdf.js-20160",
+      "repo": "mozilla/pdf.js",
+      "disposition": "not-preflighted"
+    },
+    {
+      "split": "ts",
+      "feature_key": "ts.issue-short",
+      "rank": 63,
+      "instance_id": "remotion-dev__remotion-5529",
+      "repo": "remotion-dev/remotion",
+      "disposition": "not-preflighted"
+    },
+    {
+      "split": "ts",
+      "feature_key": "ts.issue-long",
+      "rank": 64,
+      "instance_id": "TanStack__router-4629",
+      "repo": "TanStack/router",
+      "disposition": "not-preflighted"
+    },
+    {
+      "split": "ts",
+      "feature_key": "ts.issue-short",
+      "rank": 65,
+      "instance_id": "MetaMask__metamask-mobile-17198",
+      "repo": "MetaMask/metamask-mobile",
+      "disposition": "not-preflighted"
+    },
+    {
+      "split": "ts",
+      "feature_key": "ts.issue-long",
+      "rank": 66,
+      "instance_id": "TanStack__router-4685",
+      "repo": "TanStack/router",
+      "disposition": "not-preflighted"
+    },
+    {
+      "split": "ts",
+      "feature_key": "ts.issue-short",
+      "rank": 67,
+      "instance_id": "orval-labs__orval-2328",
+      "repo": "orval-labs/orval",
+      "disposition": "not-preflighted"
+    },
+    {
+      "split": "js",
+      "feature_key": "js.issue-short",
+      "rank": 44,
+      "instance_id": "ember-cli__ember-cli-10776",
+      "repo": "ember-cli/ember-cli",
+      "disposition": "not-preflighted"
+    },
+    {
+      "split": "js",
+      "feature_key": "js.issue-long",
+      "rank": 45,
+      "instance_id": "Automattic__mongoose-15534",
+      "repo": "Automattic/mongoose",
+      "disposition": "not-preflighted"
+    },
+    {
+      "split": "js",
+      "feature_key": "js.issue-long",
+      "rank": 46,
+      "instance_id": "hapijs__joi-3082",
+      "repo": "hapijs/joi",
+      "disposition": "not-preflighted"
+    },
+    {
+      "split": "js",
+      "feature_key": "js.issue-short",
+      "rank": 47,
+      "instance_id": "camunda__camunda-modeler-5121",
+      "repo": "camunda/camunda-modeler",
+      "disposition": "not-preflighted"
+    },
+    {
+      "split": "ts",
+      "feature_key": "ts.issue-long",
+      "rank": 68,
+      "instance_id": "jestjs__jest-15714",
+      "repo": "jestjs/jest",
+      "disposition": "not-preflighted"
+    },
+    {
+      "split": "js",
+      "feature_key": "js.issue-short",
+      "rank": 48,
+      "instance_id": "less__less.js-4363",
+      "repo": "less/less.js",
+      "disposition": "not-preflighted"
+    },
+    {
+      "split": "ts",
+      "feature_key": "ts.issue-short",
+      "rank": 69,
+      "instance_id": "better-auth__better-auth-4175",
+      "repo": "better-auth/better-auth",
+      "disposition": "not-preflighted"
+    },
+    {
+      "split": "ts",
+      "feature_key": "ts.issue-long",
+      "rank": 70,
+      "instance_id": "gsd-build__gsd-2-2643",
+      "repo": "gsd-build/gsd-2",
+      "disposition": "not-preflighted"
+    },
+    {
+      "split": "js",
+      "feature_key": "js.issue-short",
+      "rank": 49,
+      "instance_id": "cthackers__adm-zip-559",
+      "repo": "cthackers/adm-zip",
+      "disposition": "not-preflighted"
+    },
+    {
+      "split": "ts",
+      "feature_key": "ts.issue-short",
+      "rank": 71,
+      "instance_id": "chimurai__http-proxy-middleware-1163",
+      "repo": "chimurai/http-proxy-middleware",
+      "disposition": "not-preflighted"
+    },
+    {
+      "split": "ts",
+      "feature_key": "ts.issue-short",
+      "rank": 72,
+      "instance_id": "react-hook-form__react-hook-form-12990",
+      "repo": "react-hook-form/react-hook-form",
+      "disposition": "not-preflighted"
+    },
+    {
+      "split": "js",
+      "feature_key": "js.issue-long",
+      "rank": 50,
+      "instance_id": "proj4js__proj4js-560",
+      "repo": "proj4js/proj4js",
+      "disposition": "not-preflighted"
+    }
+  ],
+  "attestation": {
+    "algorithm": "Ed25519",
+    "payload_digest": "sha256:728b72b09eeb5a207879fce3da19d8996141015464cd698c6ac3d71023d7cc82",
+    "signature": "56VzBLPoN/fDZNuobec3uNdO0yF6fsxm1iQpiQFse4dOyn4q+L42z8lq7gCTX4jyk8YxRIRiSByfLzJ73Sy2Dw=="
+  }
+}
