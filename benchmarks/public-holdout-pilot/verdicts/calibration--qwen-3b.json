@@ -1,0 +1,70 @@
+{
+  "schema": 1,
+  "kind": "citadel_public_holdout_verdict_bundle",
+  "bundle_id": "sha256:75f9bebc7b9e1b1cf4e4bad77585a6ebe074080b9cb75ce859f2654439c8977b",
+  "phase": "pilot-calibration",
+  "plan_id": "qwen-3b",
+  "verdicts": [
+    {
+      "instance_id": "rollup__rollup-6041",
+      "attempt_id": "sha256:b75dcc2b8cf13dc1dc243193c82589ff2a7fc2f98e8abe03216bbf453e73948f",
+      "verification_status": "failed",
+      "evaluator_summary_id": "sha256:5905d57f1fad269a527b5b3531702692c94175aafd606d4ceba66e8d7a5f8459",
+      "evaluator_summary_digest": "sha256:1d7ad03cbd779328646a5c8f5bbabfadabbd7fb47c3cdf2211dfbe5e1d469362"
+    },
+    {
+      "instance_id": "nodejs__undici-5011",
+      "attempt_id": "sha256:9266bb110a5f8647796441f946c1bc62bf3b6eb46201fed7bd9d1e1c1b280608",
+      "verification_status": "failed",
+      "evaluator_summary_id": "sha256:6e5927d26337edd0e59fe474669342eedb2df1483ce45738e7dfa1bb7a7899e6",
+      "evaluator_summary_digest": "sha256:679b321ce3a74c18b6f9afa926736627eb50f792918968228e7983bf1dd65dd3"
+    },
+    {
+      "instance_id": "codeceptjs__CodeceptJS-5072",
+      "attempt_id": "sha256:e4cae86ff455e5c79a418f8387f92b6f3d8f9e2e3f9bf96970fb92cc4894f778",
+      "verification_status": "failed",
+      "evaluator_summary_id": "sha256:17976d373af7130e8c92b54010a7fa70ca4d25deade5dd3bb28367a716cee676",
+      "evaluator_summary_digest": "sha256:45716799e83b85313d91f8afafd6fb2b7cf5bc691da85e01daad3d419114da95"
+    },
+    {
+      "instance_id": "siimon__prom-client-679",
+      "attempt_id": "sha256:292c1656b0d9fdc22925d8c10b107127dc79e4c2cfac7b7c47c567f77cf78748",
+      "verification_status": "failed",
+      "evaluator_summary_id": "sha256:01d23df7a11862a32470036b522f76c582941868c1346f9e6435f051063d4870",
+      "evaluator_summary_digest": "sha256:64118289ac2916ea310cb19df819893ed229ada9ab3a9544e95b5c82ae5e0f8b"
+    },
+    {
+      "instance_id": "excalidraw__excalidraw-9760",
+      "attempt_id": "sha256:0f1dc39be21ecade4003fa92780a875809109cb7c73639c6735be9a6da82f3b6",
+      "verification_status": "failed",
+      "evaluator_summary_id": "sha256:49325c24c8695c6ade81fdab0a331b2bb08d006c54e68d14d651dbc8b5601b27",
+      "evaluator_summary_digest": "sha256:5b47e10e5b2508687c7f60d1147a648da195539d9f42b2e5e968897bb84d43d7"
+    },
+    {
+      "instance_id": "mui__base-ui-2493",
+      "attempt_id": "sha256:fd1b374f8b21d4a88ca3cb75fdba24b081ac8a79ae305e2e4da410d7846314f0",
+      "verification_status": "failed",
+      "evaluator_summary_id": "sha256:1f4643e095872928fcc50f1d3af3857f0be852b6c5f957d9501678d79664503c",
+      "evaluator_summary_digest": "sha256:b5126cc37205943a2310d7be70575c84d1acd52e97ba5afee2885def43f37aac"
+    },
+    {
+      "instance_id": "QwenLM__qwen-code-349",
+      "attempt_id": "sha256:aead29b2f98954d3839a964711eef4e2d4835b9641f777e2d76f00ea136fc2c0",
+      "verification_status": "failed",
+      "evaluator_summary_id": "sha256:0da9f72fac94537c46f97dc6cb7298591ae6823e6984f32b79d04f086245fce9",
+      "evaluator_summary_digest": "sha256:6375f919cd0401e5e780c6a142a93dc1522da183a61a501d17e189d336595681"
+    },
+    {
+      "instance_id": "TypeCellOS__BlockNote-2629",
+      "attempt_id": "sha256:ecc086cbc55e50aff5314221e18c4e6ed0234bfc5eb608465b7cfd2d71121947",
+      "verification_status": "failed",
+      "evaluator_summary_id": "sha256:8e89fb24fa3d2a823ff192607c68b0f170265467dcbbaf0246b137b6cdea31b0",
+      "evaluator_summary_digest": "sha256:921cdd047630f66548e387a45fc3a40f9e0e1630d9e30b85749dff5f075a1722"
+    }
+  ],
+  "attestation": {
+    "algorithm": "Ed25519",
+    "payload_digest": "sha256:a198e76894ecef4fedb8336a003b5546c6fbacf1bb11b67706a827ff8f7b2e48",
+    "signature": "o26GVSXuFpuEI0YG9dy3TfREf/TrX4/LFIOIOOIZkDcMIE0xhhBN5mf2AVEITgDUb4C5c0sC4dikIlJn6GRyDw=="
+  }
+}

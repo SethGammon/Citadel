@@ -1,0 +1,4320 @@
+{
+  "schema": 1,
+  "kind": "citadel_public_holdout_fast_pilot_route_ledger",
+  "ledger_id": "sha256:6839fbc159f099ac0e3c13004dc9718d4d3e1dfac60a44f61eaa12e7f00ea257",
+  "freeze_id": "sha256:cfe2d091ccd01effd8cacc443986e649a9db442a828fbe20946673a9eff173c8",
+  "assignment_id": "sha256:c5fa3f2a08617b1347fa402964fb91ae422036333a92fc1f551da073e3eb765e",
+  "calibration_history_digest": "sha256:79339e533028bc9db82df85c08ac375dfb3c20588ce0c183cb8595cade81b62e",
+  "calibration_records": 16,
+  "routes": [
+    {
+      "schema": 1,
+      "kind": "citadel_public_holdout_fast_pilot_route",
+      "instance_id": "preactjs__preact-4880",
+      "feature_key": "js.issue-short",
+      "quality_target_source": "direct-Claude conservative probability in the same frozen feature stratum, floored at 0.10",
+      "decision": {
+        "schema": 1,
+        "kind": "citadel_operation_decision",
+        "operation_id": "swe-pilot-9093a6f14ee053204077",
+        "request_digest": "sha256:62830a49a694edbf3084d268d59bb7c6807d007da472679aa179701a42566726",
+        "catalog_digest": "sha256:ca695a7f5967ef5000e9367a70daac75708b1de052a8721f51c450374f76297f",
+        "history_digest": "sha256:51f24c2058aee888fd2dae5c6093db5e208acc9d844be758695ac328d3a4c7f1",
+        "selection_status": "best-available",
+        "quality_target": 0.1,
+        "selected": {
+          "root_plan_id": "qwen-3b",
+          "plan_ids": [
+            "qwen-3b",
+            "claude-sonnet"
+          ],
+          "stages": [
+            {
+              "plan_id": "qwen-3b",
+              "reach_probability": 1,
+              "success_probability": 0.03351,
+              "evidence_basis": "verified-outcome-history"
+            },
+            {
+              "plan_id": "claude-sonnet",
+              "reach_probability": 0.96649,
+              "success_probability": 0.03351,
+              "evidence_basis": "verified-outcome-history"
+            }
+          ],
+          "verified_success_probability": 0.065897,
+          "expected_duration_ms": 285199,
+          "maximum_duration_ms": 292136,
+          "expected_costs": {
+            "actual_cash": {
+              "status": "unknown",
+              "amount_usd": null,
+              "unknown_plan_ids": [
+                "claude-sonnet"
+              ]
+            },
+            "marginal": {
+              "status": "known",
+              "amount_usd": 0.474571,
+              "unknown_plan_ids": []
+            },
+            "market_equivalent": {
+              "status": "known",
+              "amount_usd": 0.474571,
+              "unknown_plan_ids": []
+            }
+          },
+          "maximum_costs": {
+            "actual_cash": {
+              "status": "unknown",
+              "amount_usd": null,
+              "unknown_plan_ids": [
+                "claude-sonnet"
+              ]
+            },
+            "marginal": {
+              "status": "known",
+              "amount_usd": 0.491002,
+              "unknown_plan_ids": []
+            },
+            "market_equivalent": {
+              "status": "known",
+              "amount_usd": 0.491002,
+              "unknown_plan_ids": []
+            }
+          },
+          "eligible": true,
+          "reason_codes": []
+        },
+        "candidates": [
+          {
+            "root_plan_id": "qwen-3b",
+            "plan_ids": [
+              "qwen-3b",
+              "claude-sonnet"
+            ],
+            "stages": [
+              {
+                "plan_id": "qwen-3b",
+                "reach_probability": 1,
+                "success_probability": 0.03351,
+                "evidence_basis": "verified-outcome-history"
+              },
+              {
+                "plan_id": "claude-sonnet",
+                "reach_probability": 0.96649,
+                "success_probability": 0.03351,
+                "evidence_basis": "verified-outcome-history"
+              }
+            ],
+            "verified_success_probability": 0.065897,
+            "expected_duration_ms": 285199,
+            "maximum_duration_ms": 292136,
+            "expected_costs": {
+              "actual_cash": {
+                "status": "unknown",
+                "amount_usd": null,
+                "unknown_plan_ids": [
+                  "claude-sonnet"
+                ]
+              },
+              "marginal": {
+                "status": "known",
+                "amount_usd": 0.474571,
+                "unknown_plan_ids": []
+              },
+              "market_equivalent": {
+                "status": "known",
+                "amount_usd": 0.474571,
+                "unknown_plan_ids": []
+              }
+            },
+            "maximum_costs": {
+              "actual_cash": {
+                "status": "unknown",
+                "amount_usd": null,
+                "unknown_plan_ids": [
+                  "claude-sonnet"
+                ]
+              },
+              "marginal": {
+                "status": "known",
+                "amount_usd": 0.491002,
+                "unknown_plan_ids": []
+              },
+              "market_equivalent": {
+                "status": "known",
+                "amount_usd": 0.491002,
+                "unknown_plan_ids": []
+              }
+            },
+            "eligible": true,
+            "reason_codes": []
+          },
+          {
+            "root_plan_id": "claude-sonnet",
+            "plan_ids": [
+              "claude-sonnet"
+            ],
+            "stages": [
+              {
+                "plan_id": "claude-sonnet",
+                "reach_probability": 1,
+                "success_probability": 0.03351,
+                "evidence_basis": "verified-outcome-history"
+              }
+            ],
+            "verified_success_probability": 0.03351,
+            "expected_duration_ms": 206987,
+            "maximum_duration_ms": 206987,
+            "expected_costs": {
+              "actual_cash": {
+                "status": "unknown",
+                "amount_usd": null,
+                "unknown_plan_ids": [
+                  "claude-sonnet"
+                ]
+              },
+              "marginal": {
+                "status": "known",
+                "amount_usd": 0.490322,
+                "unknown_plan_ids": []
+              },
+              "market_equivalent": {
+                "status": "known",
+                "amount_usd": 0.490322,
+                "unknown_plan_ids": []
+              }
+            },
+            "maximum_costs": {
+              "actual_cash": {
+                "status": "unknown",
+                "amount_usd": null,
+                "unknown_plan_ids": [
+                  "claude-sonnet"
+                ]
+              },
+              "marginal": {
+                "status": "known",
+                "amount_usd": 0.490322,
+                "unknown_plan_ids": []
+              },
+              "market_equivalent": {
+                "status": "known",
+                "amount_usd": 0.490322,
+                "unknown_plan_ids": []
+              }
+            },
+            "eligible": true,
+            "reason_codes": []
+          }
+        ],
+        "predictions": {
+          "qwen-3b": {
+            "plan_id": "qwen-3b",
+            "evidence_records": 2,
+            "decided_records": 2,
+            "passed_records": 0,
+            "posterior_mean": 0.166667,
+            "conservative_probability": 0.03351,
+            "expected_duration_ms": 85148.5,
+            "costs": {
+              "actual_cash": {
+                "status": "known",
+                "amount_usd": 0,
+                "basis": "observed",
+                "source": "history:2-records"
+              },
+              "marginal": {
+                "status": "known",
+                "amount_usd": 0.000679764,
+                "basis": "observed",
+                "source": "history:2-records"
+              },
+              "market_equivalent": {
+                "status": "known",
+                "amount_usd": 0.000679764,
+                "basis": "observed",
+                "source": "history:2-records"
+              }
+            },
+            "evidence_basis": "verified-outcome-history",
+            "confidence_method": "90-percent-one-sided-wilson-with-prior-pseudocounts"
+          },
+          "claude-sonnet": {
+            "plan_id": "claude-sonnet",
+            "evidence_records": 2,
+            "decided_records": 2,
+            "passed_records": 0,
+            "posterior_mean": 0.166667,
+            "conservative_probability": 0.03351,
+            "expected_duration_ms": 206987,
+            "costs": {
+              "actual_cash": {
+                "status": "unknown",
+                "amount_usd": null,
+                "basis": "subscription",
+                "source": "subscription-not-allocated-per-operation"
+              },
+              "marginal": {
+                "status": "known",
+                "amount_usd": 0.490322,
+                "basis": "observed",
+                "source": "history:2-records"
+              },
+              "market_equivalent": {
+                "status": "known",
+                "amount_usd": 0.490322,
+                "basis": "observed",
+                "source": "history:2-records"
+              }
+            },
+            "evidence_basis": "verified-outcome-history",
+            "confidence_method": "90-percent-one-sided-wilson-with-prior-pseudocounts"
+          }
+        },
+        "decision_digest": "sha256:015c3b1827d112b2318f9cb76693cd4a0f9a349a4b29383866181a4750269b34"
+      }
+    },
+    {
+      "schema": 1,
+      "kind": "citadel_public_holdout_fast_pilot_route",
+      "instance_id": "GladysAssistant__Gladys-2504",
+      "feature_key": "js.issue-short",
+      "quality_target_source": "direct-Claude conservative probability in the same frozen feature stratum, floored at 0.10",
+      "decision": {
+        "schema": 1,
+        "kind": "citadel_operation_decision",
+        "operation_id": "swe-pilot-09acf45304a120c7cf81",
+        "request_digest": "sha256:8d714482343ab28b1f681ff2c6aa11b68fe8f8d733ea5e144e6a37aac9f145ef",
+        "catalog_digest": "sha256:ca695a7f5967ef5000e9367a70daac75708b1de052a8721f51c450374f76297f",
+        "history_digest": "sha256:51f24c2058aee888fd2dae5c6093db5e208acc9d844be758695ac328d3a4c7f1",
+        "selection_status": "best-available",
+        "quality_target": 0.1,
+        "selected": {
+          "root_plan_id": "qwen-3b",
+          "plan_ids": [
+            "qwen-3b",
+            "claude-sonnet"
+          ],
+          "stages": [
+            {
+              "plan_id": "qwen-3b",
+              "reach_probability": 1,
+              "success_probability": 0.03351,
+              "evidence_basis": "verified-outcome-history"
+            },
+            {
+              "plan_id": "claude-sonnet",
+              "reach_probability": 0.96649,
+              "success_probability": 0.03351,
+              "evidence_basis": "verified-outcome-history"
+            }
+          ],
+          "verified_success_probability": 0.065897,
+          "expected_duration_ms": 285199,
+          "maximum_duration_ms": 292136,
+          "expected_costs": {
+            "actual_cash": {
+              "status": "unknown",
+              "amount_usd": null,
+              "unknown_plan_ids": [
+                "claude-sonnet"
+              ]
+            },
+            "marginal": {
+              "status": "known",
+              "amount_usd": 0.474571,
+              "unknown_plan_ids": []
+            },
+            "market_equivalent": {
+              "status": "known",
+              "amount_usd": 0.474571,
+              "unknown_plan_ids": []
+            }
+          },
+          "maximum_costs": {
+            "actual_cash": {
+              "status": "unknown",
+              "amount_usd": null,
+              "unknown_plan_ids": [
+                "claude-sonnet"
+              ]
+            },
+            "marginal": {
+              "status": "known",
+              "amount_usd": 0.491002,
+              "unknown_plan_ids": []
+            },
+            "market_equivalent": {
+              "status": "known",
+              "amount_usd": 0.491002,
+              "unknown_plan_ids": []
+            }
+          },
+          "eligible": true,
+          "reason_codes": []
+        },
+        "candidates": [
+          {
+            "root_plan_id": "qwen-3b",
+            "plan_ids": [
+              "qwen-3b",
+              "claude-sonnet"
+            ],
+            "stages": [
+              {
+                "plan_id": "qwen-3b",
+                "reach_probability": 1,
+                "success_probability": 0.03351,
+                "evidence_basis": "verified-outcome-history"
+              },
+              {
+                "plan_id": "claude-sonnet",
+                "reach_probability": 0.96649,
+                "success_probability": 0.03351,
+                "evidence_basis": "verified-outcome-history"
+              }
+            ],
+            "verified_success_probability": 0.065897,
+            "expected_duration_ms": 285199,
+            "maximum_duration_ms": 292136,
+            "expected_costs": {
+              "actual_cash": {
+                "status": "unknown",
+                "amount_usd": null,
+                "unknown_plan_ids": [
+                  "claude-sonnet"
+                ]
+              },
+              "marginal": {
+                "status": "known",
+                "amount_usd": 0.474571,
+                "unknown_plan_ids": []
+              },
+              "market_equivalent": {
+                "status": "known",
+                "amount_usd": 0.474571,
+                "unknown_plan_ids": []
+              }
+            },
+            "maximum_costs": {
+              "actual_cash": {
+                "status": "unknown",
+                "amount_usd": null,
+                "unknown_plan_ids": [
+                  "claude-sonnet"
+                ]
+              },
+              "marginal": {
+                "status": "known",
+                "amount_usd": 0.491002,
+                "unknown_plan_ids": []
+              },
+              "market_equivalent": {
+                "status": "known",
+                "amount_usd": 0.491002,
+                "unknown_plan_ids": []
+              }
+            },
+            "eligible": true,
+            "reason_codes": []
+          },
+          {
+            "root_plan_id": "claude-sonnet",
+            "plan_ids": [
+              "claude-sonnet"
+            ],
+            "stages": [
+              {
+                "plan_id": "claude-sonnet",
+                "reach_probability": 1,
+                "success_probability": 0.03351,
+                "evidence_basis": "verified-outcome-history"
+              }
+            ],
+            "verified_success_probability": 0.03351,
+            "expected_duration_ms": 206987,
+            "maximum_duration_ms": 206987,
+            "expected_costs": {
+              "actual_cash": {
+                "status": "unknown",
+                "amount_usd": null,
+                "unknown_plan_ids": [
+                  "claude-sonnet"
+                ]
+              },
+              "marginal": {
+                "status": "known",
+                "amount_usd": 0.490322,
+                "unknown_plan_ids": []
+              },
+              "market_equivalent": {
+                "status": "known",
+                "amount_usd": 0.490322,
+                "unknown_plan_ids": []
+              }
+            },
+            "maximum_costs": {
+              "actual_cash": {
+                "status": "unknown",
+                "amount_usd": null,
+                "unknown_plan_ids": [
+                  "claude-sonnet"
+                ]
+              },
+              "marginal": {
+                "status": "known",
+                "amount_usd": 0.490322,
+                "unknown_plan_ids": []
+              },
+              "market_equivalent": {
+                "status": "known",
+                "amount_usd": 0.490322,
+                "unknown_plan_ids": []
+              }
+            },
+            "eligible": true,
+            "reason_codes": []
+          }
+        ],
+        "predictions": {
+          "qwen-3b": {
+            "plan_id": "qwen-3b",
+            "evidence_records": 2,
+            "decided_records": 2,
+            "passed_records": 0,
+            "posterior_mean": 0.166667,
+            "conservative_probability": 0.03351,
+            "expected_duration_ms": 85148.5,
+            "costs": {
+              "actual_cash": {
+                "status": "known",
+                "amount_usd": 0,
+                "basis": "observed",
+                "source": "history:2-records"
+              },
+              "marginal": {
+                "status": "known",
+                "amount_usd": 0.000679764,
+                "basis": "observed",
+                "source": "history:2-records"
+              },
+              "market_equivalent": {
+                "status": "known",
+                "amount_usd": 0.000679764,
+                "basis": "observed",
+                "source": "history:2-records"
+              }
+            },
+            "evidence_basis": "verified-outcome-history",
+            "confidence_method": "90-percent-one-sided-wilson-with-prior-pseudocounts"
+          },
+          "claude-sonnet": {
+            "plan_id": "claude-sonnet",
+            "evidence_records": 2,
+            "decided_records": 2,
+            "passed_records": 0,
+            "posterior_mean": 0.166667,
+            "conservative_probability": 0.03351,
+            "expected_duration_ms": 206987,
+            "costs": {
+              "actual_cash": {
+                "status": "unknown",
+                "amount_usd": null,
+                "basis": "subscription",
+                "source": "subscription-not-allocated-per-operation"
+              },
+              "marginal": {
+                "status": "known",
+                "amount_usd": 0.490322,
+                "basis": "observed",
+                "source": "history:2-records"
+              },
+              "market_equivalent": {
+                "status": "known",
+                "amount_usd": 0.490322,
+                "basis": "observed",
+                "source": "history:2-records"
+              }
+            },
+            "evidence_basis": "verified-outcome-history",
+            "confidence_method": "90-percent-one-sided-wilson-with-prior-pseudocounts"
+          }
+        },
+        "decision_digest": "sha256:1ee86f67981bb5c7fc63c0943a8df620f892821a677667896aeeb6837375c9c2"
+      }
+    },
+    {
+      "schema": 1,
+      "kind": "citadel_public_holdout_fast_pilot_route",
+      "instance_id": "simple-icons__simple-icons-13659",
+      "feature_key": "js.issue-short",
+      "quality_target_source": "direct-Claude conservative probability in the same frozen feature stratum, floored at 0.10",
+      "decision": {
+        "schema": 1,
+        "kind": "citadel_operation_decision",
+        "operation_id": "swe-pilot-d41b569caf4d53501109",
+        "request_digest": "sha256:2510f8c1d38a2b5672184842f681ebb96dfd3b6046f7f348949d48857ef2cc6d",
+        "catalog_digest": "sha256:ca695a7f5967ef5000e9367a70daac75708b1de052a8721f51c450374f76297f",
+        "history_digest": "sha256:51f24c2058aee888fd2dae5c6093db5e208acc9d844be758695ac328d3a4c7f1",
+        "selection_status": "best-available",
+        "quality_target": 0.1,
+        "selected": {
+          "root_plan_id": "qwen-3b",
+          "plan_ids": [
+            "qwen-3b",
+            "claude-sonnet"
+          ],
+          "stages": [
+            {
+              "plan_id": "qwen-3b",
+              "reach_probability": 1,
+              "success_probability": 0.03351,
+              "evidence_basis": "verified-outcome-history"
+            },
+            {
+              "plan_id": "claude-sonnet",
+              "reach_probability": 0.96649,
+              "success_probability": 0.03351,
+              "evidence_basis": "verified-outcome-history"
+            }
+          ],
+          "verified_success_probability": 0.065897,
+          "expected_duration_ms": 285199,
+          "maximum_duration_ms": 292136,
+          "expected_costs": {
+            "actual_cash": {
+              "status": "unknown",
+              "amount_usd": null,
+              "unknown_plan_ids": [
+                "claude-sonnet"
+              ]
+            },
+            "marginal": {
+              "status": "known",
+              "amount_usd": 0.474571,
+              "unknown_plan_ids": []
+            },
+            "market_equivalent": {
+              "status": "known",
+              "amount_usd": 0.474571,
+              "unknown_plan_ids": []
+            }
+          },
+          "maximum_costs": {
+            "actual_cash": {
+              "status": "unknown",
+              "amount_usd": null,
+              "unknown_plan_ids": [
+                "claude-sonnet"
+              ]
+            },
+            "marginal": {
+              "status": "known",
+              "amount_usd": 0.491002,
+              "unknown_plan_ids": []
+            },
+            "market_equivalent": {
+              "status": "known",
+              "amount_usd": 0.491002,
+              "unknown_plan_ids": []
+            }
+          },
+          "eligible": true,
+          "reason_codes": []
+        },
+        "candidates": [
+          {
+            "root_plan_id": "qwen-3b",
+            "plan_ids": [
+              "qwen-3b",
+              "claude-sonnet"
+            ],
+            "stages": [
+              {
+                "plan_id": "qwen-3b",
+                "reach_probability": 1,
+                "success_probability": 0.03351,
+                "evidence_basis": "verified-outcome-history"
+              },
+              {
+                "plan_id": "claude-sonnet",
+                "reach_probability": 0.96649,
+                "success_probability": 0.03351,
+                "evidence_basis": "verified-outcome-history"
+              }
+            ],
+            "verified_success_probability": 0.065897,
+            "expected_duration_ms": 285199,
+            "maximum_duration_ms": 292136,
+            "expected_costs": {
+              "actual_cash": {
+                "status": "unknown",
+                "amount_usd": null,
+                "unknown_plan_ids": [
+                  "claude-sonnet"
+                ]
+              },
+              "marginal": {
+                "status": "known",
+                "amount_usd": 0.474571,
+                "unknown_plan_ids": []
+              },
+              "market_equivalent": {
+                "status": "known",
+                "amount_usd": 0.474571,
+                "unknown_plan_ids": []
+              }
+            },
+            "maximum_costs": {
+              "actual_cash": {
+                "status": "unknown",
+                "amount_usd": null,
+                "unknown_plan_ids": [
+                  "claude-sonnet"
+                ]
+              },
+              "marginal": {
+                "status": "known",
+                "amount_usd": 0.491002,
+                "unknown_plan_ids": []
+              },
+              "market_equivalent": {
+                "status": "known",
+                "amount_usd": 0.491002,
+                "unknown_plan_ids": []
+              }
+            },
+            "eligible": true,
+            "reason_codes": []
+          },
+          {
+            "root_plan_id": "claude-sonnet",
+            "plan_ids": [
+              "claude-sonnet"
+            ],
+            "stages": [
+              {
+                "plan_id": "claude-sonnet",
+                "reach_probability": 1,
+                "success_probability": 0.03351,
+                "evidence_basis": "verified-outcome-history"
+              }
+            ],
+            "verified_success_probability": 0.03351,
+            "expected_duration_ms": 206987,
+            "maximum_duration_ms": 206987,
+            "expected_costs": {
+              "actual_cash": {
+                "status": "unknown",
+                "amount_usd": null,
+                "unknown_plan_ids": [
+                  "claude-sonnet"
+                ]
+              },
+              "marginal": {
+                "status": "known",
+                "amount_usd": 0.490322,
+                "unknown_plan_ids": []
+              },
+              "market_equivalent": {
+                "status": "known",
+                "amount_usd": 0.490322,
+                "unknown_plan_ids": []
+              }
+            },
+            "maximum_costs": {
+              "actual_cash": {
+                "status": "unknown",
+                "amount_usd": null,
+                "unknown_plan_ids": [
+                  "claude-sonnet"
+                ]
+              },
+              "marginal": {
+                "status": "known",
+                "amount_usd": 0.490322,
+                "unknown_plan_ids": []
+              },
+              "market_equivalent": {
+                "status": "known",
+                "amount_usd": 0.490322,
+                "unknown_plan_ids": []
+              }
+            },
+            "eligible": true,
+            "reason_codes": []
+          }
+        ],
+        "predictions": {
+          "qwen-3b": {
+            "plan_id": "qwen-3b",
+            "evidence_records": 2,
+            "decided_records": 2,
+            "passed_records": 0,
+            "posterior_mean": 0.166667,
+            "conservative_probability": 0.03351,
+            "expected_duration_ms": 85148.5,
+            "costs": {
+              "actual_cash": {
+                "status": "known",
+                "amount_usd": 0,
+                "basis": "observed",
+                "source": "history:2-records"
+              },
+              "marginal": {
+                "status": "known",
+                "amount_usd": 0.000679764,
+                "basis": "observed",
+                "source": "history:2-records"
+              },
+              "market_equivalent": {
+                "status": "known",
+                "amount_usd": 0.000679764,
+                "basis": "observed",
+                "source": "history:2-records"
+              }
+            },
+            "evidence_basis": "verified-outcome-history",
+            "confidence_method": "90-percent-one-sided-wilson-with-prior-pseudocounts"
+          },
+          "claude-sonnet": {
+            "plan_id": "claude-sonnet",
+            "evidence_records": 2,
+            "decided_records": 2,
+            "passed_records": 0,
+            "posterior_mean": 0.166667,
+            "conservative_probability": 0.03351,
+            "expected_duration_ms": 206987,
+            "costs": {
+              "actual_cash": {
+                "status": "unknown",
+                "amount_usd": null,
+                "basis": "subscription",
+                "source": "subscription-not-allocated-per-operation"
+              },
+              "marginal": {
+                "status": "known",
+                "amount_usd": 0.490322,
+                "basis": "observed",
+                "source": "history:2-records"
+              },
+              "market_equivalent": {
+                "status": "known",
+                "amount_usd": 0.490322,
+                "basis": "observed",
+                "source": "history:2-records"
+              }
+            },
+            "evidence_basis": "verified-outcome-history",
+            "confidence_method": "90-percent-one-sided-wilson-with-prior-pseudocounts"
+          }
+        },
+        "decision_digest": "sha256:8c3f70ac2cb4b755f19ff751e888bd0b4210727ff632105543be764bcfd4c4e5"
+      }
+    },
+    {
+      "schema": 1,
+      "kind": "citadel_public_holdout_fast_pilot_route",
+      "instance_id": "moment__luxon-1720",
+      "feature_key": "js.issue-short",
+      "quality_target_source": "direct-Claude conservative probability in the same frozen feature stratum, floored at 0.10",
+      "decision": {
+        "schema": 1,
+        "kind": "citadel_operation_decision",
+        "operation_id": "swe-pilot-947f352380841ea372b3",
+        "request_digest": "sha256:2a0a5f6c163f63da4199c4441c3aac7f7f53bb6e97e59c2c174534330e055d74",
+        "catalog_digest": "sha256:ca695a7f5967ef5000e9367a70daac75708b1de052a8721f51c450374f76297f",
+        "history_digest": "sha256:51f24c2058aee888fd2dae5c6093db5e208acc9d844be758695ac328d3a4c7f1",
+        "selection_status": "best-available",
+        "quality_target": 0.1,
+        "selected": {
+          "root_plan_id": "qwen-3b",
+          "plan_ids": [
+            "qwen-3b",
+            "claude-sonnet"
+          ],
+          "stages": [
+            {
+              "plan_id": "qwen-3b",
+              "reach_probability": 1,
+              "success_probability": 0.03351,
+              "evidence_basis": "verified-outcome-history"
+            },
+            {
+              "plan_id": "claude-sonnet",
+              "reach_probability": 0.96649,
+              "success_probability": 0.03351,
+              "evidence_basis": "verified-outcome-history"
+            }
+          ],
+          "verified_success_probability": 0.065897,
+          "expected_duration_ms": 285199,
+          "maximum_duration_ms": 292136,
+          "expected_costs": {
+            "actual_cash": {
+              "status": "unknown",
+              "amount_usd": null,
+              "unknown_plan_ids": [
+                "claude-sonnet"
+              ]
+            },
+            "marginal": {
+              "status": "known",
+              "amount_usd": 0.474571,
+              "unknown_plan_ids": []
+            },
+            "market_equivalent": {
+              "status": "known",
+              "amount_usd": 0.474571,
+              "unknown_plan_ids": []
+            }
+          },
+          "maximum_costs": {
+            "actual_cash": {
+              "status": "unknown",
+              "amount_usd": null,
+              "unknown_plan_ids": [
+                "claude-sonnet"
+              ]
+            },
+            "marginal": {
+              "status": "known",
+              "amount_usd": 0.491002,
+              "unknown_plan_ids": []
+            },
+            "market_equivalent": {
+              "status": "known",
+              "amount_usd": 0.491002,
+              "unknown_plan_ids": []
+            }
+          },
+          "eligible": true,
+          "reason_codes": []
+        },
+        "candidates": [
+          {
+            "root_plan_id": "qwen-3b",
+            "plan_ids": [
+              "qwen-3b",
+              "claude-sonnet"
+            ],
+            "stages": [
+              {
+                "plan_id": "qwen-3b",
+                "reach_probability": 1,
+                "success_probability": 0.03351,
+                "evidence_basis": "verified-outcome-history"
+              },
+              {
+                "plan_id": "claude-sonnet",
+                "reach_probability": 0.96649,
+                "success_probability": 0.03351,
+                "evidence_basis": "verified-outcome-history"
+              }
+            ],
+            "verified_success_probability": 0.065897,
+            "expected_duration_ms": 285199,
+            "maximum_duration_ms": 292136,
+            "expected_costs": {
+              "actual_cash": {
+                "status": "unknown",
+                "amount_usd": null,
+                "unknown_plan_ids": [
+                  "claude-sonnet"
+                ]
+              },
+              "marginal": {
+                "status": "known",
+                "amount_usd": 0.474571,
+                "unknown_plan_ids": []
+              },
+              "market_equivalent": {
+                "status": "known",
+                "amount_usd": 0.474571,
+                "unknown_plan_ids": []
+              }
+            },
+            "maximum_costs": {
+              "actual_cash": {
+                "status": "unknown",
+                "amount_usd": null,
+                "unknown_plan_ids": [
+                  "claude-sonnet"
+                ]
+              },
+              "marginal": {
+                "status": "known",
+                "amount_usd": 0.491002,
+                "unknown_plan_ids": []
+              },
+              "market_equivalent": {
+                "status": "known",
+                "amount_usd": 0.491002,
+                "unknown_plan_ids": []
+              }
+            },
+            "eligible": true,
+            "reason_codes": []
+          },
+          {
+            "root_plan_id": "claude-sonnet",
+            "plan_ids": [
+              "claude-sonnet"
+            ],
+            "stages": [
+              {
+                "plan_id": "claude-sonnet",
+                "reach_probability": 1,
+                "success_probability": 0.03351,
+                "evidence_basis": "verified-outcome-history"
+              }
+            ],
+            "verified_success_probability": 0.03351,
+            "expected_duration_ms": 206987,
+            "maximum_duration_ms": 206987,
+            "expected_costs": {
+              "actual_cash": {
+                "status": "unknown",
+                "amount_usd": null,
+                "unknown_plan_ids": [
+                  "claude-sonnet"
+                ]
+              },
+              "marginal": {
+                "status": "known",
+                "amount_usd": 0.490322,
+                "unknown_plan_ids": []
+              },
+              "market_equivalent": {
+                "status": "known",
+                "amount_usd": 0.490322,
+                "unknown_plan_ids": []
+              }
+            },
+            "maximum_costs": {
+              "actual_cash": {
+                "status": "unknown",
+                "amount_usd": null,
+                "unknown_plan_ids": [
+                  "claude-sonnet"
+                ]
+              },
+              "marginal": {
+                "status": "known",
+                "amount_usd": 0.490322,
+                "unknown_plan_ids": []
+              },
+              "market_equivalent": {
+                "status": "known",
+                "amount_usd": 0.490322,
+                "unknown_plan_ids": []
+              }
+            },
+            "eligible": true,
+            "reason_codes": []
+          }
+        ],
+        "predictions": {
+          "qwen-3b": {
+            "plan_id": "qwen-3b",
+            "evidence_records": 2,
+            "decided_records": 2,
+            "passed_records": 0,
+            "posterior_mean": 0.166667,
+            "conservative_probability": 0.03351,
+            "expected_duration_ms": 85148.5,
+            "costs": {
+              "actual_cash": {
+                "status": "known",
+                "amount_usd": 0,
+                "basis": "observed",
+                "source": "history:2-records"
+              },
+              "marginal": {
+                "status": "known",
+                "amount_usd": 0.000679764,
+                "basis": "observed",
+                "source": "history:2-records"
+              },
+              "market_equivalent": {
+                "status": "known",
+                "amount_usd": 0.000679764,
+                "basis": "observed",
+                "source": "history:2-records"
+              }
+            },
+            "evidence_basis": "verified-outcome-history",
+            "confidence_method": "90-percent-one-sided-wilson-with-prior-pseudocounts"
+          },
+          "claude-sonnet": {
+            "plan_id": "claude-sonnet",
+            "evidence_records": 2,
+            "decided_records": 2,
+            "passed_records": 0,
+            "posterior_mean": 0.166667,
+            "conservative_probability": 0.03351,
+            "expected_duration_ms": 206987,
+            "costs": {
+              "actual_cash": {
+                "status": "unknown",
+                "amount_usd": null,
+                "basis": "subscription",
+                "source": "subscription-not-allocated-per-operation"
+              },
+              "marginal": {
+                "status": "known",
+                "amount_usd": 0.490322,
+                "basis": "observed",
+                "source": "history:2-records"
+              },
+              "market_equivalent": {
+                "status": "known",
+                "amount_usd": 0.490322,
+                "basis": "observed",
+                "source": "history:2-records"
+              }
+            },
+            "evidence_basis": "verified-outcome-history",
+            "confidence_method": "90-percent-one-sided-wilson-with-prior-pseudocounts"
+          }
+        },
+        "decision_digest": "sha256:401ab223f1df25abd7c94e63ff206635703ce1a329ee4bab33d1eaf038c285d0"
+      }
+    },
+    {
+      "schema": 1,
+      "kind": "citadel_public_holdout_fast_pilot_route",
+      "instance_id": "gsd-build__get-shit-done-2186",
+      "feature_key": "js.issue-long",
+      "quality_target_source": "direct-Claude conservative probability in the same frozen feature stratum, floored at 0.10",
+      "decision": {
+        "schema": 1,
+        "kind": "citadel_operation_decision",
+        "operation_id": "swe-pilot-960926212e0c2fac591f",
+        "request_digest": "sha256:d554350f77039513d83b39a45a58f7f7117d1f7f733570e8b4751d559b2b0939",
+        "catalog_digest": "sha256:ca695a7f5967ef5000e9367a70daac75708b1de052a8721f51c450374f76297f",
+        "history_digest": "sha256:51f24c2058aee888fd2dae5c6093db5e208acc9d844be758695ac328d3a4c7f1",
+        "selection_status": "meets-quality-target",
+        "quality_target": 0.202603,
+        "selected": {
+          "root_plan_id": "qwen-3b",
+          "plan_ids": [
+            "qwen-3b",
+            "claude-sonnet"
+          ],
+          "stages": [
+            {
+              "plan_id": "qwen-3b",
+              "reach_probability": 1,
+              "success_probability": 0.03351,
+              "evidence_basis": "verified-outcome-history"
+            },
+            {
+              "plan_id": "claude-sonnet",
+              "reach_probability": 0.96649,
+              "success_probability": 0.202603,
+              "evidence_basis": "verified-outcome-history"
+            }
+          ],
+          "verified_success_probability": 0.229324,
+          "expected_duration_ms": 121451,
+          "maximum_duration_ms": 124839,
+          "expected_costs": {
+            "actual_cash": {
+              "status": "unknown",
+              "amount_usd": null,
+              "unknown_plan_ids": [
+                "claude-sonnet"
+              ]
+            },
+            "marginal": {
+              "status": "known",
+              "amount_usd": 0.216707,
+              "unknown_plan_ids": []
+            },
+            "market_equivalent": {
+              "status": "known",
+              "amount_usd": 0.216707,
+              "unknown_plan_ids": []
+            }
+          },
+          "maximum_costs": {
+            "actual_cash": {
+              "status": "unknown",
+              "amount_usd": null,
+              "unknown_plan_ids": [
+                "claude-sonnet"
+              ]
+            },
+            "marginal": {
+              "status": "known",
+              "amount_usd": 0.224215,
+              "unknown_plan_ids": []
+            },
+            "market_equivalent": {
+              "status": "known",
+              "amount_usd": 0.224215,
+              "unknown_plan_ids": []
+            }
+          },
+          "eligible": true,
+          "reason_codes": []
+        },
+        "candidates": [
+          {
+            "root_plan_id": "qwen-3b",
+            "plan_ids": [
+              "qwen-3b",
+              "claude-sonnet"
+            ],
+            "stages": [
+              {
+                "plan_id": "qwen-3b",
+                "reach_probability": 1,
+                "success_probability": 0.03351,
+                "evidence_basis": "verified-outcome-history"
+              },
+              {
+                "plan_id": "claude-sonnet",
+                "reach_probability": 0.96649,
+                "success_probability": 0.202603,
+                "evidence_basis": "verified-outcome-history"
+              }
+            ],
+            "verified_success_probability": 0.229324,
+            "expected_duration_ms": 121451,
+            "maximum_duration_ms": 124839,
+            "expected_costs": {
+              "actual_cash": {
+                "status": "unknown",
+                "amount_usd": null,
+                "unknown_plan_ids": [
+                  "claude-sonnet"
+                ]
+              },
+              "marginal": {
+                "status": "known",
+                "amount_usd": 0.216707,
+                "unknown_plan_ids": []
+              },
+              "market_equivalent": {
+                "status": "known",
+                "amount_usd": 0.216707,
+                "unknown_plan_ids": []
+              }
+            },
+            "maximum_costs": {
+              "actual_cash": {
+                "status": "unknown",
+                "amount_usd": null,
+                "unknown_plan_ids": [
+                  "claude-sonnet"
+                ]
+              },
+              "marginal": {
+                "status": "known",
+                "amount_usd": 0.224215,
+                "unknown_plan_ids": []
+              },
+              "market_equivalent": {
+                "status": "known",
+                "amount_usd": 0.224215,
+                "unknown_plan_ids": []
+              }
+            },
+            "eligible": true,
+            "reason_codes": []
+          },
+          {
+            "root_plan_id": "claude-sonnet",
+            "plan_ids": [
+              "claude-sonnet"
+            ],
+            "stages": [
+              {
+                "plan_id": "claude-sonnet",
+                "reach_probability": 1,
+                "success_probability": 0.202603,
+                "evidence_basis": "verified-outcome-history"
+              }
+            ],
+            "verified_success_probability": 0.202603,
+            "expected_duration_ms": 101102,
+            "maximum_duration_ms": 101102,
+            "expected_costs": {
+              "actual_cash": {
+                "status": "unknown",
+                "amount_usd": null,
+                "unknown_plan_ids": [
+                  "claude-sonnet"
+                ]
+              },
+              "marginal": {
+                "status": "known",
+                "amount_usd": 0.224041,
+                "unknown_plan_ids": []
+              },
+              "market_equivalent": {
+                "status": "known",
+                "amount_usd": 0.224041,
+                "unknown_plan_ids": []
+              }
+            },
+            "maximum_costs": {
+              "actual_cash": {
+                "status": "unknown",
+                "amount_usd": null,
+                "unknown_plan_ids": [
+                  "claude-sonnet"
+                ]
+              },
+              "marginal": {
+                "status": "known",
+                "amount_usd": 0.224041,
+                "unknown_plan_ids": []
+              },
+              "market_equivalent": {
+                "status": "known",
+                "amount_usd": 0.224041,
+                "unknown_plan_ids": []
+              }
+            },
+            "eligible": true,
+            "reason_codes": []
+          }
+        ],
+        "predictions": {
+          "qwen-3b": {
+            "plan_id": "qwen-3b",
+            "evidence_records": 2,
+            "decided_records": 2,
+            "passed_records": 0,
+            "posterior_mean": 0.166667,
+            "conservative_probability": 0.03351,
+            "expected_duration_ms": 23737,
+            "costs": {
+              "actual_cash": {
+                "status": "known",
+                "amount_usd": 0,
+                "basis": "observed",
+                "source": "history:2-records"
+              },
+              "marginal": {
+                "status": "known",
+                "amount_usd": 0.00017353950000000001,
+                "basis": "observed",
+                "source": "history:2-records"
+              },
+              "market_equivalent": {
+                "status": "known",
+                "amount_usd": 0.00017353950000000001,
+                "basis": "observed",
+                "source": "history:2-records"
+              }
+            },
+            "evidence_basis": "verified-outcome-history",
+            "confidence_method": "90-percent-one-sided-wilson-with-prior-pseudocounts"
+          },
+          "claude-sonnet": {
+            "plan_id": "claude-sonnet",
+            "evidence_records": 2,
+            "decided_records": 2,
+            "passed_records": 1,
+            "posterior_mean": 0.5,
+            "conservative_probability": 0.202603,
+            "expected_duration_ms": 101101.5,
+            "costs": {
+              "actual_cash": {
+                "status": "unknown",
+                "amount_usd": null,
+                "basis": "subscription",
+                "source": "subscription-not-allocated-per-operation"
+              },
+              "marginal": {
+                "status": "known",
+                "amount_usd": 0.22404100000000002,
+                "basis": "observed",
+                "source": "history:2-records"
+              },
+              "market_equivalent": {
+                "status": "known",
+                "amount_usd": 0.22404100000000002,
+                "basis": "observed",
+                "source": "history:2-records"
+              }
+            },
+            "evidence_basis": "verified-outcome-history",
+            "confidence_method": "90-percent-one-sided-wilson-with-prior-pseudocounts"
+          }
+        },
+        "decision_digest": "sha256:01ec12aa300485a0d2c6a5dcae6bab9feeff93bfa9dd13c38cc4b3857c3ad42c"
+      }
+    },
+    {
+      "schema": 1,
+      "kind": "citadel_public_holdout_fast_pilot_route",
+      "instance_id": "docsifyjs__docsify-2595",
+      "feature_key": "js.issue-long",
+      "quality_target_source": "direct-Claude conservative probability in the same frozen feature stratum, floored at 0.10",
+      "decision": {
+        "schema": 1,
+        "kind": "citadel_operation_decision",
+        "operation_id": "swe-pilot-2df20101c740340dd8c8",
+        "request_digest": "sha256:3061507f97166aee8ebc841d37c9a1bb8f968ff169ec504eb9e3a96c86e28a0d",
+        "catalog_digest": "sha256:ca695a7f5967ef5000e9367a70daac75708b1de052a8721f51c450374f76297f",
+        "history_digest": "sha256:51f24c2058aee888fd2dae5c6093db5e208acc9d844be758695ac328d3a4c7f1",
+        "selection_status": "meets-quality-target",
+        "quality_target": 0.202603,
+        "selected": {
+          "root_plan_id": "qwen-3b",
+          "plan_ids": [
+            "qwen-3b",
+            "claude-sonnet"
+          ],
+          "stages": [
+            {
+              "plan_id": "qwen-3b",
+              "reach_probability": 1,
+              "success_probability": 0.03351,
+              "evidence_basis": "verified-outcome-history"
+            },
+            {
+              "plan_id": "claude-sonnet",
+              "reach_probability": 0.96649,
+              "success_probability": 0.202603,
+              "evidence_basis": "verified-outcome-history"
+            }
+          ],
+          "verified_success_probability": 0.229324,
+          "expected_duration_ms": 121451,
+          "maximum_duration_ms": 124839,
+          "expected_costs": {
+            "actual_cash": {
+              "status": "unknown",
+              "amount_usd": null,
+              "unknown_plan_ids": [
+                "claude-sonnet"
+              ]
+            },
+            "marginal": {
+              "status": "known",
+              "amount_usd": 0.216707,
+              "unknown_plan_ids": []
+            },
+            "market_equivalent": {
+              "status": "known",
+              "amount_usd": 0.216707,
+              "unknown_plan_ids": []
+            }
+          },
+          "maximum_costs": {
+            "actual_cash": {
+              "status": "unknown",
+              "amount_usd": null,
+              "unknown_plan_ids": [
+                "claude-sonnet"
+              ]
+            },
+            "marginal": {
+              "status": "known",
+              "amount_usd": 0.224215,
+              "unknown_plan_ids": []
+            },
+            "market_equivalent": {
+              "status": "known",
+              "amount_usd": 0.224215,
+              "unknown_plan_ids": []
+            }
+          },
+          "eligible": true,
+          "reason_codes": []
+        },
+        "candidates": [
+          {
+            "root_plan_id": "qwen-3b",
+            "plan_ids": [
+              "qwen-3b",
+              "claude-sonnet"
+            ],
+            "stages": [
+              {
+                "plan_id": "qwen-3b",
+                "reach_probability": 1,
+                "success_probability": 0.03351,
+                "evidence_basis": "verified-outcome-history"
+              },
+              {
+                "plan_id": "claude-sonnet",
+                "reach_probability": 0.96649,
+                "success_probability": 0.202603,
+                "evidence_basis": "verified-outcome-history"
+              }
+            ],
+            "verified_success_probability": 0.229324,
+            "expected_duration_ms": 121451,
+            "maximum_duration_ms": 124839,
+            "expected_costs": {
+              "actual_cash": {
+                "status": "unknown",
+                "amount_usd": null,
+                "unknown_plan_ids": [
+                  "claude-sonnet"
+                ]
+              },
+              "marginal": {
+                "status": "known",
+                "amount_usd": 0.216707,
+                "unknown_plan_ids": []
+              },
+              "market_equivalent": {
+                "status": "known",
+                "amount_usd": 0.216707,
+                "unknown_plan_ids": []
+              }
+            },
+            "maximum_costs": {
+              "actual_cash": {
+                "status": "unknown",
+                "amount_usd": null,
+                "unknown_plan_ids": [
+                  "claude-sonnet"
+                ]
+              },
+              "marginal": {
+                "status": "known",
+                "amount_usd": 0.224215,
+                "unknown_plan_ids": []
+              },
+              "market_equivalent": {
+                "status": "known",
+                "amount_usd": 0.224215,
+                "unknown_plan_ids": []
+              }
+            },
+            "eligible": true,
+            "reason_codes": []
+          },
+          {
+            "root_plan_id": "claude-sonnet",
+            "plan_ids": [
+              "claude-sonnet"
+            ],
+            "stages": [
+              {
+                "plan_id": "claude-sonnet",
+                "reach_probability": 1,
+                "success_probability": 0.202603,
+                "evidence_basis": "verified-outcome-history"
+              }
+            ],
+            "verified_success_probability": 0.202603,
+            "expected_duration_ms": 101102,
+            "maximum_duration_ms": 101102,
+            "expected_costs": {
+              "actual_cash": {
+                "status": "unknown",
+                "amount_usd": null,
+                "unknown_plan_ids": [
+                  "claude-sonnet"
+                ]
+              },
+              "marginal": {
+                "status": "known",
+                "amount_usd": 0.224041,
+                "unknown_plan_ids": []
+              },
+              "market_equivalent": {
+                "status": "known",
+                "amount_usd": 0.224041,
+                "unknown_plan_ids": []
+              }
+            },
+            "maximum_costs": {
+              "actual_cash": {
+                "status": "unknown",
+                "amount_usd": null,
+                "unknown_plan_ids": [
+                  "claude-sonnet"
+                ]
+              },
+              "marginal": {
+                "status": "known",
+                "amount_usd": 0.224041,
+                "unknown_plan_ids": []
+              },
+              "market_equivalent": {
+                "status": "known",
+                "amount_usd": 0.224041,
+                "unknown_plan_ids": []
+              }
+            },
+            "eligible": true,
+            "reason_codes": []
+          }
+        ],
+        "predictions": {
+          "qwen-3b": {
+            "plan_id": "qwen-3b",
+            "evidence_records": 2,
+            "decided_records": 2,
+            "passed_records": 0,
+            "posterior_mean": 0.166667,
+            "conservative_probability": 0.03351,
+            "expected_duration_ms": 23737,
+            "costs": {
+              "actual_cash": {
+                "status": "known",
+                "amount_usd": 0,
+                "basis": "observed",
+                "source": "history:2-records"
+              },
+              "marginal": {
+                "status": "known",
+                "amount_usd": 0.00017353950000000001,
+                "basis": "observed",
+                "source": "history:2-records"
+              },
+              "market_equivalent": {
+                "status": "known",
+                "amount_usd": 0.00017353950000000001,
+                "basis": "observed",
+                "source": "history:2-records"
+              }
+            },
+            "evidence_basis": "verified-outcome-history",
+            "confidence_method": "90-percent-one-sided-wilson-with-prior-pseudocounts"
+          },
+          "claude-sonnet": {
+            "plan_id": "claude-sonnet",
+            "evidence_records": 2,
+            "decided_records": 2,
+            "passed_records": 1,
+            "posterior_mean": 0.5,
+            "conservative_probability": 0.202603,
+            "expected_duration_ms": 101101.5,
+            "costs": {
+              "actual_cash": {
+                "status": "unknown",
+                "amount_usd": null,
+                "basis": "subscription",
+                "source": "subscription-not-allocated-per-operation"
+              },
+              "marginal": {
+                "status": "known",
+                "amount_usd": 0.22404100000000002,
+                "basis": "observed",
+                "source": "history:2-records"
+              },
+              "market_equivalent": {
+                "status": "known",
+                "amount_usd": 0.22404100000000002,
+                "basis": "observed",
+                "source": "history:2-records"
+              }
+            },
+            "evidence_basis": "verified-outcome-history",
+            "confidence_method": "90-percent-one-sided-wilson-with-prior-pseudocounts"
+          }
+        },
+        "decision_digest": "sha256:7cdc962be3cc2ff6ed9b0fbd33e1bfb95cfa2694edd8cba178045e841cfb345f"
+      }
+    },
+    {
+      "schema": 1,
+      "kind": "citadel_public_holdout_fast_pilot_route",
+      "instance_id": "openai__codex-plugin-cc-83",
+      "feature_key": "js.issue-long",
+      "quality_target_source": "direct-Claude conservative probability in the same frozen feature stratum, floored at 0.10",
+      "decision": {
+        "schema": 1,
+        "kind": "citadel_operation_decision",
+        "operation_id": "swe-pilot-30e73e8c9d0a95506974",
+        "request_digest": "sha256:dc03adaacd3339b9a8c6f5489b790dddb0b17f16e769fa25ddb834df6292afaa",
+        "catalog_digest": "sha256:ca695a7f5967ef5000e9367a70daac75708b1de052a8721f51c450374f76297f",
+        "history_digest": "sha256:51f24c2058aee888fd2dae5c6093db5e208acc9d844be758695ac328d3a4c7f1",
+        "selection_status": "meets-quality-target",
+        "quality_target": 0.202603,
+        "selected": {
+          "root_plan_id": "qwen-3b",
+          "plan_ids": [
+            "qwen-3b",
+            "claude-sonnet"
+          ],
+          "stages": [
+            {
+              "plan_id": "qwen-3b",
+              "reach_probability": 1,
+              "success_probability": 0.03351,
+              "evidence_basis": "verified-outcome-history"
+            },
+            {
+              "plan_id": "claude-sonnet",
+              "reach_probability": 0.96649,
+              "success_probability": 0.202603,
+              "evidence_basis": "verified-outcome-history"
+            }
+          ],
+          "verified_success_probability": 0.229324,
+          "expected_duration_ms": 121451,
+          "maximum_duration_ms": 124839,
+          "expected_costs": {
+            "actual_cash": {
+              "status": "unknown",
+              "amount_usd": null,
+              "unknown_plan_ids": [
+                "claude-sonnet"
+              ]
+            },
+            "marginal": {
+              "status": "known",
+              "amount_usd": 0.216707,
+              "unknown_plan_ids": []
+            },
+            "market_equivalent": {
+              "status": "known",
+              "amount_usd": 0.216707,
+              "unknown_plan_ids": []
+            }
+          },
+          "maximum_costs": {
+            "actual_cash": {
+              "status": "unknown",
+              "amount_usd": null,
+              "unknown_plan_ids": [
+                "claude-sonnet"
+              ]
+            },
+            "marginal": {
+              "status": "known",
+              "amount_usd": 0.224215,
+              "unknown_plan_ids": []
+            },
+            "market_equivalent": {
+              "status": "known",
+              "amount_usd": 0.224215,
+              "unknown_plan_ids": []
+            }
+          },
+          "eligible": true,
+          "reason_codes": []
+        },
+        "candidates": [
+          {
+            "root_plan_id": "qwen-3b",
+            "plan_ids": [
+              "qwen-3b",
+              "claude-sonnet"
+            ],
+            "stages": [
+              {
+                "plan_id": "qwen-3b",
+                "reach_probability": 1,
+                "success_probability": 0.03351,
+                "evidence_basis": "verified-outcome-history"
+              },
+              {
+                "plan_id": "claude-sonnet",
+                "reach_probability": 0.96649,
+                "success_probability": 0.202603,
+                "evidence_basis": "verified-outcome-history"
+              }
+            ],
+            "verified_success_probability": 0.229324,
+            "expected_duration_ms": 121451,
+            "maximum_duration_ms": 124839,
+            "expected_costs": {
+              "actual_cash": {
+                "status": "unknown",
+                "amount_usd": null,
+                "unknown_plan_ids": [
+                  "claude-sonnet"
+                ]
+              },
+              "marginal": {
+                "status": "known",
+                "amount_usd": 0.216707,
+                "unknown_plan_ids": []
+              },
+              "market_equivalent": {
+                "status": "known",
+                "amount_usd": 0.216707,
+                "unknown_plan_ids": []
+              }
+            },
+            "maximum_costs": {
+              "actual_cash": {
+                "status": "unknown",
+                "amount_usd": null,
+                "unknown_plan_ids": [
+                  "claude-sonnet"
+                ]
+              },
+              "marginal": {
+                "status": "known",
+                "amount_usd": 0.224215,
+                "unknown_plan_ids": []
+              },
+              "market_equivalent": {
+                "status": "known",
+                "amount_usd": 0.224215,
+                "unknown_plan_ids": []
+              }
+            },
+            "eligible": true,
+            "reason_codes": []
+          },
+          {
+            "root_plan_id": "claude-sonnet",
+            "plan_ids": [
+              "claude-sonnet"
+            ],
+            "stages": [
+              {
+                "plan_id": "claude-sonnet",
+                "reach_probability": 1,
+                "success_probability": 0.202603,
+                "evidence_basis": "verified-outcome-history"
+              }
+            ],
+            "verified_success_probability": 0.202603,
+            "expected_duration_ms": 101102,
+            "maximum_duration_ms": 101102,
+            "expected_costs": {
+              "actual_cash": {
+                "status": "unknown",
+                "amount_usd": null,
+                "unknown_plan_ids": [
+                  "claude-sonnet"
+                ]
+              },
+              "marginal": {
+                "status": "known",
+                "amount_usd": 0.224041,
+                "unknown_plan_ids": []
+              },
+              "market_equivalent": {
+                "status": "known",
+                "amount_usd": 0.224041,
+                "unknown_plan_ids": []
+              }
+            },
+            "maximum_costs": {
+              "actual_cash": {
+                "status": "unknown",
+                "amount_usd": null,
+                "unknown_plan_ids": [
+                  "claude-sonnet"
+                ]
+              },
+              "marginal": {
+                "status": "known",
+                "amount_usd": 0.224041,
+                "unknown_plan_ids": []
+              },
+              "market_equivalent": {
+                "status": "known",
+                "amount_usd": 0.224041,
+                "unknown_plan_ids": []
+              }
+            },
+            "eligible": true,
+            "reason_codes": []
+          }
+        ],
+        "predictions": {
+          "qwen-3b": {
+            "plan_id": "qwen-3b",
+            "evidence_records": 2,
+            "decided_records": 2,
+            "passed_records": 0,
+            "posterior_mean": 0.166667,
+            "conservative_probability": 0.03351,
+            "expected_duration_ms": 23737,
+            "costs": {
+              "actual_cash": {
+                "status": "known",
+                "amount_usd": 0,
+                "basis": "observed",
+                "source": "history:2-records"
+              },
+              "marginal": {
+                "status": "known",
+                "amount_usd": 0.00017353950000000001,
+                "basis": "observed",
+                "source": "history:2-records"
+              },
+              "market_equivalent": {
+                "status": "known",
+                "amount_usd": 0.00017353950000000001,
+                "basis": "observed",
+                "source": "history:2-records"
+              }
+            },
+            "evidence_basis": "verified-outcome-history",
+            "confidence_method": "90-percent-one-sided-wilson-with-prior-pseudocounts"
+          },
+          "claude-sonnet": {
+            "plan_id": "claude-sonnet",
+            "evidence_records": 2,
+            "decided_records": 2,
+            "passed_records": 1,
+            "posterior_mean": 0.5,
+            "conservative_probability": 0.202603,
+            "expected_duration_ms": 101101.5,
+            "costs": {
+              "actual_cash": {
+                "status": "unknown",
+                "amount_usd": null,
+                "basis": "subscription",
+                "source": "subscription-not-allocated-per-operation"
+              },
+              "marginal": {
+                "status": "known",
+                "amount_usd": 0.22404100000000002,
+                "basis": "observed",
+                "source": "history:2-records"
+              },
+              "market_equivalent": {
+                "status": "known",
+                "amount_usd": 0.22404100000000002,
+                "basis": "observed",
+                "source": "history:2-records"
+              }
+            },
+            "evidence_basis": "verified-outcome-history",
+            "confidence_method": "90-percent-one-sided-wilson-with-prior-pseudocounts"
+          }
+        },
+        "decision_digest": "sha256:c0b1fe1f5f6448de83733ef3f6ac021d73eff6eb78b17f700d4ed396d3795625"
+      }
+    },
+    {
+      "schema": 1,
+      "kind": "citadel_public_holdout_fast_pilot_route",
+      "instance_id": "aralroca__next-translate-1259",
+      "feature_key": "js.issue-long",
+      "quality_target_source": "direct-Claude conservative probability in the same frozen feature stratum, floored at 0.10",
+      "decision": {
+        "schema": 1,
+        "kind": "citadel_operation_decision",
+        "operation_id": "swe-pilot-0611b95bca9de7ef9c2a",
+        "request_digest": "sha256:92e43c4f58d3bafe60c90a9df8416ca39489462b9c2ef560dcd2a5a41dd10969",
+        "catalog_digest": "sha256:ca695a7f5967ef5000e9367a70daac75708b1de052a8721f51c450374f76297f",
+        "history_digest": "sha256:51f24c2058aee888fd2dae5c6093db5e208acc9d844be758695ac328d3a4c7f1",
+        "selection_status": "meets-quality-target",
+        "quality_target": 0.202603,
+        "selected": {
+          "root_plan_id": "qwen-3b",
+          "plan_ids": [
+            "qwen-3b",
+            "claude-sonnet"
+          ],
+          "stages": [
+            {
+              "plan_id": "qwen-3b",
+              "reach_probability": 1,
+              "success_probability": 0.03351,
+              "evidence_basis": "verified-outcome-history"
+            },
+            {
+              "plan_id": "claude-sonnet",
+              "reach_probability": 0.96649,
+              "success_probability": 0.202603,
+              "evidence_basis": "verified-outcome-history"
+            }
+          ],
+          "verified_success_probability": 0.229324,
+          "expected_duration_ms": 121451,
+          "maximum_duration_ms": 124839,
+          "expected_costs": {
+            "actual_cash": {
+              "status": "unknown",
+              "amount_usd": null,
+              "unknown_plan_ids": [
+                "claude-sonnet"
+              ]
+            },
+            "marginal": {
+              "status": "known",
+              "amount_usd": 0.216707,
+              "unknown_plan_ids": []
+            },
+            "market_equivalent": {
+              "status": "known",
+              "amount_usd": 0.216707,
+              "unknown_plan_ids": []
+            }
+          },
+          "maximum_costs": {
+            "actual_cash": {
+              "status": "unknown",
+              "amount_usd": null,
+              "unknown_plan_ids": [
+                "claude-sonnet"
+              ]
+            },
+            "marginal": {
+              "status": "known",
+              "amount_usd": 0.224215,
+              "unknown_plan_ids": []
+            },
+            "market_equivalent": {
+              "status": "known",
+              "amount_usd": 0.224215,
+              "unknown_plan_ids": []
+            }
+          },
+          "eligible": true,
+          "reason_codes": []
+        },
+        "candidates": [
+          {
+            "root_plan_id": "qwen-3b",
+            "plan_ids": [
+              "qwen-3b",
+              "claude-sonnet"
+            ],
+            "stages": [
+              {
+                "plan_id": "qwen-3b",
+                "reach_probability": 1,
+                "success_probability": 0.03351,
+                "evidence_basis": "verified-outcome-history"
+              },
+              {
+                "plan_id": "claude-sonnet",
+                "reach_probability": 0.96649,
+                "success_probability": 0.202603,
+                "evidence_basis": "verified-outcome-history"
+              }
+            ],
+            "verified_success_probability": 0.229324,
+            "expected_duration_ms": 121451,
+            "maximum_duration_ms": 124839,
+            "expected_costs": {
+              "actual_cash": {
+                "status": "unknown",
+                "amount_usd": null,
+                "unknown_plan_ids": [
+                  "claude-sonnet"
+                ]
+              },
+              "marginal": {
+                "status": "known",
+                "amount_usd": 0.216707,
+                "unknown_plan_ids": []
+              },
+              "market_equivalent": {
+                "status": "known",
+                "amount_usd": 0.216707,
+                "unknown_plan_ids": []
+              }
+            },
+            "maximum_costs": {
+              "actual_cash": {
+                "status": "unknown",
+                "amount_usd": null,
+                "unknown_plan_ids": [
+                  "claude-sonnet"
+                ]
+              },
+              "marginal": {
+                "status": "known",
+                "amount_usd": 0.224215,
+                "unknown_plan_ids": []
+              },
+              "market_equivalent": {
+                "status": "known",
+                "amount_usd": 0.224215,
+                "unknown_plan_ids": []
+              }
+            },
+            "eligible": true,
+            "reason_codes": []
+          },
+          {
+            "root_plan_id": "claude-sonnet",
+            "plan_ids": [
+              "claude-sonnet"
+            ],
+            "stages": [
+              {
+                "plan_id": "claude-sonnet",
+                "reach_probability": 1,
+                "success_probability": 0.202603,
+                "evidence_basis": "verified-outcome-history"
+              }
+            ],
+            "verified_success_probability": 0.202603,
+            "expected_duration_ms": 101102,
+            "maximum_duration_ms": 101102,
+            "expected_costs": {
+              "actual_cash": {
+                "status": "unknown",
+                "amount_usd": null,
+                "unknown_plan_ids": [
+                  "claude-sonnet"
+                ]
+              },
+              "marginal": {
+                "status": "known",
+                "amount_usd": 0.224041,
+                "unknown_plan_ids": []
+              },
+              "market_equivalent": {
+                "status": "known",
+                "amount_usd": 0.224041,
+                "unknown_plan_ids": []
+              }
+            },
+            "maximum_costs": {
+              "actual_cash": {
+                "status": "unknown",
+                "amount_usd": null,
+                "unknown_plan_ids": [
+                  "claude-sonnet"
+                ]
+              },
+              "marginal": {
+                "status": "known",
+                "amount_usd": 0.224041,
+                "unknown_plan_ids": []
+              },
+              "market_equivalent": {
+                "status": "known",
+                "amount_usd": 0.224041,
+                "unknown_plan_ids": []
+              }
+            },
+            "eligible": true,
+            "reason_codes": []
+          }
+        ],
+        "predictions": {
+          "qwen-3b": {
+            "plan_id": "qwen-3b",
+            "evidence_records": 2,
+            "decided_records": 2,
+            "passed_records": 0,
+            "posterior_mean": 0.166667,
+            "conservative_probability": 0.03351,
+            "expected_duration_ms": 23737,
+            "costs": {
+              "actual_cash": {
+                "status": "known",
+                "amount_usd": 0,
+                "basis": "observed",
+                "source": "history:2-records"
+              },
+              "marginal": {
+                "status": "known",
+                "amount_usd": 0.00017353950000000001,
+                "basis": "observed",
+                "source": "history:2-records"
+              },
+              "market_equivalent": {
+                "status": "known",
+                "amount_usd": 0.00017353950000000001,
+                "basis": "observed",
+                "source": "history:2-records"
+              }
+            },
+            "evidence_basis": "verified-outcome-history",
+            "confidence_method": "90-percent-one-sided-wilson-with-prior-pseudocounts"
+          },
+          "claude-sonnet": {
+            "plan_id": "claude-sonnet",
+            "evidence_records": 2,
+            "decided_records": 2,
+            "passed_records": 1,
+            "posterior_mean": 0.5,
+            "conservative_probability": 0.202603,
+            "expected_duration_ms": 101101.5,
+            "costs": {
+              "actual_cash": {
+                "status": "unknown",
+                "amount_usd": null,
+                "basis": "subscription",
+                "source": "subscription-not-allocated-per-operation"
+              },
+              "marginal": {
+                "status": "known",
+                "amount_usd": 0.22404100000000002,
+                "basis": "observed",
+                "source": "history:2-records"
+              },
+              "market_equivalent": {
+                "status": "known",
+                "amount_usd": 0.22404100000000002,
+                "basis": "observed",
+                "source": "history:2-records"
+              }
+            },
+            "evidence_basis": "verified-outcome-history",
+            "confidence_method": "90-percent-one-sided-wilson-with-prior-pseudocounts"
+          }
+        },
+        "decision_digest": "sha256:17b2072247fa09f4d87b909c2f3f24ce590d1efc92ae73d9c068a3931754c5aa"
+      }
+    },
+    {
+      "schema": 1,
+      "kind": "citadel_public_holdout_fast_pilot_route",
+      "instance_id": "MetaMask__metamask-mobile-17294",
+      "feature_key": "ts.issue-short",
+      "quality_target_source": "direct-Claude conservative probability in the same frozen feature stratum, floored at 0.10",
+      "decision": {
+        "schema": 1,
+        "kind": "citadel_operation_decision",
+        "operation_id": "swe-pilot-8a5583853dab9e67441f",
+        "request_digest": "sha256:4f12835cb38ef42170064fcca9d0fad7fa0e4538504b654dae1d320387ac8848",
+        "catalog_digest": "sha256:ca695a7f5967ef5000e9367a70daac75708b1de052a8721f51c450374f76297f",
+        "history_digest": "sha256:51f24c2058aee888fd2dae5c6093db5e208acc9d844be758695ac328d3a4c7f1",
+        "selection_status": "best-available",
+        "quality_target": 0.1,
+        "selected": {
+          "root_plan_id": "qwen-3b",
+          "plan_ids": [
+            "qwen-3b",
+            "claude-sonnet"
+          ],
+          "stages": [
+            {
+              "plan_id": "qwen-3b",
+              "reach_probability": 1,
+              "success_probability": 0.03351,
+              "evidence_basis": "verified-outcome-history"
+            },
+            {
+              "plan_id": "claude-sonnet",
+              "reach_probability": 0.96649,
+              "success_probability": 0.03351,
+              "evidence_basis": "verified-outcome-history"
+            }
+          ],
+          "verified_success_probability": 0.065897,
+          "expected_duration_ms": 199397,
+          "maximum_duration_ms": 203570,
+          "expected_costs": {
+            "actual_cash": {
+              "status": "unknown",
+              "amount_usd": null,
+              "unknown_plan_ids": [
+                "claude-sonnet"
+              ]
+            },
+            "marginal": {
+              "status": "known",
+              "amount_usd": 0.283997,
+              "unknown_plan_ids": []
+            },
+            "market_equivalent": {
+              "status": "known",
+              "amount_usd": 0.283997,
+              "unknown_plan_ids": []
+            }
+          },
+          "maximum_costs": {
+            "actual_cash": {
+              "status": "unknown",
+              "amount_usd": null,
+              "unknown_plan_ids": [
+                "claude-sonnet"
+              ]
+            },
+            "marginal": {
+              "status": "known",
+              "amount_usd": 0.293823,
+              "unknown_plan_ids": []
+            },
+            "market_equivalent": {
+              "status": "known",
+              "amount_usd": 0.293823,
+              "unknown_plan_ids": []
+            }
+          },
+          "eligible": true,
+          "reason_codes": []
+        },
+        "candidates": [
+          {
+            "root_plan_id": "qwen-3b",
+            "plan_ids": [
+              "qwen-3b",
+              "claude-sonnet"
+            ],
+            "stages": [
+              {
+                "plan_id": "qwen-3b",
+                "reach_probability": 1,
+                "success_probability": 0.03351,
+                "evidence_basis": "verified-outcome-history"
+              },
+              {
+                "plan_id": "claude-sonnet",
+                "reach_probability": 0.96649,
+                "success_probability": 0.03351,
+                "evidence_basis": "verified-outcome-history"
+              }
+            ],
+            "verified_success_probability": 0.065897,
+            "expected_duration_ms": 199397,
+            "maximum_duration_ms": 203570,
+            "expected_costs": {
+              "actual_cash": {
+                "status": "unknown",
+                "amount_usd": null,
+                "unknown_plan_ids": [
+                  "claude-sonnet"
+                ]
+              },
+              "marginal": {
+                "status": "known",
+                "amount_usd": 0.283997,
+                "unknown_plan_ids": []
+              },
+              "market_equivalent": {
+                "status": "known",
+                "amount_usd": 0.283997,
+                "unknown_plan_ids": []
+              }
+            },
+            "maximum_costs": {
+              "actual_cash": {
+                "status": "unknown",
+                "amount_usd": null,
+                "unknown_plan_ids": [
+                  "claude-sonnet"
+                ]
+              },
+              "marginal": {
+                "status": "known",
+                "amount_usd": 0.293823,
+                "unknown_plan_ids": []
+              },
+              "market_equivalent": {
+                "status": "known",
+                "amount_usd": 0.293823,
+                "unknown_plan_ids": []
+              }
+            },
+            "eligible": true,
+            "reason_codes": []
+          },
+          {
+            "root_plan_id": "claude-sonnet",
+            "plan_ids": [
+              "claude-sonnet"
+            ],
+            "stages": [
+              {
+                "plan_id": "claude-sonnet",
+                "reach_probability": 1,
+                "success_probability": 0.03351,
+                "evidence_basis": "verified-outcome-history"
+              }
+            ],
+            "verified_success_probability": 0.03351,
+            "expected_duration_ms": 124518,
+            "maximum_duration_ms": 124518,
+            "expected_costs": {
+              "actual_cash": {
+                "status": "unknown",
+                "amount_usd": null,
+                "unknown_plan_ids": [
+                  "claude-sonnet"
+                ]
+              },
+              "marginal": {
+                "status": "known",
+                "amount_usd": 0.293224,
+                "unknown_plan_ids": []
+              },
+              "market_equivalent": {
+                "status": "known",
+                "amount_usd": 0.293224,
+                "unknown_plan_ids": []
+              }
+            },
+            "maximum_costs": {
+              "actual_cash": {
+                "status": "unknown",
+                "amount_usd": null,
+                "unknown_plan_ids": [
+                  "claude-sonnet"
+                ]
+              },
+              "marginal": {
+                "status": "known",
+                "amount_usd": 0.293224,
+                "unknown_plan_ids": []
+              },
+              "market_equivalent": {
+                "status": "known",
+                "amount_usd": 0.293224,
+                "unknown_plan_ids": []
+              }
+            },
+            "eligible": true,
+            "reason_codes": []
+          }
+        ],
+        "predictions": {
+          "qwen-3b": {
+            "plan_id": "qwen-3b",
+            "evidence_records": 2,
+            "decided_records": 2,
+            "passed_records": 0,
+            "posterior_mean": 0.166667,
+            "conservative_probability": 0.03351,
+            "expected_duration_ms": 79051.5,
+            "costs": {
+              "actual_cash": {
+                "status": "known",
+                "amount_usd": 0,
+                "basis": "observed",
+                "source": "history:2-records"
+              },
+              "marginal": {
+                "status": "known",
+                "amount_usd": 0.0005994235,
+                "basis": "observed",
+                "source": "history:2-records"
+              },
+              "market_equivalent": {
+                "status": "known",
+                "amount_usd": 0.0005994235,
+                "basis": "observed",
+                "source": "history:2-records"
+              }
+            },
+            "evidence_basis": "verified-outcome-history",
+            "confidence_method": "90-percent-one-sided-wilson-with-prior-pseudocounts"
+          },
+          "claude-sonnet": {
+            "plan_id": "claude-sonnet",
+            "evidence_records": 2,
+            "decided_records": 2,
+            "passed_records": 0,
+            "posterior_mean": 0.166667,
+            "conservative_probability": 0.03351,
+            "expected_duration_ms": 124518,
+            "costs": {
+              "actual_cash": {
+                "status": "unknown",
+                "amount_usd": null,
+                "basis": "subscription",
+                "source": "subscription-not-allocated-per-operation"
+              },
+              "marginal": {
+                "status": "known",
+                "amount_usd": 0.2932235,
+                "basis": "observed",
+                "source": "history:2-records"
+              },
+              "market_equivalent": {
+                "status": "known",
+                "amount_usd": 0.2932235,
+                "basis": "observed",
+                "source": "history:2-records"
+              }
+            },
+            "evidence_basis": "verified-outcome-history",
+            "confidence_method": "90-percent-one-sided-wilson-with-prior-pseudocounts"
+          }
+        },
+        "decision_digest": "sha256:b1f4f3b63637e31e3f257f09a313a3ebae09c190153dd46d8e20efc2086b457e"
+      }
+    },
+    {
+      "schema": 1,
+      "kind": "citadel_public_holdout_fast_pilot_route",
+      "instance_id": "denoland__std-6775",
+      "feature_key": "ts.issue-short",
+      "quality_target_source": "direct-Claude conservative probability in the same frozen feature stratum, floored at 0.10",
+      "decision": {
+        "schema": 1,
+        "kind": "citadel_operation_decision",
+        "operation_id": "swe-pilot-d5ce9155e59069d8d8c9",
+        "request_digest": "sha256:4b185a3d2763dcff824bf326d4975d942a4a665a419752c4a59236e3e04ab243",
+        "catalog_digest": "sha256:ca695a7f5967ef5000e9367a70daac75708b1de052a8721f51c450374f76297f",
+        "history_digest": "sha256:51f24c2058aee888fd2dae5c6093db5e208acc9d844be758695ac328d3a4c7f1",
+        "selection_status": "best-available",
+        "quality_target": 0.1,
+        "selected": {
+          "root_plan_id": "qwen-3b",
+          "plan_ids": [
+            "qwen-3b",
+            "claude-sonnet"
+          ],
+          "stages": [
+            {
+              "plan_id": "qwen-3b",
+              "reach_probability": 1,
+              "success_probability": 0.03351,
+              "evidence_basis": "verified-outcome-history"
+            },
+            {
+              "plan_id": "claude-sonnet",
+              "reach_probability": 0.96649,
+              "success_probability": 0.03351,
+              "evidence_basis": "verified-outcome-history"
+            }
+          ],
+          "verified_success_probability": 0.065897,
+          "expected_duration_ms": 199397,
+          "maximum_duration_ms": 203570,
+          "expected_costs": {
+            "actual_cash": {
+              "status": "unknown",
+              "amount_usd": null,
+              "unknown_plan_ids": [
+                "claude-sonnet"
+              ]
+            },
+            "marginal": {
+              "status": "known",
+              "amount_usd": 0.283997,
+              "unknown_plan_ids": []
+            },
+            "market_equivalent": {
+              "status": "known",
+              "amount_usd": 0.283997,
+              "unknown_plan_ids": []
+            }
+          },
+          "maximum_costs": {
+            "actual_cash": {
+              "status": "unknown",
+              "amount_usd": null,
+              "unknown_plan_ids": [
+                "claude-sonnet"
+              ]
+            },
+            "marginal": {
+              "status": "known",
+              "amount_usd": 0.293823,
+              "unknown_plan_ids": []
+            },
+            "market_equivalent": {
+              "status": "known",
+              "amount_usd": 0.293823,
+              "unknown_plan_ids": []
+            }
+          },
+          "eligible": true,
+          "reason_codes": []
+        },
+        "candidates": [
+          {
+            "root_plan_id": "qwen-3b",
+            "plan_ids": [
+              "qwen-3b",
+              "claude-sonnet"
+            ],
+            "stages": [
+              {
+                "plan_id": "qwen-3b",
+                "reach_probability": 1,
+                "success_probability": 0.03351,
+                "evidence_basis": "verified-outcome-history"
+              },
+              {
+                "plan_id": "claude-sonnet",
+                "reach_probability": 0.96649,
+                "success_probability": 0.03351,
+                "evidence_basis": "verified-outcome-history"
+              }
+            ],
+            "verified_success_probability": 0.065897,
+            "expected_duration_ms": 199397,
+            "maximum_duration_ms": 203570,
+            "expected_costs": {
+              "actual_cash": {
+                "status": "unknown",
+                "amount_usd": null,
+                "unknown_plan_ids": [
+                  "claude-sonnet"
+                ]
+              },
+              "marginal": {
+                "status": "known",
+                "amount_usd": 0.283997,
+                "unknown_plan_ids": []
+              },
+              "market_equivalent": {
+                "status": "known",
+                "amount_usd": 0.283997,
+                "unknown_plan_ids": []
+              }
+            },
+            "maximum_costs": {
+              "actual_cash": {
+                "status": "unknown",
+                "amount_usd": null,
+                "unknown_plan_ids": [
+                  "claude-sonnet"
+                ]
+              },
+              "marginal": {
+                "status": "known",
+                "amount_usd": 0.293823,
+                "unknown_plan_ids": []
+              },
+              "market_equivalent": {
+                "status": "known",
+                "amount_usd": 0.293823,
+                "unknown_plan_ids": []
+              }
+            },
+            "eligible": true,
+            "reason_codes": []
+          },
+          {
+            "root_plan_id": "claude-sonnet",
+            "plan_ids": [
+              "claude-sonnet"
+            ],
+            "stages": [
+              {
+                "plan_id": "claude-sonnet",
+                "reach_probability": 1,
+                "success_probability": 0.03351,
+                "evidence_basis": "verified-outcome-history"
+              }
+            ],
+            "verified_success_probability": 0.03351,
+            "expected_duration_ms": 124518,
+            "maximum_duration_ms": 124518,
+            "expected_costs": {
+              "actual_cash": {
+                "status": "unknown",
+                "amount_usd": null,
+                "unknown_plan_ids": [
+                  "claude-sonnet"
+                ]
+              },
+              "marginal": {
+                "status": "known",
+                "amount_usd": 0.293224,
+                "unknown_plan_ids": []
+              },
+              "market_equivalent": {
+                "status": "known",
+                "amount_usd": 0.293224,
+                "unknown_plan_ids": []
+              }
+            },
+            "maximum_costs": {
+              "actual_cash": {
+                "status": "unknown",
+                "amount_usd": null,
+                "unknown_plan_ids": [
+                  "claude-sonnet"
+                ]
+              },
+              "marginal": {
+                "status": "known",
+                "amount_usd": 0.293224,
+                "unknown_plan_ids": []
+              },
+              "market_equivalent": {
+                "status": "known",
+                "amount_usd": 0.293224,
+                "unknown_plan_ids": []
+              }
+            },
+            "eligible": true,
+            "reason_codes": []
+          }
+        ],
+        "predictions": {
+          "qwen-3b": {
+            "plan_id": "qwen-3b",
+            "evidence_records": 2,
+            "decided_records": 2,
+            "passed_records": 0,
+            "posterior_mean": 0.166667,
+            "conservative_probability": 0.03351,
+            "expected_duration_ms": 79051.5,
+            "costs": {
+              "actual_cash": {
+                "status": "known",
+                "amount_usd": 0,
+                "basis": "observed",
+                "source": "history:2-records"
+              },
+              "marginal": {
+                "status": "known",
+                "amount_usd": 0.0005994235,
+                "basis": "observed",
+                "source": "history:2-records"
+              },
+              "market_equivalent": {
+                "status": "known",
+                "amount_usd": 0.0005994235,
+                "basis": "observed",
+                "source": "history:2-records"
+              }
+            },
+            "evidence_basis": "verified-outcome-history",
+            "confidence_method": "90-percent-one-sided-wilson-with-prior-pseudocounts"
+          },
+          "claude-sonnet": {
+            "plan_id": "claude-sonnet",
+            "evidence_records": 2,
+            "decided_records": 2,
+            "passed_records": 0,
+            "posterior_mean": 0.166667,
+            "conservative_probability": 0.03351,
+            "expected_duration_ms": 124518,
+            "costs": {
+              "actual_cash": {
+                "status": "unknown",
+                "amount_usd": null,
+                "basis": "subscription",
+                "source": "subscription-not-allocated-per-operation"
+              },
+              "marginal": {
+                "status": "known",
+                "amount_usd": 0.2932235,
+                "basis": "observed",
+                "source": "history:2-records"
+              },
+              "market_equivalent": {
+                "status": "known",
+                "amount_usd": 0.2932235,
+                "basis": "observed",
+                "source": "history:2-records"
+              }
+            },
+            "evidence_basis": "verified-outcome-history",
+            "confidence_method": "90-percent-one-sided-wilson-with-prior-pseudocounts"
+          }
+        },
+        "decision_digest": "sha256:72ce38322e7b377dae47e98dd22c566d87469bb950e917be3d3278f60ff0ee32"
+      }
+    },
+    {
+      "schema": 1,
+      "kind": "citadel_public_holdout_fast_pilot_route",
+      "instance_id": "RocketChat__Rocket.Chat.ReactNative-6382",
+      "feature_key": "ts.issue-short",
+      "quality_target_source": "direct-Claude conservative probability in the same frozen feature stratum, floored at 0.10",
+      "decision": {
+        "schema": 1,
+        "kind": "citadel_operation_decision",
+        "operation_id": "swe-pilot-b38a676fbf41a2eeabb5",
+        "request_digest": "sha256:8d192ec29389ab97c22eec5ed02b2c485cd9193468062b980e55a73c54825c20",
+        "catalog_digest": "sha256:ca695a7f5967ef5000e9367a70daac75708b1de052a8721f51c450374f76297f",
+        "history_digest": "sha256:51f24c2058aee888fd2dae5c6093db5e208acc9d844be758695ac328d3a4c7f1",
+        "selection_status": "best-available",
+        "quality_target": 0.1,
+        "selected": {
+          "root_plan_id": "qwen-3b",
+          "plan_ids": [
+            "qwen-3b",
+            "claude-sonnet"
+          ],
+          "stages": [
+            {
+              "plan_id": "qwen-3b",
+              "reach_probability": 1,
+              "success_probability": 0.03351,
+              "evidence_basis": "verified-outcome-history"
+            },
+            {
+              "plan_id": "claude-sonnet",
+              "reach_probability": 0.96649,
+              "success_probability": 0.03351,
+              "evidence_basis": "verified-outcome-history"
+            }
+          ],
+          "verified_success_probability": 0.065897,
+          "expected_duration_ms": 199397,
+          "maximum_duration_ms": 203570,
+          "expected_costs": {
+            "actual_cash": {
+              "status": "unknown",
+              "amount_usd": null,
+              "unknown_plan_ids": [
+                "claude-sonnet"
+              ]
+            },
+            "marginal": {
+              "status": "known",
+              "amount_usd": 0.283997,
+              "unknown_plan_ids": []
+            },
+            "market_equivalent": {
+              "status": "known",
+              "amount_usd": 0.283997,
+              "unknown_plan_ids": []
+            }
+          },
+          "maximum_costs": {
+            "actual_cash": {
+              "status": "unknown",
+              "amount_usd": null,
+              "unknown_plan_ids": [
+                "claude-sonnet"
+              ]
+            },
+            "marginal": {
+              "status": "known",
+              "amount_usd": 0.293823,
+              "unknown_plan_ids": []
+            },
+            "market_equivalent": {
+              "status": "known",
+              "amount_usd": 0.293823,
+              "unknown_plan_ids": []
+            }
+          },
+          "eligible": true,
+          "reason_codes": []
+        },
+        "candidates": [
+          {
+            "root_plan_id": "qwen-3b",
+            "plan_ids": [
+              "qwen-3b",
+              "claude-sonnet"
+            ],
+            "stages": [
+              {
+                "plan_id": "qwen-3b",
+                "reach_probability": 1,
+                "success_probability": 0.03351,
+                "evidence_basis": "verified-outcome-history"
+              },
+              {
+                "plan_id": "claude-sonnet",
+                "reach_probability": 0.96649,
+                "success_probability": 0.03351,
+                "evidence_basis": "verified-outcome-history"
+              }
+            ],
+            "verified_success_probability": 0.065897,
+            "expected_duration_ms": 199397,
+            "maximum_duration_ms": 203570,
+            "expected_costs": {
+              "actual_cash": {
+                "status": "unknown",
+                "amount_usd": null,
+                "unknown_plan_ids": [
+                  "claude-sonnet"
+                ]
+              },
+              "marginal": {
+                "status": "known",
+                "amount_usd": 0.283997,
+                "unknown_plan_ids": []
+              },
+              "market_equivalent": {
+                "status": "known",
+                "amount_usd": 0.283997,
+                "unknown_plan_ids": []
+              }
+            },
+            "maximum_costs": {
+              "actual_cash": {
+                "status": "unknown",
+                "amount_usd": null,
+                "unknown_plan_ids": [
+                  "claude-sonnet"
+                ]
+              },
+              "marginal": {
+                "status": "known",
+                "amount_usd": 0.293823,
+                "unknown_plan_ids": []
+              },
+              "market_equivalent": {
+                "status": "known",
+                "amount_usd": 0.293823,
+                "unknown_plan_ids": []
+              }
+            },
+            "eligible": true,
+            "reason_codes": []
+          },
+          {
+            "root_plan_id": "claude-sonnet",
+            "plan_ids": [
+              "claude-sonnet"
+            ],
+            "stages": [
+              {
+                "plan_id": "claude-sonnet",
+                "reach_probability": 1,
+                "success_probability": 0.03351,
+                "evidence_basis": "verified-outcome-history"
+              }
+            ],
+            "verified_success_probability": 0.03351,
+            "expected_duration_ms": 124518,
+            "maximum_duration_ms": 124518,
+            "expected_costs": {
+              "actual_cash": {
+                "status": "unknown",
+                "amount_usd": null,
+                "unknown_plan_ids": [
+                  "claude-sonnet"
+                ]
+              },
+              "marginal": {
+                "status": "known",
+                "amount_usd": 0.293224,
+                "unknown_plan_ids": []
+              },
+              "market_equivalent": {
+                "status": "known",
+                "amount_usd": 0.293224,
+                "unknown_plan_ids": []
+              }
+            },
+            "maximum_costs": {
+              "actual_cash": {
+                "status": "unknown",
+                "amount_usd": null,
+                "unknown_plan_ids": [
+                  "claude-sonnet"
+                ]
+              },
+              "marginal": {
+                "status": "known",
+                "amount_usd": 0.293224,
+                "unknown_plan_ids": []
+              },
+              "market_equivalent": {
+                "status": "known",
+                "amount_usd": 0.293224,
+                "unknown_plan_ids": []
+              }
+            },
+            "eligible": true,
+            "reason_codes": []
+          }
+        ],
+        "predictions": {
+          "qwen-3b": {
+            "plan_id": "qwen-3b",
+            "evidence_records": 2,
+            "decided_records": 2,
+            "passed_records": 0,
+            "posterior_mean": 0.166667,
+            "conservative_probability": 0.03351,
+            "expected_duration_ms": 79051.5,
+            "costs": {
+              "actual_cash": {
+                "status": "known",
+                "amount_usd": 0,
+                "basis": "observed",
+                "source": "history:2-records"
+              },
+              "marginal": {
+                "status": "known",
+                "amount_usd": 0.0005994235,
+                "basis": "observed",
+                "source": "history:2-records"
+              },
+              "market_equivalent": {
+                "status": "known",
+                "amount_usd": 0.0005994235,
+                "basis": "observed",
+                "source": "history:2-records"
+              }
+            },
+            "evidence_basis": "verified-outcome-history",
+            "confidence_method": "90-percent-one-sided-wilson-with-prior-pseudocounts"
+          },
+          "claude-sonnet": {
+            "plan_id": "claude-sonnet",
+            "evidence_records": 2,
+            "decided_records": 2,
+            "passed_records": 0,
+            "posterior_mean": 0.166667,
+            "conservative_probability": 0.03351,
+            "expected_duration_ms": 124518,
+            "costs": {
+              "actual_cash": {
+                "status": "unknown",
+                "amount_usd": null,
+                "basis": "subscription",
+                "source": "subscription-not-allocated-per-operation"
+              },
+              "marginal": {
+                "status": "known",
+                "amount_usd": 0.2932235,
+                "basis": "observed",
+                "source": "history:2-records"
+              },
+              "market_equivalent": {
+                "status": "known",
+                "amount_usd": 0.2932235,
+                "basis": "observed",
+                "source": "history:2-records"
+              }
+            },
+            "evidence_basis": "verified-outcome-history",
+            "confidence_method": "90-percent-one-sided-wilson-with-prior-pseudocounts"
+          }
+        },
+        "decision_digest": "sha256:c4ea91306cfca519ff7642636338fe15173e3419a41c9d2ccafad8e0ae528225"
+      }
+    },
+    {
+      "schema": 1,
+      "kind": "citadel_public_holdout_fast_pilot_route",
+      "instance_id": "jhlywa__chess.js-546",
+      "feature_key": "ts.issue-short",
+      "quality_target_source": "direct-Claude conservative probability in the same frozen feature stratum, floored at 0.10",
+      "decision": {
+        "schema": 1,
+        "kind": "citadel_operation_decision",
+        "operation_id": "swe-pilot-47425ff2ead73521019c",
+        "request_digest": "sha256:1508dbbbb79e933fa5a27bdf6918456880ebec4039ff8960abb059f2eaebc3ab",
+        "catalog_digest": "sha256:ca695a7f5967ef5000e9367a70daac75708b1de052a8721f51c450374f76297f",
+        "history_digest": "sha256:51f24c2058aee888fd2dae5c6093db5e208acc9d844be758695ac328d3a4c7f1",
+        "selection_status": "best-available",
+        "quality_target": 0.1,
+        "selected": {
+          "root_plan_id": "qwen-3b",
+          "plan_ids": [
+            "qwen-3b",
+            "claude-sonnet"
+          ],
+          "stages": [
+            {
+              "plan_id": "qwen-3b",
+              "reach_probability": 1,
+              "success_probability": 0.03351,
+              "evidence_basis": "verified-outcome-history"
+            },
+            {
+              "plan_id": "claude-sonnet",
+              "reach_probability": 0.96649,
+              "success_probability": 0.03351,
+              "evidence_basis": "verified-outcome-history"
+            }
+          ],
+          "verified_success_probability": 0.065897,
+          "expected_duration_ms": 199397,
+          "maximum_duration_ms": 203570,
+          "expected_costs": {
+            "actual_cash": {
+              "status": "unknown",
+              "amount_usd": null,
+              "unknown_plan_ids": [
+                "claude-sonnet"
+              ]
+            },
+            "marginal": {
+              "status": "known",
+              "amount_usd": 0.283997,
+              "unknown_plan_ids": []
+            },
+            "market_equivalent": {
+              "status": "known",
+              "amount_usd": 0.283997,
+              "unknown_plan_ids": []
+            }
+          },
+          "maximum_costs": {
+            "actual_cash": {
+              "status": "unknown",
+              "amount_usd": null,
+              "unknown_plan_ids": [
+                "claude-sonnet"
+              ]
+            },
+            "marginal": {
+              "status": "known",
+              "amount_usd": 0.293823,
+              "unknown_plan_ids": []
+            },
+            "market_equivalent": {
+              "status": "known",
+              "amount_usd": 0.293823,
+              "unknown_plan_ids": []
+            }
+          },
+          "eligible": true,
+          "reason_codes": []
+        },
+        "candidates": [
+          {
+            "root_plan_id": "qwen-3b",
+            "plan_ids": [
+              "qwen-3b",
+              "claude-sonnet"
+            ],
+            "stages": [
+              {
+                "plan_id": "qwen-3b",
+                "reach_probability": 1,
+                "success_probability": 0.03351,
+                "evidence_basis": "verified-outcome-history"
+              },
+              {
+                "plan_id": "claude-sonnet",
+                "reach_probability": 0.96649,
+                "success_probability": 0.03351,
+                "evidence_basis": "verified-outcome-history"
+              }
+            ],
+            "verified_success_probability": 0.065897,
+            "expected_duration_ms": 199397,
+            "maximum_duration_ms": 203570,
+            "expected_costs": {
+              "actual_cash": {
+                "status": "unknown",
+                "amount_usd": null,
+                "unknown_plan_ids": [
+                  "claude-sonnet"
+                ]
+              },
+              "marginal": {
+                "status": "known",
+                "amount_usd": 0.283997,
+                "unknown_plan_ids": []
+              },
+              "market_equivalent": {
+                "status": "known",
+                "amount_usd": 0.283997,
+                "unknown_plan_ids": []
+              }
+            },
+            "maximum_costs": {
+              "actual_cash": {
+                "status": "unknown",
+                "amount_usd": null,
+                "unknown_plan_ids": [
+                  "claude-sonnet"
+                ]
+              },
+              "marginal": {
+                "status": "known",
+                "amount_usd": 0.293823,
+                "unknown_plan_ids": []
+              },
+              "market_equivalent": {
+                "status": "known",
+                "amount_usd": 0.293823,
+                "unknown_plan_ids": []
+              }
+            },
+            "eligible": true,
+            "reason_codes": []
+          },
+          {
+            "root_plan_id": "claude-sonnet",
+            "plan_ids": [
+              "claude-sonnet"
+            ],
+            "stages": [
+              {
+                "plan_id": "claude-sonnet",
+                "reach_probability": 1,
+                "success_probability": 0.03351,
+                "evidence_basis": "verified-outcome-history"
+              }
+            ],
+            "verified_success_probability": 0.03351,
+            "expected_duration_ms": 124518,
+            "maximum_duration_ms": 124518,
+            "expected_costs": {
+              "actual_cash": {
+                "status": "unknown",
+                "amount_usd": null,
+                "unknown_plan_ids": [
+                  "claude-sonnet"
+                ]
+              },
+              "marginal": {
+                "status": "known",
+                "amount_usd": 0.293224,
+                "unknown_plan_ids": []
+              },
+              "market_equivalent": {
+                "status": "known",
+                "amount_usd": 0.293224,
+                "unknown_plan_ids": []
+              }
+            },
+            "maximum_costs": {
+              "actual_cash": {
+                "status": "unknown",
+                "amount_usd": null,
+                "unknown_plan_ids": [
+                  "claude-sonnet"
+                ]
+              },
+              "marginal": {
+                "status": "known",
+                "amount_usd": 0.293224,
+                "unknown_plan_ids": []
+              },
+              "market_equivalent": {
+                "status": "known",
+                "amount_usd": 0.293224,
+                "unknown_plan_ids": []
+              }
+            },
+            "eligible": true,
+            "reason_codes": []
+          }
+        ],
+        "predictions": {
+          "qwen-3b": {
+            "plan_id": "qwen-3b",
+            "evidence_records": 2,
+            "decided_records": 2,
+            "passed_records": 0,
+            "posterior_mean": 0.166667,
+            "conservative_probability": 0.03351,
+            "expected_duration_ms": 79051.5,
+            "costs": {
+              "actual_cash": {
+                "status": "known",
+                "amount_usd": 0,
+                "basis": "observed",
+                "source": "history:2-records"
+              },
+              "marginal": {
+                "status": "known",
+                "amount_usd": 0.0005994235,
+                "basis": "observed",
+                "source": "history:2-records"
+              },
+              "market_equivalent": {
+                "status": "known",
+                "amount_usd": 0.0005994235,
+                "basis": "observed",
+                "source": "history:2-records"
+              }
+            },
+            "evidence_basis": "verified-outcome-history",
+            "confidence_method": "90-percent-one-sided-wilson-with-prior-pseudocounts"
+          },
+          "claude-sonnet": {
+            "plan_id": "claude-sonnet",
+            "evidence_records": 2,
+            "decided_records": 2,
+            "passed_records": 0,
+            "posterior_mean": 0.166667,
+            "conservative_probability": 0.03351,
+            "expected_duration_ms": 124518,
+            "costs": {
+              "actual_cash": {
+                "status": "unknown",
+                "amount_usd": null,
+                "basis": "subscription",
+                "source": "subscription-not-allocated-per-operation"
+              },
+              "marginal": {
+                "status": "known",
+                "amount_usd": 0.2932235,
+                "basis": "observed",
+                "source": "history:2-records"
+              },
+              "market_equivalent": {
+                "status": "known",
+                "amount_usd": 0.2932235,
+                "basis": "observed",
+                "source": "history:2-records"
+              }
+            },
+            "evidence_basis": "verified-outcome-history",
+            "confidence_method": "90-percent-one-sided-wilson-with-prior-pseudocounts"
+          }
+        },
+        "decision_digest": "sha256:5c03c2afc0a9ce3d523f367f008a0571c9e6732ea7236e43784150b4052590a8"
+      }
+    },
+    {
+      "schema": 1,
+      "kind": "citadel_public_holdout_fast_pilot_route",
+      "instance_id": "code-yeongyu__oh-my-openagent-3013",
+      "feature_key": "ts.issue-long",
+      "quality_target_source": "direct-Claude conservative probability in the same frozen feature stratum, floored at 0.10",
+      "decision": {
+        "schema": 1,
+        "kind": "citadel_operation_decision",
+        "operation_id": "swe-pilot-8f9b792199acc556fd49",
+        "request_digest": "sha256:7bf6b18b61f60c1c3134ae48979e4e8fdd5c07a1246bc6693b145efea6888b67",
+        "catalog_digest": "sha256:ca695a7f5967ef5000e9367a70daac75708b1de052a8721f51c450374f76297f",
+        "history_digest": "sha256:51f24c2058aee888fd2dae5c6093db5e208acc9d844be758695ac328d3a4c7f1",
+        "selection_status": "best-available",
+        "quality_target": 0.1,
+        "selected": {
+          "root_plan_id": "qwen-3b",
+          "plan_ids": [
+            "qwen-3b",
+            "claude-sonnet"
+          ],
+          "stages": [
+            {
+              "plan_id": "qwen-3b",
+              "reach_probability": 1,
+              "success_probability": 0.03351,
+              "evidence_basis": "verified-outcome-history"
+            },
+            {
+              "plan_id": "claude-sonnet",
+              "reach_probability": 0.96649,
+              "success_probability": 0.03351,
+              "evidence_basis": "verified-outcome-history"
+            }
+          ],
+          "verified_success_probability": 0.065897,
+          "expected_duration_ms": 30179,
+          "maximum_duration_ms": 30432,
+          "expected_costs": {
+            "actual_cash": {
+              "status": "unknown",
+              "amount_usd": null,
+              "unknown_plan_ids": [
+                "claude-sonnet"
+              ]
+            },
+            "marginal": {
+              "status": "known",
+              "amount_usd": 0.070303,
+              "unknown_plan_ids": []
+            },
+            "market_equivalent": {
+              "status": "known",
+              "amount_usd": 0.070303,
+              "unknown_plan_ids": []
+            }
+          },
+          "maximum_costs": {
+            "actual_cash": {
+              "status": "unknown",
+              "amount_usd": null,
+              "unknown_plan_ids": [
+                "claude-sonnet"
+              ]
+            },
+            "marginal": {
+              "status": "known",
+              "amount_usd": 0.072735,
+              "unknown_plan_ids": []
+            },
+            "market_equivalent": {
+              "status": "known",
+              "amount_usd": 0.072735,
+              "unknown_plan_ids": []
+            }
+          },
+          "eligible": true,
+          "reason_codes": []
+        },
+        "candidates": [
+          {
+            "root_plan_id": "qwen-3b",
+            "plan_ids": [
+              "qwen-3b",
+              "claude-sonnet"
+            ],
+            "stages": [
+              {
+                "plan_id": "qwen-3b",
+                "reach_probability": 1,
+                "success_probability": 0.03351,
+                "evidence_basis": "verified-outcome-history"
+              },
+              {
+                "plan_id": "claude-sonnet",
+                "reach_probability": 0.96649,
+                "success_probability": 0.03351,
+                "evidence_basis": "verified-outcome-history"
+              }
+            ],
+            "verified_success_probability": 0.065897,
+            "expected_duration_ms": 30179,
+            "maximum_duration_ms": 30432,
+            "expected_costs": {
+              "actual_cash": {
+                "status": "unknown",
+                "amount_usd": null,
+                "unknown_plan_ids": [
+                  "claude-sonnet"
+                ]
+              },
+              "marginal": {
+                "status": "known",
+                "amount_usd": 0.070303,
+                "unknown_plan_ids": []
+              },
+              "market_equivalent": {
+                "status": "known",
+                "amount_usd": 0.070303,
+                "unknown_plan_ids": []
+              }
+            },
+            "maximum_costs": {
+              "actual_cash": {
+                "status": "unknown",
+                "amount_usd": null,
+                "unknown_plan_ids": [
+                  "claude-sonnet"
+                ]
+              },
+              "marginal": {
+                "status": "known",
+                "amount_usd": 0.072735,
+                "unknown_plan_ids": []
+              },
+              "market_equivalent": {
+                "status": "known",
+                "amount_usd": 0.072735,
+                "unknown_plan_ids": []
+              }
+            },
+            "eligible": true,
+            "reason_codes": []
+          },
+          {
+            "root_plan_id": "claude-sonnet",
+            "plan_ids": [
+              "claude-sonnet"
+            ],
+            "stages": [
+              {
+                "plan_id": "claude-sonnet",
+                "reach_probability": 1,
+                "success_probability": 0.03351,
+                "evidence_basis": "verified-outcome-history"
+              }
+            ],
+            "verified_success_probability": 0.03351,
+            "expected_duration_ms": 7548,
+            "maximum_duration_ms": 7548,
+            "expected_costs": {
+              "actual_cash": {
+                "status": "unknown",
+                "amount_usd": null,
+                "unknown_plan_ids": [
+                  "claude-sonnet"
+                ]
+              },
+              "marginal": {
+                "status": "known",
+                "amount_usd": 0.072552,
+                "unknown_plan_ids": []
+              },
+              "market_equivalent": {
+                "status": "known",
+                "amount_usd": 0.072552,
+                "unknown_plan_ids": []
+              }
+            },
+            "maximum_costs": {
+              "actual_cash": {
+                "status": "unknown",
+                "amount_usd": null,
+                "unknown_plan_ids": [
+                  "claude-sonnet"
+                ]
+              },
+              "marginal": {
+                "status": "known",
+                "amount_usd": 0.072552,
+                "unknown_plan_ids": []
+              },
+              "market_equivalent": {
+                "status": "known",
+                "amount_usd": 0.072552,
+                "unknown_plan_ids": []
+              }
+            },
+            "eligible": true,
+            "reason_codes": []
+          }
+        ],
+        "predictions": {
+          "qwen-3b": {
+            "plan_id": "qwen-3b",
+            "evidence_records": 2,
+            "decided_records": 2,
+            "passed_records": 0,
+            "posterior_mean": 0.166667,
+            "conservative_probability": 0.03351,
+            "expected_duration_ms": 22884,
+            "costs": {
+              "actual_cash": {
+                "status": "known",
+                "amount_usd": 0,
+                "basis": "observed",
+                "source": "history:2-records"
+              },
+              "marginal": {
+                "status": "known",
+                "amount_usd": 0.0001825255,
+                "basis": "observed",
+                "source": "history:2-records"
+              },
+              "market_equivalent": {
+                "status": "known",
+                "amount_usd": 0.0001825255,
+                "basis": "observed",
+                "source": "history:2-records"
+              }
+            },
+            "evidence_basis": "verified-outcome-history",
+            "confidence_method": "90-percent-one-sided-wilson-with-prior-pseudocounts"
+          },
+          "claude-sonnet": {
+            "plan_id": "claude-sonnet",
+            "evidence_records": 2,
+            "decided_records": 2,
+            "passed_records": 0,
+            "posterior_mean": 0.166667,
+            "conservative_probability": 0.03351,
+            "expected_duration_ms": 7547.5,
+            "costs": {
+              "actual_cash": {
+                "status": "unknown",
+                "amount_usd": null,
+                "basis": "subscription",
+                "source": "subscription-not-allocated-per-operation"
+              },
+              "marginal": {
+                "status": "known",
+                "amount_usd": 0.072552,
+                "basis": "observed",
+                "source": "history:2-records"
+              },
+              "market_equivalent": {
+                "status": "known",
+                "amount_usd": 0.072552,
+                "basis": "observed",
+                "source": "history:2-records"
+              }
+            },
+            "evidence_basis": "verified-outcome-history",
+            "confidence_method": "90-percent-one-sided-wilson-with-prior-pseudocounts"
+          }
+        },
+        "decision_digest": "sha256:701c0b0d4dca7096d9162f3c59b46f3a89c464fba5736be95ee4057b9c8b3cc8"
+      }
+    },
+    {
+      "schema": 1,
+      "kind": "citadel_public_holdout_fast_pilot_route",
+      "instance_id": "honojs__hono-4269",
+      "feature_key": "ts.issue-long",
+      "quality_target_source": "direct-Claude conservative probability in the same frozen feature stratum, floored at 0.10",
+      "decision": {
+        "schema": 1,
+        "kind": "citadel_operation_decision",
+        "operation_id": "swe-pilot-9a6fda23059c92d1e175",
+        "request_digest": "sha256:e18e0a77920c7545c6325503c28b0a8a5683c2e39a5bae5e55376b508cab87ad",
+        "catalog_digest": "sha256:ca695a7f5967ef5000e9367a70daac75708b1de052a8721f51c450374f76297f",
+        "history_digest": "sha256:51f24c2058aee888fd2dae5c6093db5e208acc9d844be758695ac328d3a4c7f1",
+        "selection_status": "best-available",
+        "quality_target": 0.1,
+        "selected": {
+          "root_plan_id": "qwen-3b",
+          "plan_ids": [
+            "qwen-3b",
+            "claude-sonnet"
+          ],
+          "stages": [
+            {
+              "plan_id": "qwen-3b",
+              "reach_probability": 1,
+              "success_probability": 0.03351,
+              "evidence_basis": "verified-outcome-history"
+            },
+            {
+              "plan_id": "claude-sonnet",
+              "reach_probability": 0.96649,
+              "success_probability": 0.03351,
+              "evidence_basis": "verified-outcome-history"
+            }
+          ],
+          "verified_success_probability": 0.065897,
+          "expected_duration_ms": 30179,
+          "maximum_duration_ms": 30432,
+          "expected_costs": {
+            "actual_cash": {
+              "status": "unknown",
+              "amount_usd": null,
+              "unknown_plan_ids": [
+                "claude-sonnet"
+              ]
+            },
+            "marginal": {
+              "status": "known",
+              "amount_usd": 0.070303,
+              "unknown_plan_ids": []
+            },
+            "market_equivalent": {
+              "status": "known",
+              "amount_usd": 0.070303,
+              "unknown_plan_ids": []
+            }
+          },
+          "maximum_costs": {
+            "actual_cash": {
+              "status": "unknown",
+              "amount_usd": null,
+              "unknown_plan_ids": [
+                "claude-sonnet"
+              ]
+            },
+            "marginal": {
+              "status": "known",
+              "amount_usd": 0.072735,
+              "unknown_plan_ids": []
+            },
+            "market_equivalent": {
+              "status": "known",
+              "amount_usd": 0.072735,
+              "unknown_plan_ids": []
+            }
+          },
+          "eligible": true,
+          "reason_codes": []
+        },
+        "candidates": [
+          {
+            "root_plan_id": "qwen-3b",
+            "plan_ids": [
+              "qwen-3b",
+              "claude-sonnet"
+            ],
+            "stages": [
+              {
+                "plan_id": "qwen-3b",
+                "reach_probability": 1,
+                "success_probability": 0.03351,
+                "evidence_basis": "verified-outcome-history"
+              },
+              {
+                "plan_id": "claude-sonnet",
+                "reach_probability": 0.96649,
+                "success_probability": 0.03351,
+                "evidence_basis": "verified-outcome-history"
+              }
+            ],
+            "verified_success_probability": 0.065897,
+            "expected_duration_ms": 30179,
+            "maximum_duration_ms": 30432,
+            "expected_costs": {
+              "actual_cash": {
+                "status": "unknown",
+                "amount_usd": null,
+                "unknown_plan_ids": [
+                  "claude-sonnet"
+                ]
+              },
+              "marginal": {
+                "status": "known",
+                "amount_usd": 0.070303,
+                "unknown_plan_ids": []
+              },
+              "market_equivalent": {
+                "status": "known",
+                "amount_usd": 0.070303,
+                "unknown_plan_ids": []
+              }
+            },
+            "maximum_costs": {
+              "actual_cash": {
+                "status": "unknown",
+                "amount_usd": null,
+                "unknown_plan_ids": [
+                  "claude-sonnet"
+                ]
+              },
+              "marginal": {
+                "status": "known",
+                "amount_usd": 0.072735,
+                "unknown_plan_ids": []
+              },
+              "market_equivalent": {
+                "status": "known",
+                "amount_usd": 0.072735,
+                "unknown_plan_ids": []
+              }
+            },
+            "eligible": true,
+            "reason_codes": []
+          },
+          {
+            "root_plan_id": "claude-sonnet",
+            "plan_ids": [
+              "claude-sonnet"
+            ],
+            "stages": [
+              {
+                "plan_id": "claude-sonnet",
+                "reach_probability": 1,
+                "success_probability": 0.03351,
+                "evidence_basis": "verified-outcome-history"
+              }
+            ],
+            "verified_success_probability": 0.03351,
+            "expected_duration_ms": 7548,
+            "maximum_duration_ms": 7548,
+            "expected_costs": {
+              "actual_cash": {
+                "status": "unknown",
+                "amount_usd": null,
+                "unknown_plan_ids": [
+                  "claude-sonnet"
+                ]
+              },
+              "marginal": {
+                "status": "known",
+                "amount_usd": 0.072552,
+                "unknown_plan_ids": []
+              },
+              "market_equivalent": {
+                "status": "known",
+                "amount_usd": 0.072552,
+                "unknown_plan_ids": []
+              }
+            },
+            "maximum_costs": {
+              "actual_cash": {
+                "status": "unknown",
+                "amount_usd": null,
+                "unknown_plan_ids": [
+                  "claude-sonnet"
+                ]
+              },
+              "marginal": {
+                "status": "known",
+                "amount_usd": 0.072552,
+                "unknown_plan_ids": []
+              },
+              "market_equivalent": {
+                "status": "known",
+                "amount_usd": 0.072552,
+                "unknown_plan_ids": []
+              }
+            },
+            "eligible": true,
+            "reason_codes": []
+          }
+        ],
+        "predictions": {
+          "qwen-3b": {
+            "plan_id": "qwen-3b",
+            "evidence_records": 2,
+            "decided_records": 2,
+            "passed_records": 0,
+            "posterior_mean": 0.166667,
+            "conservative_probability": 0.03351,
+            "expected_duration_ms": 22884,
+            "costs": {
+              "actual_cash": {
+                "status": "known",
+                "amount_usd": 0,
+                "basis": "observed",
+                "source": "history:2-records"
+              },
+              "marginal": {
+                "status": "known",
+                "amount_usd": 0.0001825255,
+                "basis": "observed",
+                "source": "history:2-records"
+              },
+              "market_equivalent": {
+                "status": "known",
+                "amount_usd": 0.0001825255,
+                "basis": "observed",
+                "source": "history:2-records"
+              }
+            },
+            "evidence_basis": "verified-outcome-history",
+            "confidence_method": "90-percent-one-sided-wilson-with-prior-pseudocounts"
+          },
+          "claude-sonnet": {
+            "plan_id": "claude-sonnet",
+            "evidence_records": 2,
+            "decided_records": 2,
+            "passed_records": 0,
+            "posterior_mean": 0.166667,
+            "conservative_probability": 0.03351,
+            "expected_duration_ms": 7547.5,
+            "costs": {
+              "actual_cash": {
+                "status": "unknown",
+                "amount_usd": null,
+                "basis": "subscription",
+                "source": "subscription-not-allocated-per-operation"
+              },
+              "marginal": {
+                "status": "known",
+                "amount_usd": 0.072552,
+                "basis": "observed",
+                "source": "history:2-records"
+              },
+              "market_equivalent": {
+                "status": "known",
+                "amount_usd": 0.072552,
+                "basis": "observed",
+                "source": "history:2-records"
+              }
+            },
+            "evidence_basis": "verified-outcome-history",
+            "confidence_method": "90-percent-one-sided-wilson-with-prior-pseudocounts"
+          }
+        },
+        "decision_digest": "sha256:fc51013f747993d6a7444a31cf69386de450ab7440528c429f8e3f8af7523ed7"
+      }
+    },
+    {
+      "schema": 1,
+      "kind": "citadel_public_holdout_fast_pilot_route",
+      "instance_id": "TanStack__router-4611",
+      "feature_key": "ts.issue-long",
+      "quality_target_source": "direct-Claude conservative probability in the same frozen feature stratum, floored at 0.10",
+      "decision": {
+        "schema": 1,
+        "kind": "citadel_operation_decision",
+        "operation_id": "swe-pilot-e7892d8150fd00bfca68",
+        "request_digest": "sha256:22d11b74562b2fb699a9ed1f1b1f391b64027c4eed170f2bdfea3d74ccd89622",
+        "catalog_digest": "sha256:ca695a7f5967ef5000e9367a70daac75708b1de052a8721f51c450374f76297f",
+        "history_digest": "sha256:51f24c2058aee888fd2dae5c6093db5e208acc9d844be758695ac328d3a4c7f1",
+        "selection_status": "best-available",
+        "quality_target": 0.1,
+        "selected": {
+          "root_plan_id": "qwen-3b",
+          "plan_ids": [
+            "qwen-3b",
+            "claude-sonnet"
+          ],
+          "stages": [
+            {
+              "plan_id": "qwen-3b",
+              "reach_probability": 1,
+              "success_probability": 0.03351,
+              "evidence_basis": "verified-outcome-history"
+            },
+            {
+              "plan_id": "claude-sonnet",
+              "reach_probability": 0.96649,
+              "success_probability": 0.03351,
+              "evidence_basis": "verified-outcome-history"
+            }
+          ],
+          "verified_success_probability": 0.065897,
+          "expected_duration_ms": 30179,
+          "maximum_duration_ms": 30432,
+          "expected_costs": {
+            "actual_cash": {
+              "status": "unknown",
+              "amount_usd": null,
+              "unknown_plan_ids": [
+                "claude-sonnet"
+              ]
+            },
+            "marginal": {
+              "status": "known",
+              "amount_usd": 0.070303,
+              "unknown_plan_ids": []
+            },
+            "market_equivalent": {
+              "status": "known",
+              "amount_usd": 0.070303,
+              "unknown_plan_ids": []
+            }
+          },
+          "maximum_costs": {
+            "actual_cash": {
+              "status": "unknown",
+              "amount_usd": null,
+              "unknown_plan_ids": [
+                "claude-sonnet"
+              ]
+            },
+            "marginal": {
+              "status": "known",
+              "amount_usd": 0.072735,
+              "unknown_plan_ids": []
+            },
+            "market_equivalent": {
+              "status": "known",
+              "amount_usd": 0.072735,
+              "unknown_plan_ids": []
+            }
+          },
+          "eligible": true,
+          "reason_codes": []
+        },
+        "candidates": [
+          {
+            "root_plan_id": "qwen-3b",
+            "plan_ids": [
+              "qwen-3b",
+              "claude-sonnet"
+            ],
+            "stages": [
+              {
+                "plan_id": "qwen-3b",
+                "reach_probability": 1,
+                "success_probability": 0.03351,
+                "evidence_basis": "verified-outcome-history"
+              },
+              {
+                "plan_id": "claude-sonnet",
+                "reach_probability": 0.96649,
+                "success_probability": 0.03351,
+                "evidence_basis": "verified-outcome-history"
+              }
+            ],
+            "verified_success_probability": 0.065897,
+            "expected_duration_ms": 30179,
+            "maximum_duration_ms": 30432,
+            "expected_costs": {
+              "actual_cash": {
+                "status": "unknown",
+                "amount_usd": null,
+                "unknown_plan_ids": [
+                  "claude-sonnet"
+                ]
+              },
+              "marginal": {
+                "status": "known",
+                "amount_usd": 0.070303,
+                "unknown_plan_ids": []
+              },
+              "market_equivalent": {
+                "status": "known",
+                "amount_usd": 0.070303,
+                "unknown_plan_ids": []
+              }
+            },
+            "maximum_costs": {
+              "actual_cash": {
+                "status": "unknown",
+                "amount_usd": null,
+                "unknown_plan_ids": [
+                  "claude-sonnet"
+                ]
+              },
+              "marginal": {
+                "status": "known",
+                "amount_usd": 0.072735,
+                "unknown_plan_ids": []
+              },
+              "market_equivalent": {
+                "status": "known",
+                "amount_usd": 0.072735,
+                "unknown_plan_ids": []
+              }
+            },
+            "eligible": true,
+            "reason_codes": []
+          },
+          {
+            "root_plan_id": "claude-sonnet",
+            "plan_ids": [
+              "claude-sonnet"
+            ],
+            "stages": [
+              {
+                "plan_id": "claude-sonnet",
+                "reach_probability": 1,
+                "success_probability": 0.03351,
+                "evidence_basis": "verified-outcome-history"
+              }
+            ],
+            "verified_success_probability": 0.03351,
+            "expected_duration_ms": 7548,
+            "maximum_duration_ms": 7548,
+            "expected_costs": {
+              "actual_cash": {
+                "status": "unknown",
+                "amount_usd": null,
+                "unknown_plan_ids": [
+                  "claude-sonnet"
+                ]
+              },
+              "marginal": {
+                "status": "known",
+                "amount_usd": 0.072552,
+                "unknown_plan_ids": []
+              },
+              "market_equivalent": {
+                "status": "known",
+                "amount_usd": 0.072552,
+                "unknown_plan_ids": []
+              }
+            },
+            "maximum_costs": {
+              "actual_cash": {
+                "status": "unknown",
+                "amount_usd": null,
+                "unknown_plan_ids": [
+                  "claude-sonnet"
+                ]
+              },
+              "marginal": {
+                "status": "known",
+                "amount_usd": 0.072552,
+                "unknown_plan_ids": []
+              },
+              "market_equivalent": {
+                "status": "known",
+                "amount_usd": 0.072552,
+                "unknown_plan_ids": []
+              }
+            },
+            "eligible": true,
+            "reason_codes": []
+          }
+        ],
+        "predictions": {
+          "qwen-3b": {
+            "plan_id": "qwen-3b",
+            "evidence_records": 2,
+            "decided_records": 2,
+            "passed_records": 0,
+            "posterior_mean": 0.166667,
+            "conservative_probability": 0.03351,
+            "expected_duration_ms": 22884,
+            "costs": {
+              "actual_cash": {
+                "status": "known",
+                "amount_usd": 0,
+                "basis": "observed",
+                "source": "history:2-records"
+              },
+              "marginal": {
+                "status": "known",
+                "amount_usd": 0.0001825255,
+                "basis": "observed",
+                "source": "history:2-records"
+              },
+              "market_equivalent": {
+                "status": "known",
+                "amount_usd": 0.0001825255,
+                "basis": "observed",
+                "source": "history:2-records"
+              }
+            },
+            "evidence_basis": "verified-outcome-history",
+            "confidence_method": "90-percent-one-sided-wilson-with-prior-pseudocounts"
+          },
+          "claude-sonnet": {
+            "plan_id": "claude-sonnet",
+            "evidence_records": 2,
+            "decided_records": 2,
+            "passed_records": 0,
+            "posterior_mean": 0.166667,
+            "conservative_probability": 0.03351,
+            "expected_duration_ms": 7547.5,
+            "costs": {
+              "actual_cash": {
+                "status": "unknown",
+                "amount_usd": null,
+                "basis": "subscription",
+                "source": "subscription-not-allocated-per-operation"
+              },
+              "marginal": {
+                "status": "known",
+                "amount_usd": 0.072552,
+                "basis": "observed",
+                "source": "history:2-records"
+              },
+              "market_equivalent": {
+                "status": "known",
+                "amount_usd": 0.072552,
+                "basis": "observed",
+                "source": "history:2-records"
+              }
+            },
+            "evidence_basis": "verified-outcome-history",
+            "confidence_method": "90-percent-one-sided-wilson-with-prior-pseudocounts"
+          }
+        },
+        "decision_digest": "sha256:5575c8271eb97ddedee305cee30d5cc38b137242947310e6b677e319ef021b15"
+      }
+    },
+    {
+      "schema": 1,
+      "kind": "citadel_public_holdout_fast_pilot_route",
+      "instance_id": "openai__openai-agents-js-156",
+      "feature_key": "ts.issue-long",
+      "quality_target_source": "direct-Claude conservative probability in the same frozen feature stratum, floored at 0.10",
+      "decision": {
+        "schema": 1,
+        "kind": "citadel_operation_decision",
+        "operation_id": "swe-pilot-5c20bebd2449c01cfc17",
+        "request_digest": "sha256:7e6398d58aaf244b3ef23ac73d6d384f45291460919a0a68eefd4e1631cfd835",
+        "catalog_digest": "sha256:ca695a7f5967ef5000e9367a70daac75708b1de052a8721f51c450374f76297f",
+        "history_digest": "sha256:51f24c2058aee888fd2dae5c6093db5e208acc9d844be758695ac328d3a4c7f1",
+        "selection_status": "best-available",
+        "quality_target": 0.1,
+        "selected": {
+          "root_plan_id": "qwen-3b",
+          "plan_ids": [
+            "qwen-3b",
+            "claude-sonnet"
+          ],
+          "stages": [
+            {
+              "plan_id": "qwen-3b",
+              "reach_probability": 1,
+              "success_probability": 0.03351,
+              "evidence_basis": "verified-outcome-history"
+            },
+            {
+              "plan_id": "claude-sonnet",
+              "reach_probability": 0.96649,
+              "success_probability": 0.03351,
+              "evidence_basis": "verified-outcome-history"
+            }
+          ],
+          "verified_success_probability": 0.065897,
+          "expected_duration_ms": 30179,
+          "maximum_duration_ms": 30432,
+          "expected_costs": {
+            "actual_cash": {
+              "status": "unknown",
+              "amount_usd": null,
+              "unknown_plan_ids": [
+                "claude-sonnet"
+              ]
+            },
+            "marginal": {
+              "status": "known",
+              "amount_usd": 0.070303,
+              "unknown_plan_ids": []
+            },
+            "market_equivalent": {
+              "status": "known",
+              "amount_usd": 0.070303,
+              "unknown_plan_ids": []
+            }
+          },
+          "maximum_costs": {
+            "actual_cash": {
+              "status": "unknown",
+              "amount_usd": null,
+              "unknown_plan_ids": [
+                "claude-sonnet"
+              ]
+            },
+            "marginal": {
+              "status": "known",
+              "amount_usd": 0.072735,
+              "unknown_plan_ids": []
+            },
+            "market_equivalent": {
+              "status": "known",
+              "amount_usd": 0.072735,
+              "unknown_plan_ids": []
+            }
+          },
+          "eligible": true,
+          "reason_codes": []
+        },
+        "candidates": [
+          {
+            "root_plan_id": "qwen-3b",
+            "plan_ids": [
+              "qwen-3b",
+              "claude-sonnet"
+            ],
+            "stages": [
+              {
+                "plan_id": "qwen-3b",
+                "reach_probability": 1,
+                "success_probability": 0.03351,
+                "evidence_basis": "verified-outcome-history"
+              },
+              {
+                "plan_id": "claude-sonnet",
+                "reach_probability": 0.96649,
+                "success_probability": 0.03351,
+                "evidence_basis": "verified-outcome-history"
+              }
+            ],
+            "verified_success_probability": 0.065897,
+            "expected_duration_ms": 30179,
+            "maximum_duration_ms": 30432,
+            "expected_costs": {
+              "actual_cash": {
+                "status": "unknown",
+                "amount_usd": null,
+                "unknown_plan_ids": [
+                  "claude-sonnet"
+                ]
+              },
+              "marginal": {
+                "status": "known",
+                "amount_usd": 0.070303,
+                "unknown_plan_ids": []
+              },
+              "market_equivalent": {
+                "status": "known",
+                "amount_usd": 0.070303,
+                "unknown_plan_ids": []
+              }
+            },
+            "maximum_costs": {
+              "actual_cash": {
+                "status": "unknown",
+                "amount_usd": null,
+                "unknown_plan_ids": [
+                  "claude-sonnet"
+                ]
+              },
+              "marginal": {
+                "status": "known",
+                "amount_usd": 0.072735,
+                "unknown_plan_ids": []
+              },
+              "market_equivalent": {
+                "status": "known",
+                "amount_usd": 0.072735,
+                "unknown_plan_ids": []
+              }
+            },
+            "eligible": true,
+            "reason_codes": []
+          },
+          {
+            "root_plan_id": "claude-sonnet",
+            "plan_ids": [
+              "claude-sonnet"
+            ],
+            "stages": [
+              {
+                "plan_id": "claude-sonnet",
+                "reach_probability": 1,
+                "success_probability": 0.03351,
+                "evidence_basis": "verified-outcome-history"
+              }
+            ],
+            "verified_success_probability": 0.03351,
+            "expected_duration_ms": 7548,
+            "maximum_duration_ms": 7548,
+            "expected_costs": {
+              "actual_cash": {
+                "status": "unknown",
+                "amount_usd": null,
+                "unknown_plan_ids": [
+                  "claude-sonnet"
+                ]
+              },
+              "marginal": {
+                "status": "known",
+                "amount_usd": 0.072552,
+                "unknown_plan_ids": []
+              },
+              "market_equivalent": {
+                "status": "known",
+                "amount_usd": 0.072552,
+                "unknown_plan_ids": []
+              }
+            },
+            "maximum_costs": {
+              "actual_cash": {
+                "status": "unknown",
+                "amount_usd": null,
+                "unknown_plan_ids": [
+                  "claude-sonnet"
+                ]
+              },
+              "marginal": {
+                "status": "known",
+                "amount_usd": 0.072552,
+                "unknown_plan_ids": []
+              },
+              "market_equivalent": {
+                "status": "known",
+                "amount_usd": 0.072552,
+                "unknown_plan_ids": []
+              }
+            },
+            "eligible": true,
+            "reason_codes": []
+          }
+        ],
+        "predictions": {
+          "qwen-3b": {
+            "plan_id": "qwen-3b",
+            "evidence_records": 2,
+            "decided_records": 2,
+            "passed_records": 0,
+            "posterior_mean": 0.166667,
+            "conservative_probability": 0.03351,
+            "expected_duration_ms": 22884,
+            "costs": {
+              "actual_cash": {
+                "status": "known",
+                "amount_usd": 0,
+                "basis": "observed",
+                "source": "history:2-records"
+              },
+              "marginal": {
+                "status": "known",
+                "amount_usd": 0.0001825255,
+                "basis": "observed",
+                "source": "history:2-records"
+              },
+              "market_equivalent": {
+                "status": "known",
+                "amount_usd": 0.0001825255,
+                "basis": "observed",
+                "source": "history:2-records"
+              }
+            },
+            "evidence_basis": "verified-outcome-history",
+            "confidence_method": "90-percent-one-sided-wilson-with-prior-pseudocounts"
+          },
+          "claude-sonnet": {
+            "plan_id": "claude-sonnet",
+            "evidence_records": 2,
+            "decided_records": 2,
+            "passed_records": 0,
+            "posterior_mean": 0.166667,
+            "conservative_probability": 0.03351,
+            "expected_duration_ms": 7547.5,
+            "costs": {
+              "actual_cash": {
+                "status": "unknown",
+                "amount_usd": null,
+                "basis": "subscription",
+                "source": "subscription-not-allocated-per-operation"
+              },
+              "marginal": {
+                "status": "known",
+                "amount_usd": 0.072552,
+                "basis": "observed",
+                "source": "history:2-records"
+              },
+              "market_equivalent": {
+                "status": "known",
+                "amount_usd": 0.072552,
+                "basis": "observed",
+                "source": "history:2-records"
+              }
+            },
+            "evidence_basis": "verified-outcome-history",
+            "confidence_method": "90-percent-one-sided-wilson-with-prior-pseudocounts"
+          }
+        },
+        "decision_digest": "sha256:6c8aec1f49dbbcb63d46d531f59479db952c8107731aa3ff3e880e38370706af"
+      }
+    }
+  ],
+  "attestation": {
+    "algorithm": "Ed25519",
+    "payload_digest": "sha256:191a9bd15b83a6ef44c8ef2a04cb22a798f28667d6adf3be20ad230782fbda8c",
+    "signature": "aQPx//6P0+0+6wQ5LcTsk3hcojunEB/Yg1DjIz/GamMEiwoQRInm+aCrP27j0z0smbhftSzOgjCDHM5WzJ5eDg=="
+  }
+}
