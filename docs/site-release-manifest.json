@@ -5,7 +5,7 @@
     {
       "path": "404.html",
       "bytes": 1078,
-      "digest": "sha256:dba7effef32735c0a31a549de8f98bdbb6840652bdf4a3ed7b5b34edb62e1063"
+      "digest": "sha256:31b2f1c98da9bb12ba3e41c65b62b913570edb5086574cd2621d967941561252"
     },
     {
       "path": "EVIDENCE_MANIFEST.md",
@@ -69,8 +69,8 @@
     },
     {
       "path": "evidence.html",
-      "bytes": 30047,
-      "digest": "sha256:e7cf6b038fa7af09ff8e3ccac549b0c45ade16e68186c08a179334edc560fabf"
+      "bytes": 30060,
+      "digest": "sha256:46796e7a6b8dbb7dfa2ec41d07fbc9834173e704cccffb5483133a1f3cac6d03"
     },
     {
       "path": "grants/APPLICANT_AND_ADOPTION.md",
@@ -154,23 +154,23 @@
     },
     {
       "path": "index.html",
-      "bytes": 201647,
-      "digest": "sha256:522eddab43be3a811ebd9ba2c32bbb2d159263306842ac7c758c42045d8f6114"
+      "bytes": 202780,
+      "digest": "sha256:a18c3ad5a14f02c07a657e4d86900bc7ce925651dc57c21c2b0d2eb81c5f9627"
     },
     {
       "path": "operation-control.html",
-      "bytes": 26460,
-      "digest": "sha256:e007b5b194ed9fb52ec442366577141b0d02f15c6f987a7380d6879c0d0c6eb2"
+      "bytes": 26473,
+      "digest": "sha256:dd16b178123c8ba738663a657699395a890b44d3b8f22a7f16dc85df895dd782"
     },
     {
       "path": "optimizer.html",
-      "bytes": 33901,
-      "digest": "sha256:5b4aca3deefe108a9dc5459c5fa4deef0a6f0536646382686a2bc000098d0820"
+      "bytes": 33914,
+      "digest": "sha256:2c63cd1f477e967e6686734a673eed51ebee6cc7e63b27ea377599b926603b8b"
     },
     {
       "path": "research.html",
-      "bytes": 19263,
-      "digest": "sha256:01ef1253df0736ea1a9a0463b38c44bdae9fdfa34078e92cdbad57cd9091711c"
+      "bytes": 19274,
+      "digest": "sha256:a7413d7bb98ec76d07b1f5cd7e838e910955d9440f2f9f01f5f78215b0c007e7"
     },
     {
       "path": "robots.txt",
@@ -179,13 +179,13 @@
     },
     {
       "path": "site-system.css",
-      "bytes": 37888,
-      "digest": "sha256:0325358cb2cf243e7aa74d547a779760be07856e63354062eec8e55bcde2b88c"
+      "bytes": 39099,
+      "digest": "sha256:2f7baebf44ac5fdb843b70192a50707cbd35aeba2d37f20d4d6aaf0665aa5a84"
     },
     {
       "path": "site-system.js",
-      "bytes": 1981,
-      "digest": "sha256:bdf7c7ee8e326e3420a53e904fc3c17dc4a7417dd3c4702e0f7d3fd7ce70884a"
+      "bytes": 2400,
+      "digest": "sha256:6a682b2d105cf7d086b10bed63ad24a4405ad2f93c187402dc7cafc368b631bc"
     },
     {
       "path": "site.webmanifest",
@@ -199,9 +199,9 @@
     },
     {
       "path": "walkthrough.html",
-      "bytes": 9620,
-      "digest": "sha256:fcfa572d3523fe0a7ebd391fd0aeb8c6df65ce772f62a1d93de6903fcabf840e"
+      "bytes": 11562,
+      "digest": "sha256:4ade6149f757c62ab3c60a0cce5c72214093bf3f3b214c553c5c44bb48e16495"
     }
   ],
-  "source_digest": "sha256:2d6faa99fb9f0e5beeb39b9e5090a25ecb14d554bf500b0378a67dae1f6223ea"
+  "source_digest": "sha256:47265b4d055d0f2a07322d225c3bc5919de976d26436c167293a7968530b73a4"
 }

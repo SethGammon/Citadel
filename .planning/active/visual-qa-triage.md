@@ -1,5 +1,112 @@
 # Citadel application-readiness visual QA triage
 
+## Final whole-site pass - 2026-08-03
+
+### Summary
+
+- 373 overlapping viewport screenshots reviewed across 7 public pages and 5
+  viewport classes.
+- 5 actionable findings: 1 broken, 1 ugly, 3 polish; all resolved.
+- All other page and viewport combinations retained their current composition.
+
+### BROKEN
+
+#### [SITE-B1] Research hero metrics overflow at 320px
+
+- **Screenshots:** `output/playwright/site-visual-audit/before/research/small-mobile/`
+- **Expected:** the two-column proof strip remains inside the 320px viewport.
+- **Actual:** the right-hand metrics reach 361px inside a 320px viewport.
+- **Root cause:** shared proof-page components inherited content-box sizing, so
+  column padding expanded each nominal grid track beyond its allocation.
+- **Resolution:** border-box sizing and minimum-width containment are now an
+  explicit shared site-page contract. The 320px document is exactly 320px wide.
+
+### UGLY
+
+#### [SITE-U1] Walkthrough transcript becomes a long wall of prose
+
+- **Screenshots:** `walkthrough--tablet.png`, `walkthrough--mobile.png`, and
+  `walkthrough--small-mobile.png` contact sheets.
+- **Expected:** the media remains primary and the complete accessible transcript
+  unfolds when a visitor asks for it.
+- **Actual:** four long paragraphs occupy the final two to five screenfuls; at
+  768px the two-column layout also leaves an unnecessarily narrow reading rail.
+- **Root cause:** the full transcript is permanently expanded and the layout
+  does not collapse until 760px.
+- **Resolution:** retained a visible plain-language introduction and download,
+  then place the complete transcript in a styled native disclosure. Collapse
+  the grid before tablet reading becomes cramped.
+
+### POLISH
+
+#### [SITE-P1] Homepage suppresses the shared custom scrollbar
+
+- **Screenshot:** all Homepage captures.
+- **Expected:** long-form product storytelling uses the same thin cyan-to-blue
+  scrollbar as the rest of the public site.
+- **Actual:** legacy homepage CSS hides scrollbars in Firefox and Chromium.
+- **Root cause:** the original single-screen prototype used an intentionally
+  hidden scrollbar before the page became a native long-form story.
+- **Resolution:** removed the legacy hide rule and let the shared site system
+  own scrollbar appearance.
+
+#### [SITE-P2] Homepage ambient motion persists beyond its purpose
+
+- **Expected:** the interactive field adds life to the product entry, respects
+  reduced motion, and recedes while the visitor reads later proof sections.
+- **Actual:** the canvas requests frames at 60fps and autonomous pulses continue
+  throughout the entire long-form page.
+- **Root cause:** animation behavior remained tuned for the original single
+  viewport prototype.
+- **Resolution:** capped the canvas at 30fps, rendered only once for reduced-motion
+  visitors, confine autonomous pulses to the hero viewport, and run the five
+  routing animations only while their explanatory section is visible.
+
+#### [SITE-P3] Research closing actions read as one run-on link cluster
+
+- **Expected:** the four next steps are distinct, touch-safe actions with a
+  clear primary choice.
+- **Actual:** incomplete `.button` styling leaves inline anchors touching and
+  wrapping like prose at tablet and mobile widths.
+- **Root cause:** the proof-page button skin supplied colors without supplying
+  a complete layout and spacing contract.
+- **Resolution:** completed the button component and gave the action group a
+  wrapping gap, switching to full-width actions on the narrowest viewport.
+
+### Reviewed screenshot matrix
+
+- [x] Homepage: desktop, laptop, tablet, mobile, small mobile
+- [x] Evidence: desktop, laptop, tablet, mobile, small mobile
+- [x] Operation Control: desktop, laptop, tablet, mobile, small mobile
+- [x] Optimizer: desktop, laptop, tablet, mobile, small mobile
+- [x] Research: desktop, laptop, tablet, mobile, small mobile
+- [x] Walkthrough: desktop, laptop, tablet, mobile, small mobile
+- [x] 404: desktop, laptop, tablet, mobile, small mobile
+
+### Preserved strengths
+
+- `/do` remains the dominant first-use story and the four levels remain clear.
+- Evidence-heavy pages are dense but structured, readable, and candid.
+- Sticky navigation does not cover section starts or clip transformed controls.
+- The palette, typography roles, card depth, and proof hierarchy remain coherent.
+- Reduced-motion captures report zero active animations on every tested page.
+
+### Final verification
+
+- [x] 361 fresh after-state viewport screenshots across the same 7 pages and 5
+  viewport classes; the count fell from 373 because the transcript now unfolds
+  on request rather than consuming twelve extra overlapping captures.
+- [x] 35/35 runtime combinations: zero overflow, local console errors, missing
+  focus outlines, or failed mobile-menu/disclosure interactions.
+- [x] 14/14 reduced-motion combinations: zero active animations and zero hidden
+  reveal content.
+- [x] Public story contract: 44/44.
+- [x] Grant verification: 17/17.
+- [x] Full repository test suite: all tests passed.
+- [ ] Hosted post-merge smoke and deployment digest verification.
+
+---
+
 Initial findings were observed against the deployed GitHub Pages site on
 2026-08-01 before application-readiness edits. This file now records their
 local release-candidate disposition; hosted verification remains post-merge.

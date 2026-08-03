@@ -43,9 +43,7 @@
       -webkit-tap-highlight-color: transparent;
     }
 
-    /* Hide scrollbar everywhere */
-    html { scrollbar-width: none; background: var(--bg); }
-    ::-webkit-scrollbar { display: none; }
+    html { background: var(--bg); }
 
     #bg-dots { position: fixed; inset: 0; z-index: -1; pointer-events: none; width: 100%; height: 100%; }
 
@@ -1431,6 +1429,12 @@
     .cascade-connector:last-of-type .cascade-connector-line { animation-delay: 1.4s; }
     .cascade-connector-chevron { animation: conn-flow 2.8s ease-in-out infinite; }
     .cascade-connector:last-of-type .cascade-connector-chevron { animation-delay: 1.4s; }
+    .cascade-section .t0-word,
+    .cascade-section .cascade-connector-line,
+    .cascade-section .cascade-connector-chevron { animation-play-state: paused; }
+    .cascade-section.is-motion-active .t0-word,
+    .cascade-section.is-motion-active .cascade-connector-line,
+    .cascade-section.is-motion-active .cascade-connector-chevron { animation-play-state: running; }
 
     /* ─── prefers-reduced-motion ─── */
     @media (prefers-reduced-motion: reduce) {
@@ -1471,7 +1475,7 @@
       .scroll-cue svg:last-child { display: none; }
     }
   </style>
-  <link rel="stylesheet" href="site-system.css?v=20260801-1" />
+  <link rel="stylesheet" href="site-system.css?v=20260803-1" />
 </head>
 <body class="site-page site-home">
   <a class="site-skip-link" href="#main-content">Skip to content</a>
@@ -3087,10 +3091,24 @@
       // Retained for the router's state transitions; native scroll has no cue state.
     }
 
+    (function initCascadeMotion() {
+      const section = document.querySelector('.cascade-section');
+      if (!section || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+      if (!('IntersectionObserver' in window)) {
+        section.classList.add('is-motion-active');
+        return;
+      }
+      const observer = new IntersectionObserver(([entry]) => {
+        section.classList.toggle('is-motion-active', entry.isIntersecting);
+      }, { threshold: 0.04 });
+      observer.observe(section);
+    })();
+
     // ─── Dot grid background (physics: liquid repulsion + spring) ─────────────
     (function () {
       const canvas = document.getElementById('bg-dots');
       const ctx = canvas.getContext('2d');
+      const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
       const SPACING = 36, BASE_R = 1.2, MAX_R = 2.8;
       const REPEL_DIST = 90, REPEL_STRENGTH = 6;
       const SPRING = 0.045, DAMPING = 0.88;
@@ -3099,7 +3117,7 @@
       const STRIDE = 7;
       let mx = -9999, my = -9999, raf = null, lastTime = 0;
       const pulses = []; // { x, y, r, maxR, speed, type: 'burst'|'ripple', age }
-      const FRAME_MS = 1000 / 60;
+      const FRAME_MS = 1000 / 30;
 
       function resize() {
         W = canvas.width = window.innerWidth;
@@ -3117,7 +3135,7 @@
       }
 
       function draw(now) {
-        raf = requestAnimationFrame(draw);
+        raf = reduceMotion ? null : requestAnimationFrame(draw);
         if (now - lastTime < FRAME_MS) return;
         const dt = Math.min(now - lastTime, 32) / 16;
         lastTime = now;
@@ -3233,6 +3251,7 @@
 
     // ─── Idle placeholder cycling ─────────────────────────────────────────
     (function initPlaceholder() {
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
       const hints = [
         'Type any engineering task…',
         'try: fix the typo on line 42',
@@ -3302,10 +3321,11 @@
 
     // ─── Autonomous background pulses (background agent activity) ─────────
     (function autoPulse() {
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
       let _W = window.innerWidth, _H = window.innerHeight;
       window.addEventListener('resize', () => { _W = window.innerWidth; _H = window.innerHeight; });
       function fire() {
-        if (!document.hidden && window.fireAmbientPulse) {
+        if (!document.hidden && window.scrollY < window.innerHeight * 1.1 && window.fireAmbientPulse) {
           const x = _W * (0.1 + Math.random() * 0.8);
           const y = _H * (0.1 + Math.random() * 0.8);
           window.fireAmbientPulse(x, y);
@@ -3362,6 +3382,6 @@
         .catch(() => {});
     })();
   </script>
-  <script src="site-system.js"></script>
+  <script src="site-system.js?v=20260803-1"></script>
 </body>
 </html>

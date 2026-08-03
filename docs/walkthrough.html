@@ -30,11 +30,21 @@
     .transcript { display: grid; grid-template-columns: minmax(220px, .55fr) minmax(0, 1.45fr); gap: 60px; padding: 82px 0; }
     .transcript h2 { margin: 12px 0; font-size: 42px; letter-spacing: -.045em; }
     .transcript-copy { color: var(--site-muted); font-size: 17px; line-height: 1.75; }
-    .transcript-copy p { margin: 0 0 18px; }
+    .transcript-lede { margin: 0 0 20px; color: var(--site-text); font-size: 19px; line-height: 1.65; }
+    .transcript-disclosure { overflow: hidden; border: 1px solid var(--site-line); border-radius: 16px; background: var(--site-panel); box-shadow: var(--site-inset), 0 14px 34px rgba(0, 8, 27, .2); }
+    .transcript-disclosure summary { display: flex; min-height: 68px; align-items: center; justify-content: space-between; gap: 18px; padding: 18px 20px; color: var(--site-text); cursor: pointer; font-weight: 750; list-style: none; }
+    .transcript-disclosure summary::-webkit-details-marker { display: none; }
+    .transcript-disclosure summary small { color: var(--site-dim); font: 11px/1.4 var(--site-mono); }
+    .transcript-disclosure summary::after { content: "+"; display: grid; flex: 0 0 30px; width: 30px; height: 30px; place-items: center; border: 1px solid var(--site-line-strong); border-radius: 50%; color: var(--site-cyan); font: 700 19px/1 var(--site-mono); }
+    .transcript-disclosure[open] summary { border-bottom: 1px solid var(--site-line); }
+    .transcript-disclosure[open] summary::after { content: "-"; }
+    .transcript-body { padding: 22px 20px 8px; }
+    .transcript-body p { margin: 0 0 18px; }
     .walkthrough-footer { padding: 28px 0 48px; border-top: 1px solid var(--site-line); color: var(--site-dim); font: 12px/1.5 var(--site-mono); }
-    @media (max-width: 760px) { .transcript, .verification-demo header { grid-template-columns: 1fr; gap: 20px; } .walkthrough-hero { padding-top: 64px; } }
+    @media (max-width: 900px) { .transcript, .verification-demo header { grid-template-columns: 1fr; gap: 24px; } .walkthrough-hero { padding-top: 64px; } }
+    @media (max-width: 520px) { .transcript { padding: 64px 0; } .transcript h2 { font-size: 36px; } .transcript-disclosure summary { align-items: flex-start; } .transcript-disclosure summary small { display: none; } }
   </style>
-<link rel="stylesheet" href="site-system.css?v=20260801-1" />
+<link rel="stylesheet" href="site-system.css?v=20260803-1" />
 </head>
 <body class="site-page site-walkthrough">
   <a class="site-skip-link" href="#main-content">Skip to content</a>
@@ -96,14 +106,20 @@
     <section class="transcript">
       <div><div class="site-kicker">Accessible transcript</div><h2>The argument, in plain language.</h2><a class="site-button" href="assets/application/walkthrough-narration.txt">Download text</a></div>
       <div class="transcript-copy">
-        <p>Citadel starts with one command: <code>/do</code>. You describe the engineering outcome, and Citadel chooses the smallest operating lane that can carry it. When work lasts longer, Citadel adds repository state, recovery, coordination, bounded execution, and a concrete next action around Claude Code or Codex.</p>
-        <p>The research question begins where ordinary orchestration ends. A smaller model is not cheaper if its answer fails, the verifier forces a retry, or the operation hides part of its cost. Citadel binds the declared route to observed execution, a verdict outside the routed model, cost lenses, and a signed receipt.</p>
-        <p>Earlier prospective studies tested that contract. Three local calibrations failed or missed their gates and remain public. A first Claude-plus-local policy preserved 12/12 outcomes but reduced comparison cost only 28.4%, missing its frozen 30% gate. A separately frozen hybrid v2 used twelve new synthetic tasks, preserved 12/12 outcomes for both policies, reduced Claude calls from twelve to five, and reduced comparison cost 38.7% with every frozen gate passed.</p>
-        <p>The later public holdout is the current result. It used 24 distinct outside-authored repositories, sealed sixteen evaluation routes before model calls, and published all 32 official verdicts. Direct Claude verified 2/16 and the controller 3/16 at 1.26% lower comparison cost. Because the baseline passed only 12.5%, Citadel does not call that useful quality preservation or savings. Sentient funding buys the retrieval, edit protocol, valid baseline, broader stacks, models, tools, hardware, complete cost, and learned operation-value policy still missing. The public gate remains at least 80% absolute verified completion, at least 95% of a valid frontier baseline, and at least 30% lower measured end-to-end cost; frontier must first clear 80% overall and 70% in every frozen task stratum.</p>
+        <p class="transcript-lede">Citadel starts with <code>/do</code>, then adds durable operation control only when the work needs it. The research case asks whether the complete operation—not merely one model call—can be made cheaper without hiding failure.</p>
+        <details class="transcript-disclosure">
+          <summary><span>Read the complete transcript</span><small>Four parts · about two minutes</small></summary>
+          <div class="transcript-body">
+            <p>Citadel starts with one command: <code>/do</code>. You describe the engineering outcome, and Citadel chooses the smallest operating lane that can carry it. When work lasts longer, Citadel adds repository state, recovery, coordination, bounded execution, and a concrete next action around Claude Code or Codex.</p>
+            <p>The research question begins where ordinary orchestration ends. A smaller model is not cheaper if its answer fails, the verifier forces a retry, or the operation hides part of its cost. Citadel binds the declared route to observed execution, a verdict outside the routed model, cost lenses, and a signed receipt.</p>
+            <p>Earlier prospective studies tested that contract. Three local calibrations failed or missed their gates and remain public. A first Claude-plus-local policy preserved 12/12 outcomes but reduced comparison cost only 28.4%, missing its frozen 30% gate. A separately frozen hybrid v2 used twelve new synthetic tasks, preserved 12/12 outcomes for both policies, reduced Claude calls from twelve to five, and reduced comparison cost 38.7% with every frozen gate passed.</p>
+            <p>The later public holdout is the current result. It used 24 distinct outside-authored repositories, sealed sixteen evaluation routes before model calls, and published all 32 official verdicts. Direct Claude verified 2/16 and the controller 3/16 at 1.26% lower comparison cost. Because the baseline passed only 12.5%, Citadel does not call that useful quality preservation or savings. Sentient funding buys the retrieval, edit protocol, valid baseline, broader stacks, models, tools, hardware, complete cost, and learned operation-value policy still missing. The public gate remains at least 80% absolute verified completion, at least 95% of a valid frontier baseline, and at least 30% lower measured end-to-end cost; frontier must first clear 80% overall and 70% in every frozen task stratum.</p>
+          </div>
+        </details>
       </div>
     </section>
   </main>
   <footer class="walkthrough-shell walkthrough-footer">Synthetic narration is disclosed · source transcript and rebuild script are committed · evidence is reproducible outside the routed models.</footer>
-  <script src="site-system.js"></script>
+  <script src="site-system.js?v=20260803-1"></script>
 </body>
 </html>

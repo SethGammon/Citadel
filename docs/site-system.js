@@ -4,6 +4,12 @@
   const toggle = document.querySelector('[data-site-nav-toggle]');
   const mobile = document.querySelector('[data-site-nav-mobile]');
   if (toggle && mobile) {
+    const closeMobile = (restoreFocus = false) => {
+      toggle.setAttribute('aria-expanded', 'false');
+      toggle.textContent = 'Menu';
+      mobile.hidden = true;
+      if (restoreFocus) toggle.focus();
+    };
     toggle.addEventListener('click', () => {
       const open = toggle.getAttribute('aria-expanded') === 'true';
       toggle.setAttribute('aria-expanded', String(!open));
@@ -11,10 +17,14 @@
       toggle.textContent = open ? 'Menu' : 'Close';
     });
     mobile.querySelectorAll('a, button').forEach((control) => control.addEventListener('click', () => {
-      toggle.setAttribute('aria-expanded', 'false');
-      toggle.textContent = 'Menu';
-      mobile.hidden = true;
+      closeMobile();
     }));
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape' && toggle.getAttribute('aria-expanded') === 'true') closeMobile(true);
+    });
+    window.matchMedia('(min-width: 1081px)').addEventListener('change', (event) => {
+      if (event.matches) closeMobile();
+    });
   }
 
   const progress = document.querySelector('.site-scroll-progress span');
