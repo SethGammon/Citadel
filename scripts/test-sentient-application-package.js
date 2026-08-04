@@ -27,14 +27,15 @@ const formCheck = fs.readFileSync(formCheckFile, 'utf8');
 const pdf = fs.readFileSync(pdfFile);
 const packageJson = JSON.parse(fs.readFileSync(packageFile, 'utf8'));
 
-const oneLine = 'An open control layer that proves whether AI agents finished and what it cost.';
+const oneLine = 'An open layer that finds the cheapest verified path through any agent stack.';
 assert.ok(oneLine.length <= 80, `one-line answer exceeds Typeform limit: ${oneLine.length}`);
 assert.match(answers, new RegExp(`Character count: ${oneLine.length} of 80\\.`));
 assert.ok(answers.includes(`\`${oneLine}\``), 'one-line answer and recorded count drifted');
 
-for (const placeholder of ['[SETH EMAIL]', '[CITY, COUNTRY]']) {
+for (const placeholder of ['[CITY, COUNTRY]']) {
   assert.ok(answers.includes(placeholder), `missing human-owned placeholder: ${placeholder}`);
 }
+assert.match(answers, /seth@softwareshaped\.com/);
 assert.ok(!answers.includes('[HOW SETH HEARD ABOUT SENTIENT]'), 'Grant path must not require the skipped how-heard field');
 assert.match(answers, /jumps from the required supporting-document upload\s+directly to the thank-you screen/i);
 assert.match(readiness, /Grant-branch logic jumps from the supporting\s+document field to the grant thank-you screen/i);

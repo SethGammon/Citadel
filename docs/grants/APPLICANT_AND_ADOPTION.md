@@ -12,9 +12,9 @@ Observed 2026-08-03:
 - Current maintainer model: one maintainer and release authority, disclosed as
   a bus-factor risk rather than presented as a team.
 - License: MIT.
-- Public repository metrics: **809 stars, 80 forks, and 538 commits** reachable
-  from `main`. Of those commits, 514 are attributed to Seth's Git identity and
-  374 are non-merge commits attributed to that identity. These are delivery and
+- Public repository metrics: **809 stars, 80 forks, and 542 commits** reachable
+  from `main`. Of those commits, 518 are attributed to Seth's Git identity and
+  377 are non-merge commits attributed to that identity. These are delivery and
   repository-history signals, not manually typed code, active users, successful
   installations, retention, or revenue.
 - Owner-visible GitHub traffic for 2026-07-18 through 2026-07-31 reported 1,237
@@ -25,6 +25,12 @@ Observed 2026-08-03:
   on 2026-03-20. The current evidence package includes frozen methods, signed
   raw cells, negative reports, adapters, hosted verification, and an evaluator
   index rather than screenshots alone.
+- Applicant contact is `seth@softwareshaped.com`. Public DNS exposes Cloudflare
+  inbound routing plus SPF and DMARC records; a private delivery ledger retains
+  the 2026-08-03 inbound, sender-verification, and outbound-delivery receipts.
+- `https://softwareshaped.com/` is live as Seth's independent research and
+  software lab and publishes Citadel among its evidence-bounded case studies.
+  It is founder-context evidence, not Citadel adoption or optimizer evidence.
 
 Do not reuse an earlier claim of weekly installs unless a dated source and
 measurement definition are attached. GitHub stars must never be converted into
@@ -61,7 +67,9 @@ performance gate.
 
 ## Applicant facts and later due diligence
 
-- The live application requires applicant email and city/country.
+- The live application requires applicant email and city/country. The current
+  values are resolved in the private final payload; the public pack masks the
+  location while using the public business email.
 - Legal recipient type, tax status, and payment details were not requested on
   the observed Typeform path, but may be required during later due diligence.
 - Nine-month availability should be confirmed before accepting any award.

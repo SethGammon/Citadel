@@ -37,7 +37,7 @@ compress the research story into fast terminal noise.
 
 ## 1:40-1:50 — Delivery record
 
-- Show the dated repository evidence: 520 main-branch commits, 496 attributed
+- Show the dated repository evidence: 542 main-branch commits, 518 attributed
   to Seth's Git identity, 809 stars, 80 forks, and 524 unique cloners in the
   latest owner-visible 14-day window.
 - Caption: **Funding scales a shipped public substrate, not a first prototype.**

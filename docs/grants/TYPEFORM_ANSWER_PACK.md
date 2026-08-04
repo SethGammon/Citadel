@@ -11,20 +11,20 @@ from applicant facts that Seth must confirm before submission.
 
 | Live field | Paste-ready value | Status |
 |---|---|---|
-| Email | `[SETH EMAIL]` | Seth confirmation required |
-| Role | `Engineer / Builder` | Recommended selection |
-| City, country | `[CITY, COUNTRY]` | Seth confirmation required |
+| Email | `seth@softwareshaped.com` | Verified business sender and inbound route on 2026-08-03 |
+| Role | `Engineer / Builder` | Approved selection |
+| City, country | `[CITY, COUNTRY]` | Resolved in the private final payload; intentionally masked here |
 
 ## Project fields
 
 ### What problem are you solving, and why now?
 
-AI-agent optimization is usually measured at the model-call level even though
-cost and failure happen across the whole operation: decomposition, models,
-tools, retries, context, verification, recovery, and human intervention. That
-creates two failures. A system can look cheap while wasting work elsewhere, and
-it can claim success without proving that the declared route ran or that a
-verifier outside the routed model accepted the artifact.
+Sentient's request names the target: a layer that finds the cheapest path
+through models, tools, and calls on any agent stack. The unsolved problem is
+that model-call optimization can look cheaper while the operation fails or
+shifts cost into decomposition, retries, tools, context, verification,
+recovery, and human intervention. Citadel treats the externally verified
+operation, not the isolated call, as the economic unit.
 
 This matters now because coding agents are becoming persistent, multi-model,
 and recursive. Open stacks such as Sentient ROMA make whole-operation control
@@ -64,17 +64,17 @@ the funded evaluation reach the published gates.
 
 ### In one line, what are you building?
 
-`An open control layer that proves whether AI agents finished and what it cost.`
+`An open layer that finds the cheapest verified path through any agent stack.`
 
-Character count: 78 of 80.
+Character count: 76 of 80.
 
 ### Who is building this, and why is the team right?
 
 Seth Gammon is Citadel's solo builder and maintainer. He has taken it from a
 working Claude Code harness into an MIT-licensed operating and evidence layer
 for Claude Code, Codex, local Ollama models, and a pinned Sentient ROMA binding.
-In 136 public days it reached 809 stars and 80 forks; 514 of 538 main-branch
-commits are attributed to Seth's Git identity, including 374 non-merge commits.
+In 136 public days it reached 809 stars and 80 forks; 518 of 542 main-branch
+commits are attributed to Seth's Git identity, including 377 non-merge commits.
 GitHub's latest owner-visible 14-day window reported 524 unique cloners. Those
 are delivery and continuing-interest signals, not users or installations. The
 stronger qualification is what shipped: preregistered methods, signed actual-run
@@ -83,7 +83,9 @@ and negative findings preserved instead of marketed away. The latest public
 holdout published 32 official verdicts across 16 untouched evaluation tasks and
 then rejected its own positive sample rule because the direct-Claude baseline
 passed only 2/16. Funding scales a working, self-falsifying substrate; it does
-not fund the first prototype or conceal the hardest result.
+not fund the first prototype or conceal the hardest result. Seth also publishes
+the method, case studies, and limits through his live independent lab at
+`https://softwareshaped.com/`.
 
 Observation boundary: GitHub counts checked on 2026-08-03. Refresh immediately
 before submission.
@@ -160,11 +162,11 @@ failure analysis, and unused-funds accounting remain public deliverables.
 
 ## Final human confirmations
 
-- [ ] Confirm applicant email.
-- [ ] Confirm city and country.
-- [ ] Confirm `Engineer / Builder` as the role selection.
-- [ ] Approve the final $150,000 amount.
-- [ ] Approve this wording and the rendered PDF.
+- [x] Applicant email verified and refreshed.
+- [x] City and country resolved in the private final payload.
+- [x] `Engineer / Builder` confirmed as the role selection.
+- [x] Final $150,000 amount approved.
+- [ ] Approve this refreshed wording and rendered PDF after the final audit.
 - [ ] Explicitly authorize submission of the external Typeform.
 
 No form has been submitted by preparing this file.

@@ -36,7 +36,7 @@ const FORBIDDEN = [
   [/5\s*\/\s*5\s+passed/gi, 'Fresh-clone stages completed; doctor semantic health is unknown.'],
   [/independent(?:ly)?\s+(?:verifier|verified|graded)/gi, 'Say model-external or verifier outside the routed model.'],
   [/citadel improved this result/gi, 'V1 apparent savings reverse under matched-timeout sensitivity.'],
-  [/510\s+(?:repository\s+)?commits/gi, 'The merged main branch contains 538 commits.'],
+  [/510\s+(?:repository\s+)?commits/gi, 'The merged main branch contains 542 commits.'],
 ];
 
 const failures = [];
@@ -106,7 +106,7 @@ for (const relative of [
   'docs/grants/TYPEFORM_ANSWER_PACK.md',
 ]) {
   const value = fs.readFileSync(path.join(ROOT, relative), 'utf8');
-  assert.match(value, /538\s+commits|514\s+of\s+538\s+main-branch\s+commits/i, `${relative}: missing current main-branch delivery count`);
+  assert.match(value, /542\s+commits|518\s+of\s+542\s+main-branch\s+commits/i, `${relative}: missing current main-branch delivery count`);
   assert.match(value, /524 unique cloners/i, `${relative}: missing qualified 14-day clone signal`);
   assert.match(value, /not\s+(?:users|installation|installations)|not\s+manually\s+typed\s+code/i, `${relative}: missing interest-signal boundary`);
 }

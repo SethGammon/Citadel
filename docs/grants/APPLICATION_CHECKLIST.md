@@ -63,8 +63,8 @@ page titles, images, and application media.
 
 ## Submission authority
 
-- [ ] Seth approves the final `$150,000` amount.
-- [ ] Seth approves the final application wording.
+- [x] Seth approved the final `$150,000` amount.
+- [ ] Seth approves the refreshed application wording and regenerated PDF.
 - [ ] Seth explicitly approves submitting the external form.
 
 No outside reviewer, pre-submission outreach campaign, sponsor, recruited

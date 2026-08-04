@@ -50,8 +50,8 @@ The mandatory supporting document is ready at:
 
 - format: PDF, 16:9 landscape;
 - pages: 8;
-- size: 537,507 bytes;
-- SHA-256: `2f81f966bee724325e68fa068cabcdc02826378cbddf34e2319797e8c3240e44`;
+- size: 537,550 bytes;
+- SHA-256: `27af2246100eab7e3ab13db6f6c7c32f9192c55936ab67c868fc821e534cee3f`;
 - source renderer: `scripts/render-sentient-grant-packet.py`;
 - visual QA: all eight pages rendered to PNG and inspected at 96 DPI, the
   normal-viewer scale that exposed the original legibility problem;
@@ -121,8 +121,8 @@ dollar-for-dollar and unused funds remain unspent.
   controller verified 3/16 at 1.26% lower comparison cost. Direct Claude passed
   only 12.5% overall and 0% in three strata, so no general quality-preservation
   or savings claim is allowed.
-- GitHub showed 809 stars, 80 forks, and 538 commits reachable from `main` on
-  2026-08-03. Of those, 514 were attributed to Seth's Git identity and 374 were
+- GitHub showed 809 stars, 80 forks, and 542 commits reachable from `main` on
+  2026-08-03. Of those, 518 were attributed to Seth's Git identity and 377 were
   non-merge commits attributed to that identity. Owner-visible traffic for
   2026-07-18 through 2026-07-31 reported 524 unique cloners and 380 unique
   visitors. These are dated delivery and interest signals, not manually typed
@@ -153,15 +153,25 @@ frontier baseline higher priorities. Free-GPU work is useful only if obtained
 at zero cost and published under a frozen method. It is not a submission blocker
 and cannot establish savings or generalization by itself.
 
-## Human-owned final values
+## Founder and contact refresh
 
-Only four factual or authority inputs remain outside the repository:
+- Applicant email is `seth@softwareshaped.com`, with inbound routing,
+  authenticated outbound sending, and an end-to-end delivered test retained in
+  the private Opportunity OS receipt ledger on 2026-08-03.
+- City and country are resolved in the private final payload and remain masked
+  in this public repository.
+- `Engineer / Builder` and the $150,000 over nine months request remain the
+  approved selections.
+- Software Shaped is live at `https://softwareshaped.com/` with a public
+  partnership route and `hello@softwareshaped.com`. It supports founder and
+  communication credibility; it is not used as Citadel technical or adoption
+  evidence.
+- Career OS and Opportunity OS are current private delivery systems. They are
+  intentionally excluded from the public technical case because no public
+  evaluator surface supports them and they do not prove Citadel's optimizer.
 
-- [ ] applicant email;
-- [ ] city and country;
-- [ ] confirmation that `Engineer / Builder` is the correct role selection;
-- [ ] Seth's explicit approval of the amount, wording, upload, and external
-  submission.
+The remaining human authority gates are approval of the refreshed exact wording
+and PDF, followed by explicit authorization of the external submission.
 
 No outside reviewer, sponsor, operator outreach, external task selector, or
 recruited cohort is required or promised. Funded onboarding proof uses clean
@@ -170,7 +180,7 @@ a written scope and budget amendment.
 
 ## Final submission sequence
 
-1. Confirm the two applicant facts and role selection above.
+1. Review and approve the refreshed answer pack and rendered PDF.
 2. Run `npm run application:form:check` to reject live field, option, or branch
    drift.
 3. Refresh the dated GitHub counts or remove them if they cannot be verified.

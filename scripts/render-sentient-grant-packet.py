@@ -347,7 +347,7 @@ def slide_5(pdf: canvas.Canvas) -> None:
     text_block(pdf, "Citadel is a public system with continuing repository pull, not a grant-funded mockup.", MARGIN, 348, 800, 14, 19, MUTED)
 
     metric(pdf, 72, 300, 155, "136", "days public", GREEN)
-    metric(pdf, 270, 300, 175, "514 / 538", "main commits attributed to Seth", CYAN)
+    metric(pdf, 270, 300, 175, "518 / 542", "main commits attributed to Seth", CYAN)
     metric(pdf, 500, 300, 155, "809 / 80", "stars / forks", BLUE)
     metric(pdf, 714, 300, 175, "524", "unique cloners in 14 days", VIOLET)
 
@@ -465,8 +465,10 @@ def slide_8(pdf: canvas.Canvas) -> None:
     pdf.setFont(FONT_BOLD, 16.5)
     pdf.drawString(88, 122, "Seth Gammon - solo builder and maintainer")
     pdf.setFillColor(HexColor("#D8E5EA"))
-    pdf.setFont(FONT, 10.8)
-    pdf.drawString(88, 98, "Evaluator: github.com/SethGammon/Citadel/blob/main/docs/grants/EVALUATOR_START_HERE.md")
+    pdf.setFont(FONT, 10.3)
+    pdf.drawString(88, 99, "seth@softwareshaped.com  |  softwareshaped.com")
+    pdf.setFont(FONT, 8.8)
+    pdf.drawString(88, 84, "Evidence: github.com/SethGammon/Citadel/blob/main/docs/grants/EVALUATOR_START_HERE.md")
     pdf.setFillColor(HexColor("#83E0E8"))
     pdf.setFont(FONT_BOLD, 11)
     pdf.drawRightString(872, 121, "OPEN. VERIFIABLE. FALSIFIABLE.")

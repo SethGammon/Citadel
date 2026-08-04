@@ -608,8 +608,8 @@ Those are the exact uncertainties the funded milestones address.
 ## Applicant and adoption evidence
 
 SethGammon owns and maintains the public MIT repository. On 2026-08-03 it had
-809 stars, 80 forks, and 538 commits reachable from `main`; 514 were attributed
-to Seth's Git identity and 374 were non-merge commits attributed to that
+809 stars, 80 forks, and 542 commits reachable from `main`; 518 were attributed
+to Seth's Git identity and 377 were non-merge commits attributed to that
 identity. GitHub's owner-visible 14-day traffic reported 524 unique cloners and
 380 unique visitors. Those are delivery and interest signals, not manually
 typed code, users, installations, adoption, or economic impact. The adoption
