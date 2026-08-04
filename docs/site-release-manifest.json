@@ -74,13 +74,13 @@
     },
     {
       "path": "grants/APPLICANT_AND_ADOPTION.md",
-      "bytes": 3800,
-      "digest": "sha256:e839269a11381058ca1347afdab79d96d94f8141db7135bda8893a8506c74453"
+      "bytes": 4410,
+      "digest": "sha256:a02ef04e3e43e6170e4424b1dddff7bb5952540c8987feddd57042d48d40db84"
     },
     {
       "path": "grants/APPLICATION_CHECKLIST.md",
-      "bytes": 4682,
-      "digest": "sha256:bc21efc55fe11262e074e4977145405f9fb51ce16504c4fc69a60164193c09d3"
+      "bytes": 4706,
+      "digest": "sha256:e97628a986ad72fbc6bff2b494e147e350197b8b3dd15577a41abbae56400693"
     },
     {
       "path": "grants/APPLICATION_MEDIA.md",
@@ -95,7 +95,7 @@
     {
       "path": "grants/DEMO_SCRIPT.md",
       "bytes": 2396,
-      "digest": "sha256:54a866fa7903ad6e990bdecf3ec0c59b45c181131671baa4f5133195d51a2399"
+      "digest": "sha256:3b35dbf279a197ba82f75429e4bfd17fd71eca7362e5764fc15e6b5174f30c2f"
     },
     {
       "path": "grants/EVALUATOR_START_HERE.md",
@@ -105,7 +105,7 @@
     {
       "path": "grants/GITHUB_DELIVERY_EVIDENCE.md",
       "bytes": 2738,
-      "digest": "sha256:5fe69371bcd5dde1afb7e57eeb082305d5b3b93ea0b0c74f837f1522859ae70a"
+      "digest": "sha256:58a94902fd8d9a8978fec6ee320013516a1e36ed53341b301c43f4f21e7f4657"
     },
     {
       "path": "grants/MILESTONES_AND_BUDGET.md",
@@ -135,12 +135,12 @@
     {
       "path": "grants/SENTIENT_OPTIMIZER_APPLICATION_DRAFT.md",
       "bytes": 32670,
-      "digest": "sha256:7b48c499aac6c3460b3acdb36503850cec8a2f18e1ef6edde658e89aa11fd297"
+      "digest": "sha256:1b70440b0e08720cb6f48e2e38f4620c7b03b9dc428466802a0a6213b9c629cc"
     },
     {
       "path": "grants/SUBMISSION_READINESS.md",
-      "bytes": 9014,
-      "digest": "sha256:cfa55b72a229eb872c11eb1d44092b8888fa8e8d6396bfc532ee03032cf0045a"
+      "bytes": 9774,
+      "digest": "sha256:c10354c648e745a9285e189b238d7f9eea4030ee44cc291061062b6322e21fa3"
     },
     {
       "path": "grants/TECHNICAL_COMPARISON.md",
@@ -149,8 +149,8 @@
     },
     {
       "path": "grants/TYPEFORM_ANSWER_PACK.md",
-      "bytes": 8909,
-      "digest": "sha256:e694d059a8d17d4ce1e69e76221f568322ef45bd8993d83edf708ba40161e8ce"
+      "bytes": 9162,
+      "digest": "sha256:c0efa3a4ea5bb25b732ad533094bef67dd1e4217b38c88690e8473fc2ffbe53c"
     },
     {
       "path": "index.html",
@@ -203,5 +203,5 @@
       "digest": "sha256:4ade6149f757c62ab3c60a0cce5c72214093bf3f3b214c553c5c44bb48e16495"
     }
   ],
-  "source_digest": "sha256:47265b4d055d0f2a07322d225c3bc5919de976d26436c167293a7968530b73a4"
+  "source_digest": "sha256:045fd6f58d6f35c24529f580470d427be162d8ee03672b54ac90973516b003de"
 }
