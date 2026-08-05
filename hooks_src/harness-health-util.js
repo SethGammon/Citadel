@@ -475,6 +475,24 @@ function _validateInput(value, label, regex) {
 function validatePath(filePath) { return _validateInput(filePath, 'path', PATH_META_RE); }
 function validateCommand(command) { return _validateInput(command, 'command', CMD_META_RE); }
 
+// Resolve filesystem identity through the nearest existing ancestor. This
+// keeps containment checks correct when the project root is reached through a
+// platform alias such as macOS /var -> /private/var, and it also exposes an
+// existing symlink or junction that points outside the declared root.
+function canonicalizePath(candidate) {
+  let cursor = path.resolve(candidate);
+  const missing = [];
+  while (!fs.existsSync(cursor)) {
+    const parent = path.dirname(cursor);
+    if (parent === cursor) break;
+    missing.unshift(path.basename(cursor));
+    cursor = parent;
+  }
+  const realpath = fs.realpathSync.native || fs.realpathSync;
+  const canonicalBase = fs.existsSync(cursor) ? realpath(cursor) : cursor;
+  return path.resolve(canonicalBase, ...missing);
+}
+
 function securityWarning(hook, message) {
   const msg = `[SECURITY] ${hook}: ${message}\n`;
   if (process.env.CITADEL_UI === 'true') {
@@ -741,6 +759,7 @@ module.exports = {
   getTypecheckConfig,
   validatePath,
   validateCommand,
+  canonicalizePath,
   securityWarning,
   readConsent,
   writeConsent,

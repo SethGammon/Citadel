@@ -1,0 +1,34 @@
+{
+  "schema": 1,
+  "experiment_id": "deploy-steward-live-github-ab",
+  "arms": ["control", "treatment"],
+  "prs_per_arm": 15,
+  "visibility": "public",
+  "required_check": "verify",
+  "branch_protection": {
+    "strict": true,
+    "enforce_admins": true,
+    "required_linear_history": true,
+    "required_conversation_resolution": true
+  },
+  "control": "concurrent independent merge-and-deploy loops",
+  "treatment": "single leased AGENTS.md deploy steward",
+  "deployment_environment": "citadel-proof",
+  "evidence_boundary": "GitHub Deployment records and success statuses are simulated deployment evidence, not a real production deploy.",
+  "required_evidence": [
+    "branch-protection-readback",
+    "github-actions-check-runs",
+    "pull-request-merge-shas",
+    "github-deployments-by-merge-sha",
+    "race-stale-intervention-telemetry"
+  ],
+  "success": {
+    "prs_per_arm": 15,
+    "merged_per_arm": 15,
+    "successful_deployments_per_merge_sha": 1,
+    "treatment_duplicate_deployments": 0,
+    "treatment_repairs": 0,
+    "treatment_race_attempts_less_than_control": true,
+    "treatment_interventions_not_greater_than_control": true
+  }
+}

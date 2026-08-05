@@ -10,6 +10,14 @@ const path = require('path');
 const proof = require('../core/product-proof');
 const cli = require('./product-proof-trial');
 
+const EXPERIMENT_MANIFEST = path.join(
+  __dirname,
+  '..',
+  'benchmarks',
+  'citadel-proof-experiments',
+  'experiment-manifest.json',
+);
+
 let passed = 0;
 function test(name, fn) {
   try {
@@ -318,26 +326,78 @@ test('local store persists exact records and explicit purge removes only v2 stor
   assert.equal(fs.readFileSync(path.join(root, '.planning', 'keep-me', 'user.txt'), 'utf8'), 'preserve');
 });
 
+test('CLI rejects unknown options and hash-binds the experiment manifest', () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'citadel-proof-binding-'));
+  const specFile = path.join(root, 'spec.json');
+  const manifestFile = path.join(root, 'experiment-manifest.json');
+  fs.writeFileSync(specFile, JSON.stringify(spec()));
+  fs.copyFileSync(EXPERIMENT_MANIFEST, manifestFile);
+
+  assert.throws(
+    () => cli.run(['plan', '--spec', specFile, '--experiment-manifest', manifestFile, '--surprise']),
+    /unknown option: --surprise/,
+  );
+  const planned = cli.run([
+    'plan', '--spec', specFile, '--experiment-manifest', manifestFile, '--root', root,
+  ], capture());
+  assert.equal(planned.experiment_manifest_binding.experiment_id, 'real-user-proof-v2');
+  cli.run(['start', '--spec', specFile, '--experiment-manifest', manifestFile, '--root', root], capture());
+
+  assert.throws(() => cli.run(['report', '--root', root], capture()), /--experiment-manifest is required/);
+  const tampered = JSON.parse(fs.readFileSync(manifestFile, 'utf8'));
+  tampered.created_at = '2026-08-04T00:00:01.000Z';
+  fs.writeFileSync(manifestFile, JSON.stringify(tampered));
+  assert.throws(
+    () => cli.run(['report', '--root', root, '--experiment-manifest', manifestFile], capture()),
+    /manifest binding mismatch/,
+  );
+});
+
 test('CLI plan is non-mutating and full local lifecycle makes no network request', () => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'citadel-proof-cli-'));
   const specFile = path.join(root, 'spec.json');
   const recordFile = path.join(root, 'record.json');
   fs.writeFileSync(specFile, JSON.stringify(spec()));
   let output = capture();
-  const planned = cli.run(['plan', '--spec', specFile, '--root', root], output);
+  const planned = cli.run([
+    'plan', '--spec', specFile, '--experiment-manifest', EXPERIMENT_MANIFEST, '--root', root,
+  ], output);
   assert.equal(planned.wrote_files, false);
   assert.equal(fs.existsSync(path.join(root, '.planning')), false);
 
   output = capture();
-  cli.run(['start', '--spec', specFile, '--root', root], output);
+  cli.run([
+    'start', '--spec', specFile, '--experiment-manifest', EXPERIMENT_MANIFEST, '--root', root,
+  ], output);
   const store = proof.loadStore(root);
   fs.writeFileSync(recordFile, JSON.stringify(scoreFor(store.assignments[0])));
-  cli.run(['record', '--input', recordFile, '--root', root], capture());
-  const report = cli.run(['report', '--root', root], capture());
+  cli.run([
+    'record', '--input', recordFile, '--experiment-manifest', EXPERIMENT_MANIFEST, '--root', root,
+  ], capture());
+  const report = cli.run([
+    'report', '--experiment-manifest', EXPERIMENT_MANIFEST, '--root', root,
+  ], capture());
   assert.equal(report.claim_status, 'instrument_only');
-  const preview = cli.run(['share-preview', '--root', root], capture());
+  const preview = cli.run([
+    'share-preview', '--experiment-manifest', EXPERIMENT_MANIFEST, '--root', root,
+  ], capture());
   assert.equal(preview.transmitted, false);
   assert.ok(fs.existsSync(proof.pathsFor(root).sharePreview));
+  const reportBytes = fs.readFileSync(proof.pathsFor(root).report, 'utf8');
+  const previewBytes = fs.readFileSync(proof.pathsFor(root).sharePreview, 'utf8');
+  const writeFileSync = fs.writeFileSync;
+  fs.writeFileSync = (file, ...args) => {
+    if (String(file).includes('.tmp-')) throw new Error('unchanged artifact attempted an atomic rewrite');
+    return writeFileSync(file, ...args);
+  };
+  try {
+    cli.run(['report', '--experiment-manifest', EXPERIMENT_MANIFEST, '--root', root], capture());
+    cli.run(['share-preview', '--experiment-manifest', EXPERIMENT_MANIFEST, '--root', root], capture());
+  } finally {
+    fs.writeFileSync = writeFileSync;
+  }
+  assert.equal(fs.readFileSync(proof.pathsFor(root).report, 'utf8'), reportBytes);
+  assert.equal(fs.readFileSync(proof.pathsFor(root).sharePreview, 'utf8'), previewBytes);
   const source = fs.readFileSync(path.join(__dirname, 'product-proof-trial.js'), 'utf8');
   assert.doesNotMatch(source, /require\s*\(\s*['"](?:node:)?(?:http|https|net|tls|dgram|dns)['"]\s*\)/);
   assert.doesNotMatch(source, /\b(?:fetch|XMLHttpRequest|WebSocket)\s*\(/);

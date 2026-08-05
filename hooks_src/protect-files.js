@@ -124,9 +124,14 @@ function run(input) {
   // Security: block writes to absolute paths outside project root. Reads may
   // inspect neighboring docs, vaults, and reference repos; .env reads are still
   // blocked by basename below.
-  const normalizedPath = path.normalize(path.resolve(filePath));
-  const normalizedRoot = path.normalize(PROJECT_ROOT);
-  const insideProject = normalizedPath.startsWith(normalizedRoot + path.sep) || normalizedPath === normalizedRoot;
+  const normalizedPath = path.normalize(health.canonicalizePath(filePath));
+  const normalizedRoot = path.normalize(health.canonicalizePath(PROJECT_ROOT));
+  const rootRelativePath = path.relative(normalizedRoot, normalizedPath);
+  const insideProject = rootRelativePath === '' || (
+    rootRelativePath !== '..'
+    && !rootRelativePath.startsWith(`..${path.sep}`)
+    && !path.isAbsolute(rootRelativePath)
+  );
 
   // Claude Code native auto-memory lives outside the project root by design.
   // Allow those writes before the outside-project-root block below.
@@ -144,7 +149,7 @@ function run(input) {
   }
 
   const relativePath = insideProject
-    ? path.relative(PROJECT_ROOT, filePath).split(path.sep).join('/')
+    ? rootRelativePath.split(path.sep).join('/')
     : normalizedPath;
 
   // Read events: only block .env files (secrets protection)
@@ -284,7 +289,9 @@ function isNativeMemoryPath(normalizedPath) {
   const home = (process.env.CITADEL_TEST === '1' && process.env.CITADEL_HOME_OVERRIDE)
     ? process.env.CITADEL_HOME_OVERRIDE
     : os.homedir();
-  const projectsRoot = path.normalize(path.resolve(home, '.claude', 'projects'));
+  const projectsRoot = path.normalize(health.canonicalizePath(
+    path.resolve(home, '.claude', 'projects')
+  ));
   const fold = (p) => (process.platform === 'win32' ? p.toLowerCase() : p);
   const target = fold(normalizedPath);
   const root = fold(projectsRoot);

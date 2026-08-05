@@ -1,0 +1,20 @@
+{
+  "schema": 1,
+  "kind": "citadel_fleet_ablation_suite",
+  "suite_id": "citadel-fleet-ablation-seed-v1",
+  "created_at": "2026-08-04T14:00:00.000Z",
+  "claim_boundary": "Single-suite local provider observation; not a general Fleet speed, cost, or quality claim.",
+  "verifier": "node test.js",
+  "tasks": [
+    {
+      "id": "slugify",
+      "owned_file": "src/slugify.js",
+      "instruction": "Implement slugify(value): trim, lowercase, collapse non-alphanumeric runs to one hyphen, and remove leading/trailing hyphens. Export { slugify }."
+    },
+    {
+      "id": "parse-duration",
+      "owned_file": "src/duration.js",
+      "instruction": "Implement parseDuration(value): accept a non-negative integer followed by ms, s, m, or h and return milliseconds; throw for every other input. Export { parseDuration }."
+    }
+  ]
+}

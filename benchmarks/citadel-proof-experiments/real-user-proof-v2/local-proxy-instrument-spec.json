@@ -1,0 +1,34 @@
+{
+  "evidence_kind": "instrument-proof",
+  "created_day": "2026-08-04",
+  "participant_count": 2,
+  "metric_set_id": "real-user-proof-v2",
+  "scenario_pairs": [
+    {
+      "pair_id": "pair-local-proxy",
+      "scenario_a": "local-proxy-control",
+      "scenario_b": "local-proxy-treatment",
+      "category": "instrumentation-only"
+    }
+  ],
+  "strata": [
+    {
+      "runtime_family": "other",
+      "model_id": "unassigned-local-proxy",
+      "os_family": "windows"
+    }
+  ],
+  "gates": {
+    "telemetry_join_min": 0.95,
+    "accepted_completion_margin": -0.05,
+    "recovery_gain_min": 0.2,
+    "intervention_reduction_min": 0.25,
+    "time_overhead_max": 0.15,
+    "verification_accuracy_min": 0.95,
+    "false_pass_max": 0,
+    "d7_retention_min": 0.15,
+    "minimum_public_cell": 5
+  },
+  "randomization_seed": "real-user-proof-v2-local-proxy-20260804",
+  "signing_public_key": null
+}

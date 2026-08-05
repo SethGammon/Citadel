@@ -107,30 +107,33 @@ For a short, one-off edit, your coding agent may already be enough. Citadel beco
 
 Citadel does not replace `CLAUDE.md` or `AGENTS.md`. Those files describe the project and its rules. Citadel supplies the workflows and state used to carry them out consistently.
 
-## Evidence status
+## What Citadel can prove
 
-Citadel publishes positive and negative results from the same evidence
-contract. V1 recorded 27/36 verified cells versus 24/36 and a frozen aggregate
-with 9.9% less measured GPU energy, but one same-route 60-second baseline
-timeout drove that appearance. Excluding the matched pair reverses the
-economic direction to 3.5% more GPU energy and 5.4% more modeled GPU cost, so
-Citadel makes no v1 savings claim.
+Citadel has repeatable local evidence for several engineering invariants and a
+replayable public evaluation record. It does not yet have evidence for the
+blanket claim that it makes every coding agent better.
 
-A distinct capability-profile follow-up then preserved the always-7B verified
-rate (24/36 versus 24/36) but used 15.7% more measured GPU energy after 12
-verification escalations. Citadel publishes that regression because detecting
-a plausible policy that is economically worse is part of the product.
+| Evidence | Result | Boundary |
+|---|---|---|
+| Outside-authored public holdout | 24 distinct repositories, sealed routes, and 32 official verdicts. The controller verified 3/16 tasks versus 2/16 for direct Claude at 1.26% lower comparison cost. | Direct Claude verified only 12.5%, so the baseline was invalid. This is a diagnostic, not proof of reliability or savings. |
+| Bounded hybrid pilot | Both policies verified 12/12 synthetic tasks. A local Qwen 3B support route used 38.7% less comparison cost than always-Claude. | One model pair, one machine, and author-selected tasks. Actual subscription cash and production generalization remain unknown. |
+| Offline evidence replay | `npm run grant:verify` checks the signed artifacts, source bindings, receipt chains, reports, and public claims without calling a model. | Artifact integrity does not prove that an agent produced good work. |
+| Deterministic recovery and safety A/Bs | Journaled recovery produced 0 duplicate effects versus 3 for naive restart across six injected boundaries. Safety gates achieved 100% malicious recall and 0% benign false positives across 12 matched decisions. | Local deterministic fixtures only. No process-kill, power-loss, real exploit, or cross-OS claim. |
+| Leased deploy-steward state machine | Across three 15-PR batches per arm, independent loops produced 315 stale-head race attempts; the leased steward produced 0. | Fake provider only. This is not GitHub, Actions, branch-protection, or real-deployment evidence. |
+| Protected GitHub deploy-steward A/B | Across three valid matched public runs, both policies merged 45/45 PRs through strict Actions checks and recorded exactly one successful GitHub Deployment per merge SHA. Independent loops incurred 106 failed merge races, 315 stale updates, and 421 interventions; the steward incurred 0 of each. | Six disposable public repositories under one account, plus one disclosed invalid run. Deployments are GitHub API records, not production releases. No speed, cost, human-utility, or broad reliability claim. |
+| Lean installed distribution | The npm tarball is more than 5% smaller and contains 66 fewer files than the frozen baseline. Six installed CLI surfaces, 21 control-plane checks, and all 17 offline proof checks pass. | Source-only material remains in the repository and hash-accounted. One Windows and Node environment was measured. |
 
-The latest representative fixture shakedown moved verification from exact
-answers to repository artifacts. Both policies verified 6/12 cells with zero
-false passes and path violations; Citadel's 7.1% energy reduction missed the
-frozen 20% gate and is published as failed.
+The public claim is deliberately narrow: Citadel can make agent evaluations
+inspectable, reproducible, and fail-honest. Comparative real-user utility
+remains open.
 
 - [Evaluator start here](docs/grants/EVALUATOR_START_HERE.md)
 - [Generated evidence manifest](docs/EVIDENCE_MANIFEST.md)
-- [Prospective local comparison](benchmarks/sentient-readiness/published-run/REPORT.md)
-- [Capability-profile follow-up](benchmarks/sentient-readiness-v2/published-run/REPORT.md)
-- [Representative repository-operation shakedown](benchmarks/representative-operation-pilot-v2/published-run/REPORT.md)
+- [Experiment results, boundaries, and reproduction commands](docs/EXPERIMENTS.md)
+- [Deploy-steward public case study](docs/CASE_STUDY_DEPLOY_STEWARD.md)
+- [Public deploy control](https://github.com/SethGammon/citadel-steward-proof-20260804-control) and [steward treatment](https://github.com/SethGammon/citadel-steward-proof-20260804-treatment)
+- [Outside-authored holdout](benchmarks/public-holdout-pilot/REPORT.md)
+- [Bounded hybrid pilot](benchmarks/hybrid-economic-pilot-v2/published-run/REPORT.md)
 - [Research site](https://sethgammon.github.io/Citadel/research.html)
 
 ## One operating loop
@@ -197,7 +200,7 @@ The complete reference is in [`docs/`](docs/).
 
 <br>
 
-The current package includes <!-- GENERATED: skill-count -->49<!-- /GENERATED --> workflows and <!-- GENERATED: hook-script-count -->35<!-- /GENERATED --> hook scripts across <!-- GENERATED: hook-event-count -->29<!-- /GENERATED --> lifecycle events. `/do` selects among them; they are not a prerequisite checklist.
+The current package includes <!-- GENERATED: skill-count -->48<!-- /GENERATED --> workflows and <!-- GENERATED: hook-script-count -->35<!-- /GENERATED --> hook scripts across <!-- GENERATED: hook-event-count -->29<!-- /GENERATED --> lifecycle events. `/do` selects among them; they are not a prerequisite checklist.
 
 Citadel keeps operational state separate from application code:
 

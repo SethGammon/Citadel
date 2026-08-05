@@ -68,7 +68,7 @@ const BUNDLE_CATALOG = deepFreeze({
     deprecatedSince: null,
     removedIn: null,
     owns: {
-      skills: ['fleet', 'merge-review', 'research-fleet', 'workspace'],
+      skills: ['fleet', 'merge-review', 'workspace'],
       hooks: [
         'subagent-start', 'subagent-stop', 'teammate-idle', 'task-events',
         'worktree-setup', 'worktree-remove',

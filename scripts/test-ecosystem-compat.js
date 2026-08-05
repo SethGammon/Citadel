@@ -56,6 +56,12 @@ function proofIn(runRoot) {
 test('metadata matches package, manifests, skills, commands, and proof links', () => {
   const metadata = buildMetadata(ROOT);
   assert.deepEqual(validateMetadata(ROOT, metadata), []);
+  assert.equal(metadata.proof_links[0], 'README.md#what-citadel-can-prove');
+  const missingAnchor = structuredClone(metadata);
+  missingAnchor.proof_links = ['README.md#missing-proof-section'];
+  assert.deepEqual(validateMetadata(ROOT, missingAnchor), [
+    'proof link anchor missing: README.md#missing-proof-section',
+  ]);
   const current = fs.readFileSync(path.join(ROOT, 'citadel-metadata.json'), 'utf8').replace(/\r\n/g, '\n');
   assert.equal(current, stableJson(metadata));
 });

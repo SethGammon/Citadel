@@ -1,0 +1,14 @@
+{
+  "schema": 1,
+  "experiment_id": "deploy-steward",
+  "batch_ids": ["batch-01", "batch-02", "batch-03"],
+  "prs_per_arm_per_batch": 15,
+  "provider": "deterministic_fake_shared_main_state_v1",
+  "treatment_seam": "core/deploy-steward/steward.js#runDeploySteward",
+  "public_arm_required_gates": [
+    { "id": "explicit_mutation_approval", "category": "authority" },
+    { "id": "authenticated_github", "category": "infrastructure" },
+    { "id": "disposable_protected_repositories", "category": "infrastructure" },
+    { "id": "github_actions", "category": "infrastructure" }
+  ]
+}

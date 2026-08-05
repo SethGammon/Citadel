@@ -1,0 +1,58 @@
+{
+  "schema": 1,
+  "experiment_id": "deploy-steward-live-github-ab-repeat",
+  "frozen_contract": "live-github-contract.json",
+  "frozen_baseline_result": "live-github-result.json",
+  "purpose": "Repeat the matched public GitHub experiment with counterbalanced arm order and descriptive timing telemetry.",
+  "runs": [
+    {
+      "run_id": "proof-20260804",
+      "arm_order": "control-first",
+      "status": "published-baseline",
+      "timing_available": false
+    },
+    {
+      "run_id": "proof-20260805-r2",
+      "arm_order": "treatment-first",
+      "status": "invalidated-resume-defect",
+      "exclusion_reason": "A transient GitHub GraphQL failure triggered a resume defect that recreated ten already-merged PRs. The run is retained as negative integration evidence and excluded from comparison.",
+      "timing_available": false
+    },
+    {
+      "run_id": "proof-20260805-r2b",
+      "arm_order": "treatment-first",
+      "status": "published-repeat",
+      "timing_available": true
+    },
+    {
+      "run_id": "proof-20260805-r3",
+      "arm_order": "control-first",
+      "status": "published-repeat",
+      "timing_available": true
+    }
+  ],
+  "required_repeat_evidence": [
+    "bound-arm-order-in-plan-and-state",
+    "overall-started-completed-elapsed-ms",
+    "per-arm-started-completed-elapsed-ms",
+    "timestamped-api-stage-and-action-wait-telemetry",
+    "original-contract-validation"
+  ],
+  "analysis": {
+    "primary": [
+      "race-attempts",
+      "stale-attempts",
+      "interventions",
+      "repairs",
+      "exactly-once-deployments"
+    ],
+    "descriptive_only": [
+      "overall-elapsed-ms",
+      "per-arm-elapsed-ms",
+      "api-elapsed-ms",
+      "action-wait-elapsed-ms"
+    ],
+    "timing_claim_boundary": "Timing is environment-sensitive operational telemetry. No latency or performance claim is accepted from these runs alone."
+  },
+  "publication_gate": "Aggregate only the published baseline, valid replacement R2b, and R3 after both repeats validate against the unchanged frozen contract. Invalidated R2 remains disclosed and excluded."
+}

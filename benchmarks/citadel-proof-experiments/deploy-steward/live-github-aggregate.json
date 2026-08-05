@@ -1,0 +1,55 @@
+{
+  "schema": 1,
+  "experiment_id": "deploy-steward-live-github-ab-aggregate",
+  "contract_sha256": "857140d0810e530e61047ff7492109d4e97e6a35e31883770a1970e6273cd828",
+  "generated_at": "2026-08-05T17:13:59.424Z",
+  "valid_run_count": 3,
+  "valid_runs": [
+    {
+      "run_id": "proof-20260804",
+      "arm_order": "control-first",
+      "artifact": "live-github-result.json"
+    },
+    {
+      "run_id": "proof-20260805-r2b",
+      "arm_order": "treatment-first",
+      "artifact": "live-github-result-r2b.json"
+    },
+    {
+      "run_id": "proof-20260805-r3",
+      "arm_order": "control-first",
+      "artifact": "live-github-result-r3.json"
+    }
+  ],
+  "excluded_runs": [
+    {
+      "run_id": "proof-20260805-r2",
+      "artifact": "live-github-invalid-r2.json",
+      "reason": "Transient GitHub failure exposed a resume defect that recreated already-merged pull requests."
+    }
+  ],
+  "aggregate": {
+    "control": {
+      "pull_requests": 45,
+      "merged": 45,
+      "successful_deployments": 45,
+      "exactly_once_deployments": true,
+      "failed_merge_races": 106,
+      "stale_branch_updates": 315,
+      "interventions": 421,
+      "repairs": 0
+    },
+    "treatment": {
+      "pull_requests": 45,
+      "merged": 45,
+      "successful_deployments": 45,
+      "exactly_once_deployments": true,
+      "failed_merge_races": 0,
+      "stale_branch_updates": 0,
+      "interventions": 0,
+      "repairs": 0
+    }
+  },
+  "comparative_hypothesis_passed_in_every_valid_run": true,
+  "claim_boundary": "Three valid matched public GitHub runs under one account, with one invalid run disclosed and excluded. Deployments are GitHub Deployment API records with success statuses, not production releases. Timing is descriptive only. No speed, cost, outage-resilience, human-utility, or broad reliability claim."
+}

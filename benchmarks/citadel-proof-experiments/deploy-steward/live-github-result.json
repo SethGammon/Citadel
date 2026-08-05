@@ -1,0 +1,34 @@
+{
+  "schema": 1,
+  "experiment_id": "deploy-steward-live-github-ab",
+  "run_id": "proof-20260804",
+  "generated_at": "2026-08-04T23:43:14.737Z",
+  "contract_sha256": "857140d0810e530e61047ff7492109d4e97e6a35e31883770a1970e6273cd828",
+  "full_result_sha256": "a58c27f988f1de4e2332fa66f9970d951aa5f768397d6a22d0950c1524bd63ed",
+  "validation_passed": true,
+  "control": {
+    "repository": "https://github.com/SethGammon/citadel-steward-proof-20260804-control",
+    "final_main_sha": "9b554a452e200198a627810309d5e8a0217f7484",
+    "pull_requests": 15,
+    "merged": 15,
+    "successful_deployments": 15,
+    "exactly_once_deployments": true,
+    "failed_merge_races": 34,
+    "stale_branch_updates": 105,
+    "interventions": 139
+  },
+  "treatment": {
+    "repository": "https://github.com/SethGammon/citadel-steward-proof-20260804-treatment",
+    "final_main_sha": "11eaddf7b20478794dbb4c94f174c64c131f89fc",
+    "pull_requests": 15,
+    "merged": 15,
+    "successful_deployments": 15,
+    "exactly_once_deployments": true,
+    "failed_merge_races": 0,
+    "stale_branch_updates": 0,
+    "serialized_branch_updates": 14,
+    "interventions": 0,
+    "repairs": 0
+  },
+  "claim_boundary": "One matched public GitHub run. Deployment evidence is GitHub Deployment API records and success statuses, not production releases. No speed, cost, outage-resilience, or broad product-utility claim."
+}

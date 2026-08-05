@@ -1,0 +1,30 @@
+{
+  "schema": 1,
+  "kind": "citadel_package_bloat_baseline",
+  "measured_at": "2026-08-04T00:00:00.000Z",
+  "source_commit": "d3aae97446b54696c521710ee8846f2211b276c3",
+  "package_version": "1.3.0",
+  "npm_pack": {
+    "file_count": 1954,
+    "packed_bytes": 9678793,
+    "unpacked_bytes": 22586511
+  },
+  "repository_observations": {
+    "external_dependencies": 0,
+    "deprecated_research_fleet_files": 2,
+    "untracked_planning_tmp_files": 1782,
+    "untracked_planning_tmp_bytes": 87985252,
+    "generated_contract_vendor_bytes": 191273
+  },
+  "guardrails": {
+    "runtime_install_smoke": true,
+    "offline_evidence_replay": true,
+    "strict_suite": true,
+    "source_repository_preserved": true
+  },
+  "accounting": {
+    "runtime_and_total_published_bytes": true,
+    "split_artifacts_hash_bound": true
+  },
+  "claim_status": "baseline_only"
+}

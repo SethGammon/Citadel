@@ -1,0 +1,32 @@
+{
+  "schema": 1,
+  "experiment_id": "deploy-steward-live-github-ab-repeat",
+  "run_id": "proof-20260805-r2",
+  "status": "invalidated",
+  "excluded_from_comparison": true,
+  "arm_order": ["treatment", "control"],
+  "repositories": {
+    "treatment": "https://github.com/SethGammon/citadel-steward-proof-20260805-r2-treatment",
+    "control": "https://github.com/SethGammon/citadel-steward-proof-20260805-r2-control"
+  },
+  "observed_before_invalidation": {
+    "treatment_merged_original_prs": 10,
+    "treatment_race_attempts": 0,
+    "treatment_interventions": 0,
+    "control_started": false
+  },
+  "first_failure": {
+    "kind": "external-platform-error",
+    "source": "GitHub GraphQL",
+    "at": "2026-08-05T15:57:33Z",
+    "reference": "EAD1:3D8847:3EA736E:CFC89F1:6A735D69"
+  },
+  "resume_defect": {
+    "kind": "non-idempotent-pr-reconciliation",
+    "effect": "Resume recreated ten already-merged treatment PRs as PRs 16 through 25 before failing on existing PR 11.",
+    "accidental_prs": [16, 17, 18, 19, 20, 21, 22, 23, 24, 25],
+    "cleanup_status": "completed 2026-08-05T18:08:00Z; accidental PRs 16 through 25 were closed with explanatory comments and duplicate branches agent-01 through agent-10 were deleted; original unfinished PRs 11 through 15 remain open",
+    "fix": "Resume now verifies and retains the recorded PR identity, including merged PRs whose head branch was deleted."
+  },
+  "claim_boundary": "This run is negative integration evidence only. It is not included in the deploy-steward comparative result or any reliability, latency, or product claim."
+}

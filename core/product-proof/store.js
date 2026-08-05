@@ -30,9 +30,11 @@ function pathsFor(root = process.cwd()) {
 }
 
 function atomicJson(file, value) {
+  const serialized = `${JSON.stringify(value, null, 2)}\n`;
+  if (fs.existsSync(file) && fs.readFileSync(file, 'utf8') === serialized) return;
   fs.mkdirSync(path.dirname(file), { recursive: true });
   const temp = `${file}.tmp-${process.pid}`;
-  fs.writeFileSync(temp, `${JSON.stringify(value, null, 2)}\n`, 'utf8');
+  fs.writeFileSync(temp, serialized, 'utf8');
   fs.renameSync(temp, file);
 }
 

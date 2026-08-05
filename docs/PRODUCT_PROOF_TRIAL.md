@@ -7,6 +7,8 @@ The version-2 instrument separates:
 3. receipt-owned exit and restore evidence.
 
 Run `node scripts/product-proof-trial.js help` for the local-only v2 workflow.
+The participant-ready protocol and the still-open human gate are documented in
+[External Owner Trial](EXTERNAL_OWNER_TRIAL.md).
 Every v2 report remains `claim_status: instrument_only` and
 `utility_claim: false` until an independently run, preregistered cohort supplies
 the required human evidence. Assignment failures, timeouts, abandonments, and

@@ -122,6 +122,48 @@ function main() {
     assert(result.status === 0, `Expected exit code 0 (allow), got ${result.status}`);
   });
 
+  test('protect-files accepts an in-root write through an equivalent filesystem alias', () => {
+    const base = fs.mkdtempSync(path.join(os.tmpdir(), 'citadel-root-alias-'));
+    const actualRoot = path.join(base, 'actual');
+    const aliasRoot = path.join(base, 'alias');
+    try {
+      fs.mkdirSync(path.join(actualRoot, '.claude'), { recursive: true });
+      fs.mkdirSync(path.join(actualRoot, 'safe'), { recursive: true });
+      fs.writeFileSync(path.join(actualRoot, '.claude', 'harness.json'), '{"protectedFiles":[]}\n');
+      fs.symlinkSync(actualRoot, aliasRoot, process.platform === 'win32' ? 'junction' : 'dir');
+      const result = spawnSync(process.execPath, [PROTECT_FILES_HOOK], {
+        input: JSON.stringify({ tool_name: 'Write', tool_input: { file_path: 'safe/alias-note.txt' } }),
+        encoding: 'utf8',
+        cwd: fs.realpathSync(actualRoot),
+        env: { ...process.env, CLAUDE_PROJECT_DIR: aliasRoot, CITADEL_TEST: '1', CITADEL_UI: 'false' },
+      });
+      assert(result.status === 0, `Expected equivalent root alias to allow, got ${result.status}: ${result.stdout} ${result.stderr}`);
+    } finally {
+      fs.rmSync(base, { recursive: true, force: true });
+    }
+  });
+
+  test('protect-files blocks an in-root symlink or junction that escapes outside', () => {
+    const base = fs.mkdtempSync(path.join(os.tmpdir(), 'citadel-root-escape-'));
+    const projectRoot = path.join(base, 'project');
+    const outsideRoot = path.join(base, 'outside');
+    try {
+      fs.mkdirSync(path.join(projectRoot, '.claude'), { recursive: true });
+      fs.mkdirSync(outsideRoot, { recursive: true });
+      fs.writeFileSync(path.join(projectRoot, '.claude', 'harness.json'), '{"protectedFiles":[]}\n');
+      fs.symlinkSync(outsideRoot, path.join(projectRoot, 'escape'), process.platform === 'win32' ? 'junction' : 'dir');
+      const result = spawnSync(process.execPath, [PROTECT_FILES_HOOK], {
+        input: JSON.stringify({ tool_name: 'Write', tool_input: { file_path: 'escape/canary.txt' } }),
+        encoding: 'utf8',
+        cwd: projectRoot,
+        env: { ...process.env, CLAUDE_PROJECT_DIR: projectRoot, CITADEL_TEST: '1', CITADEL_UI: 'false' },
+      });
+      assert(result.status === 2, `Expected escaping link to block, got ${result.status}: ${result.stdout} ${result.stderr}`);
+    } finally {
+      fs.rmSync(base, { recursive: true, force: true });
+    }
+  });
+
   test('protect-files blocks .env file reads', () => {
     const input = JSON.stringify({
       tool_name: 'Read',
@@ -383,14 +425,18 @@ function main() {
 
   console.log('\n▶ Native Memory Directory Allowlist');
 
-  test('protect-files allows writes under home .claude/projects/<slug>/memory/', () => {
-    const tmpHome = fs.mkdtempSync(path.join(os.tmpdir(), 'citadel-home-'));
+  test('protect-files allows native memory writes through an equivalent home alias', () => {
+    const tmpRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'citadel-home-'));
+    const tmpHome = path.join(tmpRoot, 'real-home');
+    const homeAlias = path.join(tmpRoot, 'home-alias');
+    fs.mkdirSync(tmpHome);
+    fs.symlinkSync(tmpHome, homeAlias, process.platform === 'win32' ? 'junction' : 'dir');
     const memFile = path.join(tmpHome, '.claude', 'projects', 'some-slug', 'memory', 'notes.md');
     const result = runProtectFiles('Write', memFile, {
       CITADEL_TEST: '1',
-      CITADEL_HOME_OVERRIDE: tmpHome,
+      CITADEL_HOME_OVERRIDE: homeAlias,
     });
-    fs.rmSync(tmpHome, { recursive: true, force: true });
+    fs.rmSync(tmpRoot, { recursive: true, force: true });
     assert(
       result.status === 0,
       `Expected exit code 0 (allow), got ${result.status}: ${result.stdout} ${result.stderr}`

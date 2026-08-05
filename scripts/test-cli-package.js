@@ -19,6 +19,74 @@ function invoke(args, cwd = ROOT) {
   });
 }
 
+function invokeInstalled(packageRoot, args, cwd) {
+  return spawnSync(process.execPath, [path.join(packageRoot, 'bin', 'citadel.js'), ...args], {
+    cwd, encoding: 'utf8', shell: false, stdio: ['ignore', 'pipe', 'pipe'],
+    timeout: 30000,
+  });
+}
+
+function installedRuntimeSmoke(packageRoot, scratchRoot) {
+  const installedManifest = JSON.parse(fs.readFileSync(path.join(packageRoot, 'package.json'), 'utf8'));
+  const run = (args) => invokeInstalled(packageRoot, args, scratchRoot);
+  const help = run(['--help']);
+  assert.equal(help.status, 0, help.stderr);
+  assert(help.stdout.includes('Citadel'));
+
+  const version = run(['--version']);
+  assert.equal(version.status, 0, version.stderr);
+  assert.equal(version.stdout.trim(), installedManifest.version);
+
+  const packList = run(['pack', 'list', '--root', packageRoot, '--json']);
+  assert.equal(packList.status, 0, packList.stderr);
+  assert.deepEqual(
+    JSON.parse(packList.stdout).packs.map((pack) => pack.id).sort(),
+    ['citadel/ci-recovery', 'citadel/migration-campaign', 'citadel/release-steward'],
+  );
+
+  const configRoot = path.join(scratchRoot, 'config-smoke');
+  fs.mkdirSync(configRoot, { recursive: true });
+  const config = run(['config', 'show', '--project-root', configRoot, '--runtime', 'codex', '--json']);
+  assert.equal(config.status, 0, config.stderr);
+  const configReport = JSON.parse(config.stdout);
+  assert.equal(configReport.status, 'ready');
+  assert.equal(configReport.package.version, installedManifest.version);
+
+  const operation = run([
+    'operation', 'explain',
+    '--request', path.join(packageRoot, 'examples', 'operation-control', 'request.json'),
+    '--catalog', path.join(packageRoot, 'examples', 'operation-control', 'catalog.json'),
+    '--json',
+  ]);
+  assert.equal(operation.status, 0, operation.stderr);
+  assert.equal(JSON.parse(operation.stdout).selection_status, 'meets-quality-target');
+
+  const controlPlane = run(['control-plane', 'conformance']);
+  assert.equal(controlPlane.status, 0, controlPlane.stderr);
+  const controlReport = JSON.parse(controlPlane.stdout);
+  assert.equal(controlReport.status, 'passed');
+  assert(controlReport.check_count >= 20, 'installed control-plane conformance must exercise the full offline contract');
+
+  return {
+    surfaces: ['root-help', 'version', 'pack-list', 'config-show', 'operation-explain', 'control-plane-conformance'],
+    controlPlaneChecks: controlReport.check_count,
+  };
+}
+
+const installedPackageFlag = process.argv.indexOf('--installed-package-root');
+if (installedPackageFlag >= 0) {
+  try {
+    const packageRoot = path.resolve(process.argv[installedPackageFlag + 1] || '');
+    const scratchRoot = path.resolve(process.argv[installedPackageFlag + 2] || process.cwd());
+    const report = installedRuntimeSmoke(packageRoot, scratchRoot);
+    process.stdout.write(`${JSON.stringify({ status: 'passed', ...report })}\n`);
+    process.exit(0);
+  } catch (error) {
+    process.stderr.write(`Installed CLI package smoke failed: ${error.stack || error.message}\n`);
+    process.exit(1);
+  }
+}
+
 function tarEntries(buffer) {
   const result = [];
   for (let offset = 0; offset + 512 <= buffer.length;) {
@@ -51,6 +119,9 @@ assert(manifest.files.includes('bin/'));
 assert(manifest.files.includes('core/'));
 assert(manifest.files.includes('.planning/_templates/'));
 assert(!manifest.files.includes('.planning/'), 'operational planning state must not be published wholesale');
+for (const ignoreFile of ['docs/.npmignore', 'skills/.npmignore', 'packages/.npmignore']) {
+  assert(fs.existsSync(path.join(ROOT, ignoreFile)), `package profile missing ${ignoreFile}`);
+}
 
 const markerFreeFs = { existsSync: () => false };
 assert.deepEqual(cli.detectRuntime(['--runtime', 'claude']), { runtime: 'claude', source: 'argument' });
@@ -168,6 +239,26 @@ for (const forbidden of [
   'package/.planning/campaigns/citadel-product-proof.md',
   'package/.planning/research/twelve-month-unlocks/product-growth-audit.md',
 ]) assert(!names.has(forbidden), `packed archive leaked ${forbidden}`);
+for (const entry of entries) {
+  const packedPath = entry.name.replace(/^package\//, '');
+  assert(!packedPath.startsWith('docs/images/'), `packed archive leaked site screenshot ${packedPath}`);
+  assert(!/^skills\/[^/]+\/__benchmarks__\//.test(packedPath), `packed archive leaked skill benchmark ${packedPath}`);
+  assert(!packedPath.startsWith('packages/client/'), `packed archive leaked private client workspace ${packedPath}`);
+  assert(!packedPath.startsWith('packages/runtime-openai/'), `packed archive leaked private OpenAI runtime workspace ${packedPath}`);
+  assert(!packedPath.startsWith('packages/runtime-claude-code/'), `packed archive leaked private Claude runtime workspace ${packedPath}`);
+  assert(!packedPath.endsWith('.npmignore'), `packed archive leaked ignore control ${packedPath}`);
+}
+for (const requiredTest of [
+  'test-experiment-contracts.js',
+  'test-experiment-operation-recovery.js',
+  'test-experiment-safety-gates.js',
+  'test-experiment-judge-eval.js',
+  'test-experiment-fleet-ablation.js',
+  'test-experiment-deploy-steward.js',
+  'test-experiment-package-bloat.js',
+]) {
+  assert(names.has(`package/scripts/${requiredTest}`), `packed archive lost experiment regression test ${requiredTest}`);
+}
 const binEntry = entries.find((entry) => entry.name === 'package/bin/citadel.js');
 assert(binEntry.size > 0, 'npm tarball CLI entrypoint must contain executable code');
 
@@ -184,11 +275,9 @@ const installedBin = path.join(installedRoot, 'node_modules', 'citadel', 'bin', 
 const shim = path.join(installedRoot, 'node_modules', '.bin', process.platform === 'win32' ? 'citadel.cmd' : 'citadel');
 assert(fs.existsSync(shim), 'package install must create the citadel executable shim');
 if (process.platform !== 'win32') assert(fs.statSync(shim).mode & 0o111, 'installed citadel shim must be executable');
-const packedHelp = spawnSync(process.execPath, [installedBin, '--help'], {
-  cwd: packRoot, encoding: 'utf8', shell: false, stdio: ['ignore', 'pipe', 'pipe'],
-});
-assert.equal(packedHelp.status, 0, packedHelp.stderr);
-assert(packedHelp.stdout.includes('Citadel'));
+assert(fs.existsSync(installedBin), 'installed Citadel package root must contain the CLI entrypoint');
+const installedSmoke = installedRuntimeSmoke(path.dirname(path.dirname(installedBin)), packRoot);
+assert.equal(installedSmoke.surfaces.length, 6);
 
 for (const directory of [markerRoot, installRoot, autoRoot, uninstallRoot, packRoot]) {
   fs.rmSync(directory, { recursive: true, force: true });

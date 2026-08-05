@@ -1,0 +1,265 @@
+{
+  "schema": 1,
+  "kind": "citadel_package_bloat_result",
+  "experiment_id": "package-bloat",
+  "measured_at": "2026-08-05T18:10:12.455Z",
+  "baseline": {
+    "source_commit": "d3aae97446b54696c521710ee8846f2211b276c3",
+    "runtime": {
+      "packed_bytes": 9678793,
+      "unpacked_bytes": 22586511,
+      "file_count": 1954
+    }
+  },
+  "budget": {
+    "maximum_iterations": 5,
+    "measured_iterations": 1
+  },
+  "iterations": [
+    {
+      "iteration": 1,
+      "label": "live-github-proof",
+      "previous_packed_bytes": 9678793,
+      "packed_bytes": 9123375,
+      "delta_bytes": -555418,
+      "verdict": "KEEP",
+      "reason": "metric-improved-and-all-guardrails-passed",
+      "final_adjudication": {
+        "installed_runtime_smoke": true,
+        "offline_evidence_replay": true,
+        "signed_package_source_preserved": true
+      },
+      "exclusions": [
+        "!docs/images/**",
+        "!skills/*/__benchmarks__/**",
+        "!packages/client/**",
+        "!packages/runtime-openai/**",
+        "!packages/runtime-claude-code/**"
+      ],
+      "packaging_profile": {
+        "mechanism": "scoped-npmignore",
+        "exclusions": [
+          {
+            "pattern": "!docs/images/**",
+            "id": "site-screenshots",
+            "kind": "source-only-site-media"
+          },
+          {
+            "pattern": "!skills/*/__benchmarks__/**",
+            "id": "skill-benchmarks",
+            "kind": "source-only-dev-fixtures"
+          },
+          {
+            "pattern": "!packages/client/**",
+            "id": "private-client-workspace",
+            "kind": "source-only-private-workspace"
+          },
+          {
+            "pattern": "!packages/runtime-openai/**",
+            "id": "private-openai-workspace",
+            "kind": "source-only-private-workspace"
+          },
+          {
+            "pattern": "!packages/runtime-claude-code/**",
+            "id": "private-claude-workspace",
+            "kind": "source-only-private-workspace"
+          }
+        ],
+        "ignore_files": [
+          "docs/.npmignore",
+          "skills/.npmignore",
+          "packages/.npmignore"
+        ],
+        "signed_package_source_preserved": true,
+        "signed_package_source_digest": "sha256:2e6129771d502c717bc514ce24c0bd2e9e9a75af9df6b6a6323e1fa7af75d050"
+      },
+      "runtime": {
+        "filename": "citadel-1.3.0.tgz",
+        "packed_bytes": 9123375,
+        "unpacked_bytes": 22066567,
+        "file_count": 1888,
+        "sha256": "eea42a8e7974e1cd8eb7136490d0b1161129d8977c0e672a0ec9a4e98d57d80c",
+        "sha512_integrity": "sha512-+pzF7ge0k2l/ykE8vteetqzEv20JKmID7ubWRXz1JCGM5Zux/heK4z/JOhkK/EEA/Rf3bPnmFsnfhzh6bQLQnA==",
+        "npm_shasum": "98703bf579ca8fe03ff14542bfee3245cfda004d",
+        "file_manifest_sha256": "2956005b9fab218630ab1f0e751b58ef160dab8f9d4ae355957c51e00fbbc3f5"
+      },
+      "guardrails": {
+        "npm_files_negations_effective": true,
+        "protected_runtime_files_present": true,
+        "installed_runtime_smoke": true,
+        "installed_runtime_surfaces": [
+          "root-help",
+          "version",
+          "pack-list",
+          "config-show",
+          "operation-explain",
+          "control-plane-conformance"
+        ],
+        "installed_control_plane_checks": 21,
+        "offline_evidence_replay": true,
+        "source_repository_preserved": true
+      }
+    }
+  ],
+  "final": {
+    "source_head": "9bebf1a0bb3ae4136a6f502dc8169c3ae28561e5",
+    "package_json_sha256": "1b0e0e1d3819ed4764107464b0a89e36bdebfc03c226d0d0481a51e66ac2b370",
+    "exclusions": [
+      "!docs/images/**",
+      "!skills/*/__benchmarks__/**",
+      "!packages/client/**",
+      "!packages/runtime-openai/**",
+      "!packages/runtime-claude-code/**"
+    ],
+    "packaging_profile": {
+      "mechanism": "scoped-npmignore",
+      "exclusions": [
+        {
+          "pattern": "!docs/images/**",
+          "id": "site-screenshots",
+          "kind": "source-only-site-media"
+        },
+        {
+          "pattern": "!skills/*/__benchmarks__/**",
+          "id": "skill-benchmarks",
+          "kind": "source-only-dev-fixtures"
+        },
+        {
+          "pattern": "!packages/client/**",
+          "id": "private-client-workspace",
+          "kind": "source-only-private-workspace"
+        },
+        {
+          "pattern": "!packages/runtime-openai/**",
+          "id": "private-openai-workspace",
+          "kind": "source-only-private-workspace"
+        },
+        {
+          "pattern": "!packages/runtime-claude-code/**",
+          "id": "private-claude-workspace",
+          "kind": "source-only-private-workspace"
+        }
+      ],
+      "ignore_files": [
+        "docs/.npmignore",
+        "skills/.npmignore",
+        "packages/.npmignore"
+      ],
+      "signed_package_source_preserved": true,
+      "signed_package_source_digest": "sha256:2e6129771d502c717bc514ce24c0bd2e9e9a75af9df6b6a6323e1fa7af75d050"
+    },
+    "runtime": {
+      "filename": "citadel-1.3.0.tgz",
+      "packed_bytes": 9123375,
+      "unpacked_bytes": 22066567,
+      "file_count": 1888,
+      "sha256": "eea42a8e7974e1cd8eb7136490d0b1161129d8977c0e672a0ec9a4e98d57d80c",
+      "sha512_integrity": "sha512-+pzF7ge0k2l/ykE8vteetqzEv20JKmID7ubWRXz1JCGM5Zux/heK4z/JOhkK/EEA/Rf3bPnmFsnfhzh6bQLQnA==",
+      "npm_shasum": "98703bf579ca8fe03ff14542bfee3245cfda004d",
+      "file_manifest_sha256": "2956005b9fab218630ab1f0e751b58ef160dab8f9d4ae355957c51e00fbbc3f5"
+    },
+    "source_only": {
+      "file_count": 101,
+      "bytes": 836818,
+      "manifest_sha256": "0500d70652cb23aad23f6ce063473cbc310cae52d85a00c125f7f20b8cf16ce1",
+      "groups": [
+        {
+          "id": "site-screenshots",
+          "kind": "source-only-site-media",
+          "pattern": "!docs/images/**",
+          "file_count": 6,
+          "bytes": 733977,
+          "manifest_sha256": "22e967680fcac3fb80a92a7084d1366cc1e23b5b3e9787fdc17b0498872103a9"
+        },
+        {
+          "id": "skill-benchmarks",
+          "kind": "source-only-dev-fixtures",
+          "pattern": "!skills/*/__benchmarks__/**",
+          "file_count": 80,
+          "bytes": 78040,
+          "manifest_sha256": "b69230d1ae7de926d784f756a820662293a0c887754627fcacfae0579dfa38fa"
+        },
+        {
+          "id": "private-client-workspace",
+          "kind": "source-only-private-workspace",
+          "pattern": "!packages/client/**",
+          "file_count": 9,
+          "bytes": 20635,
+          "manifest_sha256": "59c9beaba1e53cead53bfff137176ba2a3bed82b4086ca0c5c54369e765bd2d1"
+        },
+        {
+          "id": "private-openai-workspace",
+          "kind": "source-only-private-workspace",
+          "pattern": "!packages/runtime-openai/**",
+          "file_count": 3,
+          "bytes": 3271,
+          "manifest_sha256": "89371a9de003268803c5f1d89d71d15155c777d59f83a93488284ceb785f3060"
+        },
+        {
+          "id": "private-claude-workspace",
+          "kind": "source-only-private-workspace",
+          "pattern": "!packages/runtime-claude-code/**",
+          "file_count": 3,
+          "bytes": 895,
+          "manifest_sha256": "a49eba9cb01d3f9797574344bd27783fbc2dc409b2d1af778dffa2c14511e295"
+        }
+      ]
+    },
+    "accounting": {
+      "observed_published_artifacts": [
+        "npm-runtime-tarball"
+      ],
+      "observed_total_published_bytes": 9123375,
+      "total_accounted_unpacked_bytes": 22903385,
+      "cross_profile_packed_total": null,
+      "boundary": "The npm tarball is the only artifact packed by this local experiment. Source-only files remain hash-accounted in GitHub/source, but no GitHub archive is produced; packed runtime bytes are not added to raw source bytes."
+    },
+    "guardrails": {
+      "npm_files_negations_effective": true,
+      "protected_runtime_files_present": true,
+      "installed_runtime_smoke": true,
+      "installed_runtime_surfaces": [
+        "root-help",
+        "version",
+        "pack-list",
+        "config-show",
+        "operation-explain",
+        "control-plane-conformance"
+      ],
+      "installed_control_plane_checks": 21,
+      "offline_evidence_replay": true,
+      "source_repository_preserved": true
+    },
+    "timings_ms": {
+      "npm_pack": 9170,
+      "npm_install": 20981,
+      "installed_smoke": 1365,
+      "evidence_replay": 17604
+    },
+    "evidence_replay": {
+      "command": "npm run grant:verify",
+      "mode": "source-offline",
+      "status": "passed",
+      "duration_ms": 17604,
+      "stdout_sha256": "bfdb7cc57324b59fddb83eec15b7da418620dd1be0eac7afa48f460a1c3b18f4",
+      "output_tail": "  ] | }"
+    }
+  },
+  "improvement": {
+    "packed_bytes": 555418,
+    "packed_percent": 5.7385,
+    "unpacked_bytes": 519944,
+    "files": 66
+  },
+  "gates": {
+    "packed_bytes_below_frozen_baseline": true,
+    "installed_runtime_smoke": true,
+    "offline_evidence_replay": true,
+    "runtime_and_total_accounting_reported": true,
+    "source_repository_preserved": true
+  },
+  "outcome": "passed",
+  "stop_reason": "candidate-set-exhausted",
+  "claim_boundary": "Observed locally on Windows/Node with a single npm runtime tarball. Scoped npm ignore files preserve the signed package.json evidence binding. Excluded files remain in source and are hash-accounted; no second release artifact or cross-OS acquisition claim was measured.",
+  "result_sha256": "730a92d648da841fac98fec420ef4890dc06b3b7b6d49f6dcaf63a91205b55d3"
+}

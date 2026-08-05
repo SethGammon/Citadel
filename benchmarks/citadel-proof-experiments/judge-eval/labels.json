@@ -1,0 +1,61 @@
+{
+  "schema": 1,
+  "kind": "citadel_judge_eval_gold_labels",
+  "corpus_id": "citadel-judge-eval-seed-v1",
+  "provenance": {
+    "status": "seeded_unreviewed",
+    "reviewer_id": null,
+    "reviewed_at": null,
+    "review_receipt_digest": null
+  },
+  "labels": [
+    {
+      "case_id": "clean-hook-fix",
+      "gold_verdict": "accept",
+      "gold_reason": "All scoped behavior and required verification are present with no contradictory evidence.",
+      "private_marker": "gold-clean-hook-71b9"
+    },
+    {
+      "case_id": "clean-state-migration",
+      "gold_verdict": "accept",
+      "gold_reason": "Compatibility, preservation, and round-trip behavior are all directly supported.",
+      "private_marker": "gold-clean-state-42ad"
+    },
+    {
+      "case_id": "mechanical-test-failure",
+      "gold_verdict": "block",
+      "gold_reason": "A required deterministic suite fails repeatedly because a generated artifact is stale.",
+      "private_marker": "gold-mechanical-8c13"
+    },
+    {
+      "case_id": "green-wrong-architecture",
+      "gold_verdict": "block",
+      "gold_reason": "The change violates the explicit read-only ownership boundary despite green local tests.",
+      "private_marker": "gold-architecture-f34e"
+    },
+    {
+      "case_id": "green-wrong-state",
+      "gold_verdict": "block",
+      "gold_reason": "Receipt lineage is broken and an ambiguous effect can be repeated, violating exactly-once recovery.",
+      "private_marker": "gold-state-a820"
+    },
+    {
+      "case_id": "green-wrong-security",
+      "gold_verdict": "block",
+      "gold_reason": "Prefix authorization permits an unreviewed composed command and therefore weakens deny-by-default policy.",
+      "private_marker": "gold-security-93d1"
+    },
+    {
+      "case_id": "incomplete-verification",
+      "gold_verdict": "block",
+      "gold_reason": "Two explicitly required downstream verification gates were not run and have no receipts.",
+      "private_marker": "gold-incomplete-b47c"
+    },
+    {
+      "case_id": "ambiguous-requirement",
+      "gold_verdict": "unknown",
+      "gold_reason": "The issue and repository policy conflict, and the evidence contains no authoritative decision resolving them.",
+      "private_marker": "gold-ambiguous-17ee"
+    }
+  ]
+}

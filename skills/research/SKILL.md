@@ -117,7 +117,7 @@ The research document persists for future reference.
 
 ## Parallel Mode (--parallel)
 
-Formerly /research-fleet, which is now a deprecated stub pointing here. Spawns
+The former /research-fleet behavior now lives in this parallel mode. Spawns
 multiple scout agents, each investigating a different angle of the same
 question. Findings are compressed between waves. Produces a unified research
 brief from multiple independent perspectives.

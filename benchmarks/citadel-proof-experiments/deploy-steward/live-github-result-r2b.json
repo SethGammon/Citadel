@@ -1,0 +1,35 @@
+{
+  "schema": 1,
+  "experiment_id": "deploy-steward-live-github-ab",
+  "run_id": "proof-20260805-r2b",
+  "generated_at": "2026-08-05T16:38:03.978Z",
+  "arm_order": "treatment-first",
+  "contract_sha256": "857140d0810e530e61047ff7492109d4e97e6a35e31883770a1970e6273cd828",
+  "full_result_sha256": "71419678bb7773bdd7b76f4d17b0a92c523d088f5194481974da28d0a5e8b500",
+  "validation_passed": true,
+  "control": {
+    "repository": "https://github.com/SethGammon/citadel-steward-proof-20260805-r2b-control",
+    "pull_requests": 15,
+    "merged": 15,
+    "successful_deployments": 15,
+    "exactly_once_deployments": true,
+    "failed_merge_races": 47,
+    "stale_branch_updates": 105,
+    "interventions": 152,
+    "repairs": 0,
+    "elapsed_ms": 1054796
+  },
+  "treatment": {
+    "repository": "https://github.com/SethGammon/citadel-steward-proof-20260805-r2b-treatment",
+    "pull_requests": 15,
+    "merged": 15,
+    "successful_deployments": 15,
+    "exactly_once_deployments": true,
+    "failed_merge_races": 0,
+    "stale_branch_updates": 0,
+    "interventions": 0,
+    "repairs": 0,
+    "elapsed_ms": 718390
+  },
+  "claim_boundary": "Second valid matched public GitHub run, executed treatment-first. Timing is descriptive environment-sensitive telemetry only. Deployment evidence is GitHub Deployment API records and success statuses, not production releases. No speed, cost, outage-resilience, or broad product-utility claim."
+}

@@ -4,7 +4,7 @@ const fs = require('fs');
 const path = require('path');
 
 const PROOF_LINKS = Object.freeze([
-  'README.md#see-it-run',
+  'README.md#what-citadel-can-prove',
   'docs/GOLDEN_PATH.md',
   'docs/INTEROPERABILITY.md',
   'docs/RELEASES.md',
@@ -19,6 +19,23 @@ function countSkills(root) {
   return fs.readdirSync(skills, { withFileTypes: true })
     .filter((entry) => entry.isDirectory() && fs.existsSync(path.join(skills, entry.name, 'SKILL.md')))
     .length;
+}
+
+function markdownAnchors(source) {
+  const anchors = new Set();
+  for (const line of source.split(/\r?\n/)) {
+    const match = /^#{1,6}\s+(.+?)\s*#*\s*$/.exec(line);
+    if (!match) continue;
+    const anchor = match[1]
+      .toLowerCase()
+      .replace(/<[^>]+>/g, '')
+      .replace(/[^a-z0-9\s-]/g, '')
+      .trim()
+      .replace(/\s+/g, '-')
+      .replace(/-+/g, '-');
+    if (anchor) anchors.add(anchor);
+  }
+  return anchors;
 }
 
 function buildMetadata(rootPath) {
@@ -83,8 +100,14 @@ function validateMetadata(rootPath, metadata) {
     }
   }
   for (const link of metadata.proof_links) {
-    const file = link.split('#')[0];
-    if (!fs.existsSync(path.join(root, file))) errors.push(`proof link missing: ${link}`);
+    const [file, fragment] = link.split('#');
+    const proofPath = path.join(root, file);
+    if (!fs.existsSync(proofPath)) {
+      errors.push(`proof link missing: ${link}`);
+    } else if (fragment && path.extname(file).toLowerCase() === '.md') {
+      const anchors = markdownAnchors(fs.readFileSync(proofPath, 'utf8'));
+      if (!anchors.has(fragment)) errors.push(`proof link anchor missing: ${link}`);
+    }
   }
   if (metadata.interoperability.remote_registry_verification !== 'not-claimed') {
     errors.push('remote registry verification must remain explicitly unclaimed');
@@ -100,4 +123,4 @@ function stableJson(value) {
   return `${JSON.stringify(value, null, 2)}\n`;
 }
 
-module.exports = Object.freeze({ buildMetadata, countSkills, stableJson, validateMetadata });
+module.exports = Object.freeze({ buildMetadata, countSkills, markdownAnchors, stableJson, validateMetadata });
