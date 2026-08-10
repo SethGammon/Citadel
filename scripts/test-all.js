@@ -182,20 +182,49 @@ function dashboardPerfAccepted(status) {
   return status === 'pass' || status === 'advisory';
 }
 
+function aggregateExitCode(dashboardPerfStatus, requiredChecksPassed = true) {
+  if (!requiredChecksPassed || dashboardPerfStatus === 'fail') return 1;
+  if (dashboardPerfStatus === 'advisory') return 2;
+  return dashboardPerfStatus === 'pass' ? 0 : 1;
+}
+
 function suiteSuccessMessage(dashboardPerfStatus) {
   return dashboardPerfStatus === 'advisory'
-    ? 'All required tests pass; dashboard performance timing remains ADVISORY.\n'
+    ? 'All correctness checks passed; dashboard performance timing is INCONCLUSIVE (ADVISORY).\n'
     : 'All tests pass.\n';
 }
 
+const dashboardPerfStatusFixture = process.argv.find((argument) => argument.startsWith('--dashboard-perf-status-fixture='));
+if (dashboardPerfStatusFixture) {
+  const status = dashboardPerfStatusFixture.split('=', 2)[1];
+  const requiredChecksPassed = !process.argv.includes('--dashboard-perf-other-failure');
+  console.log(`Dashboard perf: ${String(status).toUpperCase()}`);
+  if (requiredChecksPassed && dashboardPerfAccepted(status)) console.log(suiteSuccessMessage(status));
+  process.exit(aggregateExitCode(status, requiredChecksPassed));
+}
+
 if (process.argv.includes('--test-dashboard-perf-status')) {
-  const childAdvisory = runWithAdvisory('Synthetic Dashboard Performance Advisory', '-e', ['process.exit(2)']);
+  const runAggregateFixture = (status, otherFailure = false) => spawnSync(process.execPath, [
+    __filename,
+    `--dashboard-perf-status-fixture=${status}`,
+    ...(otherFailure ? ['--dashboard-perf-other-failure'] : []),
+  ], { cwd: PLUGIN_ROOT, encoding: 'utf8' });
+  const passingAggregate = runAggregateFixture('pass');
+  const advisoryAggregate = runAggregateFixture('advisory');
+  const failingAggregate = runAggregateFixture('fail');
+  const mixedFailureAggregate = runAggregateFixture('advisory', true);
   assert.equal(statusFromExitCode(0), 'pass');
   assert.equal(statusFromExitCode(2), 'advisory');
   assert.equal(statusFromExitCode(1), 'fail');
-  assert.equal(childAdvisory, 'advisory', 'aggregate runner must preserve the child advisory status');
+  assert.equal(passingAggregate.status, 0, 'aggregate full pass must exit 0');
+  assert.equal(advisoryAggregate.status, 2, 'aggregate advisory must remain machine-distinct with exit 2');
+  assert.equal(failingAggregate.status, 1, 'aggregate timing failure must exit 1');
+  assert.equal(mixedFailureAggregate.status, 1, 'ordinary failures must dominate an advisory and exit 1');
+  assert(advisoryAggregate.stdout.includes('Dashboard perf: ADVISORY'));
+  assert(advisoryAggregate.stdout.includes('INCONCLUSIVE (ADVISORY)'));
+  assert(!advisoryAggregate.stdout.includes('Dashboard perf: PASS'));
   assert.equal(dashboardPerfAccepted('advisory'), true,
-    'an explicit host-contention advisory is not a correctness failure');
+    'an advisory may reach the aggregate inconclusive exit instead of the ordinary failure path');
   assert(!suiteSuccessMessage('advisory').includes('All tests pass'),
     'advisory aggregate output must never claim every test passed');
   assert(suiteSuccessMessage('advisory').includes('ADVISORY'),
@@ -423,7 +452,7 @@ if (hooksPassed && securityPassed && contractsPassed && operationsProtocolPassed
   console.log('  node scripts/skill-bench.js             validate scenario files');
   console.log('  node scripts/skill-bench.js --execute   run against Claude CLI');
   console.log('  node scripts/skill-bench.js --execute --runtime codex-exec   run against Codex exec\n');
-  process.exit(0);
+  process.exit(aggregateExitCode(dashboardPerfStatus));
 }
 
 const hookFail = !hooksPassed ? 1 : 0;
