@@ -228,6 +228,18 @@ assert.equal(stalePreview.activation.context.status, 'stale');
 assert.equal(stalePreview.activation.decision.status, 'blocked');
 assert.equal(stalePreview.boundary, 'product-bundle-activation');
 
+const staleDirectBlocked = run(
+  '../hooks_src/user-prompt-submit.js',
+  [],
+  JSON.stringify({ prompt: '/do diagnose the card-effect engine' }),
+  { CLAUDE_PROJECT_DIR: root, CITADEL_RUNTIME: 'claude-code' },
+);
+assert.equal(staleDirectBlocked.status, 2);
+assert.match(
+  staleDirectBlocked.stderr,
+  /EFFECTIVE_CONFIG_STALE.*reconcile --apply --json/,
+);
+
 const healthUtil = path.join(__dirname, '..', 'hooks_src', 'harness-health-util.js');
 const health = spawnSync(
   process.execPath,

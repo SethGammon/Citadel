@@ -101,6 +101,11 @@ test('stale effective receipts are rejected and preflight fails closed', () => {
   assert.equal(decision.status, 'blocked');
   assert.equal(decision.reasonCode, config.EFFECTIVE_RECEIPT_REASONS.STALE);
   assert.equal(decision.plan.action, 'reconcile-effective-config');
+  assert.equal(decision.plan.requiresExplicitApply, true);
+  assert.equal(
+    decision.plan.applyCommand,
+    'node .citadel/scripts/citadel-config.js reconcile --apply --json',
+  );
 });
 
 test('malformed and future effective receipts are rejected distinctly', () => {

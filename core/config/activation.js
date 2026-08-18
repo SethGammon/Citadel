@@ -159,8 +159,9 @@ function activationDecision(effective, target) {
       deepFreeze({
         contractVersion: 1,
         action: 'reconcile-effective-config',
-        requiresExplicitApply: false,
+        requiresExplicitApply: true,
         mutatesConfig: false,
+        applyCommand: 'node .citadel/scripts/citadel-config.js reconcile --apply --json',
       }),
     );
   }
