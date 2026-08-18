@@ -79,12 +79,18 @@ function testReadinessCheck() {
   const tmp = tempProject('citadel-readiness-');
   try {
     fs.writeFileSync(path.join(tmp, 'AGENTS.md'), '# Test\n\n## Review guidelines\n\n- Focus on P0/P1 issues.\n', 'utf8');
+    fs.writeFileSync(path.join(tmp, 'package.json'), '{"type":"module"}\n', 'utf8');
     execFileSync(process.execPath, [path.join(CITADEL_ROOT, 'scripts', 'codex-compat.js'), tmp], {
       cwd: CITADEL_ROOT,
       stdio: 'pipe',
       encoding: 'utf8',
       timeout: 20000,
     });
+    execFileSync(
+      process.execPath,
+      [path.join(tmp, '.citadel', 'scripts', 'citadel-config.js'), 'show', '--json'],
+      { cwd: tmp, stdio: 'pipe', encoding: 'utf8', timeout: 20000 },
+    );
 
     const report = checkCodexReadiness({ projectRoot: tmp, write: true });
     assert(report.pass, JSON.stringify(report.checks.filter((check) => !check.pass), null, 2));

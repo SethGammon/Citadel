@@ -81,6 +81,13 @@ function shouldSyncScripts() {
     const pluginScripts = path.join(PLUGIN_ROOT, 'scripts');
     const projectScripts = path.join(PROJECT_ROOT, '.citadel', 'scripts');
     if (!fs.existsSync(pluginScripts) || !fs.existsSync(projectScripts)) return true;
+    const moduleScope = path.join(projectScripts, 'package.json');
+    if (!fs.existsSync(moduleScope)) return true;
+    try {
+      if (JSON.parse(fs.readFileSync(moduleScope, 'utf8')).type !== 'commonjs') return true;
+    } catch {
+      return true;
+    }
     return fs.readdirSync(pluginScripts)
       .filter((file) => file.endsWith('.js') || file.endsWith('.cjs'))
       .some((file) => !fs.existsSync(path.join(projectScripts, file)));
@@ -209,6 +216,10 @@ function main() {
       const projectScripts = path.join(PROJECT_ROOT, '.citadel', 'scripts');
       if (fs.existsSync(pluginScripts)) {
         ensureDir(projectScripts);
+        fs.writeFileSync(
+          path.join(projectScripts, 'package.json'),
+          `${JSON.stringify({ type: 'commonjs' }, null, 2)}\n`,
+        );
         for (const file of fs.readdirSync(pluginScripts)) {
           if (file.endsWith('.js') || file.endsWith('.cjs')) {
             fs.writeFileSync(
