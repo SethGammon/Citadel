@@ -192,6 +192,10 @@ console.log('\nPhase 2: Init project (SessionStart → init-project.js)');
 console.log('─'.repeat(40));
 
 const initDir = sandbox();
+fs.writeFileSync(
+  path.join(initDir, 'package.json'),
+  `${JSON.stringify({ type: 'module' }, null, 2)}\n`,
+);
 
 test('init-project.js exits 0', () => {
   const r = fireHook('init-project.js', {}, initDir);
@@ -226,6 +230,30 @@ test('.citadel/scripts/ populated with delegates', () => {
     return !content.includes(delegateMarker);
   });
   if (nonDelegate.length > 0) return `non-delegate scripts found: ${nonDelegate.join(', ')}`;
+});
+
+test('.citadel script delegates execute inside an ESM target', () => {
+  const moduleScope = JSON.parse(fs.readFileSync(
+    path.join(initDir, '.citadel', 'scripts', 'package.json'),
+    'utf8',
+  ));
+  if (moduleScope.type !== 'commonjs') return 'delegate package scope is not CommonJS';
+  const result = spawnSync(
+    process.execPath,
+    [path.join(initDir, '.citadel', 'scripts', 'citadel-config.js'), 'show', '--json'],
+    { cwd: initDir, encoding: 'utf8' },
+  );
+  if (result.status !== 0) return `delegate failed: ${result.stderr || result.stdout}`;
+  JSON.parse(result.stdout);
+});
+
+test('init-project repairs a missing delegate module scope without a version change', () => {
+  const moduleScopePath = path.join(initDir, '.citadel', 'scripts', 'package.json');
+  fs.rmSync(moduleScopePath);
+  const result = fireHook('init-project.js', {}, initDir);
+  if (result.exitCode !== 0) return `repair failed: ${result.stderr || result.stdout}`;
+  const moduleScope = JSON.parse(fs.readFileSync(moduleScopePath, 'utf8'));
+  if (moduleScope.type !== 'commonjs') return 'delegate package scope was not repaired';
 });
 
 test('.citadel/plugin-root.txt written', () => {

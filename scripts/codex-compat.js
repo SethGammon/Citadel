@@ -629,6 +629,10 @@ function syncProjectScripts() {
   }
 
   writeFile(path.join(PROJECT_ROOT, '.citadel', 'plugin-root.txt'), CITADEL_ROOT);
+  writeFile(
+    path.join(PROJECT_ROOT, '.citadel', 'scripts', 'package.json'),
+    `${JSON.stringify({ type: 'commonjs' }, null, 2)}\n`
+  );
 
   let synced = 0;
   for (const file of fs.readdirSync(sourceDir)) {
