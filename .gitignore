@@ -126,3 +126,22 @@ docs/cloud/
 
 # Internal planning and design documents (not user-facing)
 docs/FACELIFT_PLAN.md
+
+# Local operational state (generated artifacts and internal strategy; keep out of the public repo)
+.planning/evolve/
+.planning/memory/
+.planning/design-manifest.md
+.planning/prd-*.md
+.planning/architecture-*.md
+.planning/citadel-app-experience-decisions.md
+.planning/review-packages/
+.planning/product-proof/baseline.md
+.planning/product-proof/golden-path-matrix-windows.json
+.planning/research/twelve-month-unlocks/BASELINE-EVIDENCE.md
+.planning/research/twelve-month-unlocks/COMPLETION-AUDIT.md
+.planning/campaigns/citadel-executor-profiles-live-proof.md
+.planning/campaigns/citadel-interactive-product-story-v2.md
+.planning/campaigns/citadel-twelve-month-unlocks.md
+
+# npm package excludes (handled via nested .npmignore for tarball content)
+docs/images/

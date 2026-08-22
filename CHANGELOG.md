@@ -83,6 +83,22 @@ All notable Citadel changes are recorded here. Citadel follows semantic versioni
   reports, OpenTelemetry-compatible GenAI attributes, and JSONL outcome learning.
 - The public experience now uses four progressive levels: `/do`, durable
   continuation, coordinated work, and optional explicit Operation Control.
+- Zero-to-Receipt showcase (`docs/SHOWCASE.md`): the canonical Operation Fork
+  journey — objective, dual-runtime isolation, interruption and fresh-session
+  recovery, honest comparison, human selection, landing, offline receipt
+  verification, and redacted replay — with a reproducible demo repository.
+- `docs/archive/` for superseded internal specifications.
+
+### Changed
+
+- Moved superseded internal specifications to `docs/archive/`.
+- npm package excludes documentation images, archived specs, and raw benchmark
+  fixture output (unpacked size 7.7 MB → ~5.8 MB).
+- Internal planning state (experiment logs, compiled memory blocks, active
+  strategy campaigns, PRDs) is now local-only and excluded from the repository.
+
+### Added
+
 - Operation Fork runs one objective through isolated Claude Code and Codex worktrees
   under one immutable objective, scope, policy, budget, workflow, and verifier contract.
 - Signed per-branch receipts, evidence coverage, duration, cost, and diff metadata feed
