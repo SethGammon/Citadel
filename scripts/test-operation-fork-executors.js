@@ -424,6 +424,19 @@ assert.throws(() => forks.platformInvocation({ command: 'unknown', args: ['exec'
   platform: 'win32', env: {}, resolve: () => 'C:\\tools\\unknown.cmd',
   resolveEntrypoint: () => null,
 }), /trusted direct entrypoint/i);
+const npmShim = forks.platformInvocation({ command: 'npm', args: ['test'] }, {
+  platform: 'win32',
+  env: {},
+  resolve: () => 'C:\\Program Files\\nodejs\\npm.cmd',
+  resolveEntrypoint: () => 'C:\\Program Files\\nodejs\\node_modules\\npm\\bin\\npm-cli.js',
+  exists: () => true,
+  nodePath: 'C:\\Program Files\\nodejs\\node.exe',
+});
+assert.equal(npmShim.command, 'C:\\Program Files\\nodejs\\node.exe');
+assert.deepEqual(npmShim.args.slice(0, 2), [
+  'C:\\Program Files\\nodejs\\node_modules\\npm\\bin\\npm-cli.js',
+  'test',
+]);
 let spawnOptions = null;
 forks.spawnInvocation(invocation, { platform: 'linux', spawn: (_command, _args, spawned) => {
   spawnOptions = spawned;

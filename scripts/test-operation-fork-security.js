@@ -78,6 +78,9 @@ forks.createForkRecord(sandbox, landingFork);
 const token = forks.landingConfirmation(landingFork, BASE);
 let mergeCalls = 0;
 const provider = {
+  branchTip(_root, branchRef) {
+    return branchRef.endsWith('empty') ? BASE : 'c'.repeat(40);
+  },
   merge(_root, branchRef, expected) {
     mergeCalls += 1;
     assert.equal(branchRef, 'citadel/fork-landing-safe/branch-claude');
@@ -109,6 +112,23 @@ assert.throws(() => forks.applyLanding({ projectRoot: sandbox, forkId: ambiguous
   expectedRevision: inProgress.revision, targetRevision: BASE, confirmation: ambiguousToken,
   idempotencyKey: 'landing-ambiguous-001', worktreeProvider: provider }), /ambiguous/i);
 assert.equal(mergeCalls, 1, 'ambiguous landing recovery must not invoke merge');
+
+const emptyFork = readyFork('fork-landing-empty');
+forks.createForkRecord(sandbox, emptyFork);
+// Point the selected branch's ref at a tip that resolves to the base revision,
+// simulating an agent that produced working-tree changes but never committed.
+const emptyWithBaseRef = forks.nextFork(emptyFork, {
+  branches: emptyFork.branches.map((branch) => (
+    branch.branch_id === 'branch-claude' ? { ...branch, branch_ref: 'citadel/fork-landing-empty/empty' } : branch)),
+}, '2026-07-13T15:00:06.000Z');
+forks.saveFork(sandbox, emptyWithBaseRef, emptyFork.revision);
+assert.throws(() => forks.applyLanding({ projectRoot: sandbox, forkId: 'fork-landing-empty',
+  expectedRevision: emptyWithBaseRef.revision, targetRevision: BASE,
+  confirmation: forks.landingConfirmation(emptyWithBaseRef, BASE),
+  idempotencyKey: 'landing-empty-001', worktreeProvider: provider }), (error) => {
+  assert.equal(error.code, 'FORK_LANDING_EMPTY');
+  return true;
+});
 
 fs.rmSync(sandbox, { recursive: true, force: true });
 process.stdout.write('Operation Fork security passed: strict schemas, literal spawning, path containment, replay redaction, and exactly-once landing boundaries.\n');

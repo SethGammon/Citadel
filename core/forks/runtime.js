@@ -297,8 +297,14 @@ function runRuntimeBranch(options) {
   const agentPassed = !agent.error && agent.status === 0 && !containmentViolation;
   let verifier = { status: 1, stdout: '', stderr: 'Agent execution failed before verification.' };
   if (agentPassed) {
-    verifier = safeSpawn(options.verifier.command, options.verifier.args || [], { spawn: options.spawn,
-      cwd: options.worktree, timeoutMs: options.verifier.timeout_ms || options.timeoutMs, env: options.env });
+    // Verifier commands may be Windows .cmd shims (npm, npx), which shell-free
+    // spawnSync cannot execute directly; resolve them the same way executors are.
+    const verifierInvocation = platformInvocation(
+      { command: options.verifier.command, args: options.verifier.args || [] },
+      { platform: options.platform || process.platform, env: options.env || process.env });
+    verifier = safeSpawn(verifierInvocation.command, verifierInvocation.args, { spawn: options.spawn,
+      cwd: options.worktree, timeoutMs: options.verifier.timeout_ms || options.timeoutMs, env: options.env,
+      windowsVerbatimArguments: verifierInvocation.windowsVerbatimArguments === true });
   }
   const passed = agentPassed && !verifier.error && verifier.status === 0;
   const completedAt = options.completedAt || new Date().toISOString();
