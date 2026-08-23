@@ -240,18 +240,24 @@ function resolveExecutorSelection(selection = {}) {
   };
 }
 
-function runtimeInvocationForProfile(profile) {
+function runtimeInvocationForProfile(profile, options = {}) {
   assertValidExecutorProfile(profile);
-  const options = profile.adapter_options;
+  const platform = options.platform || process.platform;
+  const adapterOptions = profile.adapter_options;
   if (profile.runtime === 'claude') {
     const args = ['--print', '--output-format', 'json',
-      '--permission-mode', options.permission_mode || DEFAULT_PERMISSION_MODE,
+      '--permission-mode', adapterOptions.permission_mode || DEFAULT_PERMISSION_MODE,
       '--allowedTools', CLAUDE_ALLOWED_TOOLS];
     if (profile.model !== null) args.push('--model', profile.model);
-    if (options.effort) args.push('--effort', options.effort);
+    if (adapterOptions.effort) args.push('--effort', adapterOptions.effort);
     return { command: 'claude', args };
   }
-  const args = ['exec', '--json', '--sandbox', options.sandbox || DEFAULT_SANDBOX, '--ignore-user-config'];
+  const args = ['exec', '--json', '--sandbox', adapterOptions.sandbox || DEFAULT_SANDBOX, '--ignore-user-config'];
+  // --ignore-user-config strips the user's [windows] sandbox setting, and on
+  // Windows the Codex CLI cannot enforce workspace-write without it, falling
+  // back to a read-only filesystem. Restore the elevated sandbox explicitly so
+  // fork branches keep write parity with ordinary user-configured sessions.
+  if (platform === 'win32') args.push('-c', 'windows.sandbox=elevated');
   if (profile.local_provider !== null) args.push('--oss', '--local-provider', profile.local_provider);
   if (profile.model !== null) args.push('--model', profile.model);
   args.push('-');

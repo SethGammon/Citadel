@@ -253,6 +253,18 @@ function applyLanding(options) {
   let fork = loadFork(projectRoot, options.forkId);
   if (fork.landing?.status === 'landed' && fork.landing.idempotency_key === options.idempotencyKey) return fork;
   if (fork.landing?.status === 'unknown') throw Object.assign(new Error('Previous landing effect is ambiguous and will not be repeated'), { code: 'FORK_LANDING_AMBIGUOUS' });
+  // A branch whose tip equals the base revision carries no committed work.
+  // Landing it would report success while changing nothing, so block instead.
+  const preselectedBranch = fork.selection
+    ? fork.branches.find((branch) => branch.branch_id === fork.selection.branch_id) : null;
+  if (preselectedBranch && preselectedBranch.base_revision) {
+    const tip = provider.branchTip(projectRoot, preselectedBranch.branch_ref);
+    if (tip === preselectedBranch.base_revision) {
+      throw Object.assign(new Error('Selected branch has no commits beyond the base revision; agent changes were never committed'), {
+        code: 'FORK_LANDING_EMPTY',
+      });
+    }
+  }
   // The stored wrapper is reloaded and verified here, not trusted from the record.
   const selectedBranch = fork.selection
     ? fork.branches.find((branch) => branch.branch_id === fork.selection.branch_id) : null;

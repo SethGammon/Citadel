@@ -76,6 +76,9 @@ function createGitWorktreeProvider(options = {}) {
     isClean(projectRoot) {
       return git(['status', '--porcelain=v1', '--untracked-files=normal'], { cwd: projectRoot, spawn }) === '';
     },
+    branchTip(projectRoot, branchRef) {
+      return git(['rev-parse', '--verify', branchRef], { cwd: projectRoot, spawn, code: 'FORK_BRANCH_TIP_READ_FAILED' });
+    },
     resolve(projectRoot, root, forkId, branchId) {
       return worktreePath(projectRoot, root, forkId, branchId);
     },

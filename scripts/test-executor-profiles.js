@@ -109,11 +109,15 @@ assert.deepEqual(profiles.runtimeInvocationForProfile(claude), {
     '--allowedTools', profiles.CLAUDE_ALLOWED_TOOLS,
     '--model', 'claude-sonnet-4-5', '--effort', 'high'],
 });
-assert.deepEqual(profiles.runtimeInvocationForProfile(local), {
+assert.deepEqual(profiles.runtimeInvocationForProfile(local, { platform: 'linux' }), {
   command: 'codex',
   args: ['exec', '--json', '--sandbox', 'workspace-write', '--ignore-user-config', '--oss', '--local-provider', 'ollama',
     '--model', 'qwen3-coder:30b', '-'],
 });
+const codexWindows = profiles.runtimeInvocationForProfile(codex, { platform: 'win32' });
+assert.strictEqual(codexWindows.args.filter((item) => item === '-c').length, 1);
+assert.ok(codexWindows.args.includes('windows.sandbox=elevated'));
+assert.ok(profiles.runtimeInvocationForProfile(codex, { platform: 'linux' }).args.every((item) => !String(item).startsWith('windows.sandbox')));
 let spawnOptions;
 const invocation = profiles.runtimeInvocationForProfile(local);
 forks.safeSpawn(invocation.command, invocation.args, {

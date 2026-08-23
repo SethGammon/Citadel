@@ -120,6 +120,14 @@ operation lineage without prompts, source, paths, or credentials.
 - [ ] Walkthrough post (≤1500 words) published and linked
 - [ ] Every artifact labeled real vs fixture without exception
 
+## Known limitations (being fixed)
+
+First live runs of this showcase surfaced three Windows defects — read-only
+fork branches, `.cmd` verifier spawn failures, and no-op landings reporting
+success. See [issue #268](https://github.com/SethGammon/Citadel/issues/268)
+for reproductions, verified fixes, and the remaining commit-in-worktree design
+question. Until the fixes are released, run this showcase on macOS or Linux.
+
 ## Troubleshooting
 
 | Symptom | First check |
