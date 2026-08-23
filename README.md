@@ -13,7 +13,7 @@ Citadel routes requests, preserves repository state between sessions,
 coordinates parallel work, applies repository safeguards, and records evidence
 and handoffs around the coding agent you already use.
 
-[Install](#install) · [Start using it](#start-using-it) · [Trust boundary](#trust-boundary) · [Zero-to-receipt showcase](docs/SHOWCASE.md) · [Documentation](#documentation)
+[Install](#install) · [Start using it](#start-using-it) · [Trust boundary](#trust-boundary) · [Documentation](#documentation)
 
 </div>
 
