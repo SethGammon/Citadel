@@ -143,5 +143,5 @@ docs/FACELIFT_PLAN.md
 .planning/campaigns/citadel-interactive-product-story-v2.md
 .planning/campaigns/citadel-twelve-month-unlocks.md
 
-# npm package excludes (handled via nested .npmignore for tarball content)
+# Source-only documentation images (excluded from npm tarballs by the root ignore policy)
 docs/images/
