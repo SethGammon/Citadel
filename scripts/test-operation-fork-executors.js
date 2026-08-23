@@ -428,7 +428,9 @@ const npmShim = forks.platformInvocation({ command: 'npm', args: ['test'] }, {
   platform: 'win32',
   env: {},
   resolve: () => 'C:\\Program Files\\nodejs\\npm.cmd',
+  resolveEntrypoint: () => 'C:\\Program Files\\nodejs\\node_modules\\npm\\bin\\npm-cli.js',
   exists: () => true,
+  nodePath: 'C:\\Program Files\\nodejs\\node.exe',
 });
 assert.equal(npmShim.command, 'C:\\Program Files\\nodejs\\node.exe');
 assert.deepEqual(npmShim.args.slice(0, 2), [
