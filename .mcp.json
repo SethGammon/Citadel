@@ -5,6 +5,7 @@
       "args": [
         "mcp-servers/citadel-state/index.js"
       ],
+      "cwd": ".",
       "env": {
         "CITADEL_MCP_SERVER": "citadel-state"
       },
@@ -20,6 +21,7 @@
       "args": [
         "mcp-servers/codebase-memory/index.js"
       ],
+      "cwd": ".",
       "env": {
         "CITADEL_MCP_SERVER": "codebase-memory"
       },

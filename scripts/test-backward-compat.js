@@ -397,6 +397,72 @@ check('Codex Stop output rejects malformed block decisions but leaves other even
   }).stdout, nonStop);
 });
 
+check('Codex SessionStart output wraps inner hook text in the native envelope', () => {
+  const projected = projectCodexOutput({
+    nativeEventName: 'SessionStart',
+    stdout: '[citadel] restored durable memory\n',
+    stderr: '',
+  });
+  assert.deepStrictEqual(JSON.parse(projected.stdout), {
+    hookSpecificOutput: {
+      hookEventName: 'SessionStart',
+      additionalContext: '[citadel] restored durable memory',
+    },
+  });
+  assert.equal(projected.stderr, '');
+});
+
+check('Codex SessionStart output converts Citadel UI JSON to native context', () => {
+  const projected = projectCodexOutput({
+    nativeEventName: 'SessionStart',
+    stdout: JSON.stringify({
+      hook: 'intake-scanner',
+      action: 'allowed',
+      message: '[Intake] Work items detected',
+      data: { pending: ['example'] },
+    }),
+    stderr: '',
+  });
+  assert.deepStrictEqual(JSON.parse(projected.stdout), {
+    hookSpecificOutput: {
+      hookEventName: 'SessionStart',
+      additionalContext: '[Intake] Work items detected',
+    },
+  });
+});
+
+check('Codex SessionStart output preserves an already native envelope', () => {
+  const native = JSON.stringify({
+    hookSpecificOutput: {
+      hookEventName: 'SessionStart',
+      additionalContext: 'Load project memory.',
+    },
+  });
+  assert.equal(projectCodexOutput({
+    nativeEventName: 'SessionStart',
+    stdout: native,
+    stderr: '',
+  }).stdout, native);
+});
+
+check('Codex PostToolUse output wraps Citadel UI JSON in the native envelope', () => {
+  const projected = projectCodexOutput({
+    nativeEventName: 'PostToolUse',
+    stdout: JSON.stringify({
+      hook: 'post-edit',
+      action: 'allowed',
+      message: '[citadel] post-edit checks passed',
+    }),
+    stderr: '',
+  });
+  assert.deepStrictEqual(JSON.parse(projected.stdout), {
+    hookSpecificOutput: {
+      hookEventName: 'PostToolUse',
+      additionalContext: '[citadel] post-edit checks passed',
+    },
+  });
+});
+
 check('Codex apply_patch target extraction covers add, update, delete, and move paths', () => {
   const command = [
     '*** Begin Patch',

@@ -249,9 +249,55 @@ function isValidCodexStopOutput(output) {
   return output.reason === undefined;
 }
 
+function isValidCodexContextOutput(output, eventName) {
+  if (!output || typeof output !== 'object' || Array.isArray(output)) return false;
+  const allowedKeys = new Set([
+    'continue',
+    'stopReason',
+    'suppressOutput',
+    'systemMessage',
+    'hookSpecificOutput',
+  ]);
+  if (Object.keys(output).some((key) => !allowedKeys.has(key))) return false;
+  const specific = output.hookSpecificOutput;
+  if (!specific || typeof specific !== 'object' || Array.isArray(specific)) return false;
+  if (specific.hookEventName !== eventName) return false;
+  return typeof specific.additionalContext === 'string';
+}
+
+function projectCodexContextOutput(stdout, eventName) {
+  if (stdout.trim().length === 0) return '';
+
+  let parsed;
+  try {
+    parsed = JSON.parse(stdout);
+  } catch {
+    parsed = null;
+  }
+
+  if (isValidCodexContextOutput(parsed, eventName)) return stdout;
+
+  const context = parsed
+    && typeof parsed === 'object'
+    && !Array.isArray(parsed)
+    && typeof parsed.message === 'string'
+    ? parsed.message
+    : stdout.trim();
+
+  return JSON.stringify({
+    hookSpecificOutput: {
+      hookEventName: eventName,
+      additionalContext: context,
+    },
+  });
+}
+
 function projectCodexOutput(result) {
   const stdout = result.stdout || '';
   const stderr = result.stderr || '';
+  if (['SessionStart', 'PostToolUse'].includes(result.nativeEventName)) {
+    return { stdout: projectCodexContextOutput(stdout, result.nativeEventName), stderr };
+  }
   if (result.nativeEventName !== 'Stop' || stdout.trim().length === 0) {
     return { stdout, stderr };
   }
@@ -308,8 +354,10 @@ module.exports = Object.freeze({
   extractApplyPatchTargets,
   isValidCodexStopOutput,
   isSecurityHook,
+  isValidCodexContextOutput,
   parseApplyPatchOperations,
   projectLegacyPayloads,
   projectCodexOutput,
+  projectCodexContextOutput,
   validateSecurityEnvelope,
 });

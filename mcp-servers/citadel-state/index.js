@@ -273,7 +273,7 @@ function handleRequest(req) {
   if (method === 'notifications/initialized') return;
   if (method === 'tools/list') { respond(id, { tools: TOOL_DEFS }); return; }
   if (method === 'tools/call') {
-    if (!isPlainObject(params) || Object.keys(params).some((key) => !['name', 'arguments'].includes(key))
+    if (!isPlainObject(params) || Object.keys(params).some((key) => !['name', 'arguments', '_meta'].includes(key))
       || typeof params.name !== 'string') {
       respondError(id, -32602, 'Invalid tool call');
       return;

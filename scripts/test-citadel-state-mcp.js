@@ -193,7 +193,10 @@ async function run() {
       call(14, 'citadel_operation_pause', { operation_id: 'operation-pause' }),
       call(15, 'citadel_operation_get', { operation_id: '../campaigns/escape' }),
       call(16, 'citadel_operation_pause', mutation('operation-pause', 'pause', 'key-root', { project_root: path.dirname(root) })),
-      call(17, 'citadel_status', {}),
+      {
+        ...call(17, 'citadel_status', {}),
+        params: { ...call(17, 'citadel_status', {}).params, _meta: { progressToken: 'codex-call-17' } },
+      },
       call(18, 'citadel_workflow_prompt', { workflow: 'qa', target: 'control surface' }),
     ];
     const responses = await drive(root, requests);
