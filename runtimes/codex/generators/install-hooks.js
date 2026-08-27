@@ -92,7 +92,9 @@ function translateCodexHooks(hooksTemplate, adapterScriptPath, options = {}) {
           type: 'command',
           command: commandForHook(hookName),
           statusMessage: `Citadel: ${hookName}`,
-          timeout: hook.timeout || 30,
+          timeout: codexEvent === 'SessionEnd'
+            ? Math.min(hook.timeout || 30, 3)
+            : hook.timeout || 30,
         };
         if (commandWindowsForHook) translatedHook.commandWindows = commandWindowsForHook(hookName);
         hooks.push(translatedHook);

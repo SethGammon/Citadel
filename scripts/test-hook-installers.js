@@ -125,6 +125,9 @@ assert(translated.hooks.SubagentStop, 'codex translation should install Subagent
 assert(translated.hooks.SessionEnd?.some((entry) =>
   entry.hooks.some((hook) => hook.command.includes('session-end'))
 ), 'codex translation should install session-end on native SessionEnd');
+assert(translated.hooks.SessionEnd.every((entry) =>
+  entry.hooks.every((hook) => hook.timeout <= 3)
+), 'Codex SessionEnd hooks must stay within the native three-second limit');
 assert(!translated.hooks.Stop.some((entry) =>
   entry.hooks.some((hook) => hook.command.includes('session-end'))
 ), 'codex translation must not project SessionEnd handlers onto Stop');

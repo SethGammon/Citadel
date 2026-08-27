@@ -229,7 +229,7 @@
             "type": "command",
             "command": "node \"${PLUGIN_ROOT}/hooks_src/codex-adapter.js\" session-end",
             "statusMessage": "Citadel: session-end",
-            "timeout": 10,
+            "timeout": 3,
             "commandWindows": "node \"%PLUGIN_ROOT%\\hooks_src\\codex-adapter.js\" session-end"
           }
         ]

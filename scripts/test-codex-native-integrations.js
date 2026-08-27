@@ -45,6 +45,11 @@ function testRepositoryHookPackagingBoundary() {
 }
 
 function testGeneratedCodexArtifacts() {
+  const bundledMcp = readJson(path.join(CITADEL_ROOT, '.mcp.json'));
+  for (const server of Object.values(bundledMcp.mcpServers)) {
+    assert.equal(server.cwd, '.', 'bundled MCP entrypoints must resolve from the plugin root');
+  }
+
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'citadel-codex-native-'));
   try {
     execFileSync(process.execPath, [path.join(CITADEL_ROOT, 'scripts', 'codex-compat.js'), tmp], {
@@ -100,7 +105,7 @@ function testMcpServer() {
     const input = [
       JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'initialize', params: {} }),
       JSON.stringify({ jsonrpc: '2.0', id: 2, method: 'tools/list', params: {} }),
-      JSON.stringify({ jsonrpc: '2.0', id: 3, method: 'tools/call', params: { name: 'citadel_status', arguments: { includeFiles: true } } }),
+      JSON.stringify({ jsonrpc: '2.0', id: 3, method: 'tools/call', params: { name: 'citadel_status', arguments: { includeFiles: true }, _meta: { progressToken: 3 } } }),
       JSON.stringify({ jsonrpc: '2.0', id: 4, method: 'resources/read', params: { uri: 'citadel://status' } }),
       '',
     ].join('\n');
