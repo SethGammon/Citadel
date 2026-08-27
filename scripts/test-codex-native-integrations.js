@@ -105,7 +105,7 @@ function testMcpServer() {
     const input = [
       JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'initialize', params: {} }),
       JSON.stringify({ jsonrpc: '2.0', id: 2, method: 'tools/list', params: {} }),
-      JSON.stringify({ jsonrpc: '2.0', id: 3, method: 'tools/call', params: { name: 'citadel_status', arguments: { includeFiles: true }, _meta: { progressToken: 'codex-call-3' } } }),
+      JSON.stringify({ jsonrpc: '2.0', id: 3, method: 'tools/call', params: { name: 'citadel_status', arguments: { includeFiles: true }, _meta: { progressToken: 3 } } }),
       JSON.stringify({ jsonrpc: '2.0', id: 4, method: 'resources/read', params: { uri: 'citadel://status' } }),
       '',
     ].join('\n');

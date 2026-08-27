@@ -211,7 +211,7 @@
             "type": "command",
             "command": "node ${CITADEL_ROOT}/codex-adapter.js session-end",
             "statusMessage": "Citadel: session-end",
-            "timeout": 10
+            "timeout": 3
           }
         ]
       }

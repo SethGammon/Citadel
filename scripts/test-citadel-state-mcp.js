@@ -195,7 +195,7 @@ async function run() {
       call(16, 'citadel_operation_pause', mutation('operation-pause', 'pause', 'key-root', { project_root: path.dirname(root) })),
       {
         ...call(17, 'citadel_status', {}),
-        params: { ...call(17, 'citadel_status', {}).params, _meta: { progressToken: 'codex-call-17' } },
+        params: { ...call(17, 'citadel_status', {}).params, _meta: { progressToken: 17 } },
       },
       call(18, 'citadel_workflow_prompt', { workflow: 'qa', target: 'control surface' }),
     ];
