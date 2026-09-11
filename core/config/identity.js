@@ -14,6 +14,10 @@ const INSTALLATION_IDENTITY_VERSION = 1;
 const INSTALLATION_SOURCE_FILES = Object.freeze([
   'package.json',
   'core/config/contract.js',
+  'core/config/validate.js',
+  'core/config/profiles.js',
+  'core/config/migrate.js',
+  'core/config/bundle-catalog.js',
   'core/config/resolve.js',
   'core/config/runtime.js',
   'core/config/receipt.js',

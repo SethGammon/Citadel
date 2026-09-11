@@ -17,6 +17,7 @@ const {
   installationGeneration,
   runtimeIdentity,
 } = require('./identity');
+const { detectRuntimeContract } = require('./runtime');
 
 const EFFECTIVE_RECEIPT_VERSION = 1;
 const EFFECTIVE_RECEIPT_KIND = 'citadel.effective-config';
@@ -301,6 +302,9 @@ function rejectedRead(source, receiptPath, status, reasonCode, errors, options =
 
 function readEffectiveConfig(projectRoot, options = {}) {
   const source = readConfigFile(projectRoot, options);
+  const activeRuntime = options.runtime && typeof options.runtime === 'object'
+    ? options.runtime
+    : detectRuntimeContract(source.projectRoot, options);
   const receiptPath = effectiveConfigPath(source.projectRoot, options);
   if (!fs.existsSync(receiptPath)) {
     return rejectedRead(
@@ -372,24 +376,22 @@ function readEffectiveConfig(projectRoot, options = {}) {
       raw.runtime?.id,
     );
   }
-  if (options.runtime && typeof options.runtime === 'object') {
-    const activeRuntime = runtimeIdentity(options.runtime);
-    if (raw.runtime.id !== activeRuntime.id
-      || raw.runtime.contractDigest !== activeRuntime.contractDigest) {
-      return rejectedRead(
-        source,
-        receiptPath,
-        'stale',
-        EFFECTIVE_RECEIPT_REASONS.STALE,
-        [
-          'effective config runtime ' + raw.runtime.id
-            + ' does not match active runtime ' + activeRuntime.id,
-          'Regenerate with: ' + regenerationCommand(options, activeRuntime.id),
-        ],
-        options,
-        activeRuntime.id,
-      );
-    }
+  const activeRuntimeIdentity = runtimeIdentity(activeRuntime);
+  if (raw.runtime.id !== activeRuntimeIdentity.id
+    || raw.runtime.contractDigest !== activeRuntimeIdentity.contractDigest) {
+    return rejectedRead(
+      source,
+      receiptPath,
+      'stale',
+      EFFECTIVE_RECEIPT_REASONS.STALE,
+      [
+        'effective config runtime ' + raw.runtime.id
+          + ' does not match active runtime ' + activeRuntimeIdentity.id,
+        'Regenerate with: ' + regenerationCommand(options, activeRuntimeIdentity.id),
+      ],
+      options,
+      activeRuntimeIdentity.id,
+    );
   }
   return deepFreeze({
     status: 'current',

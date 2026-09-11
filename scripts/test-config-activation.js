@@ -315,6 +315,22 @@ test('effective receipts bind runtime and installation identities without machin
   assert.equal(serialized.includes(root), false);
   assert.equal(serialized.includes(installationRoot), false);
 
+  const previousRuntime = process.env.CITADEL_RUNTIME;
+  process.env.CITADEL_RUNTIME = 'claude-code';
+  let switchedByEnv;
+  try {
+    switchedByEnv = config.readEffectiveConfig(root, { installationRoot });
+  } finally {
+    if (previousRuntime === undefined) delete process.env.CITADEL_RUNTIME;
+    else process.env.CITADEL_RUNTIME = previousRuntime;
+  }
+  assert.equal(switchedByEnv.reasonCode, config.EFFECTIVE_RECEIPT_REASONS.STALE);
+  assert.match(switchedByEnv.errors[0], /runtime codex does not match active runtime claude-code/);
+  assert.equal(
+    switchedByEnv.repairCommand,
+    'node .citadel/scripts/citadel-config.js reconcile --apply --runtime claude-code --json',
+  );
+
   const switched = config.readEffectiveConfig(root, {
     runtime: claudeRuntime,
     installationRoot,
@@ -324,6 +340,29 @@ test('effective receipts bind runtime and installation identities without machin
   assert.equal(
     switched.repairCommand,
     'node .citadel/scripts/citadel-config.js reconcile --apply --runtime claude-code --json',
+  );
+
+  for (const relative of [
+    'core/config/validate.js',
+    'core/config/profiles.js',
+    'core/config/migrate.js',
+    'core/config/bundle-catalog.js',
+  ]) {
+    assert.equal(identity.INSTALLATION_SOURCE_FILES.includes(relative), true);
+  }
+  const trackedSource = path.join(installationRoot, 'core', 'config', 'validate.js');
+  fs.mkdirSync(path.dirname(trackedSource), { recursive: true });
+  fs.writeFileSync(trackedSource, 'module.exports = {};\n', 'utf8');
+  const changedSource = config.readEffectiveConfig(root, {
+    runtime: codexRuntime,
+    installationRoot,
+  });
+  assert.equal(changedSource.reasonCode, config.EFFECTIVE_RECEIPT_REASONS.STALE);
+  assert.match(changedSource.errors[0], /installationGeneration/);
+  assert.equal(
+    identity.installationGeneration({ installationRoot }).id
+      === current.receipt.installationGeneration.id,
+    false,
   );
 
   fs.writeFileSync(
