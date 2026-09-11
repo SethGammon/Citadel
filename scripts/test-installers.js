@@ -11,6 +11,7 @@ const activation = require('../core/telemetry/activation');
 const installer = require('./install');
 const {
   assertPortableSharedOutputs,
+  classifyOutputs,
   ensureMachineLocalExcludes,
   guidanceOwner,
   inspectInstallInventory,
@@ -250,9 +251,45 @@ function testPortableInstallContractAndTwoClones() {
       () => assertPortableSharedOutputs([{ path: 'opencode.json', ownership: 'shared', content: { root: 'C:\\\\workstation' } }]),
       (error) => error.code === 'CITADEL_SHARED_PATH_NOT_PORTABLE',
     );
+
+    const firstClassification = classifyOutputs([{
+      path: 'opencode.json',
+      ownership: 'shared',
+      content: { skills: { paths: ['C:\\\\old-citadel\\skills'] } },
+    }])[0];
+    const reclassified = classifyOutputs([firstClassification])[0];
+    assert.equal(reclassified.portable, false, 'reclassifying output evidence must preserve portability failures');
+    assert.deepEqual(reclassified.absoluteReferences, firstClassification.absoluteReferences);
   } finally {
     fs.rmSync(first, { recursive: true, force: true });
     fs.rmSync(second, { recursive: true, force: true });
+  }
+}
+
+function testLinkedWorktreeExcludesUseCommonGitDirectory() {
+  const repository = tempProject('citadel-common-git-');
+  const linked = path.join(repository, 'linked');
+  try {
+    execFileSync('git', ['init', '--quiet'], { cwd: repository, stdio: 'ignore' });
+    execFileSync('git', ['config', 'user.email', 'citadel-tests@example.test'], { cwd: repository, stdio: 'ignore' });
+    execFileSync('git', ['config', 'user.name', 'Citadel Tests'], { cwd: repository, stdio: 'ignore' });
+    execFileSync('git', ['commit', '--allow-empty', '-m', 'test'], { cwd: repository, stdio: 'ignore' });
+    execFileSync('git', ['worktree', 'add', '--detach', '--quiet', linked], { cwd: repository, stdio: 'ignore' });
+
+    const plan = ensureMachineLocalExcludes(linked);
+    const commonDir = path.resolve(repository, execFileSync(
+      'git', ['rev-parse', '--git-common-dir'], { cwd: linked, encoding: 'utf8' },
+    ).trim());
+    assert.equal(path.resolve(plan.path), path.join(commonDir, 'info', 'exclude'));
+    execFileSync('git', ['check-ignore', '--no-index', '-q', '.opencode/portable-test'], {
+      cwd: linked,
+      stdio: 'ignore',
+    });
+  } finally {
+    if (fs.existsSync(linked)) {
+      try { execFileSync('git', ['worktree', 'remove', '--force', linked], { cwd: repository, stdio: 'ignore' }); } catch { /* cleanup below */ }
+    }
+    fs.rmSync(repository, { recursive: true, force: true });
   }
 }
 
@@ -264,5 +301,6 @@ testUnifiedDispatcherRecordsSuccessfulInstall();
 testUnifiedDispatcherRecordsFailureWithoutChangingExit();
 testUnifiedDispatcherRespectsNonInstallModesAndOptOut();
 testPortableInstallContractAndTwoClones();
+testLinkedWorktreeExcludesUseCommonGitDirectory();
 
 console.log('installer tests passed');

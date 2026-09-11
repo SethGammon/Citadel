@@ -108,7 +108,9 @@ function classifyOutputs(outputs, options = {}) {
   return (outputs || []).map((output) => {
     const relativePath = normalizeRelative(output.path || output.relativePath);
     const ownership = classifyOutput(relativePath, output);
-    const references = absoluteReferences(output.content, '$');
+    const references = Array.isArray(output.absoluteReferences)
+      ? output.absoluteReferences
+      : absoluteReferences(output.content, '$');
     return Object.freeze({
       runtime: output.runtime || options.runtime || 'unknown',
       path: relativePath,
@@ -116,7 +118,9 @@ function classifyOutputs(outputs, options = {}) {
       reason: output.reason || (ownership === 'shared'
         ? 'Project policy or guidance is intentionally shared.'
         : 'Contains machine-local runtime state, generated adapters, or checkout paths.'),
-      portable: ownership === 'machine-local' || references.length === 0,
+      portable: typeof output.portable === 'boolean'
+        ? output.portable
+        : ownership === 'machine-local' || references.length === 0,
       absoluteReferences: references,
     });
   });
@@ -159,6 +163,15 @@ function gitExcludePath(projectRoot, fileSystem = fs) {
       const match = pointer.match(/^gitdir:\s*(.+)$/i);
       if (!match) return null;
       gitDirectory = path.resolve(path.dirname(gitPath), match[1]);
+      const commonDirFile = path.join(gitDirectory, 'commondir');
+      if (fileSystem.existsSync(commonDirFile)) {
+        const commonDir = fileSystem.readFileSync(commonDirFile, 'utf8').trim();
+        if (commonDir) gitDirectory = path.resolve(gitDirectory, commonDir);
+      } else if (path.basename(path.dirname(gitDirectory)).toLowerCase() === 'worktrees') {
+        // Older or synthetic linked-worktree gitdirs may omit `commondir`, but
+        // still follow Git's conventional .git/worktrees/<name> layout.
+        gitDirectory = path.resolve(gitDirectory, '..', '..');
+      }
     }
   } catch {
     return null;

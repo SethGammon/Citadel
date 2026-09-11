@@ -387,10 +387,9 @@ async function testReadinessOnFurnishedInstall() {
   }
 }
 
-// Skills reach opencode through `skills.paths` pointing at the Citadel checkout,
-// rather than by copying 48 directories into every project. opencode scans each
-// configured path with `**/SKILL.md` (skill/index.ts:211-219), so a Citadel
-// upgrade takes effect with no reinstall and nothing can go stale.
+// Skills reach opencode through a project-local `.citadel/skills` projection.
+// opencode scans each configured path with `**/SKILL.md` (skill/index.ts:211-219),
+// so the shared config remains portable while reinstall refreshes the projection.
 function testSkillsPathMerge() {
   // An existing user path must survive, and Citadel's must be appended.
   const withUserPath = mergeOpencodeConfig(
@@ -412,6 +411,31 @@ function testSkillsPathMerge() {
   const skipped = mergeOpencodeConfig(null, { citadelRoot: '/citadel', projectRoot: '/project', skipSkills: true });
   assert.equal(skipped.config.skills, undefined);
   assert(!skipped.changes.some((item) => item.includes('skills')));
+}
+
+function testReinstallMigratesStaleAbsoluteSkillsPath() {
+  const project = scratchProject();
+  const oldCitadel = scratchProject();
+  const newCitadel = scratchProject();
+  try {
+    installOpencodePlugin({ citadelRoot: oldCitadel, projectRoot: project });
+    const configPath = path.join(project, 'opencode.json');
+    const legacy = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+    legacy.skills.paths = [path.join(oldCitadel, 'skills')];
+    fs.writeFileSync(configPath, JSON.stringify(legacy, null, 2));
+
+    // Exercise the legacy stub fallback as well as the pointer path used by
+    // current installs.
+    fs.rmSync(path.join(project, '.citadel', 'plugin-root.txt'));
+    const reinstalled = installOpencodePlugin({ citadelRoot: newCitadel, projectRoot: project });
+    assert(!reinstalled.config.skills.paths.includes(path.join(oldCitadel, 'skills')),
+      'reinstall must remove the prior Citadel checkout skill path');
+    assert.deepStrictEqual(reinstalled.config.skills.paths, ['./.citadel/skills']);
+  } finally {
+    fs.rmSync(project, { recursive: true, force: true });
+    fs.rmSync(oldCitadel, { recursive: true, force: true });
+    fs.rmSync(newCitadel, { recursive: true, force: true });
+  }
 }
 
 // The projection has to actually resolve to Citadel's real skills, and a stale
@@ -453,6 +477,7 @@ async function main() {
   testMcpShape();
   testMergePreservesUserConfig();
   testSkillsPathMerge();
+  testReinstallMigratesStaleAbsoluteSkillsPath();
   testYamlQuoting();
   testGuidanceTarget();
   testGuidanceNeverClobbers();
