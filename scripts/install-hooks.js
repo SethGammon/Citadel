@@ -89,6 +89,14 @@ function main() {
       console.log(`  Skipped unsupported hook events: ${result.compatibility.skippedEvents.join(', ')}`);
       console.log('  Re-run with --hook-profile latest after upgrading Claude Code to enable them.');
     }
+    if (result.diagnostics?.length) {
+      for (const diagnostic of result.diagnostics) {
+        console.log(`  Diagnostic: ${diagnostic.message}`);
+      }
+    }
+    if (result.machineLocalExcludes?.written) {
+      console.log(`  Machine-local outputs protected by ${result.machineLocalExcludes.path}`);
+    }
     console.log(`  Product bundles: ${resolved.receipt.bundles.effective.join(', ')}`);
     console.log('Hooks are ready. No restart needed.');
   } catch (error) {

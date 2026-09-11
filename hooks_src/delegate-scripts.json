@@ -1,4 +1,5 @@
 [
+  "citadel-state.js",
   "campaign.js",
   "citadel-config.js",
   "compress-discovery.cjs",

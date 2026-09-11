@@ -5,6 +5,11 @@
 const fs = require('fs');
 const path = require('path');
 const { spawnSync } = require('child_process');
+const {
+  classifyOutputs,
+  ensureMachineLocalExcludes,
+  inspectInstallInventory,
+} = require('../core/runtime/install-contract');
 
 const DEFAULT_PLUGIN_ROOT = path.resolve(__dirname, '..');
 
@@ -91,6 +96,14 @@ function printHuman(report) {
     console.log(`       ${step.command}`);
     if (!step.pass && step.stderr) console.log(step.stderr.trim());
   }
+  if (report.diagnostics?.length) {
+    console.log('');
+    console.log('Diagnostics:');
+    for (const diagnostic of report.diagnostics) console.log(`  - ${diagnostic.message}`);
+  }
+  if (report.machineLocalExcludes?.written) {
+    console.log(`Machine-local outputs are protected by ${report.machineLocalExcludes.path}`);
+  }
   console.log('');
   console.log(report.pass
     ? report.dryRun ? 'Install plan ready; no commands were run.' : 'Citadel plugin installation completed.'
@@ -168,6 +181,9 @@ if (missingScripts.length > 0) {
   return;
 }
 
+const beforeInventory = inspectInstallInventory(projectRoot, { runtime: 'codex' });
+const machineLocalExcludes = ensureMachineLocalExcludes(projectRoot, { dryRun });
+
 const steps = [];
 const node = process.execPath;
 
@@ -240,6 +256,17 @@ if (!pluginOnly && steps.every((step) => step.pass || !step.required)) {
 }
 
 const pass = steps.every((step) => step.pass || !step.required);
+const inventory = inspectInstallInventory(projectRoot, { runtime: 'codex' });
+const outputs = classifyOutputs([
+  ...(!pluginOnly ? [
+    { path: '.mcp.json', runtime: 'codex', ownership: 'shared', reason: 'Project MCP choices are shared; the Citadel entry uses a relative delegate.' },
+    { path: 'AGENTS.md', runtime: 'shared', ownership: 'shared', reason: 'Project guidance is shared and carries the canonical Citadel owner marker.' },
+    { path: '.citadel/plugin-root.txt', runtime: 'codex', ownership: 'machine-local', reason: 'The delegate pointer identifies the local Citadel checkout.' },
+  ] : []),
+  { path: '.codex/config.toml', runtime: 'codex', ownership: 'machine-local' },
+  { path: '.codex-plugin/plugin.json', runtime: 'codex', ownership: 'machine-local' },
+  { path: '.agents/', runtime: 'codex', ownership: 'machine-local' },
+]);
 const report = {
   pluginRoot,
   projectRoot,
@@ -251,6 +278,11 @@ const report = {
   generatedAt: new Date().toISOString(),
   steps,
   pass,
+  beforeInventory,
+  inventory,
+  diagnostics: inventory.diagnostics,
+  outputs,
+  machineLocalExcludes,
   nextSteps: {
     codexApp: [
       'Open Codex and select the target project.',

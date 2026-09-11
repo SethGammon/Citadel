@@ -7,6 +7,11 @@ const {
   writeJson,
 } = require('../../../core/hooks/install');
 const { filterHookTemplate } = require('../../../core/hooks/bundles');
+const {
+  classifyOutputs,
+  ensureMachineLocalExcludes,
+  inspectInstallInventory,
+} = require('../../../core/runtime/install-contract');
 
 const CODEX_EVENTS = new Set([
   'SessionStart',
@@ -156,6 +161,15 @@ function preserveUserHookHandlers(existingHooks, marker) {
 
 function installCodexHooks(options = {}) {
   const preserveMarker = 'codex-adapter';
+  const projectRoot = options.projectRoot
+    ? require('path').resolve(options.projectRoot)
+    : options.outputPath
+      ? require('path').resolve(options.outputPath, '..', '..')
+      : process.cwd();
+  const inventory = inspectInstallInventory(projectRoot, { runtime: 'codex' });
+  const machineLocalExcludes = ensureMachineLocalExcludes(projectRoot, {
+    dryRun: options.dryRun === true,
+  });
   const existingHooks = preserveUserHookHandlers(options.existingHooks || {}, preserveMarker);
   const translated = translateCodexHooks(options.hooksTemplate, options.adapterScriptPath, {
     effectiveBundles: options.effectiveBundles,
@@ -177,6 +191,15 @@ function installCodexHooks(options = {}) {
   return {
     ...translated,
     hooks: filteredHooks,
+    inventory,
+    diagnostics: inventory.diagnostics,
+    machineLocalExcludes,
+    outputs: classifyOutputs(options.outputPath ? [{
+      path: '.codex/hooks.json',
+      runtime: 'codex',
+      ownership: 'machine-local',
+      reason: 'Legacy project hook registration contains checkout-local runtime commands.',
+    }] : []),
   };
 }
 

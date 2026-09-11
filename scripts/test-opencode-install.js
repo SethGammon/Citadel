@@ -84,7 +84,7 @@ function testMergePreservesUserConfig() {
   assert.deepStrictEqual(changes, [`set mcp.${MCP_SERVER_NAME}`, 'added skills.paths entry for Citadel skills']);
 
   // skills.paths is user-owned too: Citadel appends, never replaces.
-  assert.deepStrictEqual(config.skills.paths, [citadelSkillsPath('/citadel')]);
+  assert.deepStrictEqual(config.skills.paths, [citadelSkillsPath('/citadel', '/project')]);
 
   // Merging again changes nothing: the installer must be idempotent.
   const second = mergeOpencodeConfig(config, { citadelRoot: '/citadel', projectRoot: '/project' });
@@ -397,7 +397,7 @@ function testSkillsPathMerge() {
     { skills: { paths: ['/user/own/skills'], urls: ['https://example.test/skills'] } },
     { citadelRoot: '/citadel', projectRoot: '/project' },
   );
-  assert.deepStrictEqual(withUserPath.config.skills.paths, ['/user/own/skills', citadelSkillsPath('/citadel')]);
+  assert.deepStrictEqual(withUserPath.config.skills.paths, ['/user/own/skills', citadelSkillsPath('/citadel', '/project')]);
   assert.deepStrictEqual(
     withUserPath.config.skills.urls, ['https://example.test/skills'],
     'sibling keys under skills must survive',

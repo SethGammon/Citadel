@@ -38,6 +38,7 @@
     "core/telemetry/io.js",
     "core/telemetry/log.js",
     "core/telemetry/schema.js",
+    "scripts/citadel-state.js",
     "core/utils/path-helpers.js",
     "core/verification/profiles.js",
     "core/worktree/readiness.js",

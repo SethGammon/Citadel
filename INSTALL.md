@@ -185,9 +185,18 @@ restore, and leave use `scripts/adopt.js`.
 
 `scripts/install.js` is a dispatcher: `--runtime claude` runs
 `scripts/claude-install.js` and `--runtime codex` runs
-`scripts/codex-install.js`. The commands below use the dispatcher; the
+`scripts/codex-install.js`; `--runtime opencode` runs
+`scripts/opencode-install.js`. The commands below use the dispatcher; the
 runtime-specific scripts accept the same flags if you prefer to call them
 directly.
+
+Installer output follows a shared versus machine-local contract. `AGENTS.md`,
+`CLAUDE.md`, `.citadel/project.md`, `.mcp.json`, and project policy files are
+shared and use relative paths. Runtime settings, delegates, projections, and
+checkout pointers are machine-local and are protected in `.git/info/exclude`.
+Use `--dry-run --json` to review `outputs`, `inventory`, `diagnostics`, and
+`machineLocalExcludes`; a `DUPLICATE_CITADEL_REGISTRATION` diagnostic names the
+roots that need reconciliation.
 
 ### Claude Code compatibility installer
 

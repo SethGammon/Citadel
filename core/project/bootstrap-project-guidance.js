@@ -7,6 +7,7 @@ const path = require('path');
 const { CLAUDE_GUIDANCE_TARGET } = require('../../runtimes/claude-code/guidance/render');
 const { CODEX_GUIDANCE_TARGET } = require('../../runtimes/codex/guidance/render');
 const { loadProjectSpec, resolveProjectSpecPath } = require('./load-project-spec');
+const { withGuidanceOwner } = require('../runtime/install-contract');
 
 function ensureDirectory(dirPath) {
   if (!fs.existsSync(dirPath)) {
@@ -61,7 +62,7 @@ function writeGuidanceFile(projectRoot, target, spec, overwrite) {
     return { filePath, written: false, skipped: true };
   }
 
-  fs.writeFileSync(filePath, target.render(spec), 'utf8');
+  fs.writeFileSync(filePath, withGuidanceOwner(target.render(spec)), 'utf8');
   return { filePath, written: true, skipped: false };
 }
 

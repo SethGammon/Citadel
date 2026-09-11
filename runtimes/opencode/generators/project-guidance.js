@@ -13,6 +13,7 @@
 const fs = require('fs');
 const path = require('path');
 const { ensureProjectSpec } = require('../../../core/project/bootstrap-project-guidance');
+const { withGuidanceOwner } = require('../../../core/runtime/install-contract');
 const { OPENCODE_GUIDANCE_TARGET } = require('../guidance/render');
 
 function projectOpencodeGuidance(options = {}) {
@@ -51,7 +52,7 @@ function projectOpencodeGuidance(options = {}) {
   }
 
   const ensured = ensureProjectSpec({ citadelRoot, projectRoot, ...options });
-  const content = OPENCODE_GUIDANCE_TARGET.render(ensured.loaded.spec);
+  const content = withGuidanceOwner(OPENCODE_GUIDANCE_TARGET.render(ensured.loaded.spec));
   fs.writeFileSync(filePath, content, 'utf8');
 
   return {

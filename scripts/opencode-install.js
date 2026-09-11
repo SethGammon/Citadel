@@ -8,8 +8,8 @@
 // surfaces natively:
 //   guidance  AGENTS.md, rendered from .citadel/project.md, never overwriting an
 //             existing one without --overwrite-guidance
-//   skills    scanned from the Citadel checkout through opencode.json skills.paths,
-//             so they are never copied and never go stale
+//   skills    copied to .citadel/skills and referenced with a project-relative
+//             path, so opencode.json remains portable across checkout moves
 //   commands  derived from skills by opencode   (no projection — and an explicit
 //             command file would SHADOW the live skill)
 // So this writes the plugin stub, merges opencode.json, and projects agents.
@@ -20,6 +20,10 @@ const path = require('path');
 const { installOpencodePlugin } = require('../runtimes/opencode/generators/install-plugin');
 const { projectOpencodeAgents } = require('../runtimes/opencode/generators/project-agents');
 const { projectOpencodeGuidance } = require('../runtimes/opencode/generators/project-guidance');
+const {
+  classifyOutputs,
+  inspectInstallInventory,
+} = require('../core/runtime/install-contract');
 
 const CITADEL_ROOT = path.resolve(__dirname, '..');
 
@@ -58,6 +62,8 @@ function run(argv = process.argv.slice(2)) {
   }
 
   const steps = [];
+  const before = inspectInstallInventory(projectRoot, { runtime: 'opencode' });
+  const outputs = [];
   const plugin = installOpencodePlugin({
     citadelRoot: CITADEL_ROOT,
     projectRoot,
@@ -70,11 +76,20 @@ function run(argv = process.argv.slice(2)) {
     configPath: plugin.configPath,
     writes: plugin.writes,
     configChanges: plugin.changes,
+    outputs: plugin.outputs,
+    machineLocalExcludes: plugin.machineLocalExcludes,
   });
+  outputs.push(...plugin.outputs);
 
   if (!has(argv, '--skip-agents')) {
     const agents = projectOpencodeAgents({ citadelRoot: CITADEL_ROOT, projectRoot, dryRun });
     steps.push({ step: 'agents', count: agents.length, targets: agents.map((item) => item.targetPath) });
+    outputs.push(...agents.map((item) => ({
+      path: path.relative(projectRoot, item.targetPath).replace(/\\/g, '/'),
+      runtime: 'opencode',
+      ownership: 'machine-local',
+      reason: 'Generated agent projection used by OpenCode.',
+    })));
   }
 
   if (!has(argv, '--skip-guidance')) {
@@ -85,7 +100,19 @@ function run(argv = process.argv.slice(2)) {
       overwriteGuidance: has(argv, '--overwrite-guidance'),
     });
     steps.push({ step: 'guidance', ...guidance });
+    if (guidance.written) {
+      outputs.push({
+        path: path.relative(projectRoot, guidance.filePath).replace(/\\/g, '/'),
+        runtime: 'opencode',
+        ownership: 'shared',
+        content: dryRun ? '' : fs.readFileSync(guidance.filePath, 'utf8'),
+        reason: 'Canonical project guidance shared by runtime projections.',
+      });
+    }
   }
+
+  const inventory = inspectInstallInventory(projectRoot, { runtime: 'opencode' });
+  const classifiedOutputs = classifyOutputs(outputs);
 
   return {
     ok: true,
@@ -93,6 +120,11 @@ function run(argv = process.argv.slice(2)) {
     projectRoot,
     citadelRoot: CITADEL_ROOT,
     steps,
+    beforeInventory: before,
+    inventory,
+    diagnostics: inventory.diagnostics,
+    outputs: classifiedOutputs,
+    machineLocalExcludes: plugin.machineLocalExcludes,
     // Stated plainly so an operator is never left believing Citadel gates more
     // than it does on this runtime.
     degradations: [
@@ -128,9 +160,17 @@ function render(result) {
       }
     }
   }
+  if (result.diagnostics?.length) {
+    lines.push('');
+    lines.push('Diagnostics:');
+    for (const diagnostic of result.diagnostics) lines.push(`  - ${diagnostic.message}`);
+  }
+  if (result.machineLocalExcludes?.written) {
+    lines.push(`machine-local outputs protected by ${result.machineLocalExcludes.path}`);
+  }
   lines.push('');
-  lines.push('Not copied — opencode reads these where they already live:');
-  lines.push("  skills    scanned from the Citadel checkout via opencode.json skills.paths");
+  lines.push('Project-local projections refreshed by this install:');
+  lines.push("  skills    copied to .citadel/skills and referenced with a relative path");
   lines.push('  commands  derived from skills by opencode, so no command files');
   lines.push('');
   lines.push('Known degradations on this runtime:');

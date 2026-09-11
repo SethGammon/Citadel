@@ -5,6 +5,11 @@
 const fs = require('fs');
 const path = require('path');
 const { spawnSync } = require('child_process');
+const {
+  classifyOutputs,
+  ensureMachineLocalExcludes,
+  inspectInstallInventory,
+} = require('../core/runtime/install-contract');
 
 const DEFAULT_PLUGIN_ROOT = path.resolve(__dirname, '..');
 
@@ -209,6 +214,14 @@ function printHuman(report) {
     console.log(`       ${step.command}`);
     if (!step.pass && step.stderr) console.log(step.stderr.trim());
   }
+  if (report.diagnostics?.length) {
+    console.log('');
+    console.log('Diagnostics:');
+    for (const diagnostic of report.diagnostics) console.log(`  - ${diagnostic.message}`);
+  }
+  if (report.machineLocalExcludes?.written) {
+    console.log(`Machine-local outputs are protected by ${report.machineLocalExcludes.path}`);
+  }
   console.log('');
   console.log(report.pass
     ? report.dryRun ? 'Install plan ready; no commands were run.' : 'Citadel plugin installation completed.'
@@ -282,6 +295,9 @@ if (missingPaths.length > 0) {
   process.exit(1);
 }
 
+const beforeInventory = inspectInstallInventory(projectRoot, { runtime: 'claude-code' });
+const machineLocalExcludes = ensureMachineLocalExcludes(projectRoot, { dryRun });
+
 const steps = [];
 const node = process.execPath;
 
@@ -315,6 +331,21 @@ if (installHooks && steps.every((step) => step.pass || !step.required)) {
 }
 
 const pass = steps.every((step) => step.pass || !step.required);
+const inventory = inspectInstallInventory(projectRoot, { runtime: 'claude-code' });
+const outputs = classifyOutputs([
+  ...(installHooks ? [{
+    path: '.claude/settings.json',
+    runtime: 'claude-code',
+    ownership: 'machine-local',
+    reason: 'Resolved compatibility hooks contain checkout-local commands and runtime state.',
+  }] : []),
+  {
+    path: `.claude/${scope}-plugin-registration`,
+    runtime: 'claude-code',
+    ownership: 'machine-local',
+    reason: `Claude Code ${scope} registration is stored by the CLI outside the project checkout.`,
+  },
+]);
 const report = {
   pluginRoot,
   projectRoot,
@@ -324,6 +355,11 @@ const report = {
   generatedAt: new Date().toISOString(),
   steps,
   pass,
+  beforeInventory,
+  inventory,
+  diagnostics: inventory.diagnostics,
+  outputs,
+  machineLocalExcludes,
   nextSteps: {
     claudeCode: [
       install ? 'Run claude from the target project.' : `Run claude plugin marketplace add ${q(pluginRoot)} --scope ${scope} if you want CLI marketplace registration.`,

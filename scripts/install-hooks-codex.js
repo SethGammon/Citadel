@@ -33,6 +33,7 @@ function main() {
       adapterScriptPath,
       existingHooks,
       outputPath,
+      projectRoot: PROJECT_ROOT,
       effectiveBundles: resolved.receipt.bundles.effective,
     });
 
@@ -42,6 +43,9 @@ function main() {
         installed: result.installed,
         skipped: result.skipped,
         warnings: result.warnings || [],
+        diagnostics: result.diagnostics || [],
+        outputs: result.outputs || [],
+        machineLocalExcludes: result.machineLocalExcludes || null,
         effectiveBundles: resolved.receipt.bundles.effective,
       }, null, 2) + '\n');
       return;
@@ -50,6 +54,14 @@ function main() {
     console.log(`Citadel Codex hooks installed to ${outputPath}`);
     console.log(`  ${result.installed.length} Citadel hooks translated for Codex`);
     console.log(`  Product bundles: ${resolved.receipt.bundles.effective.join(', ')}`);
+    if (result.diagnostics?.length) {
+      for (const diagnostic of result.diagnostics) {
+        console.log(`  Diagnostic: ${diagnostic.message}`);
+      }
+    }
+    if (result.machineLocalExcludes?.written) {
+      console.log(`  Machine-local outputs protected by ${result.machineLocalExcludes.path}`);
+    }
     if (result.skipped.length > 0) {
       console.log(`  ${result.skipped.length} hook mappings skipped due to missing Codex lifecycle equivalents`);
     }

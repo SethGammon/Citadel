@@ -13,6 +13,7 @@ const fs = require('fs');
 const path = require('path');
 const activation = require('../core/telemetry/activation');
 const configControl = require('../core/config');
+const { ensureMachineLocalExcludes } = require('../core/runtime/install-contract');
 
 const PLUGIN_ROOT = path.resolve(__dirname, '..');
 const PROJECT_ROOT = process.env.CLAUDE_PROJECT_DIR || process.cwd();
@@ -188,6 +189,7 @@ function main() {
       return;
     }
     const effectiveBundles = new Set(authority.bundles);
+    ensureMachineLocalExcludes(PROJECT_ROOT);
 
     // 1. Create .planning/ directory tree
     for (const dir of planningDirs(authority.bundles)) {

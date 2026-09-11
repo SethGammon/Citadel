@@ -13,6 +13,11 @@ const {
   writeJson,
 } = require('../../../core/hooks/install');
 const { filterHookTemplate } = require('../../../core/hooks/bundles');
+const {
+  classifyOutputs,
+  ensureMachineLocalExcludes,
+  inspectInstallInventory,
+} = require('../../../core/runtime/install-contract');
 const { selectSupportedClaudeHookEvents } = require('./hook-support');
 
 function resolveClaudeHooks(citadelRoot, hooksTemplatePath) {
@@ -36,8 +41,12 @@ function resolveClaudeHooks(citadelRoot, hooksTemplatePath) {
 function installClaudeHooks(options = {}) {
   const citadelRoot = options.citadelRoot || path.resolve(__dirname, '../../..', '..');
   const hooksTemplatePath = options.hooksTemplatePath || path.join(citadelRoot, 'hooks', 'hooks-template.json');
-  const projectRoot = options.projectRoot || process.env.CLAUDE_PROJECT_DIR || process.cwd();
+  const projectRoot = path.resolve(options.projectRoot || process.env.CLAUDE_PROJECT_DIR || process.cwd());
   const settingsPath = path.join(projectRoot, '.claude', 'settings.json');
+  const inventory = inspectInstallInventory(projectRoot, { runtime: 'claude-code' });
+  const machineLocalExcludes = ensureMachineLocalExcludes(projectRoot, {
+    dryRun: options.dryRun === true,
+  });
 
   if (!fs.existsSync(hooksTemplatePath)) {
     throw new Error(`hooks.json not found at ${hooksTemplatePath}`);
@@ -76,7 +85,6 @@ function installClaudeHooks(options = {}) {
   if (!('CLAUDE_CODE_SUBPROCESS_ENV_SCRUB' in merged.env)) {
     merged.env.CLAUDE_CODE_SUBPROCESS_ENV_SCRUB = '1';
   }
-
   writeJson(settingsPath, merged);
 
   return {
@@ -86,6 +94,15 @@ function installClaudeHooks(options = {}) {
     citadelRoot,
     compatibility,
     bundleFilter,
+    inventory,
+    diagnostics: inventory.diagnostics,
+    machineLocalExcludes,
+    outputs: classifyOutputs([{
+      path: '.claude/settings.json',
+      runtime: 'claude-code',
+      ownership: 'machine-local',
+      reason: 'Resolved compatibility hooks contain checkout-local commands and runtime state.',
+    }]),
   };
 }
 
