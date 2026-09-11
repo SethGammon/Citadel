@@ -21,6 +21,7 @@ const {
   mergeOpencodeConfig,
   renderPluginStub,
 } = require(path.join(CITADEL_ROOT, 'runtimes', 'opencode', 'generators', 'install-plugin'));
+const { ensureProjectDelegate } = require(path.join(CITADEL_ROOT, 'core', 'runtime', 'install-contract'));
 const {
   projectOpencodeAgents,
   renderOpencodeAgent,
@@ -438,6 +439,35 @@ function testReinstallMigratesStaleAbsoluteSkillsPath() {
   }
 }
 
+function testReinstallMigratesStaleOpenCodeStubPathAfterSharedPointerChanges() {
+  const project = scratchProject();
+  const oldCitadel = scratchProject();
+  const sharedRuntimeCitadel = scratchProject();
+  const newCitadel = scratchProject();
+  try {
+    installOpencodePlugin({ citadelRoot: oldCitadel, projectRoot: project });
+    const configPath = path.join(project, 'opencode.json');
+    const legacy = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+    legacy.skills.paths = [path.join(oldCitadel, 'skills')];
+    fs.writeFileSync(configPath, JSON.stringify(legacy, null, 2));
+
+    // Another runtime can update the shared pointer after OpenCode's stub was
+    // installed. The OpenCode stub remains the ownership evidence for oldCitadel.
+    const delegate = ensureProjectDelegate(project, sharedRuntimeCitadel, 'citadel-state.js');
+    assert.equal(fs.readFileSync(delegate.pointerPath, 'utf8').trim(), sharedRuntimeCitadel);
+
+    const reinstalled = installOpencodePlugin({ citadelRoot: newCitadel, projectRoot: project });
+    assert(!reinstalled.config.skills.paths.includes(path.join(oldCitadel, 'skills')),
+      'reinstall must remove the prior OpenCode stub checkout skill path after another runtime changes the pointer');
+    assert.deepStrictEqual(reinstalled.config.skills.paths, ['./.citadel/skills']);
+  } finally {
+    fs.rmSync(project, { recursive: true, force: true });
+    fs.rmSync(oldCitadel, { recursive: true, force: true });
+    fs.rmSync(sharedRuntimeCitadel, { recursive: true, force: true });
+    fs.rmSync(newCitadel, { recursive: true, force: true });
+  }
+}
+
 // The projection has to actually resolve to Citadel's real skills, and a stale
 // path — the realistic failure after a checkout moves — must be called out rather
 // than silently counting zero.
@@ -478,6 +508,7 @@ async function main() {
   testMergePreservesUserConfig();
   testSkillsPathMerge();
   testReinstallMigratesStaleAbsoluteSkillsPath();
+  testReinstallMigratesStaleOpenCodeStubPathAfterSharedPointerChanges();
   testYamlQuoting();
   testGuidanceTarget();
   testGuidanceNeverClobbers();

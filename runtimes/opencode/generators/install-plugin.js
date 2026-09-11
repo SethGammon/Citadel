@@ -107,20 +107,34 @@ function citadelSkillsPath(citadelRoot, projectRoot = null) {
     : './.citadel/skills';
 }
 
+// The shared delegate pointer can be updated by another runtime before
+// OpenCode is reinstalled. Keep every Citadel root evidenced by either the
+// pointer or OpenCode's own stub so stale skills paths from the old stub are
+// still migrated away.
 function readPreviousCitadelRoot(projectRoot, pluginPath) {
+  const roots = [];
+  const addRoot = candidate => {
+    if (typeof candidate !== 'string' || candidate.trim() === '') return;
+    const root = path.resolve(candidate.trim());
+    if (!roots.includes(root)) roots.push(root);
+  };
+
   const pointerPath = path.join(projectRoot, '.citadel', 'plugin-root.txt');
   if (fs.existsSync(pointerPath)) {
-    const pointer = fs.readFileSync(pointerPath, 'utf8').trim();
-    if (pointer) return path.resolve(pointer);
+    addRoot(fs.readFileSync(pointerPath, 'utf8'));
   }
 
-  if (!fs.existsSync(pluginPath)) return null;
-  const stub = fs.readFileSync(pluginPath, 'utf8');
-  const match = stub.match(/file:\/\/(.+?)\/runtimes[\\/]opencode[\\/]plugin[\\/]index\.mjs/i);
-  if (!match) return null;
-  let root = match[1].replace(/\\/g, '/');
-  if (/^\/[A-Za-z]:\//.test(root)) root = root.slice(1);
-  return path.resolve(root);
+  if (fs.existsSync(pluginPath)) {
+    const stub = fs.readFileSync(pluginPath, 'utf8');
+    const match = stub.match(/file:\/\/(.+?)\/runtimes[\\/]opencode[\\/]plugin[\\/]index\.mjs/i);
+    if (match) {
+      let root = match[1].replace(/\\/g, '/');
+      if (/^\/[A-Za-z]:\//.test(root)) root = root.slice(1);
+      addRoot(root);
+    }
+  }
+
+  return roots;
 }
 
 // Shape per opencode's McpLocalConfig (core/v1/config/mcp.ts): `command` is a
@@ -149,6 +163,7 @@ function citadelMcpServer(citadelRoot, projectRoot) {
 function mergeOpencodeConfig(existing, {
   citadelRoot,
   projectRoot,
+  previousCitadelRoots = [],
   previousCitadelRoot = null,
   skipSkills = false,
 }) {
@@ -176,8 +191,12 @@ function mergeOpencodeConfig(existing, {
   if (!skipSkills) {
     const skillsPath = citadelSkillsPath(citadelRoot, projectRoot);
     const existingPaths = Array.isArray(config.skills?.paths) ? [...config.skills.paths] : [];
-    const staleSkillRoots = [citadelRoot, previousCitadelRoot]
-      .filter(Boolean)
+    const priorRoots = [
+      ...(Array.isArray(previousCitadelRoots) ? previousCitadelRoots : [previousCitadelRoots]),
+      previousCitadelRoot,
+    ];
+    const staleSkillRoots = [citadelRoot, ...priorRoots]
+      .filter(root => typeof root === 'string' && root.trim() !== '')
       .map((root) => path.resolve(root, 'skills'));
     const retainedPaths = existingPaths.filter((item) => (
       typeof item !== 'string'
@@ -205,7 +224,7 @@ function installOpencodePlugin(options = {}) {
   const pluginDir = path.join(projectRoot, '.opencode', 'plugin');
   const pluginPath = path.join(pluginDir, PLUGIN_STUB_NAME);
   const configPath = path.join(projectRoot, 'opencode.json');
-  const previousCitadelRoot = readPreviousCitadelRoot(projectRoot, pluginPath);
+  const previousCitadelRoots = readPreviousCitadelRoot(projectRoot, pluginPath);
 
   const machineLocalExcludes = ensureMachineLocalExcludes(projectRoot, { dryRun });
   const delegate = path.resolve(projectRoot) === path.resolve(citadelRoot)
@@ -220,7 +239,7 @@ function installOpencodePlugin(options = {}) {
   const { config, changes } = mergeOpencodeConfig(existingConfig, {
     citadelRoot,
     projectRoot,
-    previousCitadelRoot,
+    previousCitadelRoots,
     skipSkills: options.skipSkills === true,
   });
 
