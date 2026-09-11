@@ -3,7 +3,7 @@
 Documents what each runtime adapter supports. Used by the runtime registry
 and compatibility tests to verify behavior.
 
-Last updated: 2026-08-09
+Last updated: 2026-09-11
 
 ## Capability IDs
 
@@ -37,7 +37,7 @@ Defined in `core/contracts/runtime.js` and printable with
 |---|---|---|---|---|
 | `guidance` | Full | Full | Full | CLAUDE.md / AGENTS.md projected from `.citadel/project.md` |
 | `skills` | Full | Full | Partial | Codex supports repo/user/admin/system/plugin skills; OpenAI uses Responses API reusable skills |
-| `agents` | Full | Full | Partial | Codex supports `.codex/agents/*.toml` and native subagents; OpenAI uses Responses API agent loop |
+| `agents` | Full | Partial | Partial | Codex supports `.codex/agents/*.toml` and native subagents, but projected TOML cannot machine-enforce Citadel tool allow/deny lists; OpenAI uses Responses API agent loop |
 | `hooks` | Full | Partial | Partial | Claude has 29 defined handler names but installs a detected compatible subset (safe fallback: eight). Codex translates a supported subset and has specialized tool exceptions. Hooks are guardrails, not a universal sandbox. |
 | `workspace` | Full | Full | Full | OpenAI Responses API provides shell tool + hosted container |
 | `worktrees` | Full | Partial | None | Codex app supports native Git worktrees and handoff; CLI flows still rely on Citadel-managed worktrees |

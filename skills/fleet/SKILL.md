@@ -75,7 +75,7 @@ For each wave:
    - Sandbox provider status when an agent has a known worktree: `node scripts/sandbox-provider.js status --provider worktree --worktree {path}`
    - Which `.planning/` paths the agent may write and the merge strategy for each (see Shared State Merge Strategies)
 2. **Log wave start**: `node .citadel/scripts/telemetry-log.cjs --event wave-start --agent fleet --session {session-slug} --meta '{"wave":N,"agents":["name1","name2"]}'`
-3. **Spawn agents** with `isolation: "worktree"`, `mode: "bypassPermissions"`, prompt = full context + direction
+3. **Spawn agents** with `isolation: "worktree"`, the host's native permission policy, and prompt = full context + direction
 4. **Collect results** from all agents in the wave
 4.5. **Validate wave results** — spawn one Phase Validator per agent (subagent_type `citadel:phase-validator`, Haiku, read-only, effort: low), all in a single parallel batch — never sequentially. Validator prompt: campaign slug, wave, agent name, exit conditions (the agent's scope goal and any stated conditions), and the agent's full HANDOFF text. For each verdict:
    - **`pass`**: record the validator observation. The task becomes merge-eligible only after its deterministic gates and required Exit Evidence are also current, subject-bound, `passed`, and complete.

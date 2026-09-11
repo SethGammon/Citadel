@@ -41,6 +41,22 @@ function main() {
     fail('Generated TOML is missing the expected reasoning effort');
   }
 
+  const reviewer = loadAgent(path.join(__dirname, '..', 'agents', 'arch-reviewer.md'));
+  const reviewerToml = renderCodexToml(reviewer);
+  if (!reviewerToml.includes('does not machine-enforce Citadel tool allow/deny lists')
+    || !reviewerToml.includes('Use only these declared tools: Read, Grep, Glob.')
+    || !reviewerToml.includes('Do not use these declared tools: Edit, Write, Bash, NotebookEdit.')) {
+    fail('Restricted Codex projection did not disclose and preserve the canonical tool policy');
+  }
+
+  const fleetSkill = fs.readFileSync(path.join(__dirname, '..', 'skills', 'fleet', 'SKILL.md'), 'utf8');
+  if (/mode:\s*["']bypassPermissions["']/.test(fleetSkill)) {
+    fail('Fleet skill still directs spawned agents to bypass native permissions');
+  }
+  if (!fleetSkill.includes("the host's native permission policy")) {
+    fail('Fleet skill does not explicitly preserve the host permission policy');
+  }
+
   const arbiter = loadAgent(path.join(__dirname, '..', 'agents', 'arbiter.md'));
   const arbiterToml = renderCodexToml(arbiter);
   if (!arbiterToml.includes('model = "gpt-5.6-sol"')) {
