@@ -12,11 +12,13 @@ const activation = require('./activation');
 const runtimes = require('./runtime');
 
 function loadResolvedConfig(projectRoot, options = {}) {
+  const runtime = options.runtime || runtimes.detectRuntimeContract(projectRoot, options);
   const loaded = source.readConfigFile(projectRoot, options);
   return Object.freeze({
     loaded,
     receipt: resolution.resolveConfig(loaded.raw, {
       ...options,
+      runtime,
       parseError: loaded.parseError,
       sourceDigest: loaded.sourceDigest,
     }),
@@ -25,7 +27,7 @@ function loadResolvedConfig(projectRoot, options = {}) {
 
 function loadActivationContext(projectRoot, options = {}) {
   const runtime = options.runtime || runtimes.detectRuntimeContract(projectRoot, options);
-  const effective = receipts.readEffectiveConfig(projectRoot, options);
+  const effective = receipts.readEffectiveConfig(projectRoot, { ...options, runtime });
   if (effective.usable || effective.reasonCode !== receipts.EFFECTIVE_RECEIPT_REASONS.MISSING
     || options.allowBootstrap === false) {
     return effective;

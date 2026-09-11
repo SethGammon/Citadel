@@ -37,6 +37,7 @@
     "core/memory/",
     "core/operations/",
     "core/project/",
+    "core/runtime/",
     "core/skills/",
     "!core/skills/noop-calibration.json",
     "!core/skills/noop-detect.js",

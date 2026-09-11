@@ -309,10 +309,12 @@ function restoreRepositoryMemory() {
 }
 
 function activationRuntime() {
-  const declared = String(process.env.CITADEL_RUNTIME || '').toLowerCase();
-  if (declared === 'codex') return 'codex';
-  if (declared === 'claude' || declared === 'claude-code') return 'claude-code';
-  return 'unknown';
+  try {
+    const id = configControl.detectRuntimeContract(PROJECT_ROOT).id;
+    return id === 'local-unknown' ? 'unknown' : id;
+  } catch {
+    return 'unknown';
+  }
 }
 
 function recordActivationMilestones() {

@@ -99,8 +99,11 @@ function requireProcess(script, args, options, code, label) {
   return { raw, value };
 }
 
-function runSetup(pluginRoot, target) {
-  const env = { CLAUDE_PROJECT_DIR: target };
+function runSetup(pluginRoot, target, runtime) {
+  const env = {
+    CLAUDE_PROJECT_DIR: target,
+    CITADEL_RUNTIME: runtime === 'claude' ? 'claude-code' : 'codex',
+  };
   const init = runNode(path.join(pluginRoot, 'hooks_src', 'init-project.js'), [], { cwd: target, env });
   if (init.status !== 0) throw new GoldenPathError('setup_failed', 'init-project failed', evidenceFor(init));
   const guidance = runNode(SCRIPT(pluginRoot, 'bootstrap-project-guidance.js'), ['--project-root', target], {
@@ -209,7 +212,9 @@ function runGoldenPath(options) {
       return { evidence: [`installer_pass=${value.pass}`, `registration_requested=false`, `plugin_refresh=${options.runtime === 'codex' ? 'performed' : 'n/a'}`] };
     });
 
-    recordStep(result, 'setup', () => ({ evidence: runSetup(options.pluginRoot, state.target) }));
+    recordStep(result, 'setup', () => ({
+      evidence: runSetup(options.pluginRoot, state.target, options.runtime),
+    }));
     recordStep(result, 'campaign', () => {
       const destination = path.join(state.target, '.planning', 'campaigns', path.basename(state.fixture.campaignFile));
       fs.mkdirSync(path.dirname(destination), { recursive: true });

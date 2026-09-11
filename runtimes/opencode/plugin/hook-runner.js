@@ -220,7 +220,11 @@ function spawnHook({ nodeBinary, hookPath, cwd, payload, timeoutMs, spawnImpl })
     try {
       child = launch(nodeBinary, [hookPath], {
         cwd,
-        env: { ...process.env, CLAUDE_PROJECT_DIR: cwd },
+        env: {
+          ...process.env,
+          CITADEL_RUNTIME: 'opencode',
+          CLAUDE_PROJECT_DIR: cwd,
+        },
         stdio: ['pipe', 'pipe', 'pipe'],
       });
     } catch (error) {

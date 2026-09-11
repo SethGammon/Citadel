@@ -13,6 +13,10 @@ const { negotiateBundles } = require('./bundle-catalog');
 const { configKind } = require('./migrate');
 const { getProfile } = require('./profiles');
 const { validateConfigV2, validateConstraints } = require('./validate');
+const {
+  installationGeneration,
+  runtimeContractDigest,
+} = require('./identity');
 const packageMetadata = require('../../package.json');
 
 const NUMERIC_CEILINGS = new Set([
@@ -38,12 +42,15 @@ function normalizeRuntime(runtime) {
       };
     }
   }
+  const id = typeof input.id === 'string' && input.id ? input.id : 'unknown';
+  const degradations = Array.isArray(input.degradations)
+    ? input.degradations.filter((value) => typeof value === 'string').sort()
+    : [];
   return {
-    id: typeof input.id === 'string' && input.id ? input.id : 'unknown',
+    id,
     capabilities,
-    degradations: Array.isArray(input.degradations)
-      ? input.degradations.filter((value) => typeof value === 'string').sort()
-      : [],
+    degradations,
+    contractDigest: runtimeContractDigest({ id, capabilities, degradations }),
   };
 }
 
@@ -248,6 +255,9 @@ function resolvedInput(raw, options) {
 function resolveConfig(raw, options = {}) {
   const input = resolvedInput(raw, options);
   const runtime = normalizeRuntime(options.runtime);
+  const installation = options.installationGeneration || installationGeneration({
+    installationRoot: options.installationRoot,
+  });
   const sourceValue = raw === undefined ? null : raw;
   const sourceDigest = typeof options.sourceDigest === 'string'
     ? options.sourceDigest
@@ -299,6 +309,7 @@ function resolveConfig(raw, options = {}) {
     configKind: input.kind,
     schemaVersion: input.kind === 'legacy' ? null : input.config?.schemaVersion ?? null,
     sourceDigest,
+    installationGeneration: installation,
     authority: {
       valid: authorityValid,
       reasonCode: authorityReasonCode,

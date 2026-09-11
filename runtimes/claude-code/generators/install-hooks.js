@@ -70,7 +70,7 @@ function installClaudeHooks(options = {}) {
   const merged = {
     ...existing,
     hooks: mergedHooks,
-    env: { ...(existing.env || {}) },
+    env: { ...(existing.env || {}), CITADEL_RUNTIME: 'claude-code' },
   };
 
   if (!('CLAUDE_CODE_SUBPROCESS_ENV_SCRUB' in merged.env)) {

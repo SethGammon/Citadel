@@ -13,6 +13,10 @@ const { dependencyClosure } = require('./bundle-catalog');
 const { getProfile } = require('./profiles');
 const { resolveConfig } = require('./resolve');
 const { readConfigFile } = require('./source');
+const {
+  installationGeneration,
+  runtimeIdentity,
+} = require('./identity');
 
 const EFFECTIVE_RECEIPT_VERSION = 1;
 const EFFECTIVE_RECEIPT_KIND = 'citadel.effective-config';
@@ -24,6 +28,7 @@ const EFFECTIVE_FIELDS = Object.freeze([
   'configKind',
   'schemaVersion',
   'sourceDigest',
+  'installationGeneration',
   'authority',
   'activation',
   'profile',
@@ -220,7 +225,14 @@ function validateEffectiveReceipt(value) {
   }
   validateProfile(value.profile, authorityValid, errors);
   validateBundleResolution(value.bundles, authorityValid, errors);
-  if (!plain(value.runtime) || typeof value.runtime.id !== 'string') {
+  if (!plain(value.installationGeneration)
+    || !digest(value.installationGeneration.id)
+    || typeof value.installationGeneration.version !== 'string'
+    || !digest(value.installationGeneration.sourceDigest)) {
+    errors.push('installationGeneration is invalid');
+  }
+  if (!plain(value.runtime) || typeof value.runtime.id !== 'string'
+    || !digest(value.runtime.contractDigest)) {
     errors.push('runtime is invalid');
   }
   if (!plain(value.package) || typeof value.package.name !== 'string'
@@ -265,7 +277,16 @@ function effectiveConfigPath(projectRoot, options = {}) {
     : path.join(root, '.citadel', 'effective-config.json');
 }
 
-function rejectedRead(source, receiptPath, status, reasonCode, errors) {
+function regenerationCommand(options = {}, fallbackRuntime = null) {
+  const candidate = options.runtime?.id || options.runtimeId || fallbackRuntime;
+  const runtime = typeof candidate === 'string' && /^[a-z0-9-]+$/i.test(candidate)
+    ? ' --runtime ' + candidate
+    : '';
+  return 'node .citadel/scripts/citadel-config.js reconcile --apply'
+    + runtime + ' --json';
+}
+
+function rejectedRead(source, receiptPath, status, reasonCode, errors, options = {}, fallbackRuntime = null) {
   return deepFreeze({
     status,
     usable: false,
@@ -273,6 +294,7 @@ function rejectedRead(source, receiptPath, status, reasonCode, errors) {
     errors,
     sourceDigest: source.sourceDigest,
     receiptPath,
+    repairCommand: regenerationCommand(options, fallbackRuntime),
     receipt: null,
   });
 }
@@ -287,6 +309,7 @@ function readEffectiveConfig(projectRoot, options = {}) {
       'missing',
       EFFECTIVE_RECEIPT_REASONS.MISSING,
       ['effective config has not been reconciled'],
+      options,
     );
   }
   let raw;
@@ -299,6 +322,7 @@ function readEffectiveConfig(projectRoot, options = {}) {
       'malformed',
       EFFECTIVE_RECEIPT_REASONS.MALFORMED,
       [error.message],
+      options,
     );
   }
   const validation = validateEffectiveReceipt(raw);
@@ -312,6 +336,8 @@ function readEffectiveConfig(projectRoot, options = {}) {
       status,
       validation.reasonCode,
       validation.errors,
+      options,
+      raw?.runtime?.id,
     );
   }
   if (raw.sourceDigest !== source.sourceDigest) {
@@ -320,8 +346,50 @@ function readEffectiveConfig(projectRoot, options = {}) {
       receiptPath,
       'stale',
       EFFECTIVE_RECEIPT_REASONS.STALE,
-      ['effective config sourceDigest does not match the current harness config'],
+      [
+        'effective config sourceDigest does not match the current harness config',
+        'Regenerate with: ' + regenerationCommand(options, raw.runtime?.id),
+      ],
+      options,
+      raw.runtime?.id,
     );
+  }
+  const expectedInstallation = installationGeneration({
+    installationRoot: options.installationRoot,
+  });
+  if (raw.installationGeneration.id !== expectedInstallation.id
+    || raw.installationGeneration.sourceDigest !== expectedInstallation.sourceDigest) {
+    return rejectedRead(
+      source,
+      receiptPath,
+      'stale',
+      EFFECTIVE_RECEIPT_REASONS.STALE,
+      [
+        'effective config installationGeneration does not match the current Citadel installation',
+        'Regenerate with: ' + regenerationCommand(options, raw.runtime?.id),
+      ],
+      options,
+      raw.runtime?.id,
+    );
+  }
+  if (options.runtime && typeof options.runtime === 'object') {
+    const activeRuntime = runtimeIdentity(options.runtime);
+    if (raw.runtime.id !== activeRuntime.id
+      || raw.runtime.contractDigest !== activeRuntime.contractDigest) {
+      return rejectedRead(
+        source,
+        receiptPath,
+        'stale',
+        EFFECTIVE_RECEIPT_REASONS.STALE,
+        [
+          'effective config runtime ' + raw.runtime.id
+            + ' does not match active runtime ' + activeRuntime.id,
+          'Regenerate with: ' + regenerationCommand(options, activeRuntime.id),
+        ],
+        options,
+        activeRuntime.id,
+      );
+    }
   }
   return deepFreeze({
     status: 'current',
@@ -330,6 +398,7 @@ function readEffectiveConfig(projectRoot, options = {}) {
     errors: [],
     sourceDigest: source.sourceDigest,
     receiptPath,
+    repairCommand: null,
     receipt: raw,
   });
 }
@@ -353,8 +422,13 @@ function atomicWriteEffectiveConfig(receiptPath, receipt) {
 function reconcileEffectiveConfig(projectRoot, options = {}) {
   const source = readConfigFile(projectRoot, options);
   const receiptPath = effectiveConfigPath(source.projectRoot, options);
+  const runtime = options.runtime || require('./runtime').detectRuntimeContract(
+    source.projectRoot,
+    options,
+  );
   const receipt = resolveConfig(source.raw, {
     ...options,
+    runtime,
     parseError: source.parseError,
     sourceDigest: source.sourceDigest,
     reconciledAt: options.reconciledAt === undefined
@@ -366,7 +440,7 @@ function reconcileEffectiveConfig(projectRoot, options = {}) {
     throw new Error(`Refusing to write invalid effective config: ${validation.errors.join('; ')}`);
   }
   atomicWriteEffectiveConfig(receiptPath, receipt);
-  const observed = readEffectiveConfig(source.projectRoot, options);
+  const observed = readEffectiveConfig(source.projectRoot, { ...options, runtime });
   if (!observed.usable || observed.receipt.receiptDigest !== receipt.receiptDigest) {
     throw new Error(
       `Effective config reconciliation failed: ${observed.reasonCode}`,

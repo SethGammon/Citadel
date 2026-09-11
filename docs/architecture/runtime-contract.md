@@ -1,6 +1,6 @@
 # Runtime Contract
 
-> last-updated: 2026-03-30
+> last-updated: 2026-09-11
 
 This document defines the intended runtime-agnostic architecture boundary for
 Citadel.
@@ -57,6 +57,21 @@ The initial reference implementation lives in:
 - `core/contracts/project-spec.js`
 - `core/contracts/skill-manifest.js`
 - `core/contracts/agent-role.js`
+
+## Runtime Identity and Effective Receipts
+
+Runtime selection is deterministic. `CITADEL_RUNTIME` or an explicit
+`--runtime` value takes precedence, followed by a process-tree marker and
+then exactly one project marker directory: `.claude`, `.codex`, or
+`.opencode`. An invalid explicit value or more than one detected runtime
+fails closed with a reconcile command. Directory timestamps are never used to
+guess the active runtime.
+
+The derived `.citadel/effective-config.json` receipt records the selected
+runtime ID and contract digest together with an installation generation
+identity. The generation includes the Citadel package version and source
+digests, so switching runtimes or changing the installed harness invalidates
+the receipt. Reconcile with the reported command before activation continues.
 
 ## Normalized Event Vocabulary
 

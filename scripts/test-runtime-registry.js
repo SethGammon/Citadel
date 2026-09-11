@@ -2,9 +2,14 @@
 
 'use strict';
 
+const assert = require('assert');
 const path = require('path');
 const { getRuntimeDefinition, listRuntimeIds } = require(path.join(__dirname, '..', 'core', 'runtime', 'registry'));
-const { detectRuntime, VALID_RUNTIMES } = require(path.join(__dirname, '..', 'core', 'runtime', 'detect-runtime'));
+const {
+  detectRuntime,
+  RuntimeDetectionError,
+  VALID_RUNTIMES,
+} = require(path.join(__dirname, '..', 'core', 'runtime', 'detect-runtime'));
 const fs = require('fs');
 const inventory = require(path.join(__dirname, '..', 'core', 'runtime', 'runtime-list-inventory'));
 
@@ -161,9 +166,14 @@ function main() {
   if (origEnv !== undefined) process.env.CITADEL_RUNTIME = origEnv;
   else delete process.env.CITADEL_RUNTIME;
 
+  assert.throws(
+    () => detectRuntime('/nonexistent', { env: { CITADEL_RUNTIME: 'invalid-value' } }),
+    (error) => error instanceof RuntimeDetectionError
+      && error.code === 'CITADEL_RUNTIME_INVALID'
+      && error.repairCommand.includes('node .citadel/scripts/citadel-config.js reconcile --apply'),
+  );
 
   // Exercise process probing and fallback without depending on host tooling.
-  const assert = require('assert');
   const vm = require('vm');
   const source = require('fs').readFileSync(path.join(__dirname, '..', 'core', 'runtime', 'detect-runtime.js'), 'utf8');
   // Runs detect-runtime against a sandboxed host so the assertions never depend
@@ -232,27 +242,16 @@ function main() {
     'opencode',
   );
 
-  // Marker recency decides when a project carries more than one runtime dir,
-  // and an equal-mtime tie still resolves to claude-code.
-  assert.equal(
-    probe({
-      platform: 'linux',
-      probeFails: true,
-      parentCommand: '',
-      markers: ['.claude', '.opencode'],
-      mtimes: { '.claude': 10, '.opencode': 20 },
-    }).result.runtime,
-    'opencode',
-  );
-  const tie = probe({
+  // Multiple markers are an unsafe state. Detection must not use directory
+  // timestamps or a fixed tie-breaker to guess which runtime is active.
+  assert.throws(() => probe({
     platform: 'linux',
     probeFails: true,
     parentCommand: '',
-    markers: ['.claude', '.codex', '.opencode'],
-    mtimes: { '.claude': 5, '.codex': 5, '.opencode': 5 },
-  }).result;
-  assert.equal(tie.runtime, 'claude-code');
-  assert.equal(tie.method, 'directory-marker-recency');
+    markers: ['.claude', '.opencode'],
+  }), (error) => error.code === 'CITADEL_RUNTIME_AMBIGUOUS'
+    && error.candidates.join(',') === 'claude-code,opencode'
+    && error.repairCommand.includes('--runtime <runtime> --json'));
 
   // No parent signal and no markers stays honest rather than guessing.
   assert.equal(

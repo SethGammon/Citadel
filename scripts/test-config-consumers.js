@@ -8,6 +8,7 @@ const path = require('path');
 const { spawnSync } = require('child_process');
 const config = require('../core/config');
 const { buildPreview } = require('./route-preview');
+const claudeRuntime = require('../runtimes/claude-code/runtime');
 
 const root = fs.mkdtempSync(path.join(os.tmpdir(), 'citadel-config-consumers-'));
 const fullRuntime = Object.freeze({
@@ -70,7 +71,7 @@ assert.match(bootstrapMarshal.approval, /\.citadel\/scripts\/citadel-config\.js 
 const value = config.createDefaultConfig();
 writeHarness(value);
 config.reconcileEffectiveConfig(root, {
-  runtime: fullRuntime,
+  runtime: claudeRuntime,
   reconciledAt: '2026-07-30T20:00:00.000Z',
 });
 
@@ -196,6 +197,7 @@ const expanded = config.createDefaultConfig();
 expanded.activation = {
   ...expanded.activation,
   bundles: config.dependencyClosure(['parallel', 'operations']),
+  allowDegradedRuntime: true,
 };
 fs.mkdirSync(path.join(scaffoldRoot, '.claude'), { recursive: true });
 fs.writeFileSync(
@@ -203,14 +205,14 @@ fs.writeFileSync(
   `${JSON.stringify(expanded, null, 2)}\n`,
 );
 config.reconcileEffectiveConfig(scaffoldRoot, {
-  runtime: fullRuntime,
+  runtime: claudeRuntime,
   reconciledAt: '2026-07-30T20:02:00.000Z',
 });
 const expandedScaffold = run(
   '../hooks_src/init-project.js',
   [],
   null,
-  { CLAUDE_PROJECT_DIR: scaffoldRoot },
+  { CLAUDE_PROJECT_DIR: scaffoldRoot, CITADEL_RUNTIME: 'claude-code' },
 );
 assert.equal(expandedScaffold.status, 0, expandedScaffold.stderr);
 assert(fs.existsSync(path.join(scaffoldRoot, '.planning', 'coordination')));
@@ -237,7 +239,7 @@ const staleDirectBlocked = run(
 assert.equal(staleDirectBlocked.status, 2);
 assert.match(
   staleDirectBlocked.stderr,
-  /EFFECTIVE_CONFIG_STALE.*reconcile --apply --json/,
+  /EFFECTIVE_CONFIG_STALE.*reconcile --apply --runtime claude-code --json/,
 );
 
 const healthUtil = path.join(__dirname, '..', 'hooks_src', 'harness-health-util.js');
@@ -293,7 +295,7 @@ assert.deepEqual(consentConfig.activation.bundles, ['core', 'persistence']);
 assert.equal(consentConfig.consent.externalActions, 'always-ask');
 assert.equal(consentConfig.consent.daemonSpend, 'auto-allow');
 const consentEffective = config.loadActivationContext(consentRoot, {
-  runtime: config.detectRuntimeContract(consentRoot),
+  runtime: claudeRuntime,
 });
 assert.equal(consentEffective.usable, true);
 assert.equal(consentEffective.receipt.configKind, 'v2');

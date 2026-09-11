@@ -7,6 +7,8 @@ const os = require('os');
 const path = require('path');
 const config = require('../core/config');
 const codexRuntime = require('../runtimes/codex/runtime');
+const claudeRuntime = require('../runtimes/claude-code/runtime');
+const identity = require('../core/config/identity');
 
 let passed = 0;
 
@@ -104,7 +106,7 @@ test('stale effective receipts are rejected and preflight fails closed', () => {
   assert.equal(decision.plan.requiresExplicitApply, true);
   assert.equal(
     decision.plan.applyCommand,
-    'node .citadel/scripts/citadel-config.js reconcile --apply --json',
+    'node .citadel/scripts/citadel-config.js reconcile --apply --runtime full-test-runtime --json',
   );
 });
 
@@ -293,6 +295,52 @@ test('repository policy overrides use a deterministic custom display identity', 
   const builtIn = config.resolveConfig(harness(['core']), { runtime: fullRuntime });
   assert.equal(builtIn.profile.id, 'standard');
   assert.equal(builtIn.profile.base, null);
+});
+
+test('effective receipts bind runtime and installation identities without machine paths', () => {
+  const root = tempProject();
+  const installationRoot = tempProject();
+  fs.writeFileSync(
+    path.join(installationRoot, 'package.json'),
+    JSON.stringify({ name: 'fixture', version: '1.0.0' }),
+  );
+  const current = reconcile(root, harness(['core']), {
+    runtime: codexRuntime,
+    installationRoot,
+  });
+  assert.match(current.receipt.installationGeneration.id, /^sha256:[a-f0-9]{64}$/);
+  assert.match(current.receipt.installationGeneration.sourceDigest, /^sha256:[a-f0-9]{64}$/);
+  assert.match(current.receipt.runtime.contractDigest, /^sha256:[a-f0-9]{64}$/);
+  const serialized = JSON.stringify(current.receipt);
+  assert.equal(serialized.includes(root), false);
+  assert.equal(serialized.includes(installationRoot), false);
+
+  const switched = config.readEffectiveConfig(root, {
+    runtime: claudeRuntime,
+    installationRoot,
+  });
+  assert.equal(switched.reasonCode, config.EFFECTIVE_RECEIPT_REASONS.STALE);
+  assert.match(switched.errors[0], /runtime codex does not match active runtime claude-code/);
+  assert.equal(
+    switched.repairCommand,
+    'node .citadel/scripts/citadel-config.js reconcile --apply --runtime claude-code --json',
+  );
+
+  fs.writeFileSync(
+    path.join(installationRoot, 'package.json'),
+    JSON.stringify({ name: 'fixture', version: '2.0.0' }),
+  );
+  const changedInstallation = config.readEffectiveConfig(root, {
+    runtime: codexRuntime,
+    installationRoot,
+  });
+  assert.equal(changedInstallation.reasonCode, config.EFFECTIVE_RECEIPT_REASONS.STALE);
+  assert.match(changedInstallation.errors[0], /installationGeneration/);
+  assert.equal(
+    identity.installationGeneration({ installationRoot }).id
+      === current.receipt.installationGeneration.id,
+    false,
+  );
 });
 
 process.stdout.write(`\nConfig activation tests passed: ${passed}\n`);

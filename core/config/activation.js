@@ -40,10 +40,16 @@ function receiptInput(value) {
         usable: false,
         reasonCode: value.reasonCode || EFFECTIVE_RECEIPT_REASONS.MALFORMED,
         errors: Array.isArray(value.errors) ? value.errors : [],
+        repairCommand: value.repairCommand || null,
         receipt: null,
       };
     }
-    return { usable: true, receipt: value.receipt, errors: [] };
+    return {
+      usable: true,
+      receipt: value.receipt,
+      errors: [],
+      repairCommand: value.repairCommand || null,
+    };
   }
   const validation = validateEffectiveReceipt(value);
   if (!validation.valid) {
@@ -51,10 +57,11 @@ function receiptInput(value) {
       usable: false,
       reasonCode: validation.reasonCode,
       errors: validation.errors,
+      repairCommand: null,
       receipt: null,
     };
   }
-  return { usable: true, receipt: value, errors: [] };
+  return { usable: true, receipt: value, errors: [], repairCommand: null };
 }
 
 function resourceChanges(bundleIds) {
@@ -161,7 +168,8 @@ function activationDecision(effective, target) {
         action: 'reconcile-effective-config',
         requiresExplicitApply: true,
         mutatesConfig: false,
-        applyCommand: 'node .citadel/scripts/citadel-config.js reconcile --apply --json',
+        applyCommand: input.repairCommand
+          || 'node .citadel/scripts/citadel-config.js reconcile --apply --json',
       }),
     );
   }

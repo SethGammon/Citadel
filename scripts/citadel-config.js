@@ -16,6 +16,7 @@ function parseArgs(argv) {
     values: [],
     projectRoot: process.cwd(),
     runtime: process.env.CITADEL_RUNTIME || 'unknown',
+    runtimeSpecified: false,
     json: false,
     apply: false,
     profile: null,
@@ -37,7 +38,10 @@ function parseArgs(argv) {
   for (let index = 1; index < argv.length; index++) {
     const arg = argv[index];
     if (arg === '--project-root') result.projectRoot = path.resolve(nextValue(arg, index++));
-    else if (arg === '--runtime') result.runtime = nextValue(arg, index++);
+    else if (arg === '--runtime') {
+      result.runtimeSpecified = true;
+      result.runtime = nextValue(arg, index++);
+    }
     else if (arg === '--profile') result.profile = nextValue(arg, index++);
     else if (arg === '--input') result.input = path.resolve(nextValue(arg, index++));
     else if (arg === '--default-model') result.defaultModel = nextValue(arg, index++);
@@ -348,9 +352,9 @@ function main(argv = process.argv.slice(2)) {
       return 0;
     }
     const loaded = config.readConfigFile(args.projectRoot);
-    const selectedRuntime = args.runtime === 'unknown'
-      ? config.detectRuntimeContract(args.projectRoot)
-      : runtimeContract(args.runtime);
+    const selectedRuntime = args.runtimeSpecified
+      ? runtimeContract(args.runtime)
+      : config.detectRuntimeContract(args.projectRoot);
     if (args.command === 'check') {
       if (args.apply) throw new TypeError('check does not accept --apply');
       const [kind, id] = args.values;
@@ -414,7 +418,11 @@ function main(argv = process.argv.slice(2)) {
       : `Applied ${receipt.action}\nConfig: ${receipt.configPath}\nDigest: ${receipt.afterDigest}\n${result.nextCommand ? `Next: ${result.nextCommand}\n` : ''}`);
     return 0;
   } catch (error) {
-    process.stderr.write(`Citadel config error: ${error.message}\n`);
+    process.stderr.write(
+      `Citadel config error: ${error.message}`
+        + (error.repairCommand ? `\nRepair: ${error.repairCommand}` : '')
+        + '\n',
+    );
     return 1;
   }
 }

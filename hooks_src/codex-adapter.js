@@ -2,6 +2,8 @@
 
 'use strict';
 
+process.env.CITADEL_RUNTIME = 'codex';
+
 const { spawnSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
@@ -179,7 +181,11 @@ function dispatchHook(hookName, input, options = {}) {
     try {
       result = run(process.execPath, [hookPath], {
         cwd: fs.existsSync(projectRoot) ? projectRoot : path.resolve(__dirname, '..'),
-        env: { ...process.env, CLAUDE_PROJECT_DIR: projectRoot },
+        env: {
+          ...process.env,
+          CITADEL_RUNTIME: 'codex',
+          CLAUDE_PROJECT_DIR: projectRoot,
+        },
         input: JSON.stringify(legacyPayload),
         encoding: 'utf8',
       });
