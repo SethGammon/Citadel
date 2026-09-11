@@ -338,7 +338,6 @@ function generatePluginMcpConfig() {
     args: [portableMcpScriptPath()],
     env: {
       CITADEL_PROJECT_ROOT: '.',
-      CITADEL_RUNTIME: 'codex',
     },
     _codex: {
       startup_timeout_sec: 10,

@@ -7,6 +7,10 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 const { execFileSync, spawnSync } = require('child_process');
+const config = require('../core/config');
+const claudeRuntime = require('../runtimes/claude-code/runtime');
+const codexRuntime = require('../runtimes/codex/runtime');
+const { installClaudeHooks } = require('../runtimes/claude-code/generators/install-hooks');
 
 const {
   buildCodexExecArgs,
@@ -21,9 +25,55 @@ const {
 
 const CITADEL_ROOT = path.resolve(__dirname, '..');
 const CODEX_PLUGIN_HOOKS_PATH = './runtimes/codex/hooks.json';
+const MCP_SERVER = path.join(CITADEL_ROOT, 'mcp-servers', 'citadel-state', 'index.js');
 
 function readJson(filePath) {
   return JSON.parse(fs.readFileSync(filePath, 'utf8').replace(/^\/\/.*\n/, ''));
+}
+
+function mcpToolResponse(projectRoot, server, runtimeId) {
+  const input = [
+    JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'initialize', params: {} }),
+    JSON.stringify({
+      jsonrpc: '2.0',
+      id: 2,
+      method: 'tools/call',
+      params: { name: 'citadel_operation_list', arguments: {} },
+    }),
+    '',
+  ].join('\n');
+  const result = spawnSync(process.execPath, [MCP_SERVER], {
+    cwd: projectRoot,
+    input,
+    env: {
+      ...process.env,
+      CITADEL_RUNTIME: runtimeId,
+      ...(server.env || {}),
+    },
+    encoding: 'utf8',
+    timeout: 10000,
+  });
+  assert.equal(result.status, 0, result.stderr);
+  return result.stdout
+    .split(/\r?\n/)
+    .filter(Boolean)
+    .map((line) => JSON.parse(line))
+    .find((message) => message.id === 2);
+}
+
+function writeOperationsHarness(projectRoot) {
+  const harness = config.createDefaultConfig();
+  harness.activation = {
+    ...harness.activation,
+    bundles: config.dependencyClosure(['operations']),
+    allowDegradedRuntime: true,
+  };
+  fs.mkdirSync(path.join(projectRoot, '.claude'), { recursive: true });
+  fs.writeFileSync(
+    path.join(projectRoot, '.claude', 'harness.json'),
+    `${JSON.stringify(harness, null, 2)}\n`,
+    'utf8',
+  );
 }
 
 function testRepositoryHookPackagingBoundary() {
@@ -92,6 +142,49 @@ function testGeneratedCodexArtifacts() {
 
     const fleetAgent = fs.readFileSync(path.join(tmp, '.codex', 'agents', 'fleet.toml'), 'utf8');
     assert(fleetAgent.includes('developer_instructions'), 'Codex fleet agent projection must include developer instructions');
+  } finally {
+    fs.rmSync(tmp, { recursive: true, force: true });
+  }
+}
+
+function testCodexAndClaudeMcpRuntimeCoexistence() {
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'citadel-mcp-runtime-coexistence-'));
+  try {
+    installClaudeHooks({ projectRoot: tmp, citadelRoot: CITADEL_ROOT });
+    const claudeSettings = readJson(path.join(tmp, '.claude', 'settings.json'));
+    assert.equal(claudeSettings.env.CITADEL_RUNTIME, 'claude-code');
+
+    execFileSync(process.execPath, [path.join(CITADEL_ROOT, 'scripts', 'codex-compat.js'), tmp], {
+      cwd: CITADEL_ROOT,
+      encoding: 'utf8',
+      stdio: 'pipe',
+      timeout: 20000,
+    });
+
+    const codexConfig = fs.readFileSync(path.join(tmp, '.codex', 'config.toml'), 'utf8');
+    assert.match(codexConfig, /CITADEL_RUNTIME = "codex"/,
+      'Codex must keep its runtime identity in .codex/config.toml');
+    const citadelState = readJson(path.join(tmp, '.mcp.json')).mcpServers['citadel-state'];
+    assert(citadelState, 'Codex installation must keep the shared Citadel MCP entry');
+    assert.equal(citadelState.env.CITADEL_RUNTIME, undefined,
+      'shared MCP config must not stamp Codex over the launching runtime');
+
+    writeOperationsHarness(tmp);
+    config.reconcileEffectiveConfig(tmp, {
+      runtime: claudeRuntime,
+      reconciledAt: '2026-09-11T12:00:00.000Z',
+    });
+    const claudeActivation = mcpToolResponse(tmp, citadelState, 'claude-code');
+    assert(claudeActivation?.result && !claudeActivation.error,
+      `Claude MCP activation should use claude-code: ${JSON.stringify(claudeActivation)}`);
+
+    config.reconcileEffectiveConfig(tmp, {
+      runtime: codexRuntime,
+      reconciledAt: '2026-09-11T12:01:00.000Z',
+    });
+    const codexActivation = mcpToolResponse(tmp, citadelState, 'codex');
+    assert(codexActivation?.result && !codexActivation.error,
+      `Codex MCP activation should use codex: ${JSON.stringify(codexActivation)}`);
   } finally {
     fs.rmSync(tmp, { recursive: true, force: true });
   }
@@ -205,6 +298,7 @@ function testDocsMatrix() {
 
 testGeneratedCodexArtifacts();
 testRepositoryHookPackagingBoundary();
+testCodexAndClaudeMcpRuntimeCoexistence();
 testMcpServer();
 testBridgeUtilities();
 testDocsMatrix();
