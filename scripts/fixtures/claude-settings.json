@@ -412,6 +412,7 @@
     ]
   },
   "env": {
+    "CITADEL_RUNTIME": "claude-code",
     "CLAUDE_CODE_SUBPROCESS_ENV_SCRUB": "1"
   }
 }

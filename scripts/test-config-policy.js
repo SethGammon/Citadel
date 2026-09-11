@@ -8,6 +8,7 @@ const path = require('path');
 const { spawnSync } = require('child_process');
 const config = require('../core/config');
 const codexRuntime = require('../runtimes/codex/runtime');
+const claudeRuntime = require('../runtimes/claude-code/runtime');
 
 let passed = 0;
 
@@ -406,18 +407,20 @@ test('CLI initialization accepts only compatibility fields and reconciles derive
     registeredSkills: ['do', 'review'],
     registeredSkillCount: 2,
   })}\n`);
-  const preview = runCli(root, ['initialize', '--input', input, '--json']);
+  const initializeArgs = ['initialize', '--input', input, '--runtime', 'claude-code'];
+  const preview = runCli(root, [...initializeArgs, '--json']);
   assert.equal(preview.status, 0, preview.stderr);
   assert.equal(fs.existsSync(path.join(root, '.claude', 'harness.json')), false);
 
-  const applied = runCli(root, ['initialize', '--input', input, '--apply', '--json']);
+  const applied = runCli(root, [...initializeArgs, '--apply', '--json']);
   assert.equal(applied.status, 0, applied.stderr);
   const harness = JSON.parse(fs.readFileSync(path.join(root, '.claude', 'harness.json'), 'utf8'));
   assert.equal(harness.schemaVersion, 2);
   assert.equal(harness.language, 'typescript');
   assert.equal(harness.framework, 'react');
-  const effective = config.readEffectiveConfig(root);
+  const effective = config.readEffectiveConfig(root, { runtime: claudeRuntime });
   assert.equal(effective.usable, true);
+  assert.equal(effective.receipt.runtime.id, 'claude-code');
   assert.equal(effective.receipt.sourceDigest, config.readConfigFile(root).sourceDigest);
 
   fs.writeFileSync(input, '{"execution":{"profile":{"id":"experimental","version":"1.0.0"}}}\n');
