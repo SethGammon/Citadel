@@ -380,7 +380,9 @@ async function main() {
   } catch (error) {
     if (!['EPERM', 'EACCES', 'UNKNOWN'].includes(error.code)) throw error;
   }
-  const server = createServer({ projectRoot: httpRoot });
+  // The fixture receipt is deliberately issued for FULL_RUNTIME. Pass the
+  // same runtime into the server so receipt identity matches activation reads.
+  const server = createServer({ projectRoot: httpRoot, runtime: FULL_RUNTIME });
   await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
   const { port } = server.address();
   const base = `http://127.0.0.1:${port}`;
@@ -525,7 +527,7 @@ async function main() {
     fs.mkdirSync(path.join(symlinkOutside, 'intents-target'), { recursive: true });
     fs.symlinkSync(path.join(symlinkOutside, 'intents-target'), path.join(symlinkRoot, '.planning', 'intents'),
       process.platform === 'win32' ? 'junction' : 'dir');
-    symlinkServer = createServer({ projectRoot: symlinkRoot });
+    symlinkServer = createServer({ projectRoot: symlinkRoot, runtime: FULL_RUNTIME });
     await new Promise((resolve) => symlinkServer.listen(0, '127.0.0.1', resolve));
     const symlinkBase = `http://127.0.0.1:${symlinkServer.address().port}`;
     const symlinkControl = await fetch(`${symlinkBase}/api/control`).then((response) => response.json());

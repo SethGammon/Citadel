@@ -709,6 +709,9 @@ function resolveEvidencePath(projectRoot, requested, fileSystem = fs) {
 
 function createServer(options) {
   const projectRoot = fixedProjectRoot(options.projectRoot);
+  const runtimeOverride = options.runtime && typeof options.runtime === 'object'
+    ? options.runtime
+    : null;
   const source = createDataSource(projectRoot);
   const sseClients = new Set();
   const processNonce = crypto.randomBytes(32).toString('base64url');
@@ -740,7 +743,7 @@ function createServer(options) {
   }
 
   function productActivation(skillId) {
-    const runtime = configControl.detectRuntimeContract(projectRoot);
+    const runtime = runtimeOverride || configControl.detectRuntimeContract(projectRoot);
     const context = configControl.loadActivationContext(projectRoot, { runtime });
     return configControl.preflightSkill(context, skillId);
   }
