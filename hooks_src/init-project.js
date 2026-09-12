@@ -14,6 +14,7 @@ const path = require('path');
 const activation = require('../core/telemetry/activation');
 const configControl = require('../core/config');
 const { ensureMachineLocalExcludes } = require('../core/runtime/install-contract');
+const { RuntimeDetectionError } = require('../core/runtime/detect-runtime');
 
 const PLUGIN_ROOT = path.resolve(__dirname, '..');
 const PROJECT_ROOT = process.env.CLAUDE_PROJECT_DIR || process.cwd();
@@ -69,7 +70,21 @@ const PLANNING_DIRS_BY_BUNDLE = Object.freeze({
 });
 
 function activationAuthority() {
-  const runtime = configControl.detectRuntimeContract(PROJECT_ROOT);
+  let runtime;
+  let runtimeDetectionError = null;
+  try {
+    runtime = configControl.detectRuntimeContract(PROJECT_ROOT);
+  } catch (error) {
+    // Multiple runtime marker directories (e.g. .claude/ + .codex/) or an
+    // invalid CITADEL_RUNTIME make the active runtime unknowable rather than
+    // wrong. Degrade to the same unknown-runtime contract the zero-marker case
+    // already uses -- proceeding is what makes the machine-local excludes and
+    // .planning/ scaffold happen at all -- but keep the error so main() can
+    // surface it instead of failing in silence.
+    if (!(error instanceof RuntimeDetectionError)) throw error;
+    runtimeDetectionError = error;
+    runtime = configControl.UNKNOWN_LOCAL_RUNTIME;
+  }
   const context = configControl.loadActivationContext(PROJECT_ROOT, { runtime });
   const decision = configControl.preflightHook(context, 'init-project');
   return {
@@ -77,6 +92,7 @@ function activationAuthority() {
     decision,
     runtime: runtime.id,
     bundles: context.receipt?.bundles?.effective || [],
+    runtimeDetectionError,
   };
 }
 
@@ -183,13 +199,23 @@ function generateDelegate(scriptName) {
 
 function main() {
   try {
+    // Protect the repository before anything else. This must not depend on
+    // resolving the active runtime -- an ambiguous or misconfigured runtime is
+    // exactly the case a mixed Claude/Codex/OpenCode checkout hits, and it must
+    // not leave machine-local state (plugin-root.txt, coordination claims,
+    // telemetry) uncommitted-but-unprotected in the repo.
+    ensureMachineLocalExcludes(PROJECT_ROOT);
+
     const authority = activationAuthority();
+    if (authority.runtimeDetectionError) {
+      process.stderr.write(`[init-project] ${authority.runtimeDetectionError.message}\n`);
+      process.stderr.write(`[init-project] repair: ${authority.runtimeDetectionError.repairCommand}\n`);
+    }
     if (!authority.allowed) {
       process.stderr.write(`[init-project] skipped: ${authority.decision.reasonCode}\n`);
       return;
     }
     const effectiveBundles = new Set(authority.bundles);
-    ensureMachineLocalExcludes(PROJECT_ROOT);
 
     // 1. Create .planning/ directory tree
     for (const dir of planningDirs(authority.bundles)) {
@@ -256,12 +282,19 @@ function main() {
 
     // 5. Copy the runtime-neutral delegated-agent context into the active
     // runtime's project namespace. Never create another runtime's marker: it
-    // makes later runtime detection ambiguous.
-    const pluginAgentContext = path.join(PLUGIN_ROOT, 'templates', 'agent-context');
-    const runtimeDirectory = authority.runtime === 'codex' ? '.codex' : '.claude';
-    const agentContext = path.join(PROJECT_ROOT, runtimeDirectory, 'agent-context');
-    if (!fs.existsSync(agentContext) && fs.existsSync(pluginAgentContext)) {
-      copyDirRecursive(pluginAgentContext, agentContext);
+    // makes later runtime detection ambiguous. A disputed runtime (multiple
+    // markers, or an invalid CITADEL_RUNTIME) must not fall through to the
+    // .claude default below -- that would create a .claude/ marker in a repo
+    // that may have neither .claude/ nor .codex/ (e.g. .codex/ + .opencode/),
+    // turning a temporary ambiguity into a permanent one. A genuinely fresh
+    // project (no markers at all) is unaffected and keeps the existing default.
+    if (!authority.runtimeDetectionError) {
+      const pluginAgentContext = path.join(PLUGIN_ROOT, 'templates', 'agent-context');
+      const runtimeDirectory = authority.runtime === 'codex' ? '.codex' : '.claude';
+      const agentContext = path.join(PROJECT_ROOT, runtimeDirectory, 'agent-context');
+      if (!fs.existsSync(agentContext) && fs.existsSync(pluginAgentContext)) {
+        copyDirRecursive(pluginAgentContext, agentContext);
+      }
     }
 
     // 6. Write .citadel-root marker (plugin path for reference)
