@@ -13,7 +13,7 @@
 const fs = require('fs');
 const path = require('path');
 const { ensureProjectSpec } = require('../../../core/project/bootstrap-project-guidance');
-const { withGuidanceOwner } = require('../../../core/runtime/install-contract');
+const { guidanceOwner, withGuidanceOwner } = require('../../../core/runtime/install-contract');
 const { OPENCODE_GUIDANCE_TARGET } = require('../guidance/render');
 
 function projectOpencodeGuidance(options = {}) {
@@ -25,10 +25,10 @@ function projectOpencodeGuidance(options = {}) {
   const filePath = path.join(projectRoot, OPENCODE_GUIDANCE_TARGET.filePath);
   const existed = fs.existsSync(filePath);
 
-  // An existing AGENTS.md is the project's own, possibly hand-written. Never
-  // replace it without being told to: opencode reads it as the primary guidance
-  // file, so clobbering it would silently change how every agent behaves here.
-  if (existed && !overwrite) {
+  // Refresh Citadel's projection for the installing runtime. Preserve files
+  // without Citadel's ownership marker unless replacement was explicitly asked for.
+  const existingOwner = existed ? guidanceOwner(fs.readFileSync(filePath, 'utf8')) : null;
+  if (existed && existingOwner !== 'citadel:project-guidance' && !overwrite) {
     return {
       specPath: null,
       specCreated: false,
@@ -47,7 +47,7 @@ function projectOpencodeGuidance(options = {}) {
       written: false,
       skipped: false,
       dryRun: true,
-      action: existed ? 'overwrite' : 'create',
+      action: existed ? 'refresh' : 'create',
     };
   }
 

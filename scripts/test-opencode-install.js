@@ -21,7 +21,7 @@ const {
   mergeOpencodeConfig,
   renderPluginStub,
 } = require(path.join(CITADEL_ROOT, 'runtimes', 'opencode', 'generators', 'install-plugin'));
-const { ensureProjectDelegate } = require(path.join(CITADEL_ROOT, 'core', 'runtime', 'install-contract'));
+const { ensureProjectDelegate, withGuidanceOwner } = require(path.join(CITADEL_ROOT, 'core', 'runtime', 'install-contract'));
 const {
   projectOpencodeAgents,
   renderOpencodeAgent,
@@ -249,6 +249,22 @@ function testGuidanceNeverClobbers() {
   }
 }
 
+function testGuidanceRefreshesCitadelOwnedProjection() {
+  const root = scratchProject();
+  try {
+    const filePath = path.join(root, 'AGENTS.md');
+    fs.writeFileSync(filePath, withGuidanceOwner('# Codex-specific guidance\n'));
+    const refreshed = projectOpencodeGuidance({ citadelRoot: CITADEL_ROOT, projectRoot: root });
+    const content = fs.readFileSync(filePath, 'utf8');
+    assert.equal(refreshed.written, true);
+    assert.equal(refreshed.skipped, false);
+    assert(!/Codex-specific guidance/.test(content));
+    assert(content.includes('`/` slash commands'));
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+}
+
 // The renderer needs a spec, so the generator bootstraps the canonical one rather
 // than inventing its own copy. A dry run must still create nothing.
 function testGuidanceBootstrapsSpec() {
@@ -267,9 +283,10 @@ function testGuidanceBootstrapsSpec() {
     // The project name comes from the bootstrapped spec, not a hardcoded default.
     assert(fs.readFileSync(written.filePath, 'utf8').startsWith(`# ${path.basename(root)}`));
 
-    // Writing again is not an error, it just preserves what is there.
+    // Citadel-owned guidance is a projection and refreshes deterministically.
     const second = projectOpencodeGuidance({ citadelRoot: CITADEL_ROOT, projectRoot: root });
-    assert.equal(second.skipped, true);
+    assert.equal(second.written, true);
+    assert.equal(second.skipped, false);
   } finally {
     fs.rmSync(root, { recursive: true, force: true });
   }
@@ -512,6 +529,7 @@ async function main() {
   testYamlQuoting();
   testGuidanceTarget();
   testGuidanceNeverClobbers();
+  testGuidanceRefreshesCitadelOwnedProjection();
   testGuidanceBootstrapsSpec();
 
   const root = scratchProject();

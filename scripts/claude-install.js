@@ -244,7 +244,7 @@ Options:
   --install                 Add the marketplace and install the native plugin.
   --add-marketplace         Run: claude plugin marketplace add <plugin-root>.
   --install-plugin          Run: claude plugin install citadel@citadel-local.
-  --install-hooks           Advanced compatibility path: write resolved hooks into the target project.
+  --install-hooks           Write resolved hooks without installing the plugin (included by --install).
   --skip-validate           Skip claude plugin validate.
   --dry-run                 Print planned commands without writing files.
   --json                    Print machine-readable JSON only.
@@ -261,7 +261,7 @@ const jsonOnly = has('--json');
 const install = has('--install');
 const addMarketplace = install || has('--add-marketplace');
 const installPlugin = install || has('--install-plugin');
-const installHooks = has('--install-hooks');
+const installHooks = install || has('--install-hooks');
 const skipValidate = has('--skip-validate');
 const scope = arg('--scope', 'local');
 const pluginRoot = path.resolve(arg('--plugin-root', DEFAULT_PLUGIN_ROOT));
@@ -364,7 +364,7 @@ const report = {
     claudeCode: [
       install ? 'Run claude from the target project.' : `Run claude plugin marketplace add ${q(pluginRoot)} --scope ${scope} if you want CLI marketplace registration.`,
       install ? 'Citadel Harness is installed for this scope; run /reload-plugins or start a fresh Claude Code session.' : 'Inside Claude Code, run /plugin and install Citadel Harness from Citadel Local Plugins.',
-      installHooks ? 'Compatibility hooks were written directly; native plugin hooks remain the preferred path.' : 'Claude Code loads Citadel hooks from the installed plugin; no separate hook-writing step is required.',
+      installHooks ? 'Resolved Citadel hooks and the Claude runtime identity were written to machine-local project settings.' : 'Run with --install-hooks to write resolved Citadel hooks into this checkout.',
       'Run a real request such as /do review README.md; first-use state initializes automatically.',
     ],
   },

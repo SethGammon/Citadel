@@ -35,6 +35,7 @@ const { loadCodexAgentConfig } = require('../core/agents/model-config');
 const {
   assertPortableSharedOutputs,
   ensureMachineLocalExcludes,
+  guidanceOwner,
   withGuidanceOwner,
 } = require('../core/runtime/install-contract');
 
@@ -675,15 +676,19 @@ policy:
   writeFile(path.join(skillDir, 'agents', 'openai.yaml'), yaml);
 }
 
-// ---- 5. Generate AGENTS.md if missing ---------------------------------------
+// ---- 5. Reconcile the Citadel-owned AGENTS.md projection --------------------
 
 function syncProjectGuidance() {
   console.log('Checking AGENTS.md...');
 
   const agentsMdPath = path.join(PROJECT_ROOT, 'AGENTS.md');
   if (fs.existsSync(agentsMdPath)) {
-    console.log('  AGENTS.md already exists, skipping.');
-    return;
+    const owner = guidanceOwner(fs.readFileSync(agentsMdPath, 'utf8'));
+    if (owner !== 'citadel:project-guidance') {
+      console.log('  User-owned AGENTS.md already exists, skipping.');
+      return;
+    }
+    console.log('  Refreshing Citadel-owned AGENTS.md for Codex.');
   }
 
   const projectSpecPath = path.join(PROJECT_ROOT, '.citadel', 'project.md');

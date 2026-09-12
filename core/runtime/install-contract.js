@@ -27,6 +27,7 @@ const MACHINE_LOCAL_PATTERNS = Object.freeze([
   '.opencode/',
   '.planning/coordination/',
   '.planning/telemetry/',
+  '.planning/opencode/',
   '.planning/acquisition/',
   '.planning/doc-sync/',
   '.planning/pr-readiness/',
