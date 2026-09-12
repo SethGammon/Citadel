@@ -54,8 +54,8 @@ function testClaudeDryRun() {
     assert(report.steps.some((step) => step.name === 'Validate Claude Code plugin marketplace'));
     assert(report.steps.some((step) => step.name === 'Register Citadel marketplace with Claude Code'));
     assert(report.steps.some((step) => step.name === 'Install Citadel Harness plugin'));
-    assert(!report.steps.some((step) => step.name === 'Install resolved Citadel hooks'),
-      'native Claude install must not silently write shared project hook settings');
+    assert(report.steps.some((step) => step.name === 'Install resolved Citadel hooks'),
+      'default Claude install must plan machine-local hooks with explicit runtime identity');
     assert(report.steps.every((step) => step.skipped));
     assert(report.nextSteps.claudeCode.some((step) => step.includes('/reload-plugins')));
     assert(report.nextSteps.claudeCode.some((step) => step.includes('/do review README.md')));
@@ -207,7 +207,10 @@ function testPortableInstallContractAndTwoClones() {
     const firstExclude = ensureMachineLocalExcludes(first);
     assert(firstExclude.written, 'first clone should receive the local machine-output block');
     assert(ensureMachineLocalExcludes(first).skipped, 'local exclusion installation must be idempotent');
-    assert(fs.readFileSync(path.join(first, '.git', 'info', 'exclude'), 'utf8').includes('.opencode/'));
+    const firstExcludeText = fs.readFileSync(path.join(first, '.git', 'info', 'exclude'), 'utf8');
+    assert(firstExcludeText.includes('.opencode/'));
+    assert(firstExcludeText.includes('.planning/opencode/'),
+      'OpenCode pending notices must be machine-local by default');
 
     installClaudeHooks({ projectRoot: first, citadelRoot: CITADEL_ROOT });
     const firstSettings = fs.readFileSync(path.join(first, '.claude', 'settings.json'), 'utf8');
@@ -391,9 +394,41 @@ function testInitProjectDoesNotCreateClaudeMarkerUnderAmbiguity() {
   }
 }
 
+function testCodexRefreshesCitadelOwnedGuidance() {
+  const repository = tempProject('citadel-codex-guidance-refresh-');
+  try {
+    fs.mkdirSync(path.join(repository, '.citadel'), { recursive: true });
+    fs.copyFileSync(path.join(CITADEL_ROOT, '.citadel', 'project.md'), path.join(repository, '.citadel', 'project.md'));
+    const agentsPath = path.join(repository, 'AGENTS.md');
+    fs.writeFileSync(agentsPath, withGuidanceOwner('# OpenCode projection\n'));
+    execFileSync(process.execPath, [path.join(CITADEL_ROOT, 'scripts', 'codex-compat.js'), repository], {
+      cwd: repository,
+      env: { ...process.env, CITADEL_RUNTIME: 'codex' },
+      stdio: 'ignore',
+      timeout: 30000,
+    });
+    const content = fs.readFileSync(agentsPath, 'utf8');
+    assert(!content.includes('OpenCode projection'));
+    assert(content.includes('Codex'));
+
+    const userOwned = '# Hand written\nKeep me.\n';
+    fs.writeFileSync(agentsPath, userOwned);
+    execFileSync(process.execPath, [path.join(CITADEL_ROOT, 'scripts', 'codex-compat.js'), repository], {
+      cwd: repository,
+      env: { ...process.env, CITADEL_RUNTIME: 'codex' },
+      stdio: 'ignore',
+      timeout: 30000,
+    });
+    assert.equal(fs.readFileSync(agentsPath, 'utf8'), userOwned);
+  } finally {
+    fs.rmSync(repository, { recursive: true, force: true });
+  }
+}
+
 testPortableInstallContractAndTwoClones();
 testLinkedWorktreeExcludesUseCommonGitDirectory();
 testInitProjectSurfacesAmbiguousRuntimeAndStillProtectsRepo();
 testInitProjectDoesNotCreateClaudeMarkerUnderAmbiguity();
+testCodexRefreshesCitadelOwnedGuidance();
 
 console.log('installer tests passed');

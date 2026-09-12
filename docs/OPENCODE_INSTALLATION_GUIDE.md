@@ -232,9 +232,8 @@ Findings are deduped by content — `session.idle` fires many times per session 
 usually says the same thing — capped at 20 notices, and delivered once. The store
 is safe to delete; you will simply lose any finding not yet delivered.
 
-`.planning/opencode/` is transient per-session state. Citadel ignores it in its
-own repo; the installer does not write a `.gitignore` into your project, so add
-the line yourself if you do not want it committed.
+`.planning/opencode/` is transient per-session state. Citadel adds it to the
+checkout's machine-local Git exclude block automatically.
 
 The store is one file per project, but findings are scoped to the session that
 produced them, so several opencode sessions can share a project without one

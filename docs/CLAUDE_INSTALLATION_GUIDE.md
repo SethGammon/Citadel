@@ -176,7 +176,7 @@ Start Claude Code from the actual target project root. Setup detects stack files
 
 ### You want a team-shared install
 
-Use `--scope project` only when you intentionally want Claude Code plugin settings shared through the repository:
+Use `--scope project` only when you want the plugin registration limited to this checkout. Citadel treats `.claude/settings.json` as machine-local and writes it to the checkout's Git exclude file, so each teammate must install the plugin for their own checkout:
 
 ```bash
 node /path/to/Citadel/scripts/claude-install.js --install --scope project
