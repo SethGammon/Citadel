@@ -1,7 +1,7 @@
 {
   "name": "citadel",
   "description": "Claude Code harness for routing requests, preserving run state, enforcing hooks, and recording evidence",
-  "version": "1.4.0",
+  "version": "1.4.1",
   "author": {
     "name": "SethGammon"
   },
