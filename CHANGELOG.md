@@ -1,5 +1,25 @@
 # Changelog
 
+## 1.4.0 - 2026-09-13
+
+### Added
+
+- Add OpenCode as a third runtime, including installation, agent and guidance projections, hook adaptation, pending notices, and readiness checks.
+
+### Fixed
+
+- Bind effective configuration receipts to explicit runtime identity and reject mismatched or ambiguous runtime evidence.
+- Make Claude, Codex, and OpenCode installation portable and idempotent when multiple runtimes share a project.
+- Preserve repository contents during ambiguous runtime initialization and avoid creating a runtime marker when identity is disputed.
+- Preserve permission boundaries when projecting agent guidance.
+- Align compatibility fixtures and configuration tests with runtime-bound receipts.
+
+### Upgrade
+
+- Use the verified GitHub release archive and the documented updater for standalone installations. Review its backup and rollback plan before applying.
+- Existing projects using more than one runtime should run the appropriate installer and readiness check with an explicit runtime selection.
+- Node.js 22 or newer is required; the release verification matrix covers Node 22 and 24 on Linux, macOS, and Windows.
+
 ## 1.3.7 - 2026-09-10
 
 ### Fixed

@@ -9,7 +9,7 @@
     {
       "name": "citadel",
       "description": "Route requests, preserve run state, enforce hooks, and surface reviewable evidence in Claude Code",
-      "version": "1.3.7",
+    "version": "1.4.0",
       "source": "./",
       "author": {
         "name": "SethGammon",
