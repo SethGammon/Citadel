@@ -15,14 +15,14 @@ Authentication depends on the runtime you use. Citadel layers on top of the runt
 
 ## Recommended: Native Plugin Marketplace
 
-The commands below pin `v1.4.0`. If that tag is not present on
+The commands below pin `v1.4.1`. If that tag is not present on
 [GitHub Releases](https://github.com/SethGammon/Citadel/releases), stop rather
 than substituting floating `main`.
 
 ### OpenAI Codex
 
 ```bash
-codex plugin marketplace add SethGammon/Citadel --ref v1.4.0
+codex plugin marketplace add SethGammon/Citadel --ref v1.4.1
 codex plugin add citadel@citadel-local
 ```
 
@@ -33,7 +33,7 @@ or duplicate it.
 ### Claude Code
 
 ```bash
-claude plugin marketplace add SethGammon/Citadel@v1.4.0 --scope local
+claude plugin marketplace add SethGammon/Citadel@v1.4.1 --scope local
 claude plugin install citadel@citadel-local --scope local
 ```
 
@@ -52,7 +52,7 @@ adds one /do entry point, repository-local state that survives sessions,
 guarded multi-step workflows, and reviewable evidence with explicit Needs You
 and Resume boundaries.
 
-Install Citadel v1.4.0 from https://github.com/SethGammon/Citadel using this
+Install Citadel v1.4.1 from https://github.com/SethGammon/Citadel using this
 runtime's native plugin marketplace, then enable it for this repository. Use
 project-local defaults and preserve removal evidence for every change. Do not clone main or change shared
 configuration, sandbox settings, permissions, or user-wide settings without

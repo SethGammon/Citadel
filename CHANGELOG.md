@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.4.1 - 2026-09-13
+
+### Fixed
+
+- Include the event contract required by the OpenCode hook runner in the release archive. The v1.4.0 source checkout included this file, but its downloadable archive omitted it.
+- Verify both OpenCode plugin modules load from the extracted archive so missing packaged dependencies block future releases.
+
+### Upgrade
+
+- OpenCode archive users should upgrade from v1.4.0 to v1.4.1 and rerun the OpenCode installer and readiness check for their project.
+
 ## 1.4.0 - 2026-09-13
 
 ### Added

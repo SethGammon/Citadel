@@ -1,6 +1,6 @@
 {
   "name": "citadel",
-  "version": "1.4.0",
+  "version": "1.4.1",
   "private": true,
   "description": "Route requests, preserve run state, enforce hooks, and record reviewable evidence",
   "author": "",
