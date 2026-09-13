@@ -17,6 +17,7 @@
     "core/cli/package-cli.js",
     "core/codex/native-integrations.js",
     "core/contracts/agent-role.js",
+    "core/contracts/events.js",
     "core/contracts/project-spec.js",
     "core/contracts/skill-manifest.js",
     "core/distribution/fs-safety.js",

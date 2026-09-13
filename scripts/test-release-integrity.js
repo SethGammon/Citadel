@@ -369,6 +369,8 @@ try {
     fs.writeFileSync(destination, data);
   }
   const productRoot = path.join(extracted, `citadel-${product.manifest.version}`);
+  execFileSync(process.execPath, ['-e', "require('./runtimes/opencode/plugin/hook-runner.js')"], { cwd: productRoot, stdio: 'pipe' });
+  execFileSync(process.execPath, ['-e', "import('./runtimes/opencode/plugin/index.mjs')"], { cwd: productRoot, stdio: 'pipe' });
   const healthOutput = execFileSync(process.execPath, [path.join(productRoot, 'scripts', 'health.js')], { cwd: productRoot, encoding: 'utf8' });
   assert(JSON.parse(healthOutput).timestamp, 'packaged health diagnostic must execute with packaged dependencies');
   const runbookAnchors = new Map();
