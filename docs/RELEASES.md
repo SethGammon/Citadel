@@ -55,10 +55,10 @@ of `refs/tags/v*`. Once the source and all version manifests are ready, the
 release tag must exactly match the package version. For example:
 
 ```sh
-TAG=v1.3.7
+TAG=v1.4.0
 node scripts/release-package.js --ref "$TAG" --dry-run --verify-reproducible
 node scripts/release-package.js --ref "$TAG" --output-dir dist/release --verify-reproducible
-node scripts/release-verify.js "dist/release/citadel-$TAG.tar.gz" --ref "$TAG" --version 1.3.7
+node scripts/release-verify.js "dist/release/citadel-$TAG.tar.gz" --ref "$TAG" --version 1.4.0
 ```
 
 A pushed `v*` tag runs the same strict and reproducibility checks on Node 22 and
@@ -76,8 +76,8 @@ Download the complete trio from the GitHub Release. From a trusted Citadel
 checkout, verify the archive's offline integrity and internal manifest consistency:
 
 ```sh
-node scripts/release-verify.js /path/to/citadel-v1.3.7.tar.gz \
-  --ref v1.3.7 --version 1.3.7
+node scripts/release-verify.js /path/to/citadel-v1.4.0.tar.gz \
+  --ref v1.4.0 --version 1.4.0
 ```
 
 This offline check proves that the archive, checksum sidecar, embedded manifest,
@@ -89,9 +89,9 @@ for authenticated build provenance. See [GitHub's artifact-attestation guide](ht
 When online, independently verify GitHub's signed build provenance:
 
 ```sh
-gh attestation verify /path/to/citadel-v1.3.7.tar.gz -R SethGammon/Citadel
-gh attestation verify /path/to/citadel-v1.3.7.tar.gz.manifest.json -R SethGammon/Citadel
-gh attestation verify /path/to/citadel-v1.3.7.tar.gz.sha256 -R SethGammon/Citadel
+gh attestation verify /path/to/citadel-v1.4.0.tar.gz -R SethGammon/Citadel
+gh attestation verify /path/to/citadel-v1.4.0.tar.gz.manifest.json -R SethGammon/Citadel
+gh attestation verify /path/to/citadel-v1.4.0.tar.gz.sha256 -R SethGammon/Citadel
 ```
 
 The archive, sidecar, external manifest, embedded manifest, GitHub asset digest,
@@ -104,14 +104,14 @@ Point the updater at a standalone Citadel installation, not at a target project
 that Citadel manages. The default command is a read-only plan:
 
 ```sh
-node scripts/update.js --archive /path/to/citadel-v1.3.7.tar.gz --target /path/to/Citadel
+node scripts/update.js --archive /path/to/citadel-v1.4.0.tar.gz --target /path/to/Citadel
 ```
 
 After reviewing the verified source, backup path, and rollback command, apply it
 explicitly:
 
 ```sh
-node scripts/update.js --archive /path/to/citadel-v1.3.7.tar.gz --target /path/to/Citadel --apply
+node scripts/update.js --archive /path/to/citadel-v1.4.0.tar.gz --target /path/to/Citadel --apply
 ```
 
 The updater preserves `.git/` and `.planning/`, creates a backup beside the
