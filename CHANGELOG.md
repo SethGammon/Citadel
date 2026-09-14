@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.4.2 - 2026-09-14
+
+### Security
+
+- Remove the optional context-compression MCP shell-execution surface so commands remain subject to the host runtime's normal approval and sandbox controls.
+- Harden repository-memory change-impact analysis against Git option injection by resolving and validating the requested base revision before diffing.
+- Add regression coverage for command side effects, option-like revisions, malformed revisions, non-string input, and valid revision ranges.
+
+Thanks to [@brandstaetter](https://github.com/brandstaetter) for responsibly reporting both issues.
+
 ## 1.4.1 - 2026-09-13
 
 ### Fixed
