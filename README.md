@@ -248,7 +248,7 @@ The stable release intentionally ships a small public documentation surface:
 | Use package commands and supported flags | [CLI reference](docs/CLI.md) |
 | Review shipped changes | [Changelog](CHANGELOG.md) |
 
-The extracted release includes <!-- GENERATED: skill-count -->48<!-- /GENERATED --> skills and <!-- GENERATED: hook-script-count -->35<!-- /GENERATED --> hook scripts across <!-- GENERATED: hook-event-count -->29<!-- /GENERATED --> lifecycle events. They are an internal catalog, not a prerequisite checklist.
+The extracted release includes <!-- GENERATED: skill-count -->49<!-- /GENERATED --> skills and <!-- GENERATED: hook-script-count -->35<!-- /GENERATED --> hook scripts across <!-- GENERATED: hook-event-count -->29<!-- /GENERATED --> lifecycle events. They are an internal catalog, not a prerequisite checklist.
 
 Citadel keeps operational state separate from application code:
 
