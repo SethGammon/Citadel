@@ -146,12 +146,24 @@ function tracePath(from, to) {
 
 function impactOfChange(base) {
   const index = ensureIndex();
+  const requestedBase = base === undefined ? 'HEAD' : base;
+  if (typeof requestedBase !== 'string'
+      || !requestedBase
+      || requestedBase.startsWith('-')
+      || !/^[A-Za-z0-9_./~^{}-]+$/.test(requestedBase)) {
+    return { error: 'invalid git base ref' };
+  }
   let changed;
   try {
-    const raw = execFileSync('git', ['diff', '--name-only', base || 'HEAD'], { cwd: PROJECT_ROOT, encoding: 'utf8' });
+    const resolvedBase = execFileSync(
+      'git',
+      ['rev-parse', '--verify', '--end-of-options', `${requestedBase}^{commit}`],
+      { cwd: PROJECT_ROOT, encoding: 'utf8' },
+    ).trim();
+    const raw = execFileSync('git', ['diff', '--name-only', resolvedBase, '--'], { cwd: PROJECT_ROOT, encoding: 'utf8' });
     changed = raw.split(/\r?\n/).map((s) => toPosix(s.trim())).filter(Boolean);
   } catch (err) {
-    return { error: `git diff failed (not a repo, or bad base "${base}"): ${err.message}` };
+    return { error: `git diff failed (not a repo, or bad base "${requestedBase}"): ${err.message}` };
   }
   const reverse = reverseGraph(index);
   const affected = changed
@@ -164,7 +176,7 @@ function impactOfChange(base) {
   const rank = { high: 0, medium: 1, low: 2 };
   affected.sort((x, y) => rank[x.risk] - rank[y.risk] || y.fanIn - x.fanIn || x.file.localeCompare(y.file));
   return {
-    base: base || 'HEAD',
+    base: requestedBase,
     changedFiles: changed.length,
     indexedChangedFiles: affected.length,
     note: 'File-level impact (core/map is file-granular). Dependents are direct (1-hop) importers.',

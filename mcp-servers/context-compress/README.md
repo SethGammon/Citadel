@@ -1,7 +1,7 @@
 # context-compress MCP server
 
-Provides `smart_read` and `smart_bash` tools that compress large file reads and
-command outputs before they land in Claude's context window.
+Provides a `smart_read` tool that compresses large file reads before they land
+in Claude's context window.
 
 ## Why
 
@@ -14,9 +14,9 @@ structure instead of raw bytes.
 
 | Output size | Strategy |
 |---|---|
-| < 300 lines (read) / < 100 lines (bash) | Full content -- no compression |
-| 300-1000 lines / 100-500 lines | Head + tail + structural index |
-| > 1000 lines / > 500 lines | Head + tail + index + section guide |
+| < 300 lines | Full content -- no compression |
+| 300-1000 lines | Head + tail + structural index |
+| > 1000 lines | Head + tail + index + section guide |
 
 No LLM call needed -- compression uses structural heuristics (function/class
 names, error lines, section headings).
@@ -61,11 +61,10 @@ instead, with `CITADEL_PROJECT_ROOT` set to that project's absolute path.
 
 ## Usage
 
-Claude will see `smart_read` and `smart_bash` as available tools. Prompt Claude
-to prefer them for large-file reads and verbose commands:
+Claude will see `smart_read` as an available tool. Prompt Claude to prefer it
+for large-file reads:
 
-> "When reading files that may be large, use smart_read. For commands that produce
-> verbose output (typecheck, build, find, grep across many files), use smart_bash."
+> "When reading files that may be large, use smart_read."
 
 Or add to the project's CLAUDE.md (no global instruction needed if Claude Code
 loads the tool description, which includes the "Use instead of..." guidance).
@@ -73,14 +72,13 @@ loads the tool description, which includes the "Use instead of..." guidance).
 ## When NOT to use
 
 - Targeted reads where you know offset/limit: use native Read
-- Short commands: use native Bash
-- Any operation where you need exact raw output (e.g. checking a specific line)
+- Any operation where you need exact raw file content (e.g. checking a specific line)
 
 ## Security boundary
 
-The read confinement above applies to `smart_read`. `smart_bash` remains an
-explicit shell-execution capability, equivalent in trust to granting a native
-shell tool; only enable this opt-in server for trusted local workflows.
+This server intentionally exposes no command-execution tool. Shell commands must
+use the runtime's native command tool so Citadel's command policy hooks remain in
+the enforcement path.
 
 ## No dependencies
 

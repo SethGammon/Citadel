@@ -11,10 +11,13 @@
  */
 
 const { spawn } = require('child_process');
+const fs = require('fs');
+const os = require('os');
 const path = require('path');
 
 const REPO_ROOT = path.resolve(__dirname, '../..');
 const SERVER = path.join(__dirname, 'index.js');
+const OUTPUT_CANARY = path.join(os.tmpdir(), `citadel-codebase-memory-${process.pid}.txt`);
 
 const REQUESTS = [
   { jsonrpc: '2.0', id: 1, method: 'initialize', params: {} },
@@ -22,6 +25,10 @@ const REQUESTS = [
   { jsonrpc: '2.0', id: 3, method: 'tools/call', params: { name: 'get_architecture', arguments: {} } },
   { jsonrpc: '2.0', id: 4, method: 'tools/call', params: { name: 'who_imports', arguments: { file: 'core/map/index.js' } } },
   { jsonrpc: '2.0', id: 5, method: 'tools/call', params: { name: 'index_status', arguments: {} } },
+  { jsonrpc: '2.0', id: 6, method: 'tools/call', params: { name: 'impact_of_change', arguments: { base: `--output=${OUTPUT_CANARY}` } } },
+  { jsonrpc: '2.0', id: 7, method: 'tools/call', params: { name: 'impact_of_change', arguments: { base: 'HEAD~1' } } },
+  { jsonrpc: '2.0', id: 8, method: 'tools/call', params: { name: 'impact_of_change', arguments: { base: { unexpected: true } } } },
+  { jsonrpc: '2.0', id: 9, method: 'tools/call', params: { name: 'impact_of_change', arguments: {} } },
 ];
 
 function parseResult(resp) {
@@ -34,9 +41,14 @@ const checks = {
   3: (r) => (parseResult(r).stats && typeof parseResult(r).stats.files === 'number') || 'no stats.files',
   4: (r) => (Array.isArray(parseResult(r).importers)) || 'importers not an array',
   5: (r) => (typeof parseResult(r).fileCount === 'number') || 'no fileCount',
+  6: (r) => (parseResult(r).error === 'invalid git base ref' && !fs.existsSync(OUTPUT_CANARY)) || 'option-like base was not rejected safely',
+  7: (r) => (parseResult(r).base === 'HEAD~1' && Array.isArray(parseResult(r).affected)) || 'valid revision expression failed',
+  8: (r) => (parseResult(r).error === 'invalid git base ref' && !fs.existsSync(OUTPUT_CANARY)) || 'non-string base was not rejected safely',
+  9: (r) => (parseResult(r).base === 'HEAD' && Array.isArray(parseResult(r).affected)) || 'default HEAD comparison failed',
 };
 
 function run() {
+  fs.rmSync(OUTPUT_CANARY, { force: true });
   const child = spawn('node', [SERVER], { cwd: REPO_ROOT, stdio: ['pipe', 'pipe', 'inherit'] });
   let buffer = '';
   const responses = {};

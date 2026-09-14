@@ -3,8 +3,8 @@
 /**
  * context-compress MCP server
  *
- * Provides smart_read and smart_bash tools that compress large outputs
- * before they land in Claude's context window.
+ * Provides a smart_read tool that compresses large file reads before they
+ * land in Claude's context window.
  *
  * Research basis: Morph (2026) -- context rot degrades all models as context
  * grows. Raw file reads and verbose command outputs are the primary blowout
@@ -16,13 +16,8 @@
  *     300-1000     → first 80 + function/class/export index + tail 20
  *     > 1000       → first 50 + structural index + tail 10 + section guide
  *
- *   smart_bash:
- *     < 100 lines  → full output
- *     100-500      → first 40 + all error/warning lines + tail 20 + stats
- *     > 500        → first 30 + all error lines (max 50) + tail 10 + stats
- *
  * Enable: add to ~/.claude/settings.json mcpServers (see README below).
- * Disable: remove from mcpServers. Native Read/Bash resume automatically.
+ * Disable: remove from mcpServers. Native Read resumes automatically.
  *
  * Enable for a project only:
  *   Add to .claude/settings.json instead of global settings.
@@ -32,7 +27,6 @@
 
 const fs = require('fs');
 const path = require('path');
-const { execSync } = require('child_process');
 
 const SECRET_BASENAMES = new Set([
   '.git-credentials',
@@ -192,33 +186,6 @@ const TOOL_DEFS = [
       required: ['path'],
     },
   },
-  {
-    name: 'smart_bash',
-    description: [
-      'Run a shell command with automatic output compression for verbose results.',
-      'Use instead of native Bash when the command may produce large output',
-      '(typecheck, build, test runs, find, grep across many files).',
-      'For short commands or when you need exact output, use native Bash.',
-    ].join(' '),
-    inputSchema: {
-      type: 'object',
-      properties: {
-        command: {
-          type: 'string',
-          description: 'The shell command to run.',
-        },
-        cwd: {
-          type: 'string',
-          description: 'Working directory (optional, defaults to process cwd).',
-        },
-        timeout_ms: {
-          type: 'number',
-          description: 'Timeout in milliseconds (default 30000).',
-        },
-      },
-      required: ['command'],
-    },
-  },
 ];
 
 // ── smart_read implementation ─────────────────────────────────────────────────
@@ -358,90 +325,6 @@ function smartRead(filePath, hint) {
 
 // ── smart_bash implementation ─────────────────────────────────────────────────
 
-const BASH_FULL_THRESHOLD = 100;
-const BASH_LARGE_THRESHOLD = 500;
-
-function smartBash(command, cwd, timeoutMs) {
-  const opts = {
-    cwd: cwd || process.cwd(),
-    timeout: timeoutMs || 30000,
-    maxBuffer: 10 * 1024 * 1024, // 10 MB
-    stdio: ['pipe', 'pipe', 'pipe'],
-  };
-
-  let stdout = '';
-  let stderr = '';
-  let exitCode = 0;
-
-  try {
-    stdout = execSync(command, { ...opts, encoding: 'utf8' });
-  } catch (e) {
-    stdout = e.stdout || '';
-    stderr = e.stderr || '';
-    exitCode = e.status || 1;
-  }
-
-  const combined = (stdout + (stderr ? '\n[stderr]\n' + stderr : '')).trimEnd();
-  const lines = combined.split('\n');
-  const total = lines.length;
-
-  if (total <= BASH_FULL_THRESHOLD) {
-    return {
-      content: combined || '(no output)',
-      exitCode,
-      meta: `[smart_bash] ${total} lines — full output`,
-    };
-  }
-
-  // Extract error and warning lines (cap at 50)
-  const errorLines = lines
-    .map((l, i) => ({ line: l, n: i + 1 }))
-    .filter(({ line }) => /\b(error|Error|ERROR|fail|FAIL|warn|WARNING)\b/.test(line))
-    .slice(0, 50)
-    .map(({ line, n }) => `  L${n}: ${line}`);
-
-  if (total <= BASH_LARGE_THRESHOLD) {
-    const head = lines.slice(0, 40).join('\n');
-    const tail = lines.slice(-20).join('\n');
-    const errStr = errorLines.length > 0 ? `\nErrors/warnings (${errorLines.length}):\n${errorLines.join('\n')}` : '';
-
-    return {
-      content: [
-        `[smart_bash] exit ${exitCode} — ${total} lines (compressed)`,
-        `Command: ${command}`,
-        `--- LINES 1-40 ---`,
-        head,
-        `--- LINES ${total - 19}-${total} ---`,
-        tail,
-        errStr,
-        `\nFull output: ${total} lines, exit ${exitCode}.`,
-      ].filter(Boolean).join('\n'),
-      exitCode,
-      meta: `compressed: ${total} lines → head/tail/errors`,
-    };
-  }
-
-  // Very large output
-  const head = lines.slice(0, 30).join('\n');
-  const tail = lines.slice(-10).join('\n');
-  const errStr = errorLines.length > 0 ? `\nErrors/warnings (${errorLines.length}):\n${errorLines.join('\n')}` : '\n(no error/warning lines found)';
-
-  return {
-    content: [
-      `[smart_bash] exit ${exitCode} — ${total} lines (heavily compressed)`,
-      `Command: ${command}`,
-      `--- LINES 1-30 ---`,
-      head,
-      `--- LINES ${total - 9}-${total} ---`,
-      tail,
-      errStr,
-      `\nFull output: ${total} lines, exit ${exitCode}. Use native Bash to re-run if you need full output.`,
-    ].filter(Boolean).join('\n'),
-    exitCode,
-    meta: `compressed: ${total} lines → head/tail/errors only`,
-  };
-}
-
 // ── MCP protocol ─────────────────────────────────────────────────────────────
 
 function respond(id, result) {
@@ -461,7 +344,7 @@ function handleRequest(req) {
     respond(id, {
       protocolVersion: '2024-11-05',
       capabilities: { tools: {} },
-      serverInfo: { name: 'context-compress', version: '1.0.1' },
+      serverInfo: { name: 'context-compress', version: '1.0.2' },
     });
     return;
   }
@@ -488,14 +371,6 @@ function handleRequest(req) {
           content: [{ type: 'text', text: result.content }],
         });
       }
-      return;
-    }
-
-    if (name === 'smart_bash') {
-      const result = smartBash(args?.command || '', args?.cwd, args?.timeout_ms);
-      respond(id, {
-        content: [{ type: 'text', text: result.content }],
-      });
       return;
     }
 

@@ -20,6 +20,10 @@ function call(id, filePath) {
   };
 }
 
+function request(id, method, params = {}) {
+  return { jsonrpc: '2.0', id, method, params };
+}
+
 function drive(requests, options = {}) {
   return new Promise((resolve, reject) => {
     const env = { ...process.env };
@@ -140,6 +144,18 @@ async function run() {
     const unconfigured = await drive([call(1, validRelative)]);
     assertBlocked(unconfigured.get(1), validContent, 'missing project root');
     assert(text(unconfigured.get(1)).includes('CITADEL_PROJECT_ROOT'));
+
+    const commandCanary = path.join(fixture, 'smart-bash-command-ran.txt');
+    const removedCommand = await drive([
+      request(3, 'tools/list'),
+      request(4, 'tools/call', {
+        name: 'smart_bash',
+        arguments: { command: `echo PWNED > "${commandCanary}"`, cwd: fixture },
+      }),
+    ], { projectRoot: project });
+    assert.deepEqual(removedCommand.get(3).result.tools.map((tool) => tool.name), ['smart_read']);
+    assert.equal(removedCommand.get(4).error.code, -32601, 'removed smart_bash must fail as an unknown tool');
+    assert(!fs.existsSync(commandCanary), 'removed smart_bash executed a shell side effect');
 
     const relativeRoot = await drive([call(2, validRelative)], {
       projectRoot: 'project',
