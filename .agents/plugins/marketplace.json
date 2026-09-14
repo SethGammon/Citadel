@@ -18,7 +18,7 @@
       "interface": {
         "displayName": "Citadel Harness"
       },
-    "version": "1.4.1",
+    "version": "1.4.2",
       "description": "Route requests, preserve run state, enforce hooks, and surface reviewable evidence in Codex.",
       "repository": "https://github.com/SethGammon/Citadel",
       "metadata": "../../citadel-metadata.json"

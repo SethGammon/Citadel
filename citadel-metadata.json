@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "name": "citadel",
-  "version": "1.4.1",
+  "version": "1.4.2",
   "description": "Route requests, preserve run state, enforce hooks, and record reviewable evidence",
   "license": "MIT",
   "source_repository": "https://github.com/SethGammon/Citadel",
