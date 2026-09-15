@@ -22,7 +22,7 @@ and handoffs around the coding agent you already use.
 **Requires:** Claude Code or OpenAI Codex, Node.js 22+, and a git repository.
 
 Citadel is installed through the plugin marketplace already built into your
-coding agent. The commands below pin the complete `v1.4.2` release; if that tag
+coding agent. The commands below pin the complete `v1.4.3` release; if that tag
 is not present on [GitHub Releases](https://github.com/SethGammon/Citadel/releases),
 do not substitute floating `main`.
 
@@ -33,7 +33,7 @@ do not substitute floating `main`.
 Run these commands from the repository you want Citadel to manage:
 
 ```bash
-codex plugin marketplace add SethGammon/Citadel --ref v1.4.2
+codex plugin marketplace add SethGammon/Citadel --ref v1.4.3
 codex plugin add citadel@citadel-local
 ```
 
@@ -45,7 +45,7 @@ request such as `/do review README.md`.
 Run these commands from the repository you want Citadel to manage:
 
 ```bash
-claude plugin marketplace add SethGammon/Citadel@v1.4.2 --scope local
+claude plugin marketplace add SethGammon/Citadel@v1.4.3 --scope local
 claude plugin install citadel@citadel-local --scope local
 ```
 
@@ -63,7 +63,7 @@ adds one /do entry point, repository-local state that survives sessions,
 guarded multi-step workflows, and reviewable evidence with explicit Needs You
 and Resume boundaries.
 
-Install Citadel v1.4.2 from https://github.com/SethGammon/Citadel using this
+Install Citadel v1.4.3 from https://github.com/SethGammon/Citadel using this
 runtime's native plugin marketplace, then enable it for this repository. Use
 project-local defaults and preserve removal evidence for every change. Do not clone main or change shared
 configuration, sandbox settings, permissions, or user-wide settings without

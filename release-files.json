@@ -29,6 +29,7 @@
     "core/momentum/watcher.js",
     "core/policy/external-actions.js",
     "core/sandbox/providers.js",
+    "core/security/shell-containment.js",
     "core/skills/catalog.js",
     "core/skills/parse-skill.js",
     "core/skills/project-skill.js",

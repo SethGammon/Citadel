@@ -1,6 +1,6 @@
 {
   "name": "citadel",
-  "version": "1.4.2",
+  "version": "1.4.3",
   "description": "Codex-native harness for routing requests, preserving run state, enforcing hooks, and recording evidence.",
   "author": {
     "name": "Citadel",

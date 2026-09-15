@@ -886,7 +886,8 @@ try {
   assert.deepEqual(Object.keys(releaseMcp.mcpServers), ['citadel-state']);
   for (const [name, server] of Object.entries(releaseMcp.mcpServers)) {
     assert.equal(server.command, 'node', `release MCP ${name} must use the packaged Node runtime target`);
-    const target = server.args?.[0];
+    assert.equal(server.cwd, '.', `release MCP ${name} must preserve the consuming project as cwd`);
+    const target = server.args?.[0]?.replace(/^\$\{CLAUDE_PLUGIN_ROOT\}\//, '');
     assert(target && fs.existsSync(path.join(productRoot, ...target.split('/'))), `release MCP ${name} targets omitted file ${target}`);
   }
 
