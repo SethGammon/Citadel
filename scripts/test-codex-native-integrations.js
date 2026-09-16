@@ -243,7 +243,7 @@ function testClaudePluginMcpEntrypoints() {
     const statusResponse = statusResult.stdout.split(/\r?\n/).filter(Boolean)
       .map((line) => JSON.parse(line)).find((response) => response.id === 2);
     const status = JSON.parse(statusResponse.result.content[0].text);
-    assert.equal(path.resolve(status.projectRoot), path.resolve(projectRoot),
+    assert.equal(fs.realpathSync(status.projectRoot), fs.realpathSync(projectRoot),
       'plugin-root entrypoint must preserve the consuming project as MCP project root');
   } finally {
     fs.rmSync(projectRoot, { recursive: true, force: true });
