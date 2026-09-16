@@ -7,7 +7,7 @@ const os = require('os');
 const path = require('path');
 const { execFileSync, spawnSync } = require('child_process');
 const config = require('../core/config');
-const { buildConfigInvocation, renderConfigCommand, shellQuote } = require('../core/utils/config-command');
+const { activeShell, buildConfigInvocation, renderConfigCommand, shellQuote } = require('../core/utils/config-command');
 const codexRuntime = require('../runtimes/codex/runtime');
 const claudeRuntime = require('../runtimes/claude-code/runtime');
 const identity = require('../core/config/identity');
@@ -408,6 +408,8 @@ test('generated config invocations bind the target project outside its cwd', () 
 });
 
 test('displayed config commands execute in supported shells', () => {
+  assert.equal(activeShell('win32', { MSYSTEM: 'MINGW64' }), 'powershell');
+  assert.equal(activeShell('win32', { MSYSTEM: 'MINGW64', SHELL: '/usr/bin/bash', TERM: 'xterm-256color' }), 'posix');
   const parent = fs.mkdtempSync(path.join(os.tmpdir(), 'citadel 303 shell '));
   const root = path.join(parent, "project O'Brien & config");
   const elsewhere = path.join(parent, 'unrelated cwd');

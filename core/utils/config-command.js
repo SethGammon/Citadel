@@ -41,7 +41,12 @@ function buildConfigInvocation(options = {}) {
 
 function activeShell(platform = process.platform, env = process.env) {
   if (platform !== 'win32') return 'posix';
-  return env.MSYSTEM ? 'posix' : 'powershell';
+  const interactivePosix = typeof env.TERM === 'string' && !/^(?:dumb|unknown)$/i.test(env.TERM);
+  return interactivePosix
+      && typeof env.SHELL === 'string'
+      && /(?:^|[\\/])(ba|z|fi|da)?sh(?:\.exe)?$/i.test(env.SHELL)
+    ? 'posix'
+    : 'powershell';
 }
 
 function shellQuote(value, shell = activeShell()) {
