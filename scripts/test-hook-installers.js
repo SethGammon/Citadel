@@ -9,6 +9,7 @@ const path = require('path');
 
 const { installClaudeHooks } = require('../runtimes/claude-code/generators/install-hooks');
 const { installCodexHooks, translateCodexHooks, translateCodexPluginHooks } = require('../runtimes/codex/generators/install-hooks');
+const { claudeShellContainmentReadiness } = require('../core/security/shell-containment');
 
 function withTempDir(run) {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'citadel-hook-install-'));
@@ -22,6 +23,18 @@ function withTempDir(run) {
 const citadelRoot = path.resolve(__dirname, '..');
 const hooksTemplatePath = path.join(citadelRoot, 'hooks', 'hooks-template.json');
 const hooksTemplate = JSON.parse(fs.readFileSync(hooksTemplatePath, 'utf8'));
+
+const nativeWindowsBoundary = claudeShellContainmentReadiness({ platform: 'win32', env: {} });
+assert.equal(nativeWindowsBoundary.status, 'unsupported-host');
+assert.match(nativeWindowsBoundary.message, /not contained by Citadel/);
+assert.match(nativeWindowsBoundary.message, /WSL2/);
+
+const wslBoundary = claudeShellContainmentReadiness({
+  platform: 'linux',
+  env: { WSL_DISTRO_NAME: 'Ubuntu' },
+});
+assert.equal(wslBoundary.status, 'runtime-unverified');
+assert.match(wslBoundary.message, /does not verify/);
 
 function countHookHandlers(hooks) {
   return Object.values(hooks || {}).reduce((total, entries) => total + entries.reduce(

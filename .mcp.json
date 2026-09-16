@@ -3,7 +3,7 @@
     "citadel-state": {
       "command": "node",
       "args": [
-        "mcp-servers/citadel-state/index.js"
+        "${CLAUDE_PLUGIN_ROOT}/mcp-servers/citadel-state/index.js"
       ],
       "cwd": ".",
       "env": {
@@ -19,7 +19,7 @@
     "codebase-memory": {
       "command": "node",
       "args": [
-        "mcp-servers/codebase-memory/index.js"
+        "${CLAUDE_PLUGIN_ROOT}/mcp-servers/codebase-memory/index.js"
       ],
       "cwd": ".",
       "env": {

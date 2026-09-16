@@ -70,15 +70,16 @@ npm test
 
 ## .env protection and write boundaries
 
-`.env` protection is symmetric across read and write paths:
+Citadel's direct-file hooks and bounded shell checks cover different surfaces:
 
-- Read, Edit, and Write tool calls on any file whose name starts with `.env` are blocked by `protect-files.js`. Template files ending in `.example`, `.sample`, or `.template` are always allowed.
-- Bash write attempts targeting `.env` files are blocked by `external-action-gate.js`: output redirection (`>` or `>>`), `tee`, and `cp` or `mv` with a `.env` destination. The same template suffixes are exempt.
+- Read tool calls on any file whose name starts with `.env`, including templates, are blocked by `protect-files.js`. Edit and Write allow template suffixes `.example`, `.sample`, and `.template` but block other `.env*` files.
+- Recognized Bash write attempts targeting `.env` files are blocked by `external-action-gate.js`: output redirection (`>` or `>>`), `tee`, and `cp` or `mv` with a `.env` destination. The same template suffixes are exempt. This pattern matching is defense in depth, not complete shell containment.
 - Escape hatch: set `"allowEnvWrites": true` in `.claude/harness.json` to disable only the Edit/Write check. Reads and the Bash write patterns stay blocked. The default is blocking.
 
 Write boundaries:
 
-- Writes outside the project root are blocked, with one allowlisted location: the Claude Code native auto-memory directory under `~/.claude/projects/<project-slug>/memory/`.
+- Direct Edit and Write tool calls outside the project root are blocked, with one allowlisted location: the Claude Code native auto-memory directory under `~/.claude/projects/<project-slug>/memory/`.
+- Shells, scripts, interpreters, aliases, expansions, and child processes can write outside that direct-tool boundary. Citadel does not parse arbitrary shell effects and is not an OS sandbox. Complete containment requires the coding runtime's supported sandbox or another OS-level boundary. `scripts/install-hooks.js` reports this boundary explicitly and warns that native-Windows Claude Code cannot establish it through Citadel.
 - Every block reason is mirrored to stderr in addition to stdout, so runtimes that only surface stderr still show why an action was stopped.
 
 ## Private state guidance

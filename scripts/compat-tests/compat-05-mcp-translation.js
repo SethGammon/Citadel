@@ -29,6 +29,11 @@ async function run() {
           command: 'npx',
           args: ['-y', '@modelcontextprotocol/server-filesystem', '.'],
         },
+        pluginServer: {
+          command: 'node',
+          args: ['${CLAUDE_PLUGIN_ROOT}/mcp-servers/codebase-memory/index.js'],
+          cwd: '.',
+        },
         _disabled: {
           command: 'should-not-appear',
         },
@@ -68,6 +73,12 @@ async function run() {
       }
       if (!content.includes('@modelcontextprotocol/server-github')) {
         errors.push('Missing: server-github in args');
+      }
+      if (content.includes('${CLAUDE_PLUGIN_ROOT}')) {
+        errors.push('Claude plugin root placeholder leaked into Codex config');
+      }
+      if (!content.includes('mcp-servers/codebase-memory/index.js')) {
+        errors.push('Plugin-root MCP argument was not translated for Codex');
       }
       // Token env var should be mapped
       if (!content.includes('MCP_EXAMPLE_VAR')) {

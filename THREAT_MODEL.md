@@ -213,6 +213,12 @@ These were found, analyzed, and explicitly accepted. They are not open bugs.
   Accepted: enumerating every exfiltration tool with regex is not achievable;
   covering arbitrary shell belongs to the runtime sandbox, which remains part
   of the security boundary.
+- Outside-project and protected-file shell writes: `protect-files.js` receives
+  structured paths for Read/Edit/Write, not the effects of arbitrary Bash or
+  PowerShell command strings. Direct-tool containment therefore does not imply
+  shell containment. Native-Windows Claude Code does not provide the supported
+  shell-sandbox boundary available on macOS, Linux, and WSL2. Citadel reports
+  this as unsupported rather than promoting missing containment to success.
 - Per-tool-call hook process spawn: every gated tool call spawns fresh Node
   processes for its hooks. This is the dominant harness overhead. Accepted for
   now: fail-closed correctness outweighs latency. The overhead is tracked as

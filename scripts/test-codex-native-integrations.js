@@ -97,7 +97,9 @@ function testRepositoryHookPackagingBoundary() {
 function testGeneratedCodexArtifacts() {
   const bundledMcp = readJson(path.join(CITADEL_ROOT, '.mcp.json'));
   for (const server of Object.values(bundledMcp.mcpServers)) {
-    assert.equal(server.cwd, '.', 'bundled MCP entrypoints must resolve from the plugin root');
+    assert.equal(server.cwd, '.', 'bundled MCP servers must preserve the consuming project as cwd');
+    assert.match(server.args[0], /^\$\{CLAUDE_PLUGIN_ROOT\}\//,
+      'Claude plugin MCP entrypoints must resolve from the plugin root');
   }
 
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'citadel-codex-native-'));
@@ -113,6 +115,8 @@ function testGeneratedCodexArtifacts() {
     assert(config.includes('hooks = true'), 'Codex config must use canonical hooks feature');
     assert(!config.includes('codex_hooks = true'), 'Codex config must not emit deprecated codex_hooks feature');
     assert(config.includes('[mcp_servers.citadel-state]'), 'Codex config must include citadel-state MCP server');
+    assert(!config.includes('${CLAUDE_PLUGIN_ROOT}'),
+      'Claude-only plugin-root placeholders must not leak into Codex MCP configuration');
 
     const manifestPath = path.join(tmp, '.codex-plugin', 'plugin.json');
     const manifest = readJson(manifestPath);
@@ -187,6 +191,62 @@ function testCodexAndClaudeMcpRuntimeCoexistence() {
       `Codex MCP activation should use codex: ${JSON.stringify(codexActivation)}`);
   } finally {
     fs.rmSync(tmp, { recursive: true, force: true });
+  }
+}
+
+function testClaudePluginMcpEntrypoints() {
+  const projectRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'citadel mcp consumer '));
+  try {
+    fs.mkdirSync(path.join(projectRoot, '.planning'), { recursive: true });
+    const bundledMcp = readJson(path.join(CITADEL_ROOT, '.mcp.json'));
+    const requests = [
+      JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'initialize', params: {} }),
+      JSON.stringify({ jsonrpc: '2.0', id: 2, method: 'tools/list', params: {} }),
+      '',
+    ].join('\n');
+
+    for (const [name, server] of Object.entries(bundledMcp.mcpServers)) {
+      const entrypoint = server.args[0].replace('${CLAUDE_PLUGIN_ROOT}', CITADEL_ROOT);
+      const result = spawnSync(process.execPath, [entrypoint], {
+        cwd: projectRoot,
+        input: requests,
+        env: { ...process.env, ...(server.env || {}) },
+        encoding: 'utf8',
+        timeout: 20000,
+      });
+      assert.equal(result.status, 0, `${name} failed from consumer project: ${result.stderr}`);
+      const responses = result.stdout.split(/\r?\n/).filter(Boolean).map((line) => JSON.parse(line));
+      assert(responses.find((response) => response.id === 1)?.result,
+        `${name} did not complete MCP initialization`);
+      assert(responses.find((response) => response.id === 2)?.result?.tools?.length,
+        `${name} did not expose MCP tools`);
+    }
+
+    const stateServer = bundledMcp.mcpServers['citadel-state'];
+    const statusInput = [
+      JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'initialize', params: {} }),
+      JSON.stringify({ jsonrpc: '2.0', id: 2, method: 'tools/call', params: { name: 'citadel_status', arguments: {} } }),
+      '',
+    ].join('\n');
+    const statusResult = spawnSync(
+      process.execPath,
+      [stateServer.args[0].replace('${CLAUDE_PLUGIN_ROOT}', CITADEL_ROOT)],
+      {
+        cwd: projectRoot,
+        input: statusInput,
+        env: { ...process.env, ...(stateServer.env || {}) },
+        encoding: 'utf8',
+        timeout: 20000,
+      }
+    );
+    assert.equal(statusResult.status, 0, statusResult.stderr);
+    const statusResponse = statusResult.stdout.split(/\r?\n/).filter(Boolean)
+      .map((line) => JSON.parse(line)).find((response) => response.id === 2);
+    const status = JSON.parse(statusResponse.result.content[0].text);
+    assert.equal(fs.realpathSync(status.projectRoot), fs.realpathSync(projectRoot),
+      'plugin-root entrypoint must preserve the consuming project as MCP project root');
+  } finally {
+    fs.rmSync(projectRoot, { recursive: true, force: true });
   }
 }
 
@@ -298,6 +358,7 @@ function testDocsMatrix() {
 
 testGeneratedCodexArtifacts();
 testRepositoryHookPackagingBoundary();
+testClaudePluginMcpEntrypoints();
 testCodexAndClaudeMcpRuntimeCoexistence();
 testMcpServer();
 testBridgeUtilities();

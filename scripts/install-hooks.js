@@ -21,6 +21,7 @@ const path = require('path');
 const { reconcileEffectiveConfig } = require('../core/config');
 const { installClaudeHooks } = require('../runtimes/claude-code/generators/install-hooks');
 const claudeRuntime = require('../runtimes/claude-code/runtime');
+const { claudeShellContainmentReadiness } = require('../core/security/shell-containment');
 
 const CITADEL_ROOT = path.resolve(__dirname, '..');
 
@@ -98,6 +99,9 @@ function main() {
       console.log(`  Machine-local outputs protected by ${result.machineLocalExcludes.path}`);
     }
     console.log(`  Product bundles: ${resolved.receipt.bundles.effective.join(', ')}`);
+    const shellBoundary = claudeShellContainmentReadiness();
+    console.log(`  Shell containment: ${shellBoundary.status}`);
+    console.log(`  ${shellBoundary.message}`);
     console.log('Hooks are ready. No restart needed.');
   } catch (error) {
     console.error(`Error: ${error.message}`);

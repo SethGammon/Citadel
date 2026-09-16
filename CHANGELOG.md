@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.4.3 - 2026-09-15
+
+### Fixed
+
+- Resolve bundled Claude Code MCP entrypoints from the installed plugin root while preserving the consuming project as each server's working directory.
+- Keep Claude-specific MCP path placeholders out of generated Codex configuration and verify both bundled servers from a separate project path.
+
+### Security
+
+- State the direct-tool file-protection boundary precisely instead of implying that Citadel contains arbitrary shell effects.
+- Report native-Windows Claude shell containment as unsupported and other host containment as runtime-unverified during hook installation.
+- Reconcile `.env` template documentation with the different Read and Edit/Write behavior.
+
 ## 1.4.2 - 2026-09-14
 
 ### Security

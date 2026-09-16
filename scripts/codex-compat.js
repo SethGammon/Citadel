@@ -51,6 +51,22 @@ function portableMcpScriptPath() {
     : './.citadel/scripts/citadel-state.js';
 }
 
+function codexMcpConfig(config) {
+  const pluginRoot = CITADEL_ROOT.replace(/\\/g, '/');
+  const replacePluginRoot = (value) => typeof value === 'string'
+    ? value.replace(/\$\{CLAUDE_PLUGIN_ROOT\}/g, pluginRoot)
+    : value;
+  return {
+    ...config,
+    command: replacePluginRoot(config.command),
+    args: Array.isArray(config.args) ? config.args.map(replacePluginRoot) : config.args,
+    cwd: replacePluginRoot(config.cwd),
+    env: config.env && typeof config.env === 'object'
+      ? Object.fromEntries(Object.entries(config.env).map(([key, value]) => [key, replacePluginRoot(value)]))
+      : config.env,
+  };
+}
+
 // ---- Utility helpers --------------------------------------------------------
 
 function ensureDir(dir) {
@@ -163,7 +179,7 @@ function generateConfigToml() {
       // Skip comments and disabled entries (prefixed with _)
       if (name.startsWith('_')) continue;
       if (name === 'citadel-state') continue;
-      entries.push(mcpServerToToml(name, config));
+      entries.push(mcpServerToToml(name, codexMcpConfig(config)));
     }
   }
   if (entries.length > 0) {
