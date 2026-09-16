@@ -5,10 +5,13 @@ const assert = require('assert');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
+const { execFileSync, spawnSync } = require('child_process');
 const config = require('../core/config');
+const { buildConfigInvocation, renderConfigCommand, shellQuote } = require('../core/utils/config-command');
 const codexRuntime = require('../runtimes/codex/runtime');
 const claudeRuntime = require('../runtimes/claude-code/runtime');
 const identity = require('../core/config/identity');
+const { ensureProjectDelegate } = require('../core/runtime/install-contract');
 
 let passed = 0;
 
@@ -65,6 +68,12 @@ function reconcile(root, value, options = {}) {
   });
 }
 
+function assertBoundCommand(command, root, subcommand) {
+  assert(command.includes(path.resolve(root)), 'command must name the intended project root');
+  assert(command.includes(` ${subcommand} --project-root `), 'subcommand must precede --project-root');
+  assert(!command.includes('node .citadel/scripts/citadel-config.js'));
+}
+
 test('reconciliation atomically writes a current derived receipt', () => {
   const root = tempProject();
   const result = reconcile(root, harness(['core', 'persistence']));
@@ -104,10 +113,8 @@ test('stale effective receipts are rejected and preflight fails closed', () => {
   assert.equal(decision.reasonCode, config.EFFECTIVE_RECEIPT_REASONS.STALE);
   assert.equal(decision.plan.action, 'reconcile-effective-config');
   assert.equal(decision.plan.requiresExplicitApply, true);
-  assert.equal(
-    decision.plan.applyCommand,
-    'node .citadel/scripts/citadel-config.js reconcile --apply --runtime full-test-runtime --json',
-  );
+  assertBoundCommand(decision.plan.applyCommand, root, 'reconcile');
+  assert(decision.plan.applyCommand.includes('--apply --runtime full-test-runtime --json'));
 });
 
 test('malformed and future effective receipts are rejected distinctly', () => {
@@ -266,14 +273,10 @@ test('runtime negotiation distinguishes degraded and unavailable activation', ()
     entry.id === 'parallel'
     && entry.adapter === 'citadel-managed-worktrees-and-approvals'
   )));
-  assert.equal(
-    unavailableDecision.plan.previewCommand,
-    'node .citadel/scripts/citadel-config.js enable parallel --runtime codex --allow-degraded-runtime --json',
-  );
-  assert.equal(
-    unavailableDecision.plan.applyCommand,
-    'node .citadel/scripts/citadel-config.js enable parallel --runtime codex --allow-degraded-runtime --apply --json',
-  );
+  assertBoundCommand(unavailableDecision.plan.previewCommand, unavailableRoot, 'enable');
+  assertBoundCommand(unavailableDecision.plan.applyCommand, unavailableRoot, 'enable');
+  assert(unavailableDecision.plan.previewCommand.includes('parallel --runtime codex --allow-degraded-runtime --json'));
+  assert(unavailableDecision.plan.applyCommand.includes('parallel --runtime codex --allow-degraded-runtime --apply --json'));
 });
 
 test('repository policy overrides use a deterministic custom display identity', () => {
@@ -326,10 +329,8 @@ test('effective receipts bind runtime and installation identities without machin
   }
   assert.equal(switchedByEnv.reasonCode, config.EFFECTIVE_RECEIPT_REASONS.STALE);
   assert.match(switchedByEnv.errors[0], /runtime codex does not match active runtime claude-code/);
-  assert.equal(
-    switchedByEnv.repairCommand,
-    'node .citadel/scripts/citadel-config.js reconcile --apply --runtime claude-code --json',
-  );
+  assertBoundCommand(switchedByEnv.repairCommand, root, 'reconcile');
+  assert(switchedByEnv.repairCommand.includes('--apply --runtime claude-code --json'));
 
   const switched = config.readEffectiveConfig(root, {
     runtime: claudeRuntime,
@@ -337,10 +338,8 @@ test('effective receipts bind runtime and installation identities without machin
   });
   assert.equal(switched.reasonCode, config.EFFECTIVE_RECEIPT_REASONS.STALE);
   assert.match(switched.errors[0], /runtime codex does not match active runtime claude-code/);
-  assert.equal(
-    switched.repairCommand,
-    'node .citadel/scripts/citadel-config.js reconcile --apply --runtime claude-code --json',
-  );
+  assertBoundCommand(switched.repairCommand, root, 'reconcile');
+  assert(switched.repairCommand.includes('--apply --runtime claude-code --json'));
 
   for (const relative of [
     'core/config/validate.js',
@@ -380,6 +379,70 @@ test('effective receipts bind runtime and installation identities without machin
       === current.receipt.installationGeneration.id,
     false,
   );
+});
+
+test('generated config invocations bind the target project outside its cwd', () => {
+  const parent = fs.mkdtempSync(path.join(os.tmpdir(), 'citadel 303 '));
+  const root = path.join(parent, 'project with spaces');
+  const elsewhere = path.join(parent, 'unrelated cwd');
+  fs.mkdirSync(root, { recursive: true });
+  fs.mkdirSync(elsewhere, { recursive: true });
+  writeHarness(root, harness(['core']));
+
+  for (const installed of [false, true]) {
+    if (installed) ensureProjectDelegate(root, path.join(__dirname, '..'), 'citadel-config.js');
+    const invocation = buildConfigInvocation({
+      projectRoot: root,
+      subcommand: 'show',
+      args: ['--runtime', 'codex', '--json'],
+    });
+    const output = execFileSync(invocation.command, invocation.args, {
+      cwd: elsewhere,
+      encoding: 'utf8',
+      env: { ...process.env, CITADEL_RUNTIME: 'codex' },
+    });
+    const shown = JSON.parse(output);
+    assert.equal(shown.sourceDigest, config.readConfigFile(root).sourceDigest);
+    assert.equal(fs.existsSync(path.join(elsewhere, '.citadel')), false);
+  }
+});
+
+test('displayed config commands execute in supported shells', () => {
+  const parent = fs.mkdtempSync(path.join(os.tmpdir(), 'citadel 303 shell '));
+  const root = path.join(parent, "project O'Brien & config");
+  const elsewhere = path.join(parent, 'unrelated cwd');
+  fs.mkdirSync(root, { recursive: true });
+  fs.mkdirSync(elsewhere, { recursive: true });
+  writeHarness(root, harness(['core']));
+
+  const cases = process.platform === 'win32'
+    ? [
+      { dialect: 'powershell', executable: 'powershell.exe', args: (command) => ['-NoProfile', '-Command', command] },
+      { dialect: 'posix', executable: 'C:\\Program Files\\Git\\bin\\bash.exe', args: (command) => ['-lc', command] },
+    ]
+    : [{ dialect: 'posix', executable: '/bin/sh', args: (command) => ['-c', command] }];
+
+  for (const shell of cases) {
+    assert(fs.existsSync(shell.executable) || shell.executable === 'powershell.exe', `${shell.dialect} shell is required`);
+    const command = renderConfigCommand({
+      projectRoot: root,
+      installationRoot: path.join(__dirname, '..'),
+      subcommand: 'show',
+      args: ['--runtime', 'codex', '--json'],
+      shell: shell.dialect,
+    });
+    const result = spawnSync(shell.executable, shell.args(command), {
+      cwd: elsewhere,
+      encoding: 'utf8',
+      env: { ...process.env, CITADEL_RUNTIME: 'codex' },
+    });
+    assert.equal(result.status, 0, result.stderr || result.stdout);
+    assert.equal(JSON.parse(result.stdout).sourceDigest, config.readConfigFile(root).sourceDigest);
+    assert.equal(fs.existsSync(path.join(elsewhere, '.citadel')), false);
+  }
+
+  assert.equal(shellQuote('<runtime>', 'powershell'), "'<runtime>'");
+  assert.equal(shellQuote('<runtime>', 'posix'), "'<runtime>'");
 });
 
 process.stdout.write(`\nConfig activation tests passed: ${passed}\n`);

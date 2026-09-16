@@ -66,7 +66,9 @@ assert.equal(bootstrapMarshal.activation.decision.bundleId, 'operations');
 assert.equal(bootstrapMarshal.activation.decision.status, 'disabled');
 assert.equal(bootstrapMarshal.boundary, 'product-bundle-activation');
 assert.equal(bootstrapMarshal.canRunNow, false);
-assert.match(bootstrapMarshal.approval, /\.citadel\/scripts\/citadel-config\.js enable operations .*--apply/);
+assert.match(bootstrapMarshal.approval, /citadel-config\.js enable --project-root /);
+assert.match(bootstrapMarshal.approval, / operations .*--apply/);
+assert.match(bootstrapMarshal.approval, new RegExp(root.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
 
 const value = config.createDefaultConfig();
 writeHarness(value);
@@ -135,7 +137,7 @@ assert.equal(codexFleetBlocked.status, 2);
 assert.match(codexFleetBlocked.stderr, /\$fleet is disabled \(ACTIVATION_PROMPT_REQUIRED\)/);
 assert.match(
   codexFleetBlocked.stderr,
-  /enable parallel --runtime codex --allow-degraded-runtime --apply --json/,
+  /enable --project-root .* parallel --runtime codex --allow-degraded-runtime --apply --json/,
 );
 
 const displayedApply = codexFleetBlocked.stderr.match(/Review and explicitly apply: (.+)\r?\n$/)?.[1];
@@ -239,7 +241,7 @@ const staleDirectBlocked = run(
 assert.equal(staleDirectBlocked.status, 2);
 assert.match(
   staleDirectBlocked.stderr,
-  /EFFECTIVE_CONFIG_STALE.*reconcile --apply --runtime claude-code --json/,
+  /EFFECTIVE_CONFIG_STALE.*reconcile --project-root .* --apply --runtime claude-code --json/,
 );
 
 const healthUtil = path.join(__dirname, '..', 'hooks_src', 'harness-health-util.js');

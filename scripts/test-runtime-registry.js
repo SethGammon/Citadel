@@ -170,7 +170,9 @@ function main() {
     () => detectRuntime('/nonexistent', { env: { CITADEL_RUNTIME: 'invalid-value' } }),
     (error) => error instanceof RuntimeDetectionError
       && error.code === 'CITADEL_RUNTIME_INVALID'
-      && error.repairCommand.includes('node .citadel/scripts/citadel-config.js reconcile --apply'),
+      && error.repairCommand.includes(' reconcile --project-root ')
+      && error.repairCommand.includes("--runtime '<runtime>' --json")
+      && error.repairCommand.endsWith(' --json.'),
   );
 
   // Exercise process probing and fallback without depending on host tooling.
@@ -187,6 +189,12 @@ function main() {
       process: { platform, ppid: 4321, env: {}, cwd: () => '/project with spaces' },
       require: (name) => {
         if (name === './registry') return { listRuntimeIds };
+        if (name === '../utils/config-command') return {
+          renderConfigCommand: ({ projectRoot, subcommand, args }) =>
+            `node /citadel/scripts/citadel-config.js ${subcommand} --project-root '${projectRoot}' ${args.map((arg) => (
+              arg === '<runtime>' ? "'<runtime>'" : arg
+            )).join(' ')}`,
+        };
         if (name === 'path') return path;
         if (name === 'fs') {
           return {
@@ -251,7 +259,7 @@ function main() {
     markers: ['.claude', '.opencode'],
   }), (error) => error.code === 'CITADEL_RUNTIME_AMBIGUOUS'
     && error.candidates.join(',') === 'claude-code,opencode'
-    && error.repairCommand.includes('--runtime <runtime> --json'));
+    && error.repairCommand.includes("--runtime '<runtime>' --json"));
 
   // No parent signal and no markers stays honest rather than guessing.
   assert.equal(

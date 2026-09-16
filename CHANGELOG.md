@@ -6,6 +6,7 @@
 
 - Resolve bundled Claude Code MCP entrypoints from the installed plugin root while preserving the consuming project as each server's working directory.
 - Keep Claude-specific MCP path placeholders out of generated Codex configuration and verify both bundled servers from a separate project path.
+- Emit configuration repair and activation commands with an executable script path and explicit project root so they work from any working directory, including before project delegates exist.
 
 ### Security
 

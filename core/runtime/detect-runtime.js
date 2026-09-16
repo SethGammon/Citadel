@@ -6,6 +6,7 @@ const fs = require('fs');
 const path = require('path');
 const { execFileSync: defaultExecFileSync } = require('child_process');
 const { listRuntimeIds } = require('./registry');
+const { renderConfigCommand } = require('../utils/config-command');
 
 const VALID_RUNTIMES = Object.freeze(listRuntimeIds().concat('openai'));
 const RUNTIME_ALIASES = Object.freeze({
@@ -33,14 +34,14 @@ const DIRECTORY_MARKERS = Object.freeze([
 ]);
 
 class RuntimeDetectionError extends Error {
-  constructor(code, message, candidates = []) {
+  constructor(code, message, candidates = [], projectRoot = process.cwd(), options = {}) {
     super(message);
     this.name = 'RuntimeDetectionError';
     this.code = code;
     this.candidates = Object.freeze([...candidates]);
-    this.repairCommand = 'Set CITADEL_RUNTIME to one active runtime or pass --runtime explicitly, '
-      + 'then run node .citadel/scripts/citadel-config.js reconcile --apply '
-      + '--runtime <runtime> --json.';
+    this.repairCommand = 'Set CITADEL_RUNTIME to one active runtime or pass --runtime explicitly, then run '
+      + renderConfigCommand({ projectRoot, installationRoot: options.installationRoot,
+        subcommand: 'reconcile', args: ['--apply', '--runtime', '<runtime>', '--json'] }) + '.';
   }
 }
 
@@ -49,13 +50,15 @@ function normalizeRuntimeId(value) {
   return RUNTIME_ALIASES[id] || null;
 }
 
-function runtimeError(code, candidates = []) {
+function runtimeError(code, candidates = [], projectRoot = process.cwd(), options = {}) {
   if (code === 'CITADEL_RUNTIME_INVALID') {
     return new RuntimeDetectionError(
       code,
       'CITADEL_RUNTIME is unsupported (' + (candidates[0] || 'empty') + '). '
         + 'Set it to claude-code, codex, opencode, or openai.',
       candidates,
+      projectRoot,
+      options,
     );
   }
   const labels = candidates.length ? ' (' + candidates.join(', ') + ')' : '';
@@ -64,6 +67,8 @@ function runtimeError(code, candidates = []) {
     'Multiple Citadel runtimes are present' + labels + '; the active runtime is not inferable. '
       + 'Set CITADEL_RUNTIME or pass --runtime explicitly, then regenerate effective config.',
     candidates,
+    projectRoot,
+    options,
   );
 }
 
@@ -118,14 +123,14 @@ function detectRuntime(projectRoot, options = {}) {
   if (explicit) {
     const normalized = normalizeRuntimeId(explicit);
     if (!normalized || !VALID_RUNTIMES.includes(normalized)) {
-      throw runtimeError('CITADEL_RUNTIME_INVALID', [explicit]);
+      throw runtimeError('CITADEL_RUNTIME_INVALID', [explicit], root, options);
     }
     return { runtime: normalized, method: 'env' };
   }
 
   const processCandidatesFound = processTreeCandidates(options);
   if (processCandidatesFound.length > 1) {
-    throw runtimeError('CITADEL_RUNTIME_AMBIGUOUS', processCandidatesFound);
+    throw runtimeError('CITADEL_RUNTIME_AMBIGUOUS', processCandidatesFound, root, options);
   }
   if (processCandidatesFound.length === 1) {
     return { runtime: processCandidatesFound[0], method: 'process-tree' };
@@ -133,7 +138,7 @@ function detectRuntime(projectRoot, options = {}) {
 
   const present = directoryCandidates(root, options.fsImpl || fs);
   if (present.length > 1) {
-    throw runtimeError('CITADEL_RUNTIME_AMBIGUOUS', present);
+    throw runtimeError('CITADEL_RUNTIME_AMBIGUOUS', present, root, options);
   }
   if (present.length === 1) {
     return { runtime: present[0], method: 'directory-marker' };
