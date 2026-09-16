@@ -142,12 +142,12 @@ assert.match(
 
 const displayedApply = codexFleetBlocked.stderr.match(/Review and explicitly apply: (.+)\r?\n$/)?.[1];
 assert(displayedApply, 'Codex Fleet block must contain one apply command');
-const displayedArgs = displayedApply.split(/\s+/);
-assert.equal(displayedArgs.shift(), 'node');
-const displayedScript = displayedArgs.shift();
+const displayedShell = process.platform === 'win32'
+  ? { executable: 'powershell.exe', args: ['-NoProfile', '-Command', displayedApply] }
+  : { executable: '/bin/sh', args: ['-c', displayedApply] };
 const codexFleetApply = spawnSync(
-  process.execPath,
-  [displayedScript, ...displayedArgs],
+  displayedShell.executable,
+  displayedShell.args,
   { cwd: codexRoot, encoding: 'utf8', env: { ...process.env } },
 );
 assert.equal(codexFleetApply.status, 0, codexFleetApply.stderr || codexFleetApply.stdout);
