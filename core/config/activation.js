@@ -11,6 +11,7 @@ const {
   EFFECTIVE_RECEIPT_REASONS,
   validateEffectiveReceipt,
 } = require('./receipt');
+const { renderConfigCommand } = require('../utils/config-command');
 
 const ACTIVATION_STATUSES = Object.freeze([
   'enabled',
@@ -41,6 +42,8 @@ function receiptInput(value) {
         reasonCode: value.reasonCode || EFFECTIVE_RECEIPT_REASONS.MALFORMED,
         errors: Array.isArray(value.errors) ? value.errors : [],
         repairCommand: value.repairCommand || null,
+        projectRoot: value.projectRoot || null,
+        installationRoot: value.installationRoot || null,
         receipt: null,
       };
     }
@@ -49,6 +52,8 @@ function receiptInput(value) {
       receipt: value.receipt,
       errors: [],
       repairCommand: value.repairCommand || null,
+      projectRoot: value.projectRoot || null,
+      installationRoot: value.installationRoot || null,
     };
   }
   const validation = validateEffectiveReceipt(value);
@@ -76,7 +81,7 @@ function resourceChanges(bundleIds) {
   });
 }
 
-function createActivationPlan(receipt, bundleId) {
+function createActivationPlan(receipt, bundleId, context = {}) {
   const closure = dependencyClosure([bundleId]);
   const requested = new Set(receipt.bundles.requested);
   const addedBundles = closure.filter((id) => !requested.has(id));
@@ -107,9 +112,14 @@ function createActivationPlan(receipt, bundleId) {
   const runtimeId = receipt.runtime && /^[a-z0-9-]+$/i.test(receipt.runtime.id)
     ? receipt.runtime.id
     : 'unknown';
-  const commandOptions = `--runtime ${runtimeId}`
-    + (degradedRuntimeOptInRequired ? ' --allow-degraded-runtime' : '');
-  const configCommand = 'node .citadel/scripts/citadel-config.js';
+  const command = (apply) => renderConfigCommand({
+    projectRoot: context.projectRoot,
+    installationRoot: context.installationRoot,
+    subcommand: 'enable',
+    args: [bundleId, '--runtime', runtimeId,
+      ...(degradedRuntimeOptInRequired ? ['--allow-degraded-runtime'] : []),
+      ...(apply ? ['--apply'] : []), '--json'],
+  });
   return deepFreeze({
     contractVersion: 1,
     action: 'enable-bundle',
@@ -122,8 +132,8 @@ function createActivationPlan(receipt, bundleId) {
     degradedRuntimeOptInRequired,
     requiresExplicitApply: true,
     mutatesConfig: false,
-    previewCommand: `${configCommand} enable ${bundleId} ${commandOptions} --json`,
-    applyCommand: `${configCommand} enable ${bundleId} ${commandOptions} --apply --json`,
+    previewCommand: command(false),
+    applyCommand: command(true),
     prospective,
   });
 }
@@ -168,8 +178,14 @@ function activationDecision(effective, target) {
         action: 'reconcile-effective-config',
         requiresExplicitApply: true,
         mutatesConfig: false,
-        applyCommand: input.repairCommand
-          || 'node .citadel/scripts/citadel-config.js reconcile --apply --json',
+        applyCommand: input.repairCommand || (input.projectRoot
+          ? renderConfigCommand({
+            projectRoot: input.projectRoot,
+            installationRoot: input.installationRoot,
+            subcommand: 'reconcile',
+            args: ['--apply', '--json'],
+          })
+          : null),
       }),
     );
   }
@@ -231,7 +247,10 @@ function activationDecision(effective, target) {
     });
   }
 
-  const plan = createActivationPlan(receipt, bundleId);
+  const plan = createActivationPlan(receipt, bundleId, {
+    projectRoot: input.projectRoot,
+    installationRoot: input.installationRoot,
+  });
   const unavailable = receipt.bundles.unavailable.find((entry) => entry.id === bundleId)
     || plan.prospective.unavailable.find((entry) => entry.id === bundleId);
   if (unavailable) {

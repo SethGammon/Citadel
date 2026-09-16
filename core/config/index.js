@@ -41,6 +41,8 @@ function loadActivationContext(projectRoot, options = {}) {
     sourceDigest: resolved.loaded.sourceDigest,
     receiptPath: receipts.effectiveConfigPath(projectRoot, options),
     receipt: resolved.receipt,
+    projectRoot: resolved.loaded.projectRoot,
+    installationRoot: options.installationRoot || null,
     persisted: false,
   });
 }

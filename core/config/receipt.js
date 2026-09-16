@@ -18,6 +18,7 @@ const {
   runtimeIdentity,
 } = require('./identity');
 const { detectRuntimeContract } = require('./runtime');
+const { renderConfigCommand } = require('../utils/config-command');
 
 const EFFECTIVE_RECEIPT_VERSION = 1;
 const EFFECTIVE_RECEIPT_KIND = 'citadel.effective-config';
@@ -278,13 +279,12 @@ function effectiveConfigPath(projectRoot, options = {}) {
     : path.join(root, '.citadel', 'effective-config.json');
 }
 
-function regenerationCommand(options = {}, fallbackRuntime = null) {
+function regenerationCommand(projectRoot, options = {}, fallbackRuntime = null) {
   const candidate = options.runtime?.id || options.runtimeId || fallbackRuntime;
-  const runtime = typeof candidate === 'string' && /^[a-z0-9-]+$/i.test(candidate)
-    ? ' --runtime ' + candidate
-    : '';
-  return 'node .citadel/scripts/citadel-config.js reconcile --apply'
-    + runtime + ' --json';
+  const args = ['--apply'];
+  if (typeof candidate === 'string' && /^[a-z0-9-]+$/i.test(candidate)) args.push('--runtime', candidate);
+  args.push('--json');
+  return renderConfigCommand({ projectRoot, installationRoot: options.installationRoot, subcommand: 'reconcile', args });
 }
 
 function rejectedRead(source, receiptPath, status, reasonCode, errors, options = {}, fallbackRuntime = null) {
@@ -295,7 +295,7 @@ function rejectedRead(source, receiptPath, status, reasonCode, errors, options =
     errors,
     sourceDigest: source.sourceDigest,
     receiptPath,
-    repairCommand: regenerationCommand(options, fallbackRuntime),
+    repairCommand: regenerationCommand(source.projectRoot, options, fallbackRuntime),
     receipt: null,
   });
 }
@@ -352,7 +352,7 @@ function readEffectiveConfig(projectRoot, options = {}) {
       EFFECTIVE_RECEIPT_REASONS.STALE,
       [
         'effective config sourceDigest does not match the current harness config',
-        'Regenerate with: ' + regenerationCommand(options, raw.runtime?.id),
+        'Regenerate with: ' + regenerationCommand(source.projectRoot, options, raw.runtime?.id),
       ],
       options,
       raw.runtime?.id,
@@ -370,7 +370,7 @@ function readEffectiveConfig(projectRoot, options = {}) {
       EFFECTIVE_RECEIPT_REASONS.STALE,
       [
         'effective config installationGeneration does not match the current Citadel installation',
-        'Regenerate with: ' + regenerationCommand(options, raw.runtime?.id),
+        'Regenerate with: ' + regenerationCommand(source.projectRoot, options, raw.runtime?.id),
       ],
       options,
       raw.runtime?.id,
@@ -387,7 +387,7 @@ function readEffectiveConfig(projectRoot, options = {}) {
       [
         'effective config runtime ' + raw.runtime.id
           + ' does not match active runtime ' + activeRuntimeIdentity.id,
-        'Regenerate with: ' + regenerationCommand(options, activeRuntimeIdentity.id),
+        'Regenerate with: ' + regenerationCommand(source.projectRoot, options, activeRuntimeIdentity.id),
       ],
       options,
       activeRuntimeIdentity.id,
@@ -400,6 +400,8 @@ function readEffectiveConfig(projectRoot, options = {}) {
     errors: [],
     sourceDigest: source.sourceDigest,
     receiptPath,
+    projectRoot: source.projectRoot,
+    installationRoot: options.installationRoot || null,
     repairCommand: null,
     receipt: raw,
   });

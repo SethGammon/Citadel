@@ -60,11 +60,13 @@ migration plan.
 
 Use the config command to inspect before changing anything:
 
+The relative delegate commands below require an initialized project and must be run from that project's root. Before first initialization, generated recovery hints use the active Citadel installation instead and bind the target with `--project-root`.
+
 ```bash
-node scripts/citadel-config.js show --project-root .
-node scripts/citadel-config.js migrate --project-root .
-node scripts/citadel-config.js enable parallel --project-root .
-node scripts/citadel-config.js enable parallel --project-root . --apply
+node .citadel/scripts/citadel-config.js show --project-root .
+node .citadel/scripts/citadel-config.js migrate --project-root .
+node .citadel/scripts/citadel-config.js enable parallel --project-root .
+node .citadel/scripts/citadel-config.js enable parallel --project-root . --apply
 ```
 
 Disabled or unsupported bundles do not execute. A degraded bundle names the
