@@ -261,7 +261,7 @@ When 2+ independent tasks detected (non-overlapping scopes, complexity >= 3, not
 ### Step 4: After Classification
 
 1. **Enforce product activation before invocation.** Run:
-   `node {citadelRoot}/scripts/citadel-config.js check route {bare-skill-name} --runtime {claude-code|codex} --json`.
+   `node {citadelRoot}/scripts/citadel-config.js check route {bare-skill-name} --runtime {claude-code|codex|opencode} --json`.
    `enabled` and explicitly named `degraded` routes may continue. For
    `disabled`, `unavailable`, or `blocked`, show the returned reason and
     activation plan; do not invoke the target. Enabling a bundle is a separate

@@ -503,10 +503,17 @@ async function testPluginShim(root) {
     const { CitadelPlugin } = await import(
       `../runtimes/opencode/plugin/index.mjs?cache=${Date.now()}`
     );
-    const plugin = await CitadelPlugin({ directory: root, worktree: root });
+    const plugin = await CitadelPlugin({ directory: root, worktree: path.parse(root).root });
 
     // Plugin init stands in for SessionStart.
     assert.equal(calls[0].event, 'plugin.init', 'plugin init must run the session-start hooks');
+
+    const shellOutput = { env: { USER_VALUE: 'kept' } };
+    await plugin['shell.env']({}, shellOutput);
+    assert.equal(shellOutput.env.USER_VALUE, 'kept', 'shell.env must preserve unrelated environment');
+    assert.equal(shellOutput.env.CITADEL_RUNTIME, 'opencode');
+    assert.equal(shellOutput.env.CITADEL_PROJECT_ROOT, root);
+    assert.equal(shellOutput.env.CLAUDE_PROJECT_DIR, root);
 
     // A blocked pre-tool outcome has to become a throw, carrying the hook's own
     // reason so the model sees why.
@@ -527,6 +534,21 @@ async function testPluginShim(root) {
     assert.strictEqual(output.args, args, 'output.args must not be replaced');
     const preToolCall = calls.find((call) => call.event === 'tool.execute.before');
     assert.strictEqual(preToolCall.payload.args, args, 'the live args object must reach the runner');
+
+    nextOutcome = { blocked: false, reason: null, messages: [], results: [], skipped: [] };
+    fs.mkdirSync(path.join(root, '.citadel', 'scripts'), { recursive: true });
+    fs.writeFileSync(path.join(root, '.citadel', 'scripts', 'dashboard.js'), '');
+    const bashArgs = { command: 'node scripts/dashboard.js' };
+    await plugin['tool.execute.before']({ tool: 'bash', sessionID: 's', callID: 'route' }, { args: bashArgs });
+    assert.equal(bashArgs.command, 'node .citadel/scripts/dashboard.js', 'installed skill routes must use project delegates');
+    assert.strictEqual(
+      calls.find((call) => call.payload?.callID === 'route').payload.args,
+      bashArgs,
+      'command translation must retain the live args object',
+    );
+    const targetTestArgs = { command: 'node scripts/test-all.js' };
+    await plugin['tool.execute.before']({ tool: 'bash', sessionID: 's', callID: 'target-test' }, { args: targetTestArgs });
+    assert.equal(targetTestArgs.command, 'node scripts/test-all.js', 'target project test commands must not be redirected into Citadel');
 
     // A post-tool outcome must never throw, even when hooks reported findings.
     nextOutcome = { blocked: true, reason: 'ignored', messages: ['[complexity-check] file is long'], results: [], skipped: [] };
