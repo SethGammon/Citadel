@@ -154,6 +154,7 @@ function render(result) {
     if (step.step === 'guidance') {
       if (step.skipped) lines.push(`guidance: kept ${step.filePath} — ${step.reason}`);
       else if (step.dryRun) lines.push(`guidance: would ${step.action} ${step.filePath}`);
+      else if (step.action === 'up-to-date') lines.push(`guidance: already up to date ${step.filePath}`);
       else {
         lines.push(`guidance: wrote ${step.filePath}`);
         if (step.specCreated) lines.push(`          created ${step.specPath} — edit the spec, not AGENTS.md`);

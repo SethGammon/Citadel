@@ -29,14 +29,15 @@ try {
   vm.runInContext(source.slice(0, source.lastIndexOf('main();')), context);
   const delegated = context.availableDelegates(path.join(repo, 'scripts'));
   for (const name of ['citadel-config.js', 'coordination.js', 'telemetry-log.cjs']) assert(delegated.includes(name));
-  for (const name of ['local-schedule.js', 'local-daemon.js', 'test-all.js', 'install.js', 'release-package.js']) assert(!delegated.includes(name));
+  assert(delegated.includes('local-schedule.js'));
+  for (const name of ['local-daemon.js', 'test-all.js', 'install.js', 'release-package.js']) assert(!delegated.includes(name));
   const target = path.join(root, '.citadel', 'scripts');
   fs.mkdirSync(target, { recursive: true });
-  fs.writeFileSync(path.join(target, 'local-schedule.js'), context.generateDelegate('local-schedule.js'));
+  fs.writeFileSync(path.join(target, 'retired-script.js'), context.generateDelegate('retired-script.js'));
   fs.writeFileSync(path.join(target, 'local-daemon.js'), '// user customization\n');
   fs.writeFileSync(path.join(target, 'citadel-config.js'), context.generateDelegate('citadel-config.js'));
   context.pruneRetiredDelegates();
-  assert(!fs.existsSync(path.join(target, 'local-schedule.js')));
+  assert(!fs.existsSync(path.join(target, 'retired-script.js')));
   assert.equal(fs.readFileSync(path.join(target, 'local-daemon.js'), 'utf8'), '// user customization\n');
   assert(fs.existsSync(path.join(target, 'citadel-config.js')));
   context.pruneRetiredDelegates();
@@ -44,11 +45,11 @@ try {
   // A redirected scripts directory is not owned by this project.
   const redirected = path.join(root, 'redirected-scripts');
   fs.mkdirSync(redirected);
-  fs.writeFileSync(path.join(redirected, 'local-schedule.js'), context.generateDelegate('local-schedule.js'));
+  fs.writeFileSync(path.join(redirected, 'retired-script.js'), context.generateDelegate('retired-script.js'));
   fs.renameSync(target, target + '-saved');
   fs.symlinkSync(redirected, target, process.platform === 'win32' ? 'junction' : 'dir');
   context.pruneRetiredDelegates();
-  assert(fs.existsSync(path.join(redirected, 'local-schedule.js')), 'retirement must not traverse a redirected scripts directory');
+  assert(fs.existsSync(path.join(redirected, 'retired-script.js')), 'retirement must not traverse a redirected scripts directory');
   fs.unlinkSync(target);
   fs.renameSync(target + '-saved', target);
 
