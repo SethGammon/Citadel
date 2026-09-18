@@ -58,6 +58,21 @@ function blockedError(outcome) {
   return error;
 }
 
+function taskLifecyclePayload(input, args, directory, status) {
+  return {
+    ...input,
+    args,
+    directory,
+    task_id: input?.callID || input?.callId || null,
+    agent_id: input?.callID || input?.callId || null,
+    subagent_id: input?.callID || input?.callId || null,
+    agent_type: args?.agent || null,
+    subagent_type: args?.agent || null,
+    title: args?.description || args?.prompt || args?.agent || null,
+    status,
+  };
+}
+
 async function observe(event, payload, options) {
   try {
     return await runner.runHooksForEvent(event, payload, options);
@@ -130,6 +145,14 @@ export const CitadelPlugin = async ({ project, directory, worktree, client } = {
       }, options);
 
       if (outcome.blocked) throw blockedError(outcome);
+
+      // OpenCode has no TaskCreated event. Emit it only after the generic gate
+      // permits the delegation, so rejected task calls do not become starts.
+      if (input?.tool === 'task') {
+        const task = taskLifecyclePayload(input, output.args, projectRoot, 'created');
+        await observe('task.created', task, options);
+        await observe('subagent.start', task, options);
+      }
     },
 
     async 'tool.execute.after'(input, output) {
@@ -138,6 +161,19 @@ export const CitadelPlugin = async ({ project, directory, worktree, client } = {
         args: input.args,
         directory: projectRoot,
       }, options);
+
+      // The task tool returns only after its delegated agent finishes. Mirror
+      // Claude Code's TaskCompleted boundary and preserve a reported failure.
+      if (input?.tool === 'task') {
+        const task = taskLifecyclePayload(
+          input,
+          input.args,
+          projectRoot,
+          output?.status || (output?.error ? 'failed' : 'completed'),
+        );
+        await observe('task.completed', task, options);
+        await observe('subagent.stop', task, options);
+      }
 
       // Never throw here: the tool already ran, and rejecting would report a
       // successful call as failed. Append findings to the output the model sees.
