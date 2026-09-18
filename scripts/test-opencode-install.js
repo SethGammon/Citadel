@@ -17,10 +17,12 @@ const {
   MCP_SERVER_NAME,
   PLUGIN_STUB_NAME,
   citadelMcpServer,
+  citadelSkillNames,
   citadelSkillsPath,
   installOpencodePlugin,
   mergeOpencodeConfig,
   renderPluginStub,
+  renderSkillCommand,
 } = require(path.join(CITADEL_ROOT, 'runtimes', 'opencode', 'generators', 'install-plugin'));
 const { ensureProjectDelegate, withGuidanceOwner } = require(path.join(CITADEL_ROOT, 'core', 'runtime', 'install-contract'));
 const {
@@ -352,20 +354,34 @@ function testGuidanceBootstrapsSpec() {
   }
 }
 
-// Commands are deliberately not projected: opencode registers every discovered
-// skill as a command, and an explicit command file shadows the skill, so a
-// projected copy could go stale and override the live one.
-function testNoCommandProjection(root) {
-  assert.equal(
-    fs.existsSync(path.join(root, '.opencode', 'command')),
-    false,
-    'commands must not be projected; opencode derives them from skills',
-  );
-  assert.equal(
-    fs.existsSync(path.join(CITADEL_ROOT, 'runtimes', 'opencode', 'generators', 'project-commands.js')),
-    false,
-    'a command projector would shadow live skills',
-  );
+function testCommandProjection(root) {
+  const commandDir = path.join(root, '.opencode', 'commands');
+  const skillNames = citadelSkillNames(CITADEL_ROOT);
+  assert(skillNames.length > 0, 'Citadel must have skills to wrap as commands');
+  for (const skillName of skillNames) {
+    const commandPath = path.join(commandDir, `${skillName}.md`);
+    assert(fs.existsSync(commandPath), `${skillName}: command wrapper must be projected`);
+    const command = fs.readFileSync(commandPath, 'utf8');
+    assert(command.includes('$ARGUMENTS'), `${skillName}: wrapper must preserve slash-command arguments`);
+    assert(command.includes(`Use the \`${skillName}\` skill`), `${skillName}: wrapper must invoke its skill`);
+  }
+  assert.equal(renderSkillCommand('demo').includes('$ARGUMENTS'), true);
+}
+
+function testCommandProjectionRefusesUserConflict() {
+  const root = scratchProject();
+  try {
+    const commandPath = path.join(root, '.opencode', 'commands', 'do.md');
+    fs.mkdirSync(path.dirname(commandPath), { recursive: true });
+    fs.writeFileSync(commandPath, '---\ndescription: Mine\n---\nMine\n');
+    assert.throws(
+      () => installOpencodePlugin({ citadelRoot: CITADEL_ROOT, projectRoot: root }),
+      /user-owned and conflicts/,
+      'a Citadel install must not overwrite a user command with the same name',
+    );
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
 }
 
 function testInstallerCli(root) {
@@ -375,7 +391,7 @@ function testInstallerCli(root) {
   assert.equal(result.dryRun, true);
   assert(result.degradations.some((item) => item.startsWith('stop-cannot-block')));
   assert(result.degradations.some((item) => item.startsWith('plugin-load-failure-fails-open')));
-  assert(install.render(result).includes('derived from skills'));
+  assert(install.render(result).includes('forward slash-command arguments'));
 
   const missing = install.run(['--project-root', path.join(root, 'nope'), '--dry-run']);
   assert.equal(missing.ok, false);
@@ -426,7 +442,7 @@ async function testReadinessOnBareInstall() {
     const optedOutWarnings = partial.filter((item) => !item.pass && item.severity === readiness.ADVISORY);
     assert.deepStrictEqual(
       optedOutWarnings.map((item) => item.name).sort(),
-      ['guidance file present', 'skills discoverable by opencode'],
+      ['argument-bearing skill commands projected', 'guidance file present', 'skills discoverable by opencode'],
     );
     for (const item of optedOutWarnings) {
       assert(item.remedy, `${item.name} must tell the operator what to do`);
@@ -614,7 +630,8 @@ async function main() {
     testInstalledSkillRoutesHaveDelegates(root);
     testSkillRouteRunsFromMixedRuntimeProject(root);
     testAgentProjection(root);
-    testNoCommandProjection(root);
+    testCommandProjection(root);
+    testCommandProjectionRefusesUserConflict();
 
     await testSkillsReadiness();
     await testReadinessOnBareInstall();

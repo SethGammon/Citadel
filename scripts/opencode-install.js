@@ -10,9 +10,8 @@
 //             existing one without --overwrite-guidance
 //   skills    copied to .citadel/skills and referenced with a project-relative
 //             path, so opencode.json remains portable across checkout moves
-//   commands  derived from skills by opencode   (no projection — and an explicit
-//             command file would SHADOW the live skill)
-// So this writes the plugin stub, merges opencode.json, and projects agents.
+//   commands  explicit wrappers carry slash-command arguments into each skill
+// So this writes the plugin stub, merges opencode.json, and projects agents and commands.
 
 const fs = require('fs');
 const path = require('path');
@@ -79,6 +78,7 @@ function run(argv = process.argv.slice(2)) {
     outputs: plugin.outputs,
     machineLocalExcludes: plugin.machineLocalExcludes,
   });
+  steps.push({ step: 'commands', count: plugin.commands.skillNames.length, writes: plugin.commands.writes });
   outputs.push(...plugin.outputs);
 
   if (!has(argv, '--skip-agents')) {
@@ -151,6 +151,7 @@ function render(result) {
       }
     }
     if (step.step === 'agents') lines.push(`agents:  ${step.count} projected into .opencode/agent`);
+    if (step.step === 'commands') lines.push(`commands: ${step.count} wrappers in .opencode/commands`);
     if (step.step === 'guidance') {
       if (step.skipped) lines.push(`guidance: kept ${step.filePath} — ${step.reason}`);
       else if (step.dryRun) lines.push(`guidance: would ${step.action} ${step.filePath}`);
@@ -172,7 +173,7 @@ function render(result) {
   lines.push('');
   lines.push('Project-local projections refreshed by this install:');
   lines.push("  skills    copied to .citadel/skills and referenced with a relative path");
-  lines.push('  commands  derived from skills by opencode, so no command files');
+  lines.push('  commands  wrappers in .opencode/commands forward slash-command arguments to skills');
   lines.push('');
   lines.push('Known degradations on this runtime:');
   for (const item of result.degradations) lines.push(`  - ${item}`);

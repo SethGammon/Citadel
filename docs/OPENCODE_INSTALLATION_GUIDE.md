@@ -40,6 +40,7 @@ node /path/to/Citadel/scripts/opencode-readiness-check.js --project-root /path/t
 | `.opencode/plugin/citadel.js` | Stub re-exporting the adapter from your Citadel checkout, so a Citadel upgrade takes effect without reinstalling |
 | `opencode.json` | Merged key by key: adds `$schema` and `mcp.citadel-state`. User keys are preserved |
 | `.opencode/agent/*.md` | Seven Citadel subagents |
+| `.opencode/commands/*.md` | Argument-bearing wrappers that invoke each Citadel skill |
 | `.citadel/skills/**/SKILL.md` | Project-local skill projection referenced by `skills.paths` |
 | `.citadel/scripts/*` | Thin delegates for every Citadel utility named by an installed skill |
 
@@ -52,9 +53,9 @@ hand-added `provider` block survived a second install untouched).
 - **Skills** — OpenCode reads the installed `.citadel/skills` projection through
   `skills.paths`, in addition to its native `.claude`, `.agents`, and `.opencode`
   skill roots.
-- **Commands** — opencode registers every discovered skill as a command
-  (`source: "skill"`). Do **not** write `.opencode/command/*.md` for a skill: an
-  explicit command file *shadows* the live skill.
+- **Commands** — OpenCode discovers skills but does not provide their slash
+  commands an argument channel. Citadel generates `.opencode/commands/*.md`
+  wrappers that pass `$ARGUMENTS` into the corresponding skill prompt.
 
 ### Readiness check output
 
@@ -407,7 +408,7 @@ back to Citadel.
 | No gating, no errors | Plugin did not load. Check the log for `citadel session start` |
 | Citadel line absent after installing | opencode was already running — restart it |
 | `node binary resolved` shows a Bun path | Node is not on `PATH`; set `CITADEL_NODE` |
-| No Citadel slash commands | Skills are not projected — see *Skills* above |
+| No Citadel slash commands | Skill wrappers are missing or stale; re-run the installer, then restart OpenCode |
 | `/do status` reports `MODULE_NOT_FOUND` | Re-run the installer to restore delegates, restart OpenCode, then run readiness with `--strict` |
 | `CITADEL_RUNTIME_AMBIGUOUS` in a skill command | Restart OpenCode so the installed plugin's `shell.env` hook supplies runtime identity |
 | `!command` not gated | Expected; the shell endpoint bypasses `tool.execute.before` |
