@@ -57,6 +57,10 @@ const CODEX_EVENT_MAP = Object.freeze({
 //   chat.params, chat.headers, shell.env, tool.definition, command.execute.before,
 //   todo.updated, command.executed, lsp.*, message.*, tui.*, server.connected,
 //   installation.updated, session.{created,updated,deleted,status,diff}
+//
+// OpenCode emits no task lifecycle bus events. The plugin synthesizes the two
+// task and subagent events around successful `task` tool calls so delegated
+// agents retain Claude Code-compatible telemetry boundaries.
 const OPENCODE_EVENT_MAP = Object.freeze({
   'tool.execute.before': CIT_EVENT_IDS.PRE_TOOL,
   'tool.execute.after': CIT_EVENT_IDS.POST_TOOL,
@@ -74,6 +78,10 @@ const OPENCODE_EVENT_MAP = Object.freeze({
   'file.edited': CIT_EVENT_IDS.FILE_CHANGED,
   'file.watcher.updated': CIT_EVENT_IDS.FILE_CHANGED,
   'permission.asked': CIT_EVENT_IDS.PERMISSION_REQUEST,
+  'task.created': CIT_EVENT_IDS.TASK_CREATED,
+  'task.completed': CIT_EVENT_IDS.TASK_COMPLETED,
+  'subagent.start': CIT_EVENT_IDS.SUBAGENT_START,
+  'subagent.stop': CIT_EVENT_IDS.SUBAGENT_STOP,
 });
 
 const CLAUDE_EVENT_MAP = Object.freeze({
