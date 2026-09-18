@@ -40,7 +40,7 @@ Non-hook surfaces are close to free:
 | Guidance | `AGENTS.md`, then `CLAUDE.md` (`session/instruction.ts:61-68`) | **its own renderer.** This row first said "reuse Codex's `AGENTS.md` renderer"; both target `AGENTS.md`, but the Codex output calls itself the Codex projection and tells the reader to invoke skills as `$skill-name`, which is wrong for opencode. Rendered from `.citadel/project.md`, never overwriting an existing file |
 | Skills | also every path in `skills.paths`, scanned `**/SKILL.md` (`skill/index.ts:211-219`) | Copy a machine-local projection to `.citadel/skills`, register that relative path, and install utility delegates. Needs opencode >= 1.18.30 |
 | Agents | `.opencode/{agent,agents}/**/*.md` (`config/agent.ts:13`) | thin projector, mirror `runtimes/codex/generators/project-agents.js` |
-| Commands | `.opencode/{command,commands}/**/*.md` | none — opencode registers every discovered skill as a command (`command/index.ts:134`), and an explicit command file *shadows* the skill, so projecting would risk overriding the live one |
+| Commands | `.opencode/{command,commands}/**/*.md` | Generate `.opencode/commands/*.md` wrappers. OpenCode skills have no slash-command argument channel; each wrapper passes `$ARGUMENTS` into the corresponding skill prompt. |
 | MCP | `opencode.json` `mcp` block | config emit for `citadel-state`, `codebase-memory` |
 | Plugin install | `.opencode/{plugin,plugins}/*.{ts,js}` auto-discovered, or `plugin: []` in `opencode.json` (`config/config.ts:476`, `config/plugin.ts:21`) | emit one file |
 

@@ -109,6 +109,29 @@ async function collect(projectRoot) {
       : `run opencode-install.js without --skip-skills to add ${citadelSkills} to skills.paths`,
   ));
 
+  // OpenCode's skill slash-command surface has no argument channel. Citadel
+  // therefore installs explicit command wrappers that pass $ARGUMENTS into the
+  // selected skill prompt.
+  const commandDir = path.join(projectRoot, '.opencode', 'commands');
+  const expectedCommands = fs.existsSync(path.join(CITADEL_ROOT, 'skills'))
+    ? fs.readdirSync(path.join(CITADEL_ROOT, 'skills'), { withFileTypes: true })
+      .filter((entry) => entry.isDirectory() && fs.existsSync(path.join(CITADEL_ROOT, 'skills', entry.name, 'SKILL.md')))
+      .map((entry) => entry.name)
+    : [];
+  const missingCommands = expectedCommands.filter((name) => {
+    const commandPath = path.join(commandDir, `${name}.md`);
+    return !fs.existsSync(commandPath) || !fs.readFileSync(commandPath, 'utf8').includes('$ARGUMENTS');
+  });
+  checks.push(check(
+    'argument-bearing skill commands projected',
+    missingCommands.length === 0,
+    missingCommands.length === 0
+      ? `${expectedCommands.length} in .opencode/commands`
+      : `missing or invalid: ${missingCommands.join(', ')}`,
+    ADVISORY,
+    're-run opencode-install.js to create .opencode/commands skill wrappers, then restart opencode',
+  ));
+
   // Agents are projected by default, but --skip-agents is a supported choice, so
   // their absence is a deliberate configuration rather than a broken install.
   const agentDir = path.join(projectRoot, '.opencode', 'agent');
