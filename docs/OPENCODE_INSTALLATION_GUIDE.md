@@ -41,7 +41,7 @@ node /path/to/Citadel/scripts/opencode-readiness-check.js --project-root /path/t
 | `opencode.json` | Merged key by key: adds `$schema` and `mcp.citadel-state`. User keys are preserved |
 | `.opencode/agent/*.md` | Seven Citadel subagents |
 | `.opencode/commands/*.md` | Argument-bearing wrappers that invoke each Citadel skill |
-| `.citadel/skills/**/SKILL.md` | Project-local skill projection referenced by `skills.paths` |
+| `.citadel/skills/**/SKILL.md` | Project-local skill projection referenced by `skills.paths`, with explicit `.citadel/scripts/` delegate routes |
 | `.citadel/scripts/*` | Thin delegates for every Citadel utility named by an installed skill |
 
 Re-running the installer is a no-op and preserves hand-edited keys (verified: a
@@ -173,12 +173,22 @@ are discovered and each is also registered as a slash command with
 refresh this projection. The plugin stub itself still loads adapter code directly
 from the checkout.
 
-Skill bodies intentionally keep the canonical cross-runtime form
-`node scripts/<name>.js`. Before an OpenCode model-issued `bash` call runs, the
-Citadel plugin translates only allowlisted Citadel routes whose generated
-delegate exists to `node .citadel/scripts/<name>.js`. The delegate then launches
-the real utility from the current Citadel checkout while retaining the target
-project as `cwd`. Unrelated shell commands are not rewritten.
+Canonical skills under `skills/` keep the cross-runtime form
+`node scripts/<name>.js`, which is correct when Citadel is itself the checkout.
+The installer rewrites that form only in the generated `.citadel/skills/**/SKILL.md`
+projection, and only for utilities listed in `hooks_src/delegate-scripts.json`,
+so projected skill bodies contain explicit `node .citadel/scripts/<name>.js`
+delegate paths. Routes to scripts that are not allowlisted, such as a target
+project's or a maintainer's own `node scripts/test-all.js`, and files bundled
+beside a skill are copied unchanged. The delegate then launches the real utility
+from the current Citadel checkout while retaining the target project as `cwd`.
+
+The plugin never rewrites `bash` commands. OpenCode gives the hook no way to tell
+a command expanded from a Citadel skill from a target repository's own
+`node scripts/dashboard.js`, so that command always runs as written. Re-running
+the installer refreshes both the delegates and the projected skill bodies; an
+older projection that still holds canonical routes fails the readiness route
+check until it does.
 
 The plugin's `shell.env` hook also supplies `CITADEL_RUNTIME=opencode`, the
 absolute `CITADEL_PROJECT_ROOT`, and `CLAUDE_PROJECT_DIR`. This makes runtime
