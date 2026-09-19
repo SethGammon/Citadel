@@ -51,7 +51,7 @@ Y or Enter → set `restoreArchive = true`, restore after Step 1 (below). n → 
 | `backlog.md` | Split sections → `.planning/intake/{name}.md` |
 | `discoveries.md` | Split sections → `.planning/discoveries/{name}.md` |
 | `project.md` | Strip frontmatter → `.citadel/project.md` |
-| `harness.json.md` | Strip frontmatter → `.claude/harness.json` |
+| `harness.json.md` | Strip frontmatter → `.claude/harness.json` (Citadel's shared config path for all runtimes, including Codex) |
 
 After restore: `  ✓ Archive restored — {N} campaigns, {N} postmortems, {N} backlog items`
 

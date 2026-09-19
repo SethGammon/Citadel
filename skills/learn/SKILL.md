@@ -228,6 +228,8 @@ reported as actionable failures.
 
 ### Step 6: APPEND QUALITY RULES
 
+`.claude/harness.json` is Citadel's shared configuration path for every runtime, including Codex. Create that path when it is missing; do not substitute a runtime-specific config file.
+
 For each high/medium-confidence rule candidate in the staged findings:
 1. Read `.claude/harness.json` (create with `{}` if missing)
 2. Initialize `qualityRules.custom` to `[]` if absent
@@ -249,7 +251,7 @@ Wiki pages: .planning/wiki/{topic-1}.md, ...
 Lint: {conflicts found | clean} | {stale entries} | {coverage warnings}
 Memory blocks: {N} compiled | lint {PASS|FAIL} | .planning/memory/index.json
 Rules added to harness.json: {M} ({K} skipped — already exist)
-Next: review .planning/wiki/index.md — promote stable patterns to CLAUDE.md for permanent enforcement.
+Next: review .planning/wiki/index.md — promote stable patterns to the project's runtime guidance (CLAUDE.md for Claude Code, AGENTS.md for Codex).
 ```
 
 ## Fringe Cases

@@ -79,7 +79,7 @@ Read the following in parallel. All are optional — treat missing files as zero
 - Check `.planning/telemetry/hook-errors.jsonl` (last 20 lines) for recent blocks
 
 **Trust level:**
-- Read `.claude/harness.json` → `trust` object
+- Read `.claude/harness.json` (Citadel's shared config path for all runtimes, including Codex) → `trust` object
 - Compute: novice (sessions < 5), familiar (5-19), trusted (20+ with 2+ campaigns)
 - If `trust.override` set, use that
 

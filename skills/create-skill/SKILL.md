@@ -132,7 +132,7 @@ trigger_keywords:
 2. Write the SKILL.md
 3. Verify file exists and is readable
 4. Register with router:
-   a. Read `.claude/harness.json` (create with `{}` if missing)
+   a. Read `.claude/harness.json`, Citadel's shared config path for all runtimes including Codex (create with `{}` if missing)
    b. Add skill name to `registeredSkills` array
    c. Update `registeredSkillCount` to match array length
 5. Only add to CLAUDE.md if it has an explicit skills section listing available skills.

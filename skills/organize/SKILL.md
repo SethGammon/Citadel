@@ -51,7 +51,7 @@ last-updated: 2026-06-11
 
 ### Step 1: CHECK
 
-Read `.claude/harness.json`. If an `organization` key exists, use its convention and placement rules; on bare `/organize`, ask whether to audit, adjust the rules, or reconfigure. If no key exists, continue to Step 2.
+Read `.claude/harness.json`, Citadel's shared config path for all runtimes including Codex. If an `organization` key exists, use its convention and placement rules; on bare `/organize`, ask whether to audit, adjust the rules, or reconfigure. If no key exists, continue to Step 2.
 
 ### Step 2: DETECT
 
