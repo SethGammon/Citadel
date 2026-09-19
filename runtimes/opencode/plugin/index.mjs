@@ -146,6 +146,12 @@ export const CitadelPlugin = async ({ project, directory, worktree, client } = {
 
     async 'tool.execute.before'(input, output) {
       if (input?.tool === 'bash' && typeof output?.args?.command === 'string') {
+        const intercepted = skillCommand.interceptSlashCommand(output.args.command, projectRoot);
+        if (intercepted) {
+          const error = new Error(intercepted);
+          error.name = 'CitadelSlashCommandError';
+          throw error;
+        }
         output.args.command = skillCommand.rewriteSkillCommand(output.args.command, projectRoot);
       }
       const outcome = await runner.runHooksForEvent('tool.execute.before', {

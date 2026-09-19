@@ -57,6 +57,7 @@ function renderOpencodeGuidance(spec) {
     '',
     '- Citadel skills are available as `/` slash commands; opencode registers every discovered skill as a command.',
     '- Citadel agents are available as subagents through `@`.',
+    '- `/skill-name args` only works when a human types it into the chat input. There is no tool that runs a slash command with arguments, and running it through the bash tool just sends the literal text to a real shell, which has no such program. To continue a skill or campaign from inside a turn (for example, an instruction to "invoke `/archon continue`"), delegate to the matching agent with the `task` tool instead, passing the continuation text as the prompt.',
     '- Keep durable campaign, fleet, research, and verification state under `.planning/` when a workflow spans sessions.',
     '- Citadel state tools are exposed through the `citadel-state` MCP server.',
     '',
