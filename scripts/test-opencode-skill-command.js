@@ -16,11 +16,8 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 
-const {
-  interceptSlashCommand,
-  knownCitadelNames,
-  rewriteSkillCommand,
-} = require(path.join(__dirname, '..', 'runtimes', 'opencode', 'plugin', 'skill-command'));
+const skillCommand = require(path.join(__dirname, '..', 'runtimes', 'opencode', 'plugin', 'skill-command'));
+const { interceptSlashCommand, knownCitadelNames } = skillCommand;
 
 function scratchProject() {
   return fs.mkdtempSync(path.join(os.tmpdir(), 'citadel-oc-skillcmd-'));
@@ -68,8 +65,9 @@ withProject((root) => {
   assert.equal(interceptSlashCommand('echo "/archon continue"', root), null, 'not a bare slash command');
 });
 
-// 4. Interception takes priority over the delegate-script rewrite, and leaves
-// the rewrite behavior for ordinary node-script commands untouched.
+// 4. Ordinary node-script commands are not slash commands and are never
+// rewritten, even when an installed delegate shares the script's name: a target
+// repository may own its own `scripts/dashboard.js`.
 withProject((root) => {
   fs.mkdirSync(path.join(root, '.citadel', 'skills', 'archon'), { recursive: true });
   fs.writeFileSync(path.join(root, '.citadel', 'skills', 'archon', 'SKILL.md'), '---\nname: archon\n---\nbody\n');
@@ -77,8 +75,10 @@ withProject((root) => {
 
   fs.mkdirSync(path.join(root, '.citadel', 'scripts'), { recursive: true });
   fs.writeFileSync(path.join(root, '.citadel', 'scripts', 'dashboard.js'), '// stub\n');
-  const rewritten = rewriteSkillCommand('node scripts/dashboard.js --json', root);
-  assert.equal(rewritten, 'node .citadel/scripts/dashboard.js --json');
+  assert.equal(interceptSlashCommand('node scripts/dashboard.js --json', root), null);
 });
+
+// 5. The module offers no way to rewrite an arbitrary bash command.
+assert.equal(skillCommand.rewriteSkillCommand, undefined, 'bash commands must not be rewritable by the plugin');
 
 console.log('opencode skill-command tests passed');

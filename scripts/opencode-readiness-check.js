@@ -10,10 +10,14 @@ const fs = require('fs');
 const path = require('path');
 const { spawnSync } = require('child_process');
 
-const { PLUGIN_STUB_NAME, MCP_SERVER_NAME, citadelSkillsPath } = require('../runtimes/opencode/generators/install-plugin');
+const {
+  PLUGIN_STUB_NAME,
+  MCP_SERVER_NAME,
+  citadelSkillsPath,
+  renderOpenCodeSkill,
+} = require('../runtimes/opencode/generators/install-plugin');
 const { runHooksForEvent, resolveNodeBinary } = require('../runtimes/opencode/plugin/hook-runner');
 const runtime = require('../runtimes/opencode/runtime');
-const { rewriteSkillCommand } = require('../runtimes/opencode/plugin/skill-command');
 
 const CITADEL_ROOT = path.resolve(__dirname, '..');
 
@@ -151,16 +155,25 @@ async function collect(projectRoot) {
   const nodeLooksRight = /node(\.exe)?$/i.test(nodeBinary);
   checks.push(check('node binary resolved for hooks', nodeLooksRight, nodeBinary));
 
-  // Discovery is not execution. Exercise the same relative command written in
-  // /do, translate it through the plugin's allowlisted route mapper, and run the
-  // resulting delegate with the environment shell.env supplies in a live process.
-  const sourceCommand = 'node scripts/dashboard.js';
-  const routedCommand = rewriteSkillCommand(sourceCommand, projectRoot);
-  const expectedCommand = 'node .citadel/scripts/dashboard.js';
-  let routePass = routedCommand === expectedCommand;
-  let routeDetail = routePass ? routedCommand : `not translated: ${routedCommand}`;
+  // Discovery is not execution. The projected /do skill names the dashboard by
+  // its explicit delegate route, so run that delegate with the environment
+  // shell.env supplies in a live process. A projection older than the installer
+  // still says `node scripts/dashboard.js`, which nothing rewrites at runtime.
+  const routedCommand = 'node .citadel/scripts/dashboard.js';
+  const delegatePath = path.join(projectRoot, '.citadel', 'scripts', 'dashboard.js');
+  const projectedDo = path.join(projectRoot, '.citadel', 'skills', 'do', 'SKILL.md');
+  const projectionStale = fs.existsSync(projectedDo)
+    && (() => {
+      const projected = fs.readFileSync(projectedDo, 'utf8');
+      return renderOpenCodeSkill(projected) !== projected;
+    })();
+  let routePass = fs.existsSync(delegatePath) && !projectionStale;
+  let routeDetail = routePass
+    ? routedCommand
+    : (projectionStale
+      ? `projected ${projectedDo} still uses canonical script routes`
+      : `missing delegate: ${delegatePath}`);
   if (routePass) {
-    const delegatePath = path.join(projectRoot, '.citadel', 'scripts', 'dashboard.js');
     const probe = spawnSync(process.execPath, [delegatePath], {
       cwd: projectRoot,
       encoding: 'utf8',
@@ -184,7 +197,7 @@ async function collect(projectRoot) {
     routePass,
     routeDetail,
     REQUIRED,
-    're-run opencode-install.js to restore project delegates, then restart opencode',
+    're-run opencode-install.js to restore project delegates and refresh projected skills, then restart opencode',
   ));
 
   // End-to-end proof that the gate refuses something it must refuse.

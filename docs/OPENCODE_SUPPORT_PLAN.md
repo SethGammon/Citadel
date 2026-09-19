@@ -4,10 +4,13 @@ Date: 2026-09-10
 Status: phases 1-6 landed; 1-5 live-verified on opencode 1.18.30 / Bun 1.4.2, all three phase-5 follow-ups closed, phase 6 delivered by deferred injection (re-prompt deliberately declined)
 
 2026-09-17 correction: external installs now copy skills to
-`.citadel/skills`, install thin utility delegates in `.citadel/scripts`, and use
-the plugin to translate allowlisted canonical `node scripts/...` routes. A
-`shell.env` hook supplies OpenCode runtime/project identity. The readiness check
-executes `/do status`'s dashboard route instead of proving discovery alone.
+`.citadel/skills`, install thin utility delegates in `.citadel/scripts`, and
+rewrite allowlisted canonical `node scripts/...` routes to explicit
+`node .citadel/scripts/...` delegate paths in that generated projection only.
+The plugin does not rewrite `bash` commands, because a target repository can have
+its own `scripts/dashboard.js`. A `shell.env` hook supplies OpenCode
+runtime/project identity. The readiness check executes `/do status`'s dashboard
+route instead of proving discovery alone.
 
 Verified against the opencode source at `anomalyco/opencode@dev` (shallow clone,
 2026-09-10), specifically `packages/plugin/src/index.ts`,

@@ -538,14 +538,21 @@ async function testPluginShim(root) {
     nextOutcome = { blocked: false, reason: null, messages: [], results: [], skipped: [] };
     fs.mkdirSync(path.join(root, '.citadel', 'scripts'), { recursive: true });
     fs.writeFileSync(path.join(root, '.citadel', 'scripts', 'dashboard.js'), '');
+    // Bash commands are never rewritten by the plugin: the hook cannot tell a
+    // command expanded from a Citadel skill from the target project's own
+    // `scripts/dashboard.js`, so skill routes are made explicit when the skills
+    // are projected instead. An installed delegate must not change that.
     const bashArgs = { command: 'node scripts/dashboard.js' };
     await plugin['tool.execute.before']({ tool: 'bash', sessionID: 's', callID: 'route' }, { args: bashArgs });
-    assert.equal(bashArgs.command, 'node .citadel/scripts/dashboard.js', 'installed skill routes must use project delegates');
-    assert.strictEqual(
-      calls.find((call) => call.payload?.callID === 'route').payload.args,
-      bashArgs,
-      'command translation must retain the live args object',
+    assert.equal(
+      bashArgs.command,
+      'node scripts/dashboard.js',
+      'a target repository command must never be redirected to Citadel',
     );
+    const routeCall = calls.find((call) => call.payload?.callID === 'route');
+    assert(routeCall, 'the ordinary pre-tool hook must still process the bash call');
+    assert.strictEqual(routeCall.payload.args, bashArgs, 'the live args object must reach the runner');
+    assert.equal(routeCall.payload.args.command, 'node scripts/dashboard.js');
     const targetTestArgs = { command: 'node scripts/test-all.js' };
     await plugin['tool.execute.before']({ tool: 'bash', sessionID: 's', callID: 'target-test' }, { args: targetTestArgs });
     assert.equal(targetTestArgs.command, 'node scripts/test-all.js', 'target project test commands must not be redirected into Citadel');

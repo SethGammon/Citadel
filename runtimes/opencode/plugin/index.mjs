@@ -137,7 +137,6 @@ export const CitadelPlugin = async ({ project, directory, worktree, client } = {
           error.name = 'CitadelSlashCommandError';
           throw error;
         }
-        output.args.command = skillCommand.rewriteSkillCommand(output.args.command, projectRoot);
       }
       const outcome = await runner.runHooksForEvent('tool.execute.before', {
         ...input,
