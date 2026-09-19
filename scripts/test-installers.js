@@ -80,6 +80,20 @@ function testUnifiedDispatcherDryRun() {
     assert.equal(codex.mode, 'plugin-only');
     assert(codex.pass, JSON.stringify(codex, null, 2));
 
+    const codexInstall = runJson([
+      path.join(CITADEL_ROOT, 'scripts', 'install.js'),
+      '--runtime',
+      'codex',
+      '--project-root',
+      tmp,
+      '--install',
+      '--dry-run',
+      '--json',
+    ]);
+    assert.equal(codexInstall.mode, 'plugin-and-project');
+    assert(codexInstall.steps.some((step) => step.name === 'Generate Codex project artifacts'),
+      'Codex install must register project-native MCP configuration before startup');
+
     const claude = runJson([
       path.join(CITADEL_ROOT, 'scripts', 'install.js'),
       '--runtime',

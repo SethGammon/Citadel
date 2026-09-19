@@ -40,6 +40,7 @@ const {
 } = require('../core/runtime/install-contract');
 
 const CITADEL_ROOT = path.resolve(__dirname, '..');
+const CLAUDE_PLUGIN_MCP_PATH = path.join(CITADEL_ROOT, '.claude-plugin', '.mcp.json');
 const args = process.argv.slice(2);
 const DRY_RUN = args.includes('--dry-run');
 const PROJECT_ROOT = args.find(a => !a.startsWith('--')) || process.env.CLAUDE_PROJECT_DIR || process.cwd();
@@ -156,10 +157,14 @@ function parseFrontmatter(content) {
 function generateConfigToml() {
   console.log('Generating .codex/config.toml...');
 
-  // Read .mcp.json for MCP server entries
+  // Codex plugin MCP declarations cannot expand Claude's plugin-root placeholder,
+  // and a plugin-relative cwd would make repository-aware servers operate on the
+  // installed plugin. Register bundled MCP servers in the consumer project's
+  // native config instead, where absolute entrypoints and a project-relative cwd
+  // can coexist.
   let mcpSection = '';
-  const mcpPath = path.join(PROJECT_ROOT, '.mcp.json');
-  const mcpData = readJSON(mcpPath);
+  const bundledMcpData = readJSON(CLAUDE_PLUGIN_MCP_PATH);
+  const projectMcpData = readJSON(path.join(PROJECT_ROOT, '.mcp.json'));
   const entries = [mcpServerToToml('citadel-state', {
     command: 'node',
     args: [portableMcpScriptPath()],
@@ -174,13 +179,24 @@ function generateConfigToml() {
       instructions: 'Use citadel_status to orient on campaign, fleet, telemetry, and artifact state before invoking Citadel workflows.',
     },
   })];
-  if (mcpData && mcpData.mcpServers) {
-    for (const [name, config] of Object.entries(mcpData.mcpServers)) {
-      // Skip comments and disabled entries (prefixed with _)
-      if (name.startsWith('_')) continue;
-      if (name === 'citadel-state') continue;
-      entries.push(mcpServerToToml(name, codexMcpConfig(config)));
+  const mergedServers = new Map();
+  for (const data of [bundledMcpData, projectMcpData]) {
+    if (!data || !data.mcpServers) continue;
+    for (const [name, config] of Object.entries(data.mcpServers)) {
+      if (name.startsWith('_') || name === 'citadel-state') continue;
+      mergedServers.set(name, config);
     }
+  }
+  for (const [name, config] of mergedServers) {
+    const translated = codexMcpConfig(config);
+    if (name === 'codebase-memory') {
+      translated.env = {
+        ...(translated.env || {}),
+        CITADEL_PROJECT_ROOT: '.',
+        CITADEL_RUNTIME: 'codex',
+      };
+    }
+    entries.push(mcpServerToToml(name, translated));
   }
   if (entries.length > 0) {
     mcpSection = '\n' + entries.join('\n');
@@ -348,6 +364,10 @@ function mcpServerToToml(name, config) {
 // ---- 2. Generate plugin MCP config ------------------------------------------
 
 function generatePluginMcpConfig() {
+  if (path.resolve(PROJECT_ROOT) === CITADEL_ROOT) {
+    console.log('Preserving runtime-specific MCP manifests; Codex uses project-native MCP registration.');
+    return;
+  }
   const mcpPath = path.join(PROJECT_ROOT, '.mcp.json');
   const existing = readJSON(mcpPath);
   const citadelState = {
@@ -417,7 +437,6 @@ function generatePluginManifest() {
     license: pkg.license || 'MIT',
     keywords: ['codex', 'openai', 'agent', 'harness', 'orchestration', 'skills', 'hooks', 'mcp', 'automation'],
     skills: pluginInCitadelRoot ? './skills/' : './.agents/skills/',
-    mcpServers: './.mcp.json',
     hooks: CODEX_PLUGIN_HOOKS_PATH,
     interface: {
       displayName: 'Citadel Harness',

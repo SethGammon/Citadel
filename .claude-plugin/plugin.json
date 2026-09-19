@@ -8,5 +8,6 @@
   "homepage": "https://github.com/SethGammon/Citadel",
   "repository": "https://github.com/SethGammon/Citadel",
   "license": "MIT",
-  "keywords": ["intent-routing", "durable-state", "evidence", "hooks", "skills", "claude-code"]
+  "keywords": ["intent-routing", "durable-state", "evidence", "hooks", "skills", "claude-code"],
+  "mcpServers": "./.claude-plugin/.mcp.json"
 }
