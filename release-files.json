@@ -2,6 +2,7 @@
   "schema": 1,
   "includeFiles": [
     ".citadel/project.template.md",
+    ".claude-plugin/.mcp.json",
     ".mcp.json",
     ".planning/intake/_TEMPLATE.md",
     "CHANGELOG.md",
@@ -131,6 +132,7 @@
     "core/runtime/",
     "hooks/",
     "hooks_src/",
+    "mcp-servers/codebase-memory/",
     "mcp-servers/citadel-state/",
     "runtimes/claude-code/",
     "runtimes/codex/",
@@ -143,6 +145,8 @@
   ],
   "excludeFiles": [
     "agents/knowledge-extractor.md",
+    "mcp-servers/codebase-memory/README.md",
+    "mcp-servers/codebase-memory/smoke-test.js",
     "mcp-servers/citadel-state/README.md",
     "hooks_src/smoke-test.js"
   ],

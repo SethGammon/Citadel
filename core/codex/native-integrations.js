@@ -865,11 +865,10 @@ function checkCodexReadiness(options = {}) {
   if (manifest) {
     const skillsPath = manifest.skills ? path.resolve(projectRoot, manifest.skills) : null;
     const hooksPath = manifest.hooks ? path.resolve(projectRoot, manifest.hooks) : null;
-    const mcpPath = manifest.mcpServers ? path.resolve(projectRoot, manifest.mcpServers) : null;
     add('plugin-description', !/claude/i.test(manifest.description || '') && /codex/i.test(`${manifest.description || ''} ${manifest.interface?.shortDescription || ''}`), manifest.description, 'Prevents Codex users from seeing stale Claude-specific packaging.');
     add('plugin-skills-path', skillsPath && fs.existsSync(skillsPath), skillsPath || 'missing', 'Skills are loaded from a real plugin path.');
     add('plugin-hooks-path', hooksPath && fs.existsSync(hooksPath), hooksPath || 'missing', 'Lifecycle safety hooks are bundled with the plugin.');
-    add('plugin-mcp-path', mcpPath && fs.existsSync(mcpPath), mcpPath || 'missing', 'Codex can load Citadel state through MCP.');
+    add('plugin-mcp-isolation', !manifest.mcpServers, manifest.mcpServers || 'project-native config', 'Codex must not load Claude-only MCP placeholders from the plugin manifest.');
     for (const check of pluginAssetChecks(projectRoot, manifest)) {
       add(check.id, check.pass, check.detail, 'Every declared plugin interface asset resolves inside the installed plugin root.');
     }
@@ -880,6 +879,7 @@ function checkCodexReadiness(options = {}) {
   add('codex-config', Boolean(config), configPath, 'Project installs have Codex feature flags and MCP wiring.');
   add('feature-hooks', /\bhooks\s*=\s*true\b/.test(config) && !/\bcodex_hooks\s*=\s*true\b/.test(config), 'canonical hooks feature', 'Uses the current hooks feature key and rejects deprecated output.');
   add('mcp-citadel-state', /\[mcp_servers\.citadel-state\]/.test(config), 'citadel-state MCP config', 'Codex can query planning and verification state directly.');
+  add('mcp-codebase-memory', /\[mcp_servers\.codebase-memory\]/.test(config), 'codebase-memory MCP config', 'Codex can index the consuming repository through project-native MCP wiring.');
 
   const agentsDir = path.join(projectRoot, '.codex', 'agents');
   const agentCount = fs.existsSync(agentsDir)
