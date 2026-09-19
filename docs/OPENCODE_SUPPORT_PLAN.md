@@ -3,6 +3,12 @@
 Date: 2026-09-10
 Status: phases 1-6 landed; 1-5 live-verified on opencode 1.18.30 / Bun 1.4.2, all three phase-5 follow-ups closed, phase 6 delivered by deferred injection (re-prompt deliberately declined)
 
+2026-09-17 correction: external installs now copy skills to
+`.citadel/skills`, install thin utility delegates in `.citadel/scripts`, and use
+the plugin to translate allowlisted canonical `node scripts/...` routes. A
+`shell.env` hook supplies OpenCode runtime/project identity. The readiness check
+executes `/do status`'s dashboard route instead of proving discovery alone.
+
 Verified against the opencode source at `anomalyco/opencode@dev` (shallow clone,
 2026-09-10), specifically `packages/plugin/src/index.ts`,
 `packages/opencode/src/plugin/index.ts`, `packages/opencode/src/session/tools.ts`,
@@ -32,9 +38,9 @@ Non-hook surfaces are close to free:
 | Surface | opencode native path | Citadel work |
 |---|---|---|
 | Guidance | `AGENTS.md`, then `CLAUDE.md` (`session/instruction.ts:61-68`) | **its own renderer.** This row first said "reuse Codex's `AGENTS.md` renderer"; both target `AGENTS.md`, but the Codex output calls itself the Codex projection and tells the reader to invoke skills as `$skill-name`, which is wrong for opencode. Rendered from `.citadel/project.md`, never overwriting an existing file |
-| Skills | also every path in `skills.paths`, scanned `**/SKILL.md` (`skill/index.ts:211-219`) | **one config key.** This row first claimed "none — opencode reads Citadel's existing `.claude/skills/` projection directly", which phase 5 disproved: no such projection exists. Resolved by adding `<citadel>/skills` to `skills.paths` in `opencode.json`, so all 48 are discovered from the checkout with nothing copied. Needs opencode >= 1.18.30 |
+| Skills | also every path in `skills.paths`, scanned `**/SKILL.md` (`skill/index.ts:211-219`) | Copy a machine-local projection to `.citadel/skills`, register that relative path, and install utility delegates. Needs opencode >= 1.18.30 |
 | Agents | `.opencode/{agent,agents}/**/*.md` (`config/agent.ts:13`) | thin projector, mirror `runtimes/codex/generators/project-agents.js` |
-| Commands | `.opencode/{command,commands}/**/*.md` | none — opencode registers every discovered skill as a command (`command/index.ts:134`), and an explicit command file *shadows* the skill, so projecting would risk overriding the live one |
+| Commands | `.opencode/{command,commands}/**/*.md` | Generate `.opencode/commands/*.md` wrappers. OpenCode skills have no slash-command argument channel; each wrapper passes `$ARGUMENTS` into the corresponding skill prompt. |
 | MCP | `opencode.json` `mcp` block | config emit for `citadel-state`, `codebase-memory` |
 | Plugin install | `.opencode/{plugin,plugins}/*.{ts,js}` auto-discovered, or `plugin: []` in `opencode.json` (`config/config.ts:476`, `config/plugin.ts:21`) | emit one file |
 
@@ -552,13 +558,13 @@ both as a skill and as a command with `source: "skill"`, unshadowed, with the
 body as the template. Only the projection step was missing. Phase 4 was right to
 drop `project-commands.js`; what it needed instead was a *skills* projector.
 
-*Resolved after phase 5, and not by copying.* opencode's config has a
+*Originally resolved after phase 5 with an absolute checkout path; superseded by
+the portable project-local projection.* opencode's config has a
 `skills.paths` array, scanned `**/SKILL.md` (`skill/index.ts:211-219`), so the
-installer adds `<citadel>/skills` to it and all 48 skills are discovered straight
-from the checkout. No copies, so a Citadel upgrade needs no reinstall and nothing
-can go stale — the same approach the plugin stub already took. The array is
-user-owned, so Citadel appends and dedupes rather than replacing; `--skip-skills`
-omits the key entirely.
+installer adds `./.citadel/skills` and all skills are discovered from the
+project-local copy. Reinstall refreshes it idempotently. The array is user-owned,
+so Citadel appends and dedupes rather than replacing; `--skip-skills` omits the
+key entirely.
 
 This needs opencode >= 1.18.30. The top-level config is a plain `Schema.Struct`,
 so on a build predating `skills.paths` the key would fail the decode and opencode
@@ -636,7 +642,7 @@ called. Second, an existing `AGENTS.md` must not be touched: it is opencode's
 primary guidance file and is often hand-written, so the generator skips it unless
 `--overwrite-guidance` is passed, and a test asserts the existing bytes survive.
 
-With this, a default install passes all eight readiness checks — `READY.` with no
+With this, a default install passes all readiness checks — `READY.` with no
 advisory gaps — and `--strict` passes too. `--skip-guidance` and `--skip-skills`
 each produce a WARN that `--strict` refuses.
 
@@ -672,7 +678,7 @@ observations. Items 1-3 pass, so `hooks: partial` stands unchanged;
 the runtime contract's `degradations`, which was the only code change this phase
 made. The skills gap (7), the guidance gap, and the readiness-check contradiction
 were the three follow-ups this phase surfaced; **all three are now closed** — see
-the resolution notes above. A default install passes all eight readiness checks.
+the resolution notes above. A default install passes all readiness checks.
 The runtime contract itself was unchanged by those fixes beyond the two
 degradations this phase added.
 
@@ -877,8 +883,9 @@ injected finding — exactly as a human turn would.
 
 *Operational caveat found in the same run.* A re-prompt starts a turn nobody is
 watching, and that turn can hit an opencode permission prompt — here
-`permission=external_directory`, because `skills.paths` points at the Citadel
-checkout and the model followed it. Under `opencode serve` there is no one to
+`permission=external_directory`, because the then-current `skills.paths` pointed
+at the Citadel checkout and the model followed it. Current installs use a
+project-local projection. Under `opencode serve` there is no one to
 answer, so the session sits `busy` indefinitely and further prompts to it return
 nothing; `POST /session/{id}/abort` clears it. This is not caused by re-prompting,
 but re-prompting is what makes it happen unattended. Anyone enabling this in a

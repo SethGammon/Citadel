@@ -40,17 +40,22 @@ node /path/to/Citadel/scripts/opencode-readiness-check.js --project-root /path/t
 | `.opencode/plugin/citadel.js` | Stub re-exporting the adapter from your Citadel checkout, so a Citadel upgrade takes effect without reinstalling |
 | `opencode.json` | Merged key by key: adds `$schema` and `mcp.citadel-state`. User keys are preserved |
 | `.opencode/agent/*.md` | Seven Citadel subagents |
+| `.opencode/commands/*.md` | Argument-bearing wrappers that invoke each Citadel skill |
+| `.citadel/skills/**/SKILL.md` | Project-local skill projection referenced by `skills.paths` |
+| `.citadel/scripts/*` | Thin delegates for every Citadel utility named by an installed skill |
 
 Re-running the installer is a no-op and preserves hand-edited keys (verified: a
 hand-added `provider` block survived a second install untouched).
 
-### Read natively, not projected
+### Native OpenCode surfaces
 
 - **Guidance** — `AGENTS.md`, then `CLAUDE.md`.
-- **Skills** — `.claude/skills/**/SKILL.md`, `.agents/skills/**`, `.opencode/skill/**`.
-- **Commands** — opencode registers every discovered skill as a command
-  (`source: "skill"`). Do **not** write `.opencode/command/*.md` for a skill: an
-  explicit command file *shadows* the live skill.
+- **Skills** — OpenCode reads the installed `.citadel/skills` projection through
+  `skills.paths`, in addition to its native `.claude`, `.agents`, and `.opencode`
+  skill roots.
+- **Commands** — OpenCode discovers skills but does not provide their slash
+  commands an argument channel. Citadel generates `.opencode/commands/*.md`
+  wrappers that pass `$ARGUMENTS` into the corresponding skill prompt.
 
 ### Readiness check output
 
@@ -62,13 +67,14 @@ PASS  opencode.json parses
 PASS  citadel-state MCP registered
 PASS  agents projected — 7 in .opencode/agent
 PASS  node binary resolved for hooks — C:\nvm4w\nodejs\node.exe
+PASS  skill route executes from project root — node .citadel/scripts/dashboard.js
 PASS  pre-tool gate blocks a .env read
 ```
 
 Confirm the resolved Node path is a **real Node**, not Bun. Override with
 `CITADEL_NODE=/path/to/node` if the probe picks the wrong one.
 
-A default install leaves no gaps: all eight checks pass. Using `--skip-guidance`
+A default install leaves no gaps: all nine checks pass. Using `--skip-guidance`
 or `--skip-skills` turns the corresponding check into a WARN with a remedy, which
 `--strict` refuses.
 
@@ -149,22 +155,34 @@ Plugin discovery happens once per opencode **process**. Disposing and recreating
 the project instance re-runs each loaded plugin's init but does **not** rescan
 `.opencode/plugin/`. After installing Citadel into a project, restart opencode.
 
-## Skills come from the checkout, not a copy
+## Skills and utility delegates are project-local
 
-The installer adds Citadel's skills directory to `skills.paths` in
+The installer copies Citadel's skills into `.citadel/skills` and adds that
+project-relative directory to `skills.paths` in
 `opencode.json`:
 
 ```json
 {
-  "skills": { "paths": ["/path/to/Citadel/skills"] }
+  "skills": { "paths": ["./.citadel/skills"] }
 }
 ```
 
-opencode scans every configured path with `**/SKILL.md`, so all 48 Citadel skills
-are discovered in place and each is also registered as a slash command with
-`source: "skill"`. Nothing is copied, so a Citadel upgrade takes effect with no
-reinstall and no projected copy can go stale — the same approach the plugin stub
-takes.
+opencode scans every configured path with `**/SKILL.md`, so all Citadel skills
+are discovered and each is also registered as a slash command with
+`source: "skill"`. Re-run the idempotent installer after a Citadel upgrade to
+refresh this projection. The plugin stub itself still loads adapter code directly
+from the checkout.
+
+Skill bodies intentionally keep the canonical cross-runtime form
+`node scripts/<name>.js`. Before an OpenCode model-issued `bash` call runs, the
+Citadel plugin translates only allowlisted Citadel routes whose generated
+delegate exists to `node .citadel/scripts/<name>.js`. The delegate then launches
+the real utility from the current Citadel checkout while retaining the target
+project as `cwd`. Unrelated shell commands are not rewritten.
+
+The plugin's `shell.env` hook also supplies `CITADEL_RUNTIME=opencode`, the
+absolute `CITADEL_PROJECT_ROOT`, and `CLAUDE_PROJECT_DIR`. This makes runtime
+detection unambiguous when `.claude`, `.codex`, and `.opencode` coexist.
 
 `skills.paths` is user-owned, so Citadel appends to it and never replaces it;
 re-running the installer does not duplicate the entry. `--skip-skills` leaves the
@@ -174,17 +192,22 @@ key absent entirely.
 top-level config is a strict schema, so on an older build this key would fail the
 decode and opencode would refuse to start.
 
-If the Citadel checkout moves, the configured path goes stale and opencode simply
-logs `skill path not found`. The readiness check reports that case explicitly —
-`skills.paths resolve to nothing` — rather than quietly counting zero. Re-run the
-installer to repoint it.
+If the Citadel checkout moves, re-run the installer to update the machine-local
+plugin pointer and delegates. The shared `skills.paths` entry remains portable
+because it is project-relative.
 
 opencode warns `duplicate skill name` when the same skill is found in several
 roots. The later scan wins: global `.claude`/`.agents`, then project
 `.claude`/`.agents`, then `.opencode` config dirs, then `skills.paths`. So a
-project-local copy of a skill is overridden by the `skills.paths` entry — if you
-want to customize one, point `skills.paths` at your own directory instead of
-Citadel's.
+project-local copy of a skill can be overridden by the `skills.paths` projection.
+To customize one, configure a later skill path with a distinct ownership policy
+rather than editing `.citadel/skills`, which reinstall refreshes.
+
+OpenCode natively recognizes only standard skill frontmatter such as `name`,
+`description`, `license`, `compatibility`, and string metadata. Citadel fields
+including `user-invocable`, `auto-trigger`, and `trigger_keywords` remain useful
+to Citadel's router but are ignored by OpenCode's native skill loader. The skill
+body becoming the command template is expected behavior, not an execution error.
 
 ## Guidance is rendered into AGENTS.md
 
@@ -213,7 +236,10 @@ the exit code; *advisory* covers capability a project gains by supplying
 something Citadel does not project. Pass `--strict` to make the advisory gaps
 exit non-zero too, which is what you want in CI.
 
-Earlier builds marked all eight checks alike, so a correct install failed its own
+Earlier builds marked all discovery checks alike and did not execute a skill
+route, so an install with broken delegates could report `READY`. The required
+dashboard route probe now catches path and runtime-identity regressions. Older
+builds also marked all eight checks alike, so a correct install failed its own
 verification and exited 1.
 
 ## Quality-gate findings arrive one turn late
@@ -382,6 +408,8 @@ back to Citadel.
 | No gating, no errors | Plugin did not load. Check the log for `citadel session start` |
 | Citadel line absent after installing | opencode was already running — restart it |
 | `node binary resolved` shows a Bun path | Node is not on `PATH`; set `CITADEL_NODE` |
-| No Citadel slash commands | Skills are not projected — see *Skills* above |
+| No Citadel slash commands | Skill wrappers are missing or stale; re-run the installer, then restart OpenCode |
+| `/do status` reports `MODULE_NOT_FOUND` | Re-run the installer to restore delegates, restart OpenCode, then run readiness with `--strict` |
+| `CITADEL_RUNTIME_AMBIGUOUS` in a skill command | Restart OpenCode so the installed plugin's `shell.env` hook supplies runtime identity |
 | `!command` not gated | Expected; the shell endpoint bypasses `tool.execute.before` |
 | `quality-gate` never blocks | Expected; `session.idle` cannot block |

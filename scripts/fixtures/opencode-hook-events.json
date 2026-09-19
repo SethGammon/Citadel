@@ -218,6 +218,30 @@
       "claude": {
         "hook_event_name": "FileChanged"
       }
+    },
+    {
+      "name": "delegated task created",
+      "expect": {
+        "event_id": "task_created",
+        "tool_name": "Agent",
+        "tool_input": {
+          "description": "review the diff"
+        }
+      },
+      "opencode": {
+        "hook_event_name": "task.created",
+        "tool": "task",
+        "args": {
+          "description": "review the diff"
+        }
+      },
+      "claude": {
+        "hook_event_name": "TaskCreated",
+        "tool_name": "Agent",
+        "tool_input": {
+          "description": "review the diff"
+        }
+      }
     }
   ],
   "mapped": [
@@ -232,7 +256,11 @@
     "session.idle",
     "file.edited",
     "file.watcher.updated",
-    "permission.asked"
+    "permission.asked",
+    "task.created",
+    "task.completed",
+    "subagent.start",
+    "subagent.stop"
   ],
   "deliberatelyUnmapped": {
     "permission.replied": "a reply may allow or deny, so only the adapter knows whether it is a denial",

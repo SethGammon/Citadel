@@ -10,16 +10,19 @@ const assert = require('assert');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
+const { spawnSync } = require('child_process');
 
 const CITADEL_ROOT = path.resolve(__dirname, '..');
 const {
   MCP_SERVER_NAME,
   PLUGIN_STUB_NAME,
   citadelMcpServer,
+  citadelSkillNames,
   citadelSkillsPath,
   installOpencodePlugin,
   mergeOpencodeConfig,
   renderPluginStub,
+  renderSkillCommand,
 } = require(path.join(CITADEL_ROOT, 'runtimes', 'opencode', 'generators', 'install-plugin'));
 const { ensureProjectDelegate, withGuidanceOwner } = require(path.join(CITADEL_ROOT, 'core', 'runtime', 'install-contract'));
 const {
@@ -32,6 +35,16 @@ const {
   renderOpencodeGuidance,
 } = require(path.join(CITADEL_ROOT, 'runtimes', 'opencode', 'guidance', 'render'));
 const { projectOpencodeGuidance } = require(path.join(CITADEL_ROOT, 'runtimes', 'opencode', 'generators', 'project-guidance'));
+const DELEGATE_SCRIPTS = require(path.join(CITADEL_ROOT, 'hooks_src', 'delegate-scripts.json'));
+const { rewriteSkillCommand } = require(path.join(CITADEL_ROOT, 'runtimes', 'opencode', 'plugin', 'skill-command'));
+const TARGET_OR_MAINTAINER_SCRIPTS = new Set([
+  'generate-routing.js',
+  'skill-lint.js',
+  'test-all.js',
+  'test-deploy-steward.js',
+  'test-routing-sync.js',
+  'test-telemetry-otlp.js',
+]);
 
 // Deliberately bare. An earlier version of this fixture hand-created AGENTS.md
 // and .claude/skills/do/SKILL.md and then asserted that the readiness check
@@ -139,6 +152,54 @@ async function testInstallAndStub(root) {
   // Windows path separators must not break the import specifier.
   const winStub = renderPluginStub('C:\\Users\\dev\\citadel');
   assert(winStub.includes('file://C:/Users/dev/citadel/'), 'backslashes must be normalized for the file URL');
+}
+
+function testInstalledSkillRoutesHaveDelegates(root) {
+  const skillRoot = path.join(CITADEL_ROOT, 'skills');
+  const referenced = new Set();
+  for (const entry of fs.readdirSync(skillRoot, { withFileTypes: true })) {
+    if (!entry.isDirectory()) continue;
+    const skillPath = path.join(skillRoot, entry.name, 'SKILL.md');
+    if (!fs.existsSync(skillPath)) continue;
+    const body = fs.readFileSync(skillPath, 'utf8');
+    for (const match of body.matchAll(/\bnode\s+scripts[\\/]([A-Za-z0-9_.-]+\.(?:js|cjs))\b/g)) {
+      referenced.add(match[1]);
+    }
+  }
+
+  const missing = [...referenced].filter((name) => (
+    !DELEGATE_SCRIPTS.includes(name) && !TARGET_OR_MAINTAINER_SCRIPTS.has(name)
+  ));
+  assert.deepStrictEqual(missing, [], `every Citadel script named by a skill needs an installed delegate: ${missing.join(', ')}`);
+  for (const name of TARGET_OR_MAINTAINER_SCRIPTS) {
+    assert(referenced.has(name), `${name}: stale target/maintainer exemption`);
+    assert(!DELEGATE_SCRIPTS.includes(name), `${name}: target/maintainer commands must not become installed delegates`);
+  }
+  for (const name of DELEGATE_SCRIPTS) {
+    assert(fs.existsSync(path.join(root, '.citadel', 'scripts', name)), `${name}: installer must create the delegate before a session starts`);
+  }
+}
+
+function testSkillRouteRunsFromMixedRuntimeProject(root) {
+  fs.mkdirSync(path.join(root, '.claude'), { recursive: true });
+  const source = 'node scripts/dashboard.js';
+  const command = rewriteSkillCommand(source, root);
+  assert.equal(command, 'node .citadel/scripts/dashboard.js');
+
+  const result = spawnSync(process.execPath, [path.join(root, '.citadel', 'scripts', 'dashboard.js')], {
+    cwd: root,
+    encoding: 'utf8',
+    env: {
+      ...process.env,
+      CITADEL_RUNTIME: 'opencode',
+      CITADEL_PROJECT_ROOT: root,
+      CLAUDE_PROJECT_DIR: root,
+    },
+    timeout: 15000,
+  });
+  assert.equal(result.error, undefined, result.error?.message);
+  assert.equal(result.status, 0, `dashboard delegate failed:\n${result.stderr || result.stdout}`);
+  assert(!/MODULE_NOT_FOUND|CITADEL_RUNTIME_AMBIGUOUS/.test(`${result.stdout}\n${result.stderr}`));
 }
 
 function testAgentProjection(root) {
@@ -285,27 +346,42 @@ function testGuidanceBootstrapsSpec() {
 
     // Citadel-owned guidance is a projection and refreshes deterministically.
     const second = projectOpencodeGuidance({ citadelRoot: CITADEL_ROOT, projectRoot: root });
-    assert.equal(second.written, true);
+    assert.equal(second.written, false);
     assert.equal(second.skipped, false);
+    assert.equal(second.action, 'up-to-date');
   } finally {
     fs.rmSync(root, { recursive: true, force: true });
   }
 }
 
-// Commands are deliberately not projected: opencode registers every discovered
-// skill as a command, and an explicit command file shadows the skill, so a
-// projected copy could go stale and override the live one.
-function testNoCommandProjection(root) {
-  assert.equal(
-    fs.existsSync(path.join(root, '.opencode', 'command')),
-    false,
-    'commands must not be projected; opencode derives them from skills',
-  );
-  assert.equal(
-    fs.existsSync(path.join(CITADEL_ROOT, 'runtimes', 'opencode', 'generators', 'project-commands.js')),
-    false,
-    'a command projector would shadow live skills',
-  );
+function testCommandProjection(root) {
+  const commandDir = path.join(root, '.opencode', 'commands');
+  const skillNames = citadelSkillNames(CITADEL_ROOT);
+  assert(skillNames.length > 0, 'Citadel must have skills to wrap as commands');
+  for (const skillName of skillNames) {
+    const commandPath = path.join(commandDir, `${skillName}.md`);
+    assert(fs.existsSync(commandPath), `${skillName}: command wrapper must be projected`);
+    const command = fs.readFileSync(commandPath, 'utf8');
+    assert(command.includes('$ARGUMENTS'), `${skillName}: wrapper must preserve slash-command arguments`);
+    assert(command.includes(`Use the \`${skillName}\` skill`), `${skillName}: wrapper must invoke its skill`);
+  }
+  assert.equal(renderSkillCommand('demo').includes('$ARGUMENTS'), true);
+}
+
+function testCommandProjectionRefusesUserConflict() {
+  const root = scratchProject();
+  try {
+    const commandPath = path.join(root, '.opencode', 'commands', 'do.md');
+    fs.mkdirSync(path.dirname(commandPath), { recursive: true });
+    fs.writeFileSync(commandPath, '---\ndescription: Mine\n---\nMine\n');
+    assert.throws(
+      () => installOpencodePlugin({ citadelRoot: CITADEL_ROOT, projectRoot: root }),
+      /user-owned and conflicts/,
+      'a Citadel install must not overwrite a user command with the same name',
+    );
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
 }
 
 function testInstallerCli(root) {
@@ -315,7 +391,7 @@ function testInstallerCli(root) {
   assert.equal(result.dryRun, true);
   assert(result.degradations.some((item) => item.startsWith('stop-cannot-block')));
   assert(result.degradations.some((item) => item.startsWith('plugin-load-failure-fails-open')));
-  assert(install.render(result).includes('derived from skills'));
+  assert(install.render(result).includes('forward slash-command arguments'));
 
   const missing = install.run(['--project-root', path.join(root, 'nope'), '--dry-run']);
   assert.equal(missing.ok, false);
@@ -336,6 +412,7 @@ async function testReadinessOnBareInstall() {
   // installer before and hid a gap for a phase.
   const root = scratchProject();
   try {
+  fs.mkdirSync(path.join(root, '.claude'), { recursive: true });
   const installed = install.run(['--project-root', root]);
   assert.equal(installed.ok, true, 'the default install must succeed');
 
@@ -365,7 +442,7 @@ async function testReadinessOnBareInstall() {
     const optedOutWarnings = partial.filter((item) => !item.pass && item.severity === readiness.ADVISORY);
     assert.deepStrictEqual(
       optedOutWarnings.map((item) => item.name).sort(),
-      ['guidance file present', 'skills discoverable by opencode'],
+      ['argument-bearing skill commands projected', 'guidance file present', 'skills discoverable by opencode'],
     );
     for (const item of optedOutWarnings) {
       assert(item.remedy, `${item.name} must tell the operator what to do`);
@@ -376,7 +453,19 @@ async function testReadinessOnBareInstall() {
     fs.rmSync(optedOut, { recursive: true, force: true });
   }
 
-  // A genuinely broken install is still a hard failure.
+  // Discovery without executable delegates is a broken install, not READY.
+  const dashboardDelegate = path.join(root, '.citadel', 'scripts', 'dashboard.js');
+  fs.rmSync(dashboardDelegate);
+  const brokenRoute = await readiness.collect(root);
+  const routeCheck = brokenRoute.find((item) => item.name === 'skill route executes from project root');
+  assert.equal(routeCheck.pass, false);
+  assert.equal(routeCheck.severity, readiness.REQUIRED);
+  assert.equal(readiness.summarize(brokenRoute).ok, false, 'a broken executable skill route must be NOT READY');
+
+  install.run(['--project-root', root]);
+  assert(fs.existsSync(dashboardDelegate), 'reinstall must restore the missing delegate');
+
+  // A genuinely broken plugin install is still a hard failure.
   const stub = path.join(root, '.opencode', 'plugin', PLUGIN_STUB_NAME);
   fs.rmSync(stub);
   const broken = await readiness.collect(root);
@@ -538,8 +627,11 @@ async function main() {
     testDryRunWritesNothing(root);
     testInstallerCli(root);
     await testInstallAndStub(root);
+    testInstalledSkillRoutesHaveDelegates(root);
+    testSkillRouteRunsFromMixedRuntimeProject(root);
     testAgentProjection(root);
-    testNoCommandProjection(root);
+    testCommandProjection(root);
+    testCommandProjectionRefusesUserConflict();
 
     await testSkillsReadiness();
     await testReadinessOnBareInstall();
