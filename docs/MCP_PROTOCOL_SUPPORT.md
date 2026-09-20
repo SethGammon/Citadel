@@ -184,8 +184,8 @@ smaller and auditable.
 Conformance is wire-first. Tests spawn each real stdio entrypoint and assert the
 newline-delimited JSON-RPC messages without relying on a client SDK.
 
-The maintainer-source external gate is
-`node scripts/mcp-external-conformance.js`. It downloads
+The full source checkout includes a maintainer-only external conformance runner
+that is not included in the slim npm or GitHub Release payload. It downloads
 the official protocol schema for every advertised revision from an immutable
 `modelcontextprotocol/modelcontextprotocol` commit, verifies the committed
 SHA-256 digest before parsing, and validates real transcripts from all three
@@ -227,10 +227,10 @@ Baseline at commit `a4c5158fa1729a04dd0b660494d79722ab4cc187` on Windows:
 
 | Command | Exit status | Result |
 |---|---:|---|
-| `rtk node scripts/test-citadel-state-mcp.js` | 0 | 21 JSON-RPC calls passed |
-| `rtk node mcp-servers/codebase-memory/smoke-test.js` | 0 | 9 smoke checks passed |
-| `rtk node scripts/test-context-compress.js` | 0 | 21 calls and 2 link checks passed |
-| `rtk node scripts/test-codex-native-integrations.js` | 0 | native integration tests passed |
+| Citadel-state MCP suite | 0 | 21 JSON-RPC calls passed |
+| Codebase-memory smoke suite | 0 | 9 smoke checks passed |
+| Context-compress MCP suite | 0 | 21 calls and 2 link checks passed |
+| Codex native integration suite | 0 | native integration tests passed |
 
 The codebase-memory run emitted only local Git global-ignore permission
 warnings; they did not affect its exit status or assertions.
