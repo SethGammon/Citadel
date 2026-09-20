@@ -271,6 +271,46 @@ function isValidCodexContextOutput(output, eventName) {
   return typeof specific.additionalContext === 'string';
 }
 
+function isValidCodexPreToolUseOutput(output) {
+  if (!output || typeof output !== 'object' || Array.isArray(output)) return false;
+  const allowedKeys = new Set([
+    'continue',
+    'stopReason',
+    'suppressOutput',
+    'systemMessage',
+    'hookSpecificOutput',
+  ]);
+  if (Object.keys(output).some((key) => !allowedKeys.has(key))) return false;
+  if (output.continue !== undefined && typeof output.continue !== 'boolean') return false;
+  if (output.stopReason !== undefined && typeof output.stopReason !== 'string') return false;
+  if (output.suppressOutput !== undefined && typeof output.suppressOutput !== 'boolean') return false;
+  if (output.systemMessage !== undefined && typeof output.systemMessage !== 'string') return false;
+
+  const specific = output.hookSpecificOutput;
+  if (!specific || typeof specific !== 'object' || Array.isArray(specific)) return false;
+  if (specific.hookEventName !== 'PreToolUse') return false;
+  const allowedSpecificKeys = new Set([
+    'hookEventName',
+    'additionalContext',
+    'permissionDecision',
+    'permissionDecisionReason',
+    'updatedInput',
+  ]);
+  if (Object.keys(specific).some((key) => !allowedSpecificKeys.has(key))) return false;
+  if (specific.additionalContext !== undefined
+    && typeof specific.additionalContext !== 'string') return false;
+  if (specific.permissionDecisionReason !== undefined
+    && typeof specific.permissionDecisionReason !== 'string') return false;
+  if (specific.updatedInput !== undefined
+    && (!specific.updatedInput || typeof specific.updatedInput !== 'object'
+      || Array.isArray(specific.updatedInput))) return false;
+
+  const hasContext = typeof specific.additionalContext === 'string';
+  const hasPermissionDecision = ['allow', 'deny', 'ask'].includes(specific.permissionDecision);
+  if (specific.permissionDecision !== undefined && !hasPermissionDecision) return false;
+  return hasContext || hasPermissionDecision;
+}
+
 function projectCodexContextOutput(stdout, eventName) {
   if (stdout.trim().length === 0) return '';
 
@@ -281,7 +321,10 @@ function projectCodexContextOutput(stdout, eventName) {
     parsed = null;
   }
 
-  if (isValidCodexContextOutput(parsed, eventName)) return stdout;
+  const isValid = eventName === 'PreToolUse'
+    ? isValidCodexPreToolUseOutput(parsed)
+    : isValidCodexContextOutput(parsed, eventName);
+  if (isValid) return stdout;
 
   const context = parsed
     && typeof parsed === 'object'
@@ -334,7 +377,7 @@ function projectCodexPostCompactOutput(stdout) {
 function projectCodexOutput(result) {
   const stdout = result.stdout || '';
   const stderr = result.stderr || '';
-  if (['SessionStart', 'PostToolUse'].includes(result.nativeEventName)) {
+  if (['SessionStart', 'PreToolUse', 'PostToolUse'].includes(result.nativeEventName)) {
     return { stdout: projectCodexContextOutput(stdout, result.nativeEventName), stderr };
   }
   if (result.nativeEventName === 'PostCompact') {
@@ -410,6 +453,7 @@ module.exports = Object.freeze({
   isValidCodexStopOutput,
   isSecurityHook,
   isValidCodexContextOutput,
+  isValidCodexPreToolUseOutput,
   isValidCodexUniversalOutput,
   parseApplyPatchOperations,
   projectLegacyPayloads,

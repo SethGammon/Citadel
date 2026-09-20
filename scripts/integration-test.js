@@ -67,6 +67,7 @@ function fireHookScript(scriptName, payload, sandbox, extraEnv = {}) {
     cwd: sandbox,
     env: {
       ...process.env,
+      CITADEL_RUNTIME: 'claude-code',
       CLAUDE_PROJECT_DIR: sandbox,
       CLAUDE_PLUGIN_DATA: path.join(sandbox, '.claude'),
       ...extraEnv,

@@ -10,7 +10,12 @@ const path = require('path');
 
 const { parseCampaignContent } = require('../core/campaigns/parse-campaign');
 const { findActiveCampaign, getCampaignPaths, readCampaignStats } = require('../core/campaigns/load-campaign');
-const { archiveCampaign, completeCampaign, updateCampaignStatus } = require('../core/campaigns/update-campaign');
+const {
+  archiveCampaign,
+  completeCampaign,
+  updateCampaignStatus,
+  updatePhaseStatus,
+} = require('../core/campaigns/update-campaign');
 const { extractCompletionOutcome } = require('../core/campaigns/outcomes');
 
 function withTempProject(run) {
@@ -146,6 +151,98 @@ withTempProject((projectRoot) => {
     () => completeCampaign(invalidFile, projectRoot, { outcome: 'not-real' }),
     /Unknown campaign outcome/,
     'completion should reject unknown outcome labels'
+  );
+});
+
+withTempProject((projectRoot) => {
+  const legacyFile = path.join(projectRoot, 'legacy.md');
+  fs.writeFileSync(legacyFile, makePhasedCampaign('Legacy Layout', ['pending', 'pending']));
+  updatePhaseStatus(legacyFile, 1, 'in-progress');
+  const legacyUpdated = fs.readFileSync(legacyFile, 'utf8');
+  assert(legacyUpdated.includes('| 1 | in-progress | build | Phase 1 | done |'));
+  assert(legacyUpdated.includes('| 2 | pending | build | Phase 2 | done |'));
+
+  const currentFile = path.join(projectRoot, 'current.md');
+  const currentCampaign = [
+    '# Campaign: Current Layout',
+    '',
+    '| # | Status | Label |',
+    '|---|--------|-------|',
+    '| 2 | untouched | unrelated |',
+    '',
+    '## Phase End Conditions',
+    '',
+    '| Phase | Type | Title | Status | End Conditions | Validator Retries |',
+    '|-------|------|-------|--------|----------------|-------------------|',
+    '| 1 | research | Observe | complete | evidence | 3 |',
+    '| 2 | build | Repair | pending | tests | 2 |',
+  ].join('\n');
+  fs.writeFileSync(currentFile, currentCampaign);
+  updatePhaseStatus(currentFile, 2, 'in-progress');
+  const currentUpdated = fs.readFileSync(currentFile, 'utf8');
+  assert(currentUpdated.includes('| 2 | untouched | unrelated |'));
+  assert(currentUpdated.includes('| 2 | build | Repair | in-progress | tests | 2 |'));
+  assert(currentUpdated.includes('| 1 | research | Observe | complete | evidence | 3 |'));
+  assert.deepStrictEqual(
+    fs.readdirSync(projectRoot).filter((name) => name.includes('.tmp-')),
+    []
+  );
+
+  const missingStatusFile = path.join(projectRoot, 'missing-status.md');
+  const missingStatusCampaign = [
+    '# Campaign: Missing Status',
+    '',
+    '## Phases',
+    '',
+    '| Phase | Type | Title |',
+    '|-------|------|-------|',
+    '| 1 | build | Repair |',
+  ].join('\n');
+  fs.writeFileSync(missingStatusFile, missingStatusCampaign);
+  assert.throws(
+    () => updatePhaseStatus(missingStatusFile, 1, 'complete'),
+    /missing Status column/
+  );
+  assert.strictEqual(fs.readFileSync(missingStatusFile, 'utf8'), missingStatusCampaign);
+
+  const missingHeaderFile = path.join(projectRoot, 'missing-header.md');
+  const missingHeaderCampaign = [
+    '# Campaign: Missing Header',
+    '',
+    '## Phases',
+    '',
+    'No phase table has been written yet.',
+  ].join('\n');
+  fs.writeFileSync(missingHeaderFile, missingHeaderCampaign);
+  assert.throws(
+    () => updatePhaseStatus(missingHeaderFile, 1, 'complete'),
+    /missing Phase\/# and Status column/
+  );
+  assert.strictEqual(fs.readFileSync(missingHeaderFile, 'utf8'), missingHeaderCampaign);
+
+  const missingPhaseFile = path.join(projectRoot, 'missing-phase.md');
+  const missingPhaseCampaign = makePhasedCampaign('Missing Phase', ['pending']);
+  fs.writeFileSync(missingPhaseFile, missingPhaseCampaign);
+  assert.throws(() => updatePhaseStatus(missingPhaseFile, 9, 'complete'), /phase 9 not found/);
+  assert.strictEqual(fs.readFileSync(missingPhaseFile, 'utf8'), missingPhaseCampaign);
+
+  const atomicFile = path.join(projectRoot, 'atomic.md');
+  const atomicCampaign = makePhasedCampaign('Atomic Failure', ['pending']);
+  fs.writeFileSync(atomicFile, atomicCampaign);
+  const originalRenameSync = fs.renameSync;
+  try {
+    fs.renameSync = () => { throw new Error('synthetic rename failure'); };
+    assert.throws(
+      () => updatePhaseStatus(atomicFile, 1, 'complete'),
+      /synthetic rename failure/
+    );
+  } finally {
+    fs.renameSync = originalRenameSync;
+  }
+  assert.strictEqual(fs.readFileSync(atomicFile, 'utf8'), atomicCampaign);
+  assert.deepStrictEqual(
+    fs.readdirSync(projectRoot).filter((name) => name.includes('.tmp-')),
+    []
   );
 });
 
