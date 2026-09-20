@@ -14,6 +14,7 @@ const {
   validateControlResult,
 } = require('../../core/operations');
 const configControl = require('../../core/config');
+const { createProtocolAdapter, validateJsonRpcRequest } = require('../protocol-adapter');
 
 const PROJECT_ROOT = fixedProjectRoot(process.env.CITADEL_PROJECT_ROOT || process.cwd());
 const CITADEL_ROOT = path.resolve(__dirname, '..', '..');
@@ -247,31 +248,45 @@ function handleTool(name, args) {
 }
 
 function respond(id, result) {
+  if (id === undefined) return;
   process.stdout.write(`${JSON.stringify({ jsonrpc: '2.0', id, result })}\n`);
 }
 
 function respondError(id, code, message, data) {
+  if (id === undefined) return;
   const error = { code, message };
   if (data !== undefined) error.data = data;
   process.stdout.write(`${JSON.stringify({ jsonrpc: '2.0', id, error })}\n`);
 }
 
-function handleRequest(req) {
-  if (!isPlainObject(req) || req.jsonrpc !== '2.0' || typeof req.method !== 'string') {
-    respondError(req?.id ?? null, -32600, 'Invalid Request');
+const protocolAdapter = createProtocolAdapter({
+  respond,
+  respondError,
+  initializeResult: () => ({
+    capabilities: { tools: {}, resources: {} },
+    serverInfo: { name: 'citadel-state', version: '1.2.0' },
+    instructions: 'Read operation state, then submit typed intents. This server never executes arbitrary commands or edits campaign files.',
+  }),
+});
+
+function handleRequest(message) {
+  const validation = validateJsonRpcRequest(message);
+  if (!validation.ok) {
+    if (!validation.notification) {
+      respondError(validation.id, validation.error.code, validation.error.message);
+    }
     return;
   }
-  const { id, method, params } = req;
-  if (method === 'initialize') {
-    respond(id, {
-      protocolVersion: '2024-11-05', capabilities: { tools: {}, resources: {} },
-      serverInfo: { name: 'citadel-state', version: '1.2.0' },
-      instructions: 'Read operation state, then submit typed intents. This server never executes arbitrary commands or edits campaign files.',
-    });
-    return;
-  }
-  if (method === 'notifications/initialized') return;
-  if (method === 'tools/list') { respond(id, { tools: TOOL_DEFS }); return; }
+  const req = validation.request;
+  const accepted = protocolAdapter.accept(req);
+  if (accepted.handled) return;
+  const { id, method } = req;
+  const params = protocolAdapter.normalizeParams(req.params);
+  const respondResult = (result, options) => respond(
+    id,
+    accepted.modern ? protocolAdapter.decorateResult(result, options) : result,
+  );
+  if (method === 'tools/list') { respondResult({ tools: TOOL_DEFS }, { cacheable: true }); return; }
   if (method === 'tools/call') {
     if (!isPlainObject(params) || Object.keys(params).some((key) => !['name', 'arguments', '_meta'].includes(key))
       || typeof params.name !== 'string') {
@@ -282,11 +297,14 @@ function handleRequest(req) {
     if (handled.error) {
       respondError(id, handled.error.code, handled.error.message, handled.error.data);
     }
-    else respond(id, handled.result);
+    else respondResult(handled.result);
     return;
   }
   if (method === 'resources/list') {
-    respond(id, { resources: [{ uri: 'citadel://status', name: 'Citadel Status', mimeType: 'application/json' }] });
+    respondResult(
+      { resources: [{ uri: 'citadel://status', name: 'Citadel Status', mimeType: 'application/json' }] },
+      { cacheable: true },
+    );
     return;
   }
   if (method === 'resources/read' && isPlainObject(params) && params.uri === 'citadel://status') {
@@ -295,13 +313,13 @@ function handleRequest(req) {
       respondError(id, handled.error.code, handled.error.message, handled.error.data);
       return;
     }
-    respond(id, {
+    respondResult({
       contents: [{
         uri: 'citadel://status',
         mimeType: 'application/json',
         text: handled.result.content[0].text,
       }],
-    });
+    }, { cacheable: true });
     return;
   }
   if (id !== undefined) respondError(id, -32601, `Unknown method: ${method}`);

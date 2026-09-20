@@ -1,0 +1,43 @@
+{
+  "formatVersion": 1,
+  "schemaRepository": "https://github.com/modelcontextprotocol/modelcontextprotocol",
+  "artifacts": [
+    {
+      "revision": "2024-11-05",
+      "commit": "0d63bea927001bedf3be3e59be735c979ba0aacb",
+      "path": "schema/schema.json",
+      "sha256": "56d9e706cc8b0daf690a483960aa4ba62217c863d36ff1d7f8bbb83ab049903d"
+    },
+    {
+      "revision": "2025-03-26",
+      "commit": "9236eb1cbfa02c17ab45c83a7bdbe55c450070be",
+      "path": "schema/2025-03-26/schema.json",
+      "sha256": "dd1619bf96fcd8c50fe46f0dd05b4b9bb9356010040ae985fa595fee226ff4ed"
+    },
+    {
+      "revision": "2025-06-18",
+      "commit": "f5ccad944fdf2b7d9cc70cf817f66ca5a8aa03a4",
+      "path": "schema/2025-06-18/schema.json",
+      "sha256": "05020a692319467847cdb1794b1306567f52860353b5ff2f2bc2b0140819305b"
+    },
+    {
+      "revision": "2025-11-25",
+      "commit": "38c84e9f93ad191d9eb26d92b945d17bd0efcaf3",
+      "path": "schema/2025-11-25/schema.json",
+      "sha256": "1ffe4c5577974012f5fa02af14ea88df4b7146679df1abaaad497c8d9230ca8a"
+    },
+    {
+      "revision": "2026-07-28",
+      "commit": "5f5440bb26a62e2cf3440b92da5a667efa03b267",
+      "path": "schema/2026-07-28/schema.json",
+      "sha256": "ef70b61f99b6d2e5e3b46863822eab08dff6a45bedc7a08914e0e5b133f40203"
+    }
+  ],
+  "upstreamConformanceBoundary": {
+    "repository": "https://github.com/modelcontextprotocol/conformance",
+    "commit": "7169291ec0b68eb370fddcd9947313ab0d5e4156",
+    "path": "README.md",
+    "sha256": "8bd88fc81dec8dcf27a544848246f54c0e3d71b18bef4becdcc093ac876a29f5",
+    "stdioServerTrackingIssue": "https://github.com/modelcontextprotocol/conformance/issues/258"
+  }
+}

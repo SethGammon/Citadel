@@ -3,6 +3,19 @@
 Provides a `smart_read` tool that compresses large file reads before they land
 in Claude's context window.
 
+## Protocol and distribution
+
+The server uses newline-delimited JSON-RPC 2.0 over stdio only. It supports
+handshake revisions `2024-11-05`, `2025-03-26`, `2025-06-18`, and
+`2025-11-25`, plus the per-request-metadata revision `2026-07-28`. The shared
+adapter, lifecycle rules, modern metadata requirements, and error behavior are
+documented in [`docs/MCP_PROTOCOL_SUPPORT.md`](../../docs/MCP_PROTOCOL_SUPPORT.md).
+
+`context-compress` is source-local. It is not registered by Citadel's bundled
+Claude/Codex MCP manifests and is not included in the private `npm pack`
+boundary or the GitHub Release artifact. Run it from a full source checkout
+with the fixed project-root configuration below.
+
 ## Why
 
 Context rot degrades all models as context grows (Morph, 2026). Raw file reads
