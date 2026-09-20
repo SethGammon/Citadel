@@ -1,7 +1,7 @@
 {
   "name": "citadel",
   "version": "1.4.3",
-  "description": "Codex-native harness for routing requests, preserving run state, enforcing hooks, and recording evidence.",
+  "description": "Codex-native agent orchestration harness for durable campaigns, skills, hooks, telemetry, and parallel work.",
   "author": {
     "name": "Citadel",
     "url": "https://github.com/SethGammon/Citadel"
@@ -33,14 +33,17 @@
     "websiteURL": "https://sethgammon.github.io/Citadel/",
     "privacyPolicyURL": "https://github.com/SethGammon/Citadel/blob/main/PRIVACY.md",
     "termsOfServiceURL": "https://github.com/SethGammon/Citadel/blob/main/LICENSE",
-    "shortDescription": "Route work, preserve state, enforce hooks, and surface evidence",
-    "longDescription": "Citadel gives Codex one request front door, durable local run state, policy hooks, reviewable evidence, and explicit Needs You boundaries.",
+    "shortDescription": "Codex-native orchestration: 48 skills, campaigns, fleet coordination, quality gates",
+    "longDescription": "Citadel adds durable planning state, reusable skills, lifecycle hooks, telemetry, PR triage, and coordinated multi-agent workflows to Codex.",
     "developerName": "Citadel",
     "category": "Developer Tools",
     "capabilities": [
-      "intent-routing",
-      "durable-state",
+      "orchestration",
+      "campaigns",
+      "parallel-agents",
       "quality-gates",
+      "telemetry",
+      "intent-routing",
       "mcp",
       "codex-hooks"
     ],
