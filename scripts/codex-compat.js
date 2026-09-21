@@ -459,7 +459,7 @@ function generatePluginManifest() {
       privacyPolicyURL: 'https://github.com/SethGammon/Citadel/blob/main/PRIVACY.md',
       termsOfServiceURL: 'https://github.com/SethGammon/Citadel/blob/main/LICENSE',
       shortDescription: `Codex-native orchestration: ${skillCount} skills, campaigns, fleet coordination, quality gates`,
-      longDescription: 'Citadel adds durable planning state, reusable skills, lifecycle hooks, telemetry, PR triage, and coordinated multi-agent workflows to Codex.',
+      longDescription: 'Citadel adds durable planning state, reusable skills, lifecycle hooks, telemetry, intent routing, and coordinated multi-agent workflows to Codex.',
       developerName: 'Citadel',
       category: 'Developer Tools',
       capabilities: [
