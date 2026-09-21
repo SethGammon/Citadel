@@ -11,6 +11,13 @@ const config = require('../core/config');
 const claudeRuntime = require('../runtimes/claude-code/runtime');
 const codexRuntime = require('../runtimes/codex/runtime');
 const { installClaudeHooks } = require('../runtimes/claude-code/generators/install-hooks');
+const {
+  CLIENT_CAPABILITIES_META_KEY,
+  CLIENT_INFO_META_KEY,
+  MODERN_PROTOCOL_VERSION,
+  PROTOCOL_VERSION_META_KEY,
+  SERVER_INFO_META_KEY,
+} = require('../mcp-servers/protocol-adapter');
 
 const {
   buildCodexExecArgs,
@@ -85,6 +92,34 @@ function runMcpConversation(projectRoot, server, requests) {
   assert.equal(result.status, 0, result.stderr);
   assert(!result.stderr.includes('MODULE_NOT_FOUND'), result.stderr);
   return result.stdout.split(/\r?\n/).filter(Boolean).map((line) => JSON.parse(line));
+}
+
+function modernMcpRequest(id, method, params = {}) {
+  return {
+    jsonrpc: '2.0',
+    id,
+    method,
+    params: {
+      ...params,
+      _meta: {
+        [PROTOCOL_VERSION_META_KEY]: MODERN_PROTOCOL_VERSION,
+        [CLIENT_CAPABILITIES_META_KEY]: {},
+        [CLIENT_INFO_META_KEY]: { name: 'codex-native-integration', version: '1.0.0' },
+      },
+    },
+  };
+}
+
+function assertModernMcpResult(message, serverInfo, { cacheable = false } = {}) {
+  assert.equal(message?.result?.resultType, 'complete');
+  assert.deepEqual(message.result._meta, { [SERVER_INFO_META_KEY]: serverInfo });
+  if (cacheable) {
+    assert.equal(message.result.ttlMs, 0);
+    assert.equal(message.result.cacheScope, 'private');
+  } else {
+    assert.equal(message.result.ttlMs, undefined);
+    assert.equal(message.result.cacheScope, undefined);
+  }
 }
 
 function mcpToolResponse(projectRoot, server, runtimeId) {
@@ -268,6 +303,27 @@ function testInstalledCodexMcpEntrypoints() {
     assert.equal(fs.realpathSync(status.projectRoot), fs.realpathSync(projectRoot),
       'citadel-state must operate on the consumer repository');
 
+    const stateModernMessages = runMcpConversation(projectRoot, state, [
+      modernMcpRequest('state-discover', 'server/discover'),
+      modernMcpRequest('state-list', 'tools/list'),
+      modernMcpRequest('state-status', 'tools/call', { name: 'citadel_status', arguments: {} }),
+    ]);
+    const stateInfo = { name: 'citadel-state', version: '1.2.0' };
+    assertModernMcpResult(
+      stateModernMessages.find((message) => message.id === 'state-discover'),
+      stateInfo,
+      { cacheable: true },
+    );
+    assertModernMcpResult(
+      stateModernMessages.find((message) => message.id === 'state-list'),
+      stateInfo,
+      { cacheable: true },
+    );
+    assertModernMcpResult(
+      stateModernMessages.find((message) => message.id === 'state-status'),
+      stateInfo,
+    );
+
     const memory = parseGeneratedMcpServer(config, 'codebase-memory');
     const memoryMessages = runMcpConversation(projectRoot, memory, [
       ...commonRequests,
@@ -282,6 +338,27 @@ function testInstalledCodexMcpEntrypoints() {
     assert(consumerIndex.includes('src/consumer-only.js'), 'codebase-memory indexed the wrong repository');
     assert(!fs.existsSync(path.join(pluginRoot, '.planning', 'map', 'index.json')),
       'codebase-memory must not index the installed plugin root');
+
+    const memoryModernMessages = runMcpConversation(projectRoot, memory, [
+      modernMcpRequest('memory-discover', 'server/discover'),
+      modernMcpRequest('memory-list', 'tools/list'),
+      modernMcpRequest('memory-status', 'tools/call', { name: 'index_status', arguments: {} }),
+    ]);
+    const memoryInfo = { name: 'codebase-memory', version: '1.0.0' };
+    assertModernMcpResult(
+      memoryModernMessages.find((message) => message.id === 'memory-discover'),
+      memoryInfo,
+      { cacheable: true },
+    );
+    assertModernMcpResult(
+      memoryModernMessages.find((message) => message.id === 'memory-list'),
+      memoryInfo,
+      { cacheable: true },
+    );
+    assertModernMcpResult(
+      memoryModernMessages.find((message) => message.id === 'memory-status'),
+      memoryInfo,
+    );
   } finally {
     fs.rmSync(tmp, { recursive: true, force: true });
   }

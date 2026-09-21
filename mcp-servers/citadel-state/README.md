@@ -4,6 +4,18 @@
 operation records and enqueue Operations Protocol intents. It does not run shell commands, edit
 campaign files, or directly change operation state.
 
+## Protocol and distribution
+
+The server uses newline-delimited JSON-RPC 2.0 over stdio only. It supports
+handshake revisions `2024-11-05`, `2025-03-26`, `2025-06-18`, and
+`2025-11-25`, plus the per-request-metadata revision `2026-07-28`. The shared
+adapter, lifecycle rules, modern metadata requirements, and error behavior are
+documented in [`docs/MCP_PROTOCOL_SUPPORT.md`](../../docs/MCP_PROTOCOL_SUPPORT.md).
+
+`citadel-state` is a distributed server: it ships in both the private local
+`npm pack` boundary and the supported GitHub Release artifact. Its entrypoint
+and shared `mcp-servers/protocol-adapter.js` are required runtime files in both.
+
 ## Tools
 
 | Tool | Behavior |

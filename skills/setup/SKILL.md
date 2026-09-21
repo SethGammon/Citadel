@@ -51,7 +51,7 @@ Y or Enter → set `restoreArchive = true`, restore after Step 1 (below). n → 
 | `backlog.md` | Split sections → `.planning/intake/{name}.md` |
 | `discoveries.md` | Split sections → `.planning/discoveries/{name}.md` |
 | `project.md` | Strip frontmatter → `.citadel/project.md` |
-| `harness.json.md` | Strip frontmatter → `.claude/harness.json` |
+| `harness.json.md` | Strip frontmatter → `.claude/harness.json` (Citadel's shared config path for all runtimes, including Codex) |
 
 After restore: `  ✓ Archive restored — {N} campaigns, {N} postmortems, {N} backlog items`
 
@@ -119,7 +119,7 @@ Preview the deterministic version-2 config migration without writing:
 
 ```bash
 node {citadelRoot}/scripts/citadel-config.js initialize \
-  --input .planning/tmp/citadel-stack.json --runtime {claude-code|codex} --json
+  --input .planning/tmp/citadel-stack.json --runtime {claude-code|codex|opencode} --json
 ```
 
 Show profile, bundles, source/candidate digests, and changed fields. Apply only
@@ -127,7 +127,7 @@ after the selected setup mode authorizes this exact plan:
 
 ```bash
 node {citadelRoot}/scripts/citadel-config.js initialize \
-  --input .planning/tmp/citadel-stack.json --runtime {claude-code|codex} --apply --json
+  --input .planning/tmp/citadel-stack.json --runtime {claude-code|codex|opencode} --apply --json
 ```
 
 Recommended and Express use `standard@1.0.0` with Core + Persistence. Full Tour
@@ -152,7 +152,9 @@ Note: `perFile` applies to Python checkers only; TypeScript always runs a projec
 
 ### Step 4: CLAUDE.md + AGENTS.md (all modes)
 
-Run `node {citadelRoot}/scripts/bootstrap-project-guidance.js --project-root {projectRoot}` — creates `.citadel/project.md` and generates `CLAUDE.md` and `AGENTS.md`. Safe to run — only creates files that don't exist.
+Run `node {citadelRoot}/scripts/bootstrap-project-guidance.js --project-root {projectRoot}` — creates `.citadel/project.md` and compatible `CLAUDE.md` plus `AGENTS.md` guidance. Safe to run — it preserves user-authored files.
+
+Claude Code v2.1.277 or later can use only `AGENTS.md`, but the version alone does not prove the built-in support is available in the current environment. When the operator has confirmed the **Project instructions** setting or an `AGENTS.md loaded` startup notice, run `node {citadelRoot}/scripts/bootstrap-project-guidance.js --project-root {projectRoot} --claude-agents-md-supported`. The script detects the installed Claude Code version, migrates only byte-for-byte unchanged Citadel guidance, and retains `CLAUDE.md` when the version or capability is unknown or project guidance would take precedence.
 
 **Project description (Recommended + Full Tour only):** ask `"What's this project? One line is fine — or press Enter to use the package name."` Skip if CLAUDE.md already exists with content.
 

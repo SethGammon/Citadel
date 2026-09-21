@@ -27,6 +27,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const { createProtocolAdapter, validateJsonRpcRequest } = require('../protocol-adapter');
 
 const SECRET_BASENAMES = new Set([
   '.git-credentials',
@@ -328,31 +329,50 @@ function smartRead(filePath, hint) {
 // ── MCP protocol ─────────────────────────────────────────────────────────────
 
 function respond(id, result) {
+  if (id === undefined) return;
   const msg = JSON.stringify({ jsonrpc: '2.0', id, result });
   process.stdout.write(msg + '\n');
 }
 
-function respondError(id, code, message) {
-  const msg = JSON.stringify({ jsonrpc: '2.0', id, error: { code, message } });
+function respondError(id, code, message, data, omitId = false) {
+  if (id === undefined && !omitId) return;
+  const error = { code, message };
+  if (data !== undefined) error.data = data;
+  const msg = JSON.stringify({ jsonrpc: '2.0', ...(omitId ? {} : { id }), error });
   process.stdout.write(msg + '\n');
 }
 
-function handleRequest(req) {
-  const { id, method, params } = req;
+const protocolAdapter = createProtocolAdapter({
+  respond,
+  respondError,
+  initializeResult: () => ({
+    capabilities: { tools: {} },
+    serverInfo: { name: 'context-compress', version: '1.0.2' },
+  }),
+});
 
-  if (method === 'initialize') {
-    respond(id, {
-      protocolVersion: '2024-11-05',
-      capabilities: { tools: {} },
-      serverInfo: { name: 'context-compress', version: '1.0.2' },
-    });
+function handleRequest(message) {
+  const validation = validateJsonRpcRequest(message);
+  if (!validation.ok) {
+    if (!validation.notification) {
+      const omitId = validation.id === null
+        && (validation.modern || protocolAdapter.getEra() === 'modern');
+      respondError(validation.id, validation.error.code, validation.error.message, undefined, omitId);
+    }
     return;
   }
-
-  if (method === 'notifications/initialized') return;
+  const req = validation.request;
+  const accepted = protocolAdapter.accept(req);
+  if (accepted.handled) return;
+  const { id, method } = req;
+  const params = protocolAdapter.normalizeParams(req.params);
+  const respondResult = (result, options) => respond(
+    id,
+    accepted.modern ? protocolAdapter.decorateResult(result, options) : result,
+  );
 
   if (method === 'tools/list') {
-    respond(id, { tools: TOOL_DEFS });
+    respondResult({ tools: TOOL_DEFS }, { cacheable: true });
     return;
   }
 
@@ -362,12 +382,12 @@ function handleRequest(req) {
     if (name === 'smart_read') {
       const result = smartRead(args?.path || '', args?.hint || '');
       if (result.error) {
-        respond(id, {
+        respondResult({
           content: [{ type: 'text', text: `Error: ${result.error}` }],
           isError: true,
         });
       } else {
-        respond(id, {
+        respondResult({
           content: [{ type: 'text', text: result.content }],
         });
       }
@@ -396,8 +416,8 @@ process.stdin.on('data', (chunk) => {
     if (!trimmed) continue;
     try {
       handleRequest(JSON.parse(trimmed));
-    } catch (e) {
-      // Malformed JSON -- ignore
+    } catch (_error) {
+      respondError(null, -32700, 'Parse error', undefined, protocolAdapter.getEra() === 'modern');
     }
   }
 });

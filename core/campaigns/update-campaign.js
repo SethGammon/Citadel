@@ -80,44 +80,130 @@ function completeCampaign(filePath, projectRoot, options = {}) {
 }
 
 /**
- * Update the status cell of a specific phase row in the Phases table.
+ * Update the status cell of a specific phase row in a campaign phase table.
  *
- * Finds the row whose first data cell matches `phaseNumber`, replaces the
- * Status cell in place, and writes the file. The rest of the row is untouched.
+ * Finds a table scoped to a Phases or Phase End Conditions section, derives
+ * the phase and status columns from its header, and updates only the matching
+ * Status cell. Both legacy `# | Status | ...` and current
+ * `Phase | ... | Status | ...` layouts are supported.
  *
  * Valid status values (by convention): pending, in-progress, design-complete,
  * complete, partial, failed, skipped.
  *
  * @param {string} filePath    - Absolute path to the campaign markdown file
- * @param {number} phaseNumber - Phase number to update (matches the # column)
+ * @param {number} phaseNumber - Phase number to update (matches Phase or #)
  * @param {string} newStatus   - New status string to write into the Status cell
  * @returns {object} Updated campaign object from readCampaignFile
  */
 function updatePhaseStatus(filePath, phaseNumber, newStatus) {
-  let content = fs.readFileSync(filePath, 'utf8');
+  const content = fs.readFileSync(filePath, 'utf8');
+  const lineEnding = content.includes('\r\n') ? '\r\n' : '\n';
+  const lines = content.split(/\r?\n/);
+  const phaseValue = String(phaseNumber).trim();
+  let phaseSectionLevel = null;
+  let sawPhaseSection = false;
+  let sawPhaseColumn = false;
+  let sawStatusColumn = false;
+  let sawPhaseTableHeader = false;
+  let matchedRowIndex = -1;
+  let matchedStatusIndex = -1;
 
-  // Find the Phases section and locate the matching row.
-  // Row format: | N | status | type | name | done when |
-  // We match the row by its leading number cell (| N |) and rewrite the
-  // second cell (Status) without touching anything else.
-  const rowPattern = new RegExp(
-    `(^\\|\\s*${phaseNumber}\\s*\\|\\s*)([^|]+)(\\|.*)$`,
-    'm'
-  );
+  const splitRow = (line) => {
+    if (!/^\s*\|.*\|\s*$/.test(line)) return null;
+    return line.trim().slice(1, -1).split('|');
+  };
+  const isSeparator = (cells) =>
+    cells && cells.length > 0 &&
+    cells.every((cell) => /^:?-{3,}:?$/.test(cell.trim()));
+  const isPhaseValue = (cell) => {
+    const normalized = cell.trim().toLowerCase();
+    return normalized === phaseValue.toLowerCase() ||
+      normalized === `phase ${phaseValue}`.toLowerCase();
+  };
 
-  if (!rowPattern.test(content)) {
+  for (let index = 0; index < lines.length; index += 1) {
+    const heading = lines[index].match(/^\s*(#{1,6})\s+(.+?)\s*#*\s*$/);
+    if (heading) {
+      const level = heading[1].length;
+      const title = heading[2].trim().toLowerCase();
+      if (title === 'phases' || title === 'phase end conditions') {
+        phaseSectionLevel = level;
+        sawPhaseSection = true;
+      } else if (phaseSectionLevel !== null && level <= phaseSectionLevel) {
+        phaseSectionLevel = null;
+      }
+      continue;
+    }
+    if (phaseSectionLevel === null) continue;
+
+    const headerCells = splitRow(lines[index]);
+    const separatorCells = index + 1 < lines.length
+      ? splitRow(lines[index + 1])
+      : null;
+    if (!headerCells || !isSeparator(separatorCells) ||
+      headerCells.length !== separatorCells.length) continue;
+
+    const normalizedHeaders = headerCells.map((cell) => cell.trim().toLowerCase());
+    const phaseIndex = normalizedHeaders.findIndex((cell) => cell === 'phase' || cell === '#');
+    const statusIndex = normalizedHeaders.indexOf('status');
+    sawPhaseColumn = sawPhaseColumn || phaseIndex >= 0;
+    sawStatusColumn = sawStatusColumn || statusIndex >= 0;
+    if (phaseIndex < 0 || statusIndex < 0) continue;
+    sawPhaseTableHeader = true;
+
+    for (let rowIndex = index + 2; rowIndex < lines.length; rowIndex += 1) {
+      const rowCells = splitRow(lines[rowIndex]);
+      if (!rowCells) break;
+      if (rowCells.length <= Math.max(phaseIndex, statusIndex)) continue;
+      if (isPhaseValue(rowCells[phaseIndex])) {
+        matchedRowIndex = rowIndex;
+        matchedStatusIndex = statusIndex;
+        break;
+      }
+    }
+    if (matchedRowIndex >= 0) break;
+  }
+
+  if (!sawPhaseSection) {
+    throw new Error(
+      `updatePhaseStatus: phase table section not found in ${path.basename(filePath)}`
+    );
+  }
+  if (!sawPhaseTableHeader) {
+    const missing = [];
+    if (!sawPhaseColumn) missing.push('Phase/#');
+    if (!sawStatusColumn) missing.push('Status');
+    const detail = missing.length > 0
+      ? `missing ${missing.join(' and ')} column`
+      : 'requires Phase/# and Status columns in the same header';
+    throw new Error(
+      `updatePhaseStatus: phase table ${detail} in ${path.basename(filePath)}`
+    );
+  }
+  if (matchedRowIndex < 0) {
     throw new Error(
       `updatePhaseStatus: phase ${phaseNumber} not found in ${path.basename(filePath)}`
     );
   }
 
-  content = content.replace(rowPattern, (_, pre, _oldStatus, rest) => {
-    // Preserve original padding width if possible
-    const padded = ` ${newStatus} `;
-    return `${pre}${padded}${rest}`;
-  });
+  const rowCells = splitRow(lines[matchedRowIndex]);
+  const statusCell = rowCells[matchedStatusIndex];
+  const leadingWhitespace = statusCell.match(/^\s*/)[0];
+  const trailingWhitespace = statusCell.match(/\s*$/)[0];
+  rowCells[matchedStatusIndex] =
+    `${leadingWhitespace}${newStatus}${trailingWhitespace}`;
+  const originalIndent = lines[matchedRowIndex].match(/^\s*/)[0];
+  lines[matchedRowIndex] = `${originalIndent}|${rowCells.join('|')}|`;
+  const updatedContent = lines.join(lineEnding);
 
-  fs.writeFileSync(filePath, content);
+  const temporaryPath = `${filePath}.tmp-${process.pid}-${Date.now()}-` +
+    Math.random().toString(16).slice(2);
+  try {
+    fs.writeFileSync(temporaryPath, updatedContent);
+    fs.renameSync(temporaryPath, filePath);
+  } finally {
+    if (fs.existsSync(temporaryPath)) fs.rmSync(temporaryPath, { force: true });
+  }
   return readCampaignFile(filePath);
 }
 

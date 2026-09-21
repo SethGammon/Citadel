@@ -83,6 +83,79 @@ try {
 // wrapped as hookSpecificOutput JSON. PostCompact supports only the universal
 // output fields, so its text becomes systemMessage. Stop plain text must be
 // redirected to stderr, while valid Stop JSON passes through unchanged.
+const preToolLegacyBlock = JSON.stringify({ decision: 'block', reason: 'stop this tool' });
+assert.equal(projectCodexOutput({
+  stdout: preToolLegacyBlock,
+  stderr: '',
+  nativeEventName: 'PreToolUse',
+}).stdout, preToolLegacyBlock, 'PreToolUse legacy block should retain its decision');
+
+const preToolLegacyBlockWithMessage = JSON.stringify({
+  decision: 'block',
+  reason: 'stop this tool',
+  systemMessage: 'Citadel blocked this tool',
+});
+assert.equal(projectCodexOutput({
+  stdout: preToolLegacyBlockWithMessage,
+  stderr: '',
+  nativeEventName: 'PreToolUse',
+}).stdout, preToolLegacyBlockWithMessage, 'PreToolUse legacy block should retain its system message');
+
+const preToolWarning = projectCodexOutput({
+  stdout: 'warning from pre-tool hook',
+  stderr: '',
+  nativeEventName: 'PreToolUse',
+});
+assert.deepEqual(JSON.parse(preToolWarning.stdout), {
+  hookSpecificOutput: {
+    hookEventName: 'PreToolUse',
+    additionalContext: 'warning from pre-tool hook',
+  },
+}, 'PreToolUse plain text should become additional context');
+
+const preToolUiWarning = projectCodexOutput({
+  stdout: JSON.stringify({ message: 'warning from Citadel UI' }),
+  stderr: '',
+  nativeEventName: 'PreToolUse',
+});
+assert.deepEqual(JSON.parse(preToolUiWarning.stdout), {
+  hookSpecificOutput: {
+    hookEventName: 'PreToolUse',
+    additionalContext: 'warning from Citadel UI',
+  },
+}, 'PreToolUse Citadel UI JSON should project only its message');
+
+const validPreToolContext = JSON.stringify({
+  hookSpecificOutput: {
+    hookEventName: 'PreToolUse',
+    additionalContext: 'already valid context',
+  },
+});
+assert.equal(projectCodexOutput({
+  stdout: validPreToolContext,
+  stderr: '',
+  nativeEventName: 'PreToolUse',
+}).stdout, validPreToolContext, 'valid PreToolUse context should pass through unchanged');
+
+const validPreToolDenial = JSON.stringify({
+  hookSpecificOutput: {
+    hookEventName: 'PreToolUse',
+    permissionDecision: 'deny',
+    permissionDecisionReason: 'operation blocked',
+  },
+});
+assert.equal(projectCodexOutput({
+  stdout: validPreToolDenial,
+  stderr: '',
+  nativeEventName: 'PreToolUse',
+}).stdout, validPreToolDenial, 'valid PreToolUse denial should pass through unchanged');
+
+assert.equal(projectCodexOutput({
+  stdout: '',
+  stderr: '',
+  nativeEventName: 'PreToolUse',
+}).stdout, '', 'empty PreToolUse allow should keep stdout empty');
+
 const hooksDir = path.join(__dirname, '..', 'hooks_src');
 const plainHook = path.join(hooksDir, 'test-fixture-plain-stop.js');
 const jsonHook = path.join(hooksDir, 'test-fixture-json-stop.js');

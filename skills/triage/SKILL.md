@@ -156,7 +156,7 @@ Write a per-PR resolution block (full template: docs/TRIAGE.md#pr-resolution-tem
 
 **Affected Component:**
 - Citadel hooks / skills / agents
-- `.claude/harness.json` — project configuration
+- `.claude/harness.json` — shared Citadel project configuration for all runtimes, including Codex
 - `.planning/` — planning/campaign system
 - `docs/` — documentation
 - Root files — project setup

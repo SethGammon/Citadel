@@ -53,6 +53,17 @@ function projectOpencodeGuidance(options = {}) {
 
   const ensured = ensureProjectSpec({ citadelRoot, projectRoot, ...options });
   const content = withGuidanceOwner(OPENCODE_GUIDANCE_TARGET.render(ensured.loaded.spec));
+  if (existed && fs.readFileSync(filePath, 'utf8') === content) {
+    return {
+      specPath: ensured.specPath,
+      specCreated: ensured.created,
+      filePath,
+      written: false,
+      skipped: false,
+      action: 'up-to-date',
+      bytes: Buffer.byteLength(content),
+    };
+  }
   fs.writeFileSync(filePath, content, 'utf8');
 
   return {

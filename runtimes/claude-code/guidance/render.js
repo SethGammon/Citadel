@@ -3,6 +3,7 @@
 'use strict';
 
 const { renderClaudeGuidance } = require('../../../core/project/render-claude-guidance');
+const { selectClaudeGuidanceTarget } = require('./select-target');
 
 const CLAUDE_GUIDANCE_TARGET = Object.freeze({
   runtime: 'claude-code',
@@ -13,4 +14,5 @@ const CLAUDE_GUIDANCE_TARGET = Object.freeze({
 module.exports = Object.freeze({
   CLAUDE_GUIDANCE_TARGET,
   renderClaudeGuidance,
+  selectClaudeGuidanceTarget,
 });

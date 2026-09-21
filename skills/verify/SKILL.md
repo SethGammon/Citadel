@@ -105,7 +105,7 @@ Failing checks:
 Output: "HOOK HEALTH: FAIL — .planning/telemetry/ not found. Run: node hooks_src/init-project.js"
 
 **Hooks installed but telemetry still zero**: The project may have a harness.json
-that disables telemetry. Check `features.telemetry` in .claude/harness.json.
+that disables telemetry. Check `features.telemetry` in `.claude/harness.json`, Citadel's shared config path for all runtimes including Codex.
 
 **First-time run (no baseline)**: If the files don't exist before the test,
 they should be created during the test. Treat "file created" as equivalent to "grew".

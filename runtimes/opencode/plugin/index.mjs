@@ -26,6 +26,7 @@ const require = createRequire(import.meta.url);
 const runner = require('./hook-runner.js');
 const notices = require('./pending-notices.js');
 const reprompt = require('./reprompt.js');
+const skillCommand = require('./skill-command.js');
 
 // A part pushed onto `output.parts` is a materialized Part, not the input shape:
 // opencode validates it against a schema requiring `id` (`^prt`), `sessionID` and
@@ -58,6 +59,21 @@ function blockedError(outcome) {
   return error;
 }
 
+function taskLifecyclePayload(input, args, directory, status) {
+  return {
+    ...input,
+    args,
+    directory,
+    task_id: input?.callID || input?.callId || null,
+    agent_id: input?.callID || input?.callId || null,
+    subagent_id: input?.callID || input?.callId || null,
+    agent_type: args?.agent || null,
+    subagent_type: args?.agent || null,
+    title: args?.description || args?.prompt || args?.agent || null,
+    status,
+  };
+}
+
 async function observe(event, payload, options) {
   try {
     return await runner.runHooksForEvent(event, payload, options);
@@ -69,7 +85,9 @@ async function observe(event, payload, options) {
 }
 
 export const CitadelPlugin = async ({ project, directory, worktree, client } = {}) => {
-  const projectRoot = worktree || directory || project?.worktree || process.cwd();
+  // `worktree` may be a broad filesystem root for a non-Git project. OpenCode's
+  // active `directory` is the cwd skill commands must retain.
+  const projectRoot = directory || project?.worktree || worktree || process.cwd();
   const options = { projectRoot };
 
   // Read once per instance: the policy governs autonomous model turns, so it
@@ -122,7 +140,19 @@ export const CitadelPlugin = async ({ project, directory, worktree, client } = {
   if (start.messages.length) await log('info', 'citadel session start', { messages: start.messages });
 
   return {
+    async 'shell.env'(_input, output) {
+      skillCommand.injectShellEnvironment(output?.env, projectRoot);
+    },
+
     async 'tool.execute.before'(input, output) {
+      if (input?.tool === 'bash' && typeof output?.args?.command === 'string') {
+        const intercepted = skillCommand.interceptSlashCommand(output.args.command, projectRoot);
+        if (intercepted) {
+          const error = new Error(intercepted);
+          error.name = 'CitadelSlashCommandError';
+          throw error;
+        }
+      }
       const outcome = await runner.runHooksForEvent('tool.execute.before', {
         ...input,
         args: output.args,
@@ -130,6 +160,14 @@ export const CitadelPlugin = async ({ project, directory, worktree, client } = {
       }, options);
 
       if (outcome.blocked) throw blockedError(outcome);
+
+      // OpenCode has no TaskCreated event. Emit it only after the generic gate
+      // permits the delegation, so rejected task calls do not become starts.
+      if (input?.tool === 'task') {
+        const task = taskLifecyclePayload(input, output.args, projectRoot, 'created');
+        await observe('task.created', task, options);
+        await observe('subagent.start', task, options);
+      }
     },
 
     async 'tool.execute.after'(input, output) {
@@ -138,6 +176,19 @@ export const CitadelPlugin = async ({ project, directory, worktree, client } = {
         args: input.args,
         directory: projectRoot,
       }, options);
+
+      // The task tool returns only after its delegated agent finishes. Mirror
+      // Claude Code's TaskCompleted boundary and preserve a reported failure.
+      if (input?.tool === 'task') {
+        const task = taskLifecyclePayload(
+          input,
+          input.args,
+          projectRoot,
+          output?.status || (output?.error ? 'failed' : 'completed'),
+        );
+        await observe('task.completed', task, options);
+        await observe('subagent.stop', task, options);
+      }
 
       // Never throw here: the tool already ran, and rejecting would report a
       // successful call as failed. Append findings to the output the model sees.

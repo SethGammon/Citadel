@@ -12,8 +12,8 @@
  * change-impact with fan-in risk. The point is to let an agent answer structural
  * questions on a cold repo without grepping and reading file chains.
  *
- * Pure Node, no dependencies, MCP 2024-11-05 JSON-RPC over stdio — same shape as
- * mcp-servers/citadel-state. The index is a derived artifact at
+ * Pure Node, no dependencies, multi-revision MCP JSON-RPC over stdio — see
+ * docs/MCP_PROTOCOL_SUPPORT.md. The index is a derived artifact at
  * .planning/map/index.json; nothing leaves the machine.
  */
 
@@ -21,6 +21,7 @@ const fs = require('fs');
 const path = require('path');
 const { execFileSync } = require('child_process');
 const map = require('../../core/map');
+const { createProtocolAdapter, validateJsonRpcRequest } = require('../protocol-adapter');
 
 const PROJECT_ROOT = path.resolve(process.env.CITADEL_PROJECT_ROOT || process.cwd());
 const OUTPUT_PATH = map.defaultOutputPath(PROJECT_ROOT);
@@ -287,30 +288,49 @@ const HANDLERS = {
 };
 
 function respond(id, result) {
+  if (id === undefined) return;
   process.stdout.write(JSON.stringify({ jsonrpc: '2.0', id, result }) + '\n');
 }
 
-function respondError(id, code, message) {
-  process.stdout.write(JSON.stringify({ jsonrpc: '2.0', id, error: { code, message } }) + '\n');
+function respondError(id, code, message, data, omitId = false) {
+  if (id === undefined && !omitId) return;
+  const error = { code, message };
+  if (data !== undefined) error.data = data;
+  process.stdout.write(JSON.stringify({ jsonrpc: '2.0', ...(omitId ? {} : { id }), error }) + '\n');
 }
 
-function handleRequest(req) {
-  const { id, method, params } = req;
+const protocolAdapter = createProtocolAdapter({
+  respond,
+  respondError,
+  initializeResult: () => ({
+    capabilities: { tools: {}, resources: {} },
+    serverInfo: { name: 'codebase-memory', version: '1.0.0' },
+    instructions: 'Call get_architecture to orient on a cold repo, then who_imports / dependencies_of / trace_path / impact_of_change for structural questions instead of grepping. Index is read-only and derived; reindex after large pulls.',
+  }),
+});
 
-  if (method === 'initialize') {
-    respond(id, {
-      protocolVersion: '2024-11-05',
-      capabilities: { tools: {}, resources: {} },
-      serverInfo: { name: 'codebase-memory', version: '1.0.0' },
-      instructions: 'Call get_architecture to orient on a cold repo, then who_imports / dependencies_of / trace_path / impact_of_change for structural questions instead of grepping. Index is read-only and derived; reindex after large pulls.',
-    });
+function handleRequest(message) {
+  const validation = validateJsonRpcRequest(message);
+  if (!validation.ok) {
+    if (!validation.notification) {
+      const omitId = validation.id === null
+        && (validation.modern || protocolAdapter.getEra() === 'modern');
+      respondError(validation.id, validation.error.code, validation.error.message, undefined, omitId);
+    }
     return;
   }
-
-  if (method === 'notifications/initialized') return;
+  const req = validation.request;
+  const accepted = protocolAdapter.accept(req);
+  if (accepted.handled) return;
+  const { id, method } = req;
+  const params = protocolAdapter.normalizeParams(req.params);
+  const respondResult = (result, options) => respond(
+    id,
+    accepted.modern ? protocolAdapter.decorateResult(result, options) : result,
+  );
 
   if (method === 'tools/list') {
-    respond(id, { tools: TOOL_DEFS });
+    respondResult({ tools: TOOL_DEFS }, { cacheable: true });
     return;
   }
 
@@ -322,22 +342,25 @@ function handleRequest(req) {
       return;
     }
     try {
-      respond(id, { content: [{ type: 'text', text: JSON.stringify(handler(args), null, 2) }] });
+      respondResult({ content: [{ type: 'text', text: JSON.stringify(handler(args), null, 2) }] });
     } catch (err) {
-      respond(id, { isError: true, content: [{ type: 'text', text: `Tool ${name} failed: ${err.message}` }] });
+      respondResult({ isError: true, content: [{ type: 'text', text: `Tool ${name} failed: ${err.message}` }] });
     }
     return;
   }
 
   if (method === 'resources/list') {
-    respond(id, { resources: [{ uri: 'codebase://architecture', name: 'Codebase Architecture', mimeType: 'application/json' }] });
+    respondResult(
+      { resources: [{ uri: 'codebase://architecture', name: 'Codebase Architecture', mimeType: 'application/json' }] },
+      { cacheable: true },
+    );
     return;
   }
 
   if (method === 'resources/read' && params && params.uri === 'codebase://architecture') {
-    respond(id, {
+    respondResult({
       contents: [{ uri: 'codebase://architecture', mimeType: 'application/json', text: JSON.stringify(getArchitecture(), null, 2) }],
-    });
+    }, { cacheable: true });
     return;
   }
 
@@ -355,8 +378,8 @@ process.stdin.on('data', (chunk) => {
     if (!trimmed) continue;
     try {
       handleRequest(JSON.parse(trimmed));
-    } catch (err) {
-      respondError(null, -32700, `Parse error: ${err.message}`);
+    } catch (_error) {
+      respondError(null, -32700, 'Parse error', undefined, protocolAdapter.getEra() === 'modern');
     }
   }
 });
