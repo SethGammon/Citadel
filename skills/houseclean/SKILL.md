@@ -192,7 +192,7 @@ Move the main repo to another drive:
 robocopy "C:\Users\$env:USERNAME\Desktop\ProjectName" "F:\Projects\ProjectName" /E /MOVE
 ```
 
-After moving, record in `.claude/harness.json`:
+After moving, record in `.claude/harness.json` (Citadel's shared config path for all runtimes, including Codex):
 ```json
 { "storage": { "projects_root": "F:/Projects" } }
 ```
