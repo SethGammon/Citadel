@@ -9,14 +9,25 @@ It is **not** a replacement for `CLAUDE.md` / `AGENTS.md` / capability manifests
 (those are human-authored doctrine). This is mechanical structure. The two are
 complementary; never auto-write a manifest from this index.
 
+## Protocol and distribution
+
+The server uses newline-delimited JSON-RPC 2.0 over stdio only. It supports
+handshake revisions `2024-11-05`, `2025-03-26`, `2025-06-18`, and
+`2025-11-25`, plus the per-request-metadata revision `2026-07-28`. The shared
+adapter, lifecycle rules, modern metadata requirements, and error behavior are
+documented in [`docs/MCP_PROTOCOL_SUPPORT.md`](../../docs/MCP_PROTOCOL_SUPPORT.md).
+
+`codebase-memory` is a distributed server: it ships in both the private local
+`npm pack` boundary and the supported GitHub Release artifact. Its entrypoint
+and shared `mcp-servers/protocol-adapter.js` are required runtime files in both.
+
 ## How it works
 
 It reuses Citadel's existing `core/map` index generator (tree-walked
 exports/imports/symbols/roles + a resolved forward dependency graph, cached at
 `.planning/map/index.json`) and adds the query surface `core/map` doesn't expose:
 reverse edges, path tracing, and change-impact. Pure Node, **no dependencies**,
-MCP `2024-11-05` JSON-RPC over stdio. The index is local and derived; nothing
-leaves the machine.
+The index is local and derived; nothing leaves the machine.
 
 The tool's value is highest on repos with little documentation — it does not
 displace the docs-first orientation Citadel already encourages, it backstops it.
