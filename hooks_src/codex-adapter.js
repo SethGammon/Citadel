@@ -311,6 +311,15 @@ function isValidCodexPreToolUseOutput(output) {
   return hasContext || hasPermissionDecision;
 }
 
+function isValidCodexPreToolUseLegacyBlock(output) {
+  return output && typeof output === 'object' && !Array.isArray(output)
+    && Object.keys(output).every((key) => ['decision', 'reason', 'systemMessage'].includes(key))
+    && output.decision === 'block'
+    && typeof output.reason === 'string'
+    && output.reason.trim().length > 0
+    && (output.systemMessage === undefined || typeof output.systemMessage === 'string');
+}
+
 function projectCodexContextOutput(stdout, eventName) {
   if (stdout.trim().length === 0) return '';
 
@@ -322,7 +331,8 @@ function projectCodexContextOutput(stdout, eventName) {
   }
 
   const isValid = eventName === 'PreToolUse'
-    ? isValidCodexPreToolUseOutput(parsed)
+    ? (isValidCodexPreToolUseOutput(parsed)
+      || isValidCodexPreToolUseLegacyBlock(parsed))
     : isValidCodexContextOutput(parsed, eventName);
   if (isValid) return stdout;
 

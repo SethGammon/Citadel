@@ -83,6 +83,24 @@ try {
 // wrapped as hookSpecificOutput JSON. PostCompact supports only the universal
 // output fields, so its text becomes systemMessage. Stop plain text must be
 // redirected to stderr, while valid Stop JSON passes through unchanged.
+const preToolLegacyBlock = JSON.stringify({ decision: 'block', reason: 'stop this tool' });
+assert.equal(projectCodexOutput({
+  stdout: preToolLegacyBlock,
+  stderr: '',
+  nativeEventName: 'PreToolUse',
+}).stdout, preToolLegacyBlock, 'PreToolUse legacy block should retain its decision');
+
+const preToolLegacyBlockWithMessage = JSON.stringify({
+  decision: 'block',
+  reason: 'stop this tool',
+  systemMessage: 'Citadel blocked this tool',
+});
+assert.equal(projectCodexOutput({
+  stdout: preToolLegacyBlockWithMessage,
+  stderr: '',
+  nativeEventName: 'PreToolUse',
+}).stdout, preToolLegacyBlockWithMessage, 'PreToolUse legacy block should retain its system message');
+
 const preToolWarning = projectCodexOutput({
   stdout: 'warning from pre-tool hook',
   stderr: '',
