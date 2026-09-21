@@ -292,10 +292,11 @@ function respond(id, result) {
   process.stdout.write(JSON.stringify({ jsonrpc: '2.0', id, result }) + '\n');
 }
 
-function respondError(id, code, message, data) {
+function respondError(id, code, message, data, omitId = false) {
+  if (id === undefined && !omitId) return;
   const error = { code, message };
   if (data !== undefined) error.data = data;
-  process.stdout.write(JSON.stringify({ jsonrpc: '2.0', ...(id === undefined ? {} : { id }), error }) + '\n');
+  process.stdout.write(JSON.stringify({ jsonrpc: '2.0', ...(omitId ? {} : { id }), error }) + '\n');
 }
 
 const protocolAdapter = createProtocolAdapter({
@@ -312,11 +313,9 @@ function handleRequest(message) {
   const validation = validateJsonRpcRequest(message);
   if (!validation.ok) {
     if (!validation.notification) {
-      respondError(
-        validation.modern || protocolAdapter.getEra() === 'modern' ? undefined : validation.id,
-        validation.error.code,
-        validation.error.message,
-      );
+      const omitId = validation.id === null
+        && (validation.modern || protocolAdapter.getEra() === 'modern');
+      respondError(validation.id, validation.error.code, validation.error.message, undefined, omitId);
     }
     return;
   }
@@ -380,7 +379,7 @@ process.stdin.on('data', (chunk) => {
     try {
       handleRequest(JSON.parse(trimmed));
     } catch (_error) {
-      respondError(protocolAdapter.getEra() === 'modern' ? undefined : null, -32700, 'Parse error');
+      respondError(null, -32700, 'Parse error', undefined, protocolAdapter.getEra() === 'modern');
     }
   }
 });

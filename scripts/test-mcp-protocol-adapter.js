@@ -254,6 +254,8 @@ function testEntrypointBoundaries() {
       JSON.stringify(request('modern-open', 'server/discover')),
       JSON.stringify(request(null, 'tools/list')),
       JSON.stringify(request(1.5, 'tools/list')),
+      JSON.stringify({ jsonrpc: '1.0', id: 'readable-invalid', method: 'tools/list', params: { _meta: envelope() } }),
+      JSON.stringify({ jsonrpc: '2.0', method: 'tools/call', params: { _meta: envelope() } }),
       '{',
       '',
     ].join('\n');
@@ -265,9 +267,11 @@ function testEntrypointBoundaries() {
     });
     check(modernChild.status, 0, `${entrypoint} modern invalid requests should exit cleanly`);
     const modernResponses = modernChild.stdout.trim().split(/\r?\n/).filter(Boolean).map((line) => JSON.parse(line));
-    check(modernResponses.map((response) => response.error?.code || null), [null, -32600, -32600, -32700]);
+    check(modernResponses.map((response) => response.error?.code || null), [null, -32600, -32600, -32600, -32700]);
+    check(modernResponses[3].id, 'readable-invalid', `${entrypoint} must echo a readable invalid request ID`);
     check(
-      modernResponses.slice(1).every((response) => !Object.prototype.hasOwnProperty.call(response, 'id')),
+      [modernResponses[1], modernResponses[2], modernResponses[4]]
+        .every((response) => !Object.prototype.hasOwnProperty.call(response, 'id')),
       true,
       `${entrypoint} must omit unreadable IDs from modern error responses`,
     );

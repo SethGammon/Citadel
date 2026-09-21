@@ -342,24 +342,27 @@ function validateModernNegativeTranscript(schema, server, projectRoot) {
   const opener = request('negative-discover', 'server/discover', modernParams());
   const invalidNull = request(null, 'tools/list', modernParams());
   const invalidFraction = request(1.5, 'tools/list', modernParams());
+  const readableInvalid = { jsonrpc: '1.0', id: 'readable-invalid', method: 'tools/list', params: modernParams() };
+  const invalidNotification = { jsonrpc: '2.0', method: 'tools/call', params: modernParams() };
   const result = spawnSync(process.execPath, [path.join(ROOT, server.entrypoint)], {
     cwd: projectRoot,
     env: { ...process.env, CITADEL_PROJECT_ROOT: projectRoot },
-    input: `${JSON.stringify(opener)}\n${JSON.stringify(invalidNull)}\n${JSON.stringify(invalidFraction)}\n{\n`,
+    input: `${JSON.stringify(opener)}\n${JSON.stringify(invalidNull)}\n${JSON.stringify(invalidFraction)}\n${JSON.stringify(readableInvalid)}\n${JSON.stringify(invalidNotification)}\n{\n`,
     encoding: 'utf8',
     timeout: 30000,
     maxBuffer: 10 * 1024 * 1024,
   });
   assert.equal(result.status, 0, `${server.name} modern negative process exited ${result.status}: ${result.stderr}`);
   const messages = result.stdout.split(/\n/).filter(Boolean).map((line) => JSON.parse(line));
-  assert.equal(messages.length, 4, `${server.name}: unexpected modern negative response count`);
+  assert.equal(messages.length, 5, `${server.name}: unexpected modern negative response count`);
   assert.equal(messages[0].id, 'negative-discover');
   const errors = messages.slice(1);
-  assert.deepStrictEqual(errors.map((message) => message.error?.code), [-32600, -32600, -32700]);
-  for (const message of errors) {
+  assert.deepStrictEqual(errors.map((message) => message.error?.code), [-32600, -32600, -32600, -32700]);
+  assert.equal(errors[2].id, 'readable-invalid', `${server.name}: readable invalid ID was not echoed`);
+  for (const message of [errors[0], errors[1], errors[3]]) {
     assert(!Object.prototype.hasOwnProperty.call(message, 'id'), `${server.name}: unreadable modern error id must be omitted`);
-    assertDefinition(schema, 'JSONRPCErrorResponse', message, `${server.name} modern negative response`);
   }
+  for (const message of errors) assertDefinition(schema, 'JSONRPCErrorResponse', message, `${server.name} modern negative response`);
   return { responseCount: errors.length, schemaChecks: errors.length };
 }
 
