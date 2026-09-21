@@ -3,11 +3,42 @@
 'use strict';
 
 const fs = require('fs');
+const os = require('os');
 const path = require('path');
-const { CLAUDE_GUIDANCE_TARGET } = require('../../runtimes/claude-code/guidance/render');
+const {
+  CLAUDE_GUIDANCE_TARGET,
+  selectClaudeGuidanceTarget,
+} = require('../../runtimes/claude-code/guidance/render');
 const { CODEX_GUIDANCE_TARGET } = require('../../runtimes/codex/guidance/render');
 const { loadProjectSpec, resolveProjectSpecPath } = require('./load-project-spec');
+const { renderSharedGuidance } = require('./render-shared-guidance');
 const { withGuidanceOwner } = require('../runtime/install-contract');
+
+const GUIDANCE_OWNER_MARKER = '<!-- citadel:project-guidance -->';
+
+function inspectClaudeGuidance(projectRoot, expectedOwnedContent = null, options = {}) {
+  const rootClaude = path.join(projectRoot, 'CLAUDE.md');
+  const rootContent = fs.existsSync(rootClaude) ? fs.readFileSync(rootClaude, 'utf8') : null;
+  const ownedRoot = rootContent !== null
+    && rootContent.includes(GUIDANCE_OWNER_MARKER)
+    && expectedOwnedContent !== null
+    && rootContent === expectedOwnedContent;
+  const candidates = [];
+  const userClaude = path.join(path.resolve(options.homeDir || os.homedir()), '.claude', 'CLAUDE.md');
+  let current = path.resolve(projectRoot);
+  while (true) {
+    for (const relative of ['CLAUDE.md', 'CLAUDE.local.md', path.join('.claude', 'CLAUDE.md')]) {
+      const candidate = path.join(current, relative);
+      if (fs.existsSync(candidate)
+        && candidate !== userClaude
+        && !(candidate === rootClaude && ownedRoot)) candidates.push(candidate);
+    }
+    const parent = path.dirname(current);
+    if (parent === current) break;
+    current = parent;
+  }
+  return { rootClaude, ownedRoot, blockingPaths: candidates };
+}
 
 function ensureDirectory(dirPath) {
   if (!fs.existsSync(dirPath)) {
@@ -71,15 +102,67 @@ function bootstrapProjectGuidance(options = {}) {
   const ensured = ensureProjectSpec(options);
   const spec = ensured.loaded.spec;
   const overwriteGuidance = options.overwriteGuidance === true;
+  const statePath = path.join(projectRoot, '.citadel', 'claude-guidance.json');
+  let persisted = null;
+  try {
+    persisted = JSON.parse(fs.readFileSync(statePath, 'utf8'));
+  } catch {
+    persisted = null;
+  }
+  const selectionOptions = options.agentsMdCapability === true
+    ? options
+    : persisted?.nativeAgentsMd === true
+      ? { ...options, agentsMdCapability: true }
+      : options;
 
-  const claude = writeGuidanceFile(projectRoot, CLAUDE_GUIDANCE_TARGET, spec, overwriteGuidance);
-  const codex = writeGuidanceFile(projectRoot, CODEX_GUIDANCE_TARGET, spec, overwriteGuidance);
+  const expectedOwnedClaude = withGuidanceOwner(CLAUDE_GUIDANCE_TARGET.render(spec));
+  const existingClaude = inspectClaudeGuidance(projectRoot, expectedOwnedClaude, options);
+  const agentsPath = path.join(projectRoot, 'AGENTS.md');
+  const expectedOwnedCodex = withGuidanceOwner(CODEX_GUIDANCE_TARGET.render(spec));
+  const expectedOwnedShared = withGuidanceOwner(renderSharedGuidance(spec));
+  const agentsContent = fs.existsSync(agentsPath) ? fs.readFileSync(agentsPath, 'utf8') : null;
+  const migratableAgents = agentsContent === null
+    || agentsContent === expectedOwnedCodex
+    || agentsContent === expectedOwnedShared;
+  const selection = selectClaudeGuidanceTarget({
+    ...selectionOptions,
+    claudeGuidancePresent: existingClaude.blockingPaths.length > 0
+      || (selectionOptions.agentsMdCapability === true
+        && existingClaude.ownedRoot
+        && !migratableAgents),
+  });
+  const claudeTarget = selection.nativeAgentsMd
+    ? { ...CLAUDE_GUIDANCE_TARGET, filePath: 'AGENTS.md', render: renderSharedGuidance }
+    : CLAUDE_GUIDANCE_TARGET;
+  const claude = writeGuidanceFile(
+    projectRoot,
+    claudeTarget,
+    spec,
+    (overwriteGuidance && !existingClaude.blockingPaths.includes(existingClaude.rootClaude))
+      || (selection.nativeAgentsMd && agentsContent === expectedOwnedCodex)
+  );
+  if (selection.nativeAgentsMd
+    && existingClaude.ownedRoot
+    && (claude.written || agentsContent === expectedOwnedShared)) {
+    fs.unlinkSync(existingClaude.rootClaude);
+    claude.removedOwnedClaudeGuidance = true;
+  }
+  if (selection.nativeAgentsMd) {
+    ensureDirectory(path.dirname(statePath));
+    fs.writeFileSync(statePath, `${JSON.stringify({
+      nativeAgentsMd: true,
+    }, null, 2)}\n`, 'utf8');
+  }
+  const codex = selection.nativeAgentsMd
+    ? { ...claude, shared: true }
+    : writeGuidanceFile(projectRoot, CODEX_GUIDANCE_TARGET, spec, overwriteGuidance);
 
   return {
     specPath: ensured.specPath,
     specCreated: ensured.created,
     claude,
     codex,
+    claudeGuidanceSelection: selection,
   };
 }
 
@@ -89,4 +172,5 @@ module.exports = Object.freeze({
   defaultProjectSummary,
   ensureProjectSpec,
   renderTemplate,
+  inspectClaudeGuidance,
 });
