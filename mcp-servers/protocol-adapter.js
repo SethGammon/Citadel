@@ -41,7 +41,7 @@ function negotiateHandshakeVersion(params) {
 /** Validate a JSON-RPC request envelope without dispatching it. */
 function validateJsonRpcRequest(value) {
   if (!isPlainObject(value)) {
-    return { ok: false, id: null, notification: false, error: INVALID_REQUEST };
+    return { ok: false, id: null, notification: false, modern: false, error: INVALID_REQUEST };
   }
 
   const hasId = hasOwn(value, 'id');
@@ -56,6 +56,7 @@ function validateJsonRpcRequest(value) {
       ok: false,
       id: hasId && validId ? value.id : null,
       notification: !hasId,
+      modern: hasModernMetadata(value),
       error: INVALID_REQUEST,
     };
   }

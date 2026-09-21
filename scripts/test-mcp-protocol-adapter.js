@@ -249,6 +249,28 @@ function testEntrypointBoundaries() {
       [-32600, -32600, -32600, -32600, -32600, -32700],
       `${entrypoint} should reject invalid requests and parse errors without answering notifications`,
     );
+
+    const modernInput = [
+      JSON.stringify(request('modern-open', 'server/discover')),
+      JSON.stringify(request(null, 'tools/list')),
+      JSON.stringify(request(1.5, 'tools/list')),
+      '{',
+      '',
+    ].join('\n');
+    const modernChild = spawnSync(process.execPath, [path.resolve(entrypoint)], {
+      cwd: path.resolve(__dirname, '..'),
+      encoding: 'utf8',
+      env: { ...process.env, CITADEL_PROJECT_ROOT: path.resolve(__dirname, '..') },
+      input: modernInput,
+    });
+    check(modernChild.status, 0, `${entrypoint} modern invalid requests should exit cleanly`);
+    const modernResponses = modernChild.stdout.trim().split(/\r?\n/).filter(Boolean).map((line) => JSON.parse(line));
+    check(modernResponses.map((response) => response.error?.code || null), [null, -32600, -32600, -32700]);
+    check(
+      modernResponses.slice(1).every((response) => !Object.prototype.hasOwnProperty.call(response, 'id')),
+      true,
+      `${entrypoint} must omit unreadable IDs from modern error responses`,
+    );
   }
 }
 

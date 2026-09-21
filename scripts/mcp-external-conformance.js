@@ -338,6 +338,31 @@ function runServer(server, revision, projectRoot) {
   return { requests, messages: parseFrames(server, revision, result.stdout, expectedIds) };
 }
 
+function validateModernNegativeTranscript(schema, server, projectRoot) {
+  const opener = request('negative-discover', 'server/discover', modernParams());
+  const invalidNull = request(null, 'tools/list', modernParams());
+  const invalidFraction = request(1.5, 'tools/list', modernParams());
+  const result = spawnSync(process.execPath, [path.join(ROOT, server.entrypoint)], {
+    cwd: projectRoot,
+    env: { ...process.env, CITADEL_PROJECT_ROOT: projectRoot },
+    input: `${JSON.stringify(opener)}\n${JSON.stringify(invalidNull)}\n${JSON.stringify(invalidFraction)}\n{\n`,
+    encoding: 'utf8',
+    timeout: 30000,
+    maxBuffer: 10 * 1024 * 1024,
+  });
+  assert.equal(result.status, 0, `${server.name} modern negative process exited ${result.status}: ${result.stderr}`);
+  const messages = result.stdout.split(/\n/).filter(Boolean).map((line) => JSON.parse(line));
+  assert.equal(messages.length, 4, `${server.name}: unexpected modern negative response count`);
+  assert.equal(messages[0].id, 'negative-discover');
+  const errors = messages.slice(1);
+  assert.deepStrictEqual(errors.map((message) => message.error?.code), [-32600, -32600, -32700]);
+  for (const message of errors) {
+    assert(!Object.prototype.hasOwnProperty.call(message, 'id'), `${server.name}: unreadable modern error id must be omitted`);
+    assertDefinition(schema, 'JSONRPCErrorResponse', message, `${server.name} modern negative response`);
+  }
+  return { responseCount: errors.length, schemaChecks: errors.length };
+}
+
 function validateTranscript(schema, server, revision, requests, messages) {
   const modern = revision === MODERN_REVISION;
   const checks = [
@@ -462,6 +487,11 @@ async function runExternal(reportPath) {
         for (const server of SERVERS) {
           const { requests, messages } = runServer(server, pin.revision, fixtureRoot);
           const counts = validateTranscript(schema, server, pin.revision, requests, messages);
+          if (pin.revision === MODERN_REVISION) {
+            const negative = validateModernNegativeTranscript(schema, server, fixtureRoot);
+            counts.responseCount += negative.responseCount;
+            counts.schemaChecks += negative.schemaChecks;
+          }
           revisionReport.servers.push({ server: server.name, status: 'passed', ...counts });
           revisionReport.combinationsPassed += 1;
           revisionReport.responsesValidated += counts.responseCount;

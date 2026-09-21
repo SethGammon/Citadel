@@ -335,10 +335,9 @@ function respond(id, result) {
 }
 
 function respondError(id, code, message, data) {
-  if (id === undefined) return;
   const error = { code, message };
   if (data !== undefined) error.data = data;
-  const msg = JSON.stringify({ jsonrpc: '2.0', id, error });
+  const msg = JSON.stringify({ jsonrpc: '2.0', ...(id === undefined ? {} : { id }), error });
   process.stdout.write(msg + '\n');
 }
 
@@ -355,7 +354,11 @@ function handleRequest(message) {
   const validation = validateJsonRpcRequest(message);
   if (!validation.ok) {
     if (!validation.notification) {
-      respondError(validation.id, validation.error.code, validation.error.message);
+      respondError(
+        validation.modern || protocolAdapter.getEra() === 'modern' ? undefined : validation.id,
+        validation.error.code,
+        validation.error.message,
+      );
     }
     return;
   }
@@ -415,7 +418,7 @@ process.stdin.on('data', (chunk) => {
     try {
       handleRequest(JSON.parse(trimmed));
     } catch (_error) {
-      respondError(null, -32700, 'Parse error');
+      respondError(protocolAdapter.getEra() === 'modern' ? undefined : null, -32700, 'Parse error');
     }
   }
 });
