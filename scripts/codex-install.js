@@ -44,6 +44,13 @@ function parseJson(stdout) {
   }
 }
 
+function installedPluginRoot(stdout) {
+  const match = /^Installed plugin root:\s*(.+)$/m.exec(String(stdout || ''));
+  if (!match) return null;
+  const candidate = path.resolve(match[1].trim());
+  return fs.existsSync(path.join(candidate, 'scripts', 'codex-compat.js')) ? candidate : null;
+}
+
 function runStep({ name, command, args, cwd, dryRun, timeout = 60000, required = true }) {
   const rendered = display(command, args);
   if (dryRun) {
@@ -144,7 +151,7 @@ Common use:
 const dryRun = has('--dry-run');
 const jsonOnly = has('--json');
 const install = has('--install');
-const pluginOnly = has('--plugin-only') || install;
+const pluginOnly = has('--plugin-only');
 const skipPluginRefresh = has('--skip-plugin-refresh');
 const skipWindowsCheck = has('--skip-windows-check');
 const addMarketplace = install || has('--add-marketplace');
@@ -186,6 +193,7 @@ const machineLocalExcludes = ensureMachineLocalExcludes(projectRoot, { dryRun })
 
 const steps = [];
 const node = process.execPath;
+let projectPluginRoot = pluginRoot;
 
 if (!skipPluginRefresh) {
   steps.push(runStep({
@@ -217,21 +225,25 @@ if (addMarketplace) {
 }
 
 if (installPlugin && steps.every((step) => step.pass || !step.required)) {
-  steps.push(runStep({
+  const installStep = runStep({
     name: 'Install Citadel Harness plugin with Codex CLI',
     command: 'codex',
     args: ['plugin', 'add', 'citadel@citadel-local'],
     cwd: projectRoot,
     dryRun,
     timeout: 30000,
-  }));
+  });
+  steps.push(installStep);
+  if (installStep.pass && !dryRun) {
+    projectPluginRoot = installedPluginRoot(installStep.stdout) || pluginRoot;
+  }
 }
 
 if (!pluginOnly && steps.every((step) => step.pass || !step.required)) {
   steps.push(runStep({
     name: 'Generate Codex project artifacts',
     command: node,
-    args: [path.join(pluginRoot, 'scripts', 'codex-compat.js'), projectRoot],
+    args: [path.join(projectPluginRoot, 'scripts', 'codex-compat.js'), projectRoot],
     cwd: projectRoot,
     dryRun,
   }));
@@ -239,7 +251,7 @@ if (!pluginOnly && steps.every((step) => step.pass || !step.required)) {
   steps.push(runStep({
     name: 'Verify Codex project readiness',
     command: node,
-    args: [path.join(pluginRoot, 'scripts', 'codex-readiness-check.js'), '--project-root', projectRoot, '--write'],
+    args: [path.join(projectPluginRoot, 'scripts', 'codex-readiness-check.js'), '--project-root', projectRoot, '--write'],
     cwd: projectRoot,
     dryRun,
   }));
@@ -248,7 +260,7 @@ if (!pluginOnly && steps.every((step) => step.pass || !step.required)) {
     steps.push(runStep({
       name: 'Verify Codex Windows shell and sandbox settings',
       command: node,
-      args: [path.join(pluginRoot, 'scripts', 'codex-windows-check.js'), '--project-root', projectRoot],
+      args: [path.join(projectPluginRoot, 'scripts', 'codex-windows-check.js'), '--project-root', projectRoot],
       cwd: projectRoot,
       dryRun,
     }));
@@ -269,6 +281,7 @@ const outputs = classifyOutputs([
 ]);
 const report = {
   pluginRoot,
+  projectPluginRoot,
   projectRoot,
   mode: pluginOnly ? 'plugin-only' : 'plugin-and-project',
   dryRun,

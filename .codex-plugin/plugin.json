@@ -21,7 +21,6 @@
     "automation"
   ],
   "skills": "./skills/",
-  "mcpServers": "./.mcp.json",
   "hooks": "./runtimes/codex/hooks.json",
   "interface": {
     "displayName": "Citadel Harness",

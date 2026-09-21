@@ -275,11 +275,21 @@ function sanitizeReleaseCli(entries) {
 
 function sanitizeReleaseMcp(entries) {
   if (!entries.some((entry) => entry.name === '.mcp.json')) return entries;
-  const config = jsonFromEntries(entries, '.mcp.json');
+  const codexFallback = jsonFromEntries(entries, '.mcp.json');
+  if (Object.keys(codexFallback.mcpServers || {}).length !== 0) {
+    throw new Error('Release plugin-root .mcp.json must stay empty for Codex auto-discovery');
+  }
+  const claudeManifest = jsonFromEntries(entries, '.claude-plugin/plugin.json');
+  const claudeMcpPath = String(claudeManifest.mcpServers || '').replace(/^\.\//, '');
+  if (!claudeMcpPath.startsWith('.claude-plugin/')) {
+    throw new Error('Release Claude manifest must own its MCP configuration');
+  }
+  const config = jsonFromEntries(entries, claudeMcpPath);
   const state = config.mcpServers?.['citadel-state'];
+  const memory = config.mcpServers?.['codebase-memory'];
   if (!state) throw new Error('Release MCP config requires citadel-state');
-  const data = Buffer.from(`${JSON.stringify({ mcpServers: { 'citadel-state': state } }, null, 2)}\n`);
-  return entries.map((entry) => (entry.name === '.mcp.json' ? { ...entry, data } : entry));
+  if (!memory) throw new Error('Release MCP config requires codebase-memory');
+  return entries;
 }
 
 function sanitizeReleaseBundleCatalog(entries) {
