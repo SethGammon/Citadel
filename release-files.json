@@ -42,6 +42,7 @@
     "core/telemetry/log.js",
     "core/telemetry/schema.js",
     "scripts/citadel-state.js",
+    "runtimes/opencode/plugin/skill-command.js",
     "core/utils/path-helpers.js",
     "core/utils/config-command.js",
     "core/verification/profiles.js",

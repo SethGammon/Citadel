@@ -119,7 +119,7 @@ Preview the deterministic version-2 config migration without writing:
 
 ```bash
 node {citadelRoot}/scripts/citadel-config.js initialize \
-  --input .planning/tmp/citadel-stack.json --runtime {claude-code|codex} --json
+  --input .planning/tmp/citadel-stack.json --runtime {claude-code|codex|opencode} --json
 ```
 
 Show profile, bundles, source/candidate digests, and changed fields. Apply only
@@ -127,7 +127,7 @@ after the selected setup mode authorizes this exact plan:
 
 ```bash
 node {citadelRoot}/scripts/citadel-config.js initialize \
-  --input .planning/tmp/citadel-stack.json --runtime {claude-code|codex} --apply --json
+  --input .planning/tmp/citadel-stack.json --runtime {claude-code|codex|opencode} --apply --json
 ```
 
 Recommended and Express use `standard@1.0.0` with Core + Persistence. Full Tour

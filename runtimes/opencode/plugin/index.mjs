@@ -26,6 +26,7 @@ const require = createRequire(import.meta.url);
 const runner = require('./hook-runner.js');
 const notices = require('./pending-notices.js');
 const reprompt = require('./reprompt.js');
+const skillCommand = require('./skill-command.js');
 
 // A part pushed onto `output.parts` is a materialized Part, not the input shape:
 // opencode validates it against a schema requiring `id` (`^prt`), `sessionID` and
@@ -69,7 +70,9 @@ async function observe(event, payload, options) {
 }
 
 export const CitadelPlugin = async ({ project, directory, worktree, client } = {}) => {
-  const projectRoot = worktree || directory || project?.worktree || process.cwd();
+  // `worktree` may be a broad filesystem root for a non-Git project. OpenCode's
+  // active `directory` is the cwd skill commands must retain.
+  const projectRoot = directory || project?.worktree || worktree || process.cwd();
   const options = { projectRoot };
 
   // Read once per instance: the policy governs autonomous model turns, so it
@@ -122,7 +125,19 @@ export const CitadelPlugin = async ({ project, directory, worktree, client } = {
   if (start.messages.length) await log('info', 'citadel session start', { messages: start.messages });
 
   return {
+    async 'shell.env'(_input, output) {
+      skillCommand.injectShellEnvironment(output?.env, projectRoot);
+    },
+
     async 'tool.execute.before'(input, output) {
+      if (input?.tool === 'bash' && typeof output?.args?.command === 'string') {
+        const intercepted = skillCommand.interceptSlashCommand(output.args.command, projectRoot);
+        if (intercepted) {
+          const error = new Error(intercepted);
+          error.name = 'CitadelSlashCommandError';
+          throw error;
+        }
+      }
       const outcome = await runner.runHooksForEvent('tool.execute.before', {
         ...input,
         args: output.args,
