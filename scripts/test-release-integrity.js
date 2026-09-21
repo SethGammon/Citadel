@@ -316,6 +316,7 @@ try {
     'scripts/install.js', 'scripts/adopt.js', 'scripts/update.js', 'scripts/unharness.js',
     'core/cli/package-cli.js', 'runtimes/codex/hooks.json', 'runtimes/claude-code/runtime.js',
     'core/skills/routing.js', 'core/skills/routing-table.json', 'scripts/route-preview.js',
+    'mcp-servers/codebase-memory/index.js',
     'skills/do/SKILL.md', 'hooks_src/init-project.js', 'docs/CLI.md', 'docs/RELEASES.md',
     'docs/CONSTITUTION.md', 'docs/CAMPAIGNS.md', 'docs/SETUP_REFERENCE.md',
     'docs/FLEET.md', 'docs/JUDGE_TIERING.md',
@@ -327,14 +328,14 @@ try {
     assert(!forbidden.startsWith('packages/'), `release leaked quarantined package: ${forbidden}`);
     assert(!forbidden.startsWith('packs/'), `release leaked experimental pack: ${forbidden}`);
     assert(!forbidden.startsWith('workflows/'), `release leaked internal workflow: ${forbidden}`);
-    assert(!forbidden.startsWith('mcp-servers/codebase-memory/'), `release leaked non-runtime MCP server: ${forbidden}`);
     assert(!forbidden.startsWith('scripts/test-'), `release leaked test program: ${forbidden}`);
     assert(!forbidden.includes('/__benchmarks__/'), `release leaked skill benchmark: ${forbidden}`);
     assert(!forbidden.split('/').includes('fixtures'), `release leaked fixture content: ${forbidden}`);
   }
   for (const forbidden of [
     'assets/social-preview.png', 'docs/index.html', 'hooks_src/smoke-test.js',
-    'agents/knowledge-extractor.md', 'mcp-servers/citadel-state/README.md',
+    'agents/knowledge-extractor.md', 'mcp-servers/codebase-memory/README.md',
+    'mcp-servers/citadel-state/README.md',
     'docs/DAEMON.md', 'docs/GOVERNED_LIFECYCLE.md', 'docs/OPERATION_CONTROL.md',
     'mcp-servers/codebase-memory/smoke-test.js', 'core/team/pilot.js',
     'core/telemetry/activation-cohort.js', 'core/telemetry/github-traffic.js',
@@ -883,8 +884,17 @@ try {
     .find((tool) => tool.name === 'citadel_workflow_prompt');
   assert.deepEqual(new Set(workflowTool.inputSchema.properties.workflow.enum), shippedSkillNames);
   const releaseMcp = JSON.parse(fs.readFileSync(path.join(productRoot, '.mcp.json'), 'utf8'));
-  assert.deepEqual(Object.keys(releaseMcp.mcpServers), ['citadel-state']);
-  for (const [name, server] of Object.entries(releaseMcp.mcpServers)) {
+  assert.deepEqual(releaseMcp.mcpServers, {},
+    'release plugin-root .mcp.json must remain inert under Codex auto-discovery');
+  const releaseClaudeManifest = JSON.parse(fs.readFileSync(
+    path.join(productRoot, '.claude-plugin', 'plugin.json'), 'utf8',
+  ));
+  assert.equal(releaseClaudeManifest.mcpServers, './.claude-plugin/.mcp.json');
+  const releaseClaudeMcp = JSON.parse(fs.readFileSync(
+    path.resolve(productRoot, releaseClaudeManifest.mcpServers), 'utf8',
+  ));
+  assert.deepEqual(Object.keys(releaseClaudeMcp.mcpServers), ['citadel-state', 'codebase-memory']);
+  for (const [name, server] of Object.entries(releaseClaudeMcp.mcpServers)) {
     assert.equal(server.command, 'node', `release MCP ${name} must use the packaged Node runtime target`);
     assert.equal(server.cwd, '.', `release MCP ${name} must preserve the consuming project as cwd`);
     const target = server.args?.[0]?.replace(/^\$\{CLAUDE_PLUGIN_ROOT\}\//, '');
@@ -909,6 +919,8 @@ try {
   }
 
   const codexManifest = JSON.parse(fs.readFileSync(path.join(productRoot, '.codex-plugin', 'plugin.json'), 'utf8'));
+  assert.equal(codexManifest.mcpServers, undefined,
+    'release Codex manifest must not auto-load Claude-only MCP declarations');
   const interfaceAssets = [
     codexManifest.interface?.composerIcon,
     codexManifest.interface?.logo,

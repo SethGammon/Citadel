@@ -191,6 +191,7 @@ const names = new Set(entries.map((entry) => entry.name));
 for (const required of [
   'package/bin/citadel.js', 'package/core/cli/package-cli.js', 'package/scripts/install.js',
   'package/core/adoption/index.js', 'package/scripts/adopt.js',
+  'package/mcp-servers/codebase-memory/index.js',
   'package/skills/unharness/SKILL.md',
   'package/skills/do/SKILL.md', 'package/.planning/_templates/campaign.md',
 ]) assert(names.has(required), `packed archive missing ${required}`);
@@ -198,7 +199,7 @@ for (const forbidden of [
   'package/.github/workflows/release.yml',
   'package/.planning/campaigns/citadel-product-proof.md',
   'package/.planning/research/twelve-month-unlocks/product-growth-audit.md',
-  'package/mcp-servers/codebase-memory/index.js',
+  'package/mcp-servers/codebase-memory/smoke-test.js',
   'package/packages/contracts/index.js',
   'package/packs/code-review/pack.json',
   'package/scripts/control-plane-stdio.js',
