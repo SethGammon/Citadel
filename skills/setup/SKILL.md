@@ -152,7 +152,9 @@ Note: `perFile` applies to Python checkers only; TypeScript always runs a projec
 
 ### Step 4: CLAUDE.md + AGENTS.md (all modes)
 
-Run `node {citadelRoot}/scripts/bootstrap-project-guidance.js --project-root {projectRoot}` — creates `.citadel/project.md` and generates `CLAUDE.md` and `AGENTS.md`. Safe to run — only creates files that don't exist.
+Run `node {citadelRoot}/scripts/bootstrap-project-guidance.js --project-root {projectRoot}` — creates `.citadel/project.md` and compatible `CLAUDE.md` plus `AGENTS.md` guidance. Safe to run — it preserves user-authored files.
+
+Claude Code v2.1.277 or later can use only `AGENTS.md`, but the version alone does not prove the built-in support is available in the current environment. When the operator has confirmed the **Project instructions** setting or an `AGENTS.md loaded` startup notice, run `node {citadelRoot}/scripts/bootstrap-project-guidance.js --project-root {projectRoot} --claude-agents-md-supported`. The script detects the installed Claude Code version, migrates only byte-for-byte unchanged Citadel guidance, and retains `CLAUDE.md` when the version or capability is unknown or project guidance would take precedence.
 
 **Project description (Recommended + Full Tour only):** ask `"What's this project? One line is fine — or press Enter to use the package name."` Skip if CLAUDE.md already exists with content.
 

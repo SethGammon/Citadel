@@ -29,6 +29,7 @@ const path = require('path');
 const { translateCodexPluginHooks } = require('../runtimes/codex/generators/install-hooks');
 const { parseProjectSpec, validateProjectSpec } = require('../core/project/load-project-spec');
 const { renderCodexGuidance } = require('../core/project/render-codex-guidance');
+const { renderSharedGuidance } = require('../core/project/render-shared-guidance');
 const { parseAgentContent } = require('../core/agents/parse-agent');
 const { renderCodexToml } = require('../core/agents/project-agent');
 const { loadCodexAgentConfig } = require('../core/agents/model-config');
@@ -744,8 +745,14 @@ function syncProjectGuidance() {
     const spec = parseProjectSpec(content);
     const errors = validateProjectSpec(spec);
     if (errors.length === 0) {
-      writeFile(agentsMdPath, withGuidanceOwner(renderCodexGuidance(spec)));
-      console.log('  Generated AGENTS.md from .citadel/project.md with Codex-specific guidance.');
+      const existing = fs.existsSync(agentsMdPath) ? fs.readFileSync(agentsMdPath, 'utf8') : '';
+      const renderer = existing.includes('<!-- citadel:shared-agents-guidance -->')
+        ? renderSharedGuidance
+        : renderCodexGuidance;
+      writeFile(agentsMdPath, withGuidanceOwner(renderer(spec)));
+      console.log(renderer === renderSharedGuidance
+        ? '  Refreshed shared Claude Code and Codex AGENTS.md from .citadel/project.md.'
+        : '  Generated AGENTS.md from .citadel/project.md with Codex-specific guidance.');
       return;
     }
     console.warn(`  warning: .citadel/project.md invalid (${errors.join('; ')}); using fallback guidance.`);
