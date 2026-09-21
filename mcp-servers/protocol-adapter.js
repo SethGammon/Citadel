@@ -45,8 +45,11 @@ function validateJsonRpcRequest(value) {
   }
 
   const hasId = hasOwn(value, 'id');
-  const validId = !hasId || value.id === null || typeof value.id === 'string'
-    || (typeof value.id === 'number' && Number.isFinite(value.id));
+  // MCP RequestId is string | integer in every supported pinned schema.
+  // JSON-RPC reserves null for error responses when a request ID cannot be
+  // detected; it is not a valid request ID for application dispatch.
+  const validId = !hasId || typeof value.id === 'string'
+    || (typeof value.id === 'number' && Number.isInteger(value.id));
   const validParams = !hasOwn(value, 'params') || Array.isArray(value.params) || isPlainObject(value.params);
   if (value.jsonrpc !== '2.0' || typeof value.method !== 'string' || !validId || !validParams) {
     return {

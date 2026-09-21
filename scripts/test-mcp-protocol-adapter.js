@@ -71,6 +71,8 @@ function testJsonRpcValidation() {
     { jsonrpc: '1.0', id: 4, method: 'ping' },
     { jsonrpc: '2.0', id: 'missing-method' },
     { jsonrpc: '2.0', id: 5, method: 42 },
+    { jsonrpc: '2.0', id: null, method: 'ping' },
+    { jsonrpc: '2.0', id: 1.5, method: 'ping' },
   ]) {
     const result = validateJsonRpcRequest(value);
     check(result.error, { code: -32600, message: 'Invalid Request' });
@@ -224,6 +226,8 @@ function testEntrypointBoundaries() {
     'null',
     '[]',
     JSON.stringify({ jsonrpc: '2.0', id: 'bad-method', method: 42 }),
+    JSON.stringify({ jsonrpc: '2.0', id: null, method: 'ping' }),
+    JSON.stringify({ jsonrpc: '2.0', id: 1.5, method: 'ping' }),
     JSON.stringify({ jsonrpc: '2.0', method: 'initialize', params: {} }),
     JSON.stringify({ jsonrpc: '1.0', method: 'ping' }),
     '{',
@@ -239,10 +243,10 @@ function testEntrypointBoundaries() {
     });
     check(child.status, 0, `${entrypoint} should exit cleanly`);
     const responses = child.stdout.trim().split(/\r?\n/).filter(Boolean).map((line) => JSON.parse(line));
-    check(responses.map((response) => response.id), [null, null, 'bad-method', null]);
+    check(responses.map((response) => response.id), [null, null, 'bad-method', null, null, null]);
     check(
       responses.map((response) => response.error.code),
-      [-32600, -32600, -32600, -32700],
+      [-32600, -32600, -32600, -32600, -32600, -32700],
       `${entrypoint} should reject invalid requests and parse errors without answering notifications`,
     );
   }
