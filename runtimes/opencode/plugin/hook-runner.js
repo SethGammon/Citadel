@@ -47,6 +47,12 @@ const TEMPLATE_EVENT_BY_OPENCODE_EVENT = Object.freeze({
   'file.edited': 'FileChanged',
   'file.watcher.updated': 'FileChanged',
   'permission.asked': 'PermissionRequest',
+  // OpenCode has no task or subagent lifecycle bus events. index.mjs emits
+  // these around its native `task` tool so Claude-compatible telemetry runs.
+  'task.created': 'TaskCreated',
+  'task.completed': 'TaskCompleted',
+  'subagent.start': 'SubagentStart',
+  'subagent.stop': 'SubagentStop',
 });
 
 // Only the pre-tool gate may abort an opencode tool call. Throwing from

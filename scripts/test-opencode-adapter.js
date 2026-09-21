@@ -98,6 +98,34 @@ async function testPostToolNeverBlocks(root) {
   assert.equal(outcome.templateEvent, 'PostToolUse');
 }
 
+async function testTaskLifecycleTelemetry(root) {
+  const task = {
+    ...preTool('task', { description: 'verify lifecycle telemetry', agent: 'explore' }, { directory: root, callID: 'task-lifecycle' }),
+    task_id: 'task-lifecycle',
+    agent_id: 'task-lifecycle',
+    subagent_id: 'task-lifecycle',
+    agent_type: 'explore',
+    subagent_type: 'explore',
+  };
+
+  for (const event of ['task.created', 'subagent.start']) {
+    const outcome = await runner.runHooksForEvent(event, { ...task, status: 'created' }, { projectRoot: root });
+    assert.equal(outcome.blocked, false, `${event} must be observational`);
+    assert(outcome.results.length > 0, `${event} must execute its lifecycle hook`);
+  }
+  for (const event of ['task.completed', 'subagent.stop']) {
+    const outcome = await runner.runHooksForEvent(event, { ...task, status: 'completed' }, { projectRoot: root });
+    assert.equal(outcome.blocked, false, `${event} must be observational`);
+    assert(outcome.results.length > 0, `${event} must execute its lifecycle hook`);
+  }
+
+  const timingPath = path.join(root, '.planning', 'telemetry', 'hook-timing.jsonl');
+  const records = fs.readFileSync(timingPath, 'utf8').trim().split('\n').map((line) => JSON.parse(line));
+  for (const expected of ['task_created', 'task_completed', 'subagent-start', 'subagent-stop']) {
+    assert(records.some((record) => record.event === expected), `${expected} must be recorded in telemetry`);
+  }
+}
+
 // A security hook that cannot give a verdict has to fail closed on a blocking
 // event, and stay silent on a non-blocking one.
 async function testFailClosed(root) {
@@ -564,6 +592,33 @@ async function testPluginShim(root) {
     assert.match(afterOutput.output, /done/, 'the tool output must be preserved');
     assert.match(afterOutput.output, /complexity-check/, 'findings must be appended to the output');
 
+    nextOutcome = { blocked: false, reason: null, messages: [], results: [], skipped: [] };
+    // OpenCode exposes subagent delegation through its task tool but no task
+    // lifecycle events. The plugin must synthesize Claude-compatible boundaries
+    // after the generic gate passes and after the delegated task returns.
+    const taskArgs = { description: 'Inspect the telemetry adapter', agent: 'explore' };
+    await plugin['tool.execute.before']({ tool: 'task', sessionID: 's', callID: 'task-1' }, { args: taskArgs });
+    const created = calls.find((call) => call.event === 'task.created' && call.payload?.task_id === 'task-1');
+    assert(created, 'a permitted task delegation must emit task.created');
+    assert.equal(created.payload.title, taskArgs.description);
+    assert.equal(created.payload.status, 'created');
+    const started = calls.find((call) => call.event === 'subagent.start' && call.payload?.subagent_id === 'task-1');
+    assert(started, 'a permitted task delegation must emit subagent.start');
+    assert.equal(started.payload.subagent_type, taskArgs.agent);
+
+    await plugin['tool.execute.after'](
+      { tool: 'task', sessionID: 's', callID: 'task-1', args: taskArgs },
+      { output: 'agent result', status: 'failed' },
+    );
+    const completed = calls.find((call) => call.event === 'task.completed' && call.payload?.task_id === 'task-1');
+    assert(completed, 'a returned task delegation must emit task.completed');
+    assert.equal(completed.payload.title, taskArgs.description);
+    assert.equal(completed.payload.status, 'failed');
+    const stopped = calls.find((call) => call.event === 'subagent.stop' && call.payload?.subagent_id === 'task-1');
+    assert(stopped, 'a returned task delegation must emit subagent.stop');
+    assert.equal(stopped.payload.status, 'failed');
+
+
     // chat.message injects by pushing onto the existing parts array; replacing
     // output.parts would be discarded by opencode. The parts opencode hands over
     // are materialized Parts carrying id/sessionID/messageID, and the pushed one
@@ -990,6 +1045,7 @@ async function main() {
     await testEventCoverage();
     await testSecurityBlock(root);
     await testPostToolNeverBlocks(root);
+    await testTaskLifecycleTelemetry(root);
     await testFailClosed(root);
     await testTimeoutEnforced(root);
     await testApplyPatchIsGated(root);
