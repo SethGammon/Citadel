@@ -124,6 +124,24 @@ withTempProject((projectRoot) => {
   assert(fs.readFileSync(result.packagePath, 'utf8').includes('Readiness: ready'));
 });
 
+for (const [status, expectedReadiness, expectedResult] of [
+  ['passed', 'ready', 'pass'],
+  ['blocked/HUMAN_INPUT_REQUIRED', 'needs-evidence', 'fail'],
+]) {
+  withTempProject((projectRoot) => {
+    const campaignPath = path.join(projectRoot, '.planning', 'campaigns', 'manual-gate.md');
+    const manualRow = `| phase:3 | operator-approval | manual | yes | Operator decision recorded in campaign | ${status} | 0 | request approval |`;
+    write(campaignPath, `${campaignMarkdown({ title: 'Manual Gate' })}\n${manualRow}`);
+    write(path.join(projectRoot, 'src', 'result.js'), 'module.exports = true;\n');
+
+    const result = packageDelivery(projectRoot, 'manual-gate');
+    const reviewPackage = fs.readFileSync(result.packagePath, 'utf8');
+    assert.equal(result.readiness, expectedReadiness);
+    assert(reviewPackage.includes(`Readiness: ${expectedReadiness}`));
+    assert(reviewPackage.includes(`| phase:3 | operator-approval | manual | yes | Operator decision recorded in campaign | ${status.toLowerCase()} | ${expectedResult} |`));
+  });
+}
+
 withTempProject((projectRoot) => {
   const campaignPath = path.join(projectRoot, '.planning', 'campaigns', 'missing-package.md');
   const original = campaignMarkdown({
