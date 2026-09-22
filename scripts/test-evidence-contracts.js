@@ -57,6 +57,15 @@ withTempProject((projectRoot) => {
   const phase2 = validateExitEvidence(markdown, { projectRoot, target: 'phase:2' });
   assert.equal(phase2.pass, true);
 
+  const manualPassed = validateExitEvidence(`${markdown}\n| phase:5 | approval | manual | yes | Operator approval recorded in campaign | passed | 0 | none |`, { projectRoot, target: 'phase:5' });
+  assert.equal(manualPassed.pass, true);
+  assert.equal(manualPassed.failures.length, 0);
+
+  const manualBlocked = validateExitEvidence(`${markdown}\n| phase:6 | approval | manual | yes | Awaiting operator approval | blocked/HUMAN_INPUT_REQUIRED | 0 | request approval |`, { projectRoot, target: 'phase:6' });
+  assert.equal(manualBlocked.pass, false);
+  assert.equal(manualBlocked.failures.length, 1);
+  assert(manualBlocked.failures[0].issues.some((issue) => issue.startsWith('status is not passing:')));
+
   const repaired = appendRepairTasks(markdown, phase1.failures);
   assert(repaired.includes('## Repair Tasks'));
   assert(repaired.includes('Repairs phase:1/screenshot'));

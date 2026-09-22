@@ -14,6 +14,7 @@ const EVIDENCE_TYPES = [
   'review_package',
   'review_thread_resolution',
   'hook_status',
+  'manual',
 ];
 
 const PASS_STATUSES = new Set(['pass', 'passed', 'verified', 'resolved', 'clean', 'ok']);
