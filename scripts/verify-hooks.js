@@ -29,6 +29,9 @@ const path          = require('path');
 const os            = require('os');
 const { spawnSync, execFileSync } = require('child_process');
 const { filterHookTemplate } = require('../core/hooks/bundles');
+const configControl = require('../core/config');
+const claudeRuntime = require('../runtimes/claude-code/runtime');
+const codexRuntime = require('../runtimes/codex/runtime');
 
 const CITADEL_ROOT  = path.resolve(__dirname, '..');
 const HOOKS_SRC     = path.join(CITADEL_ROOT, 'hooks_src');
@@ -481,6 +484,72 @@ test('session-end: preserves the v2 trust schema and removes legacy aliases', ()
   } finally {
     if (original === null) fs.rmSync(configPath, { force: true });
     else fs.writeFileSync(configPath, original, 'utf8');
+  }
+});
+
+for (const runtime of [claudeRuntime, codexRuntime]) {
+  test(`session-end: refreshes effective config for ${runtime.id}`, () => {
+    const root = sandbox();
+    try {
+      const configPath = path.join(root, '.claude', 'harness.json');
+      fs.writeFileSync(
+        configPath,
+        `${JSON.stringify(configControl.createDefaultConfig(), null, 2)}\n`,
+        'utf8',
+      );
+      configControl.reconcileEffectiveConfig(root, {
+        runtime,
+        reconciledAt: '2026-09-22T12:00:00.000Z',
+      });
+      const before = configControl.readConfigFile(root).sourceDigest;
+      const result = fireHook(
+        'session-end.js',
+        { session_id: `effective-${runtime.id}` },
+        root,
+        { CITADEL_RUNTIME: runtime.id },
+      );
+      if (result.exitCode !== 0) return `exit ${result.exitCode}: ${result.stderr.slice(0, 200)}`;
+
+      const after = configControl.readConfigFile(root).sourceDigest;
+      if (after === before) return 'trust update did not change the source digest';
+      const effective = configControl.loadActivationContext(root, {
+        runtime,
+        allowBootstrap: false,
+      });
+      if (!effective.usable) return `effective config remained ${effective.status}: ${effective.reasonCode}`;
+      if (effective.receipt.sourceDigest !== after) return 'receipt sourceDigest was not refreshed';
+      if (effective.receipt.runtime.id !== runtime.id) return `receipt runtime is ${effective.receipt.runtime.id}`;
+    } finally {
+      cleanup(root);
+    }
+  });
+}
+
+test('session-end: malformed config remains unusable', () => {
+  const root = sandbox();
+  try {
+    const configPath = path.join(root, '.claude', 'harness.json');
+    fs.writeFileSync(
+      configPath,
+      `${JSON.stringify(configControl.createDefaultConfig(), null, 2)}\n`,
+      'utf8',
+    );
+    configControl.reconcileEffectiveConfig(root, { runtime: claudeRuntime });
+    fs.writeFileSync(configPath, '{not-json', 'utf8');
+    const result = fireHook(
+      'session-end.js',
+      { session_id: 'effective-malformed' },
+      root,
+      { CITADEL_RUNTIME: claudeRuntime.id },
+    );
+    if (result.exitCode !== 0) return `exit ${result.exitCode}: ${result.stderr.slice(0, 200)}`;
+    const effective = configControl.loadActivationContext(root, {
+      runtime: claudeRuntime,
+      allowBootstrap: false,
+    });
+    if (effective.usable) return 'malformed config unexpectedly became usable';
+  } finally {
+    cleanup(root);
   }
 });
 

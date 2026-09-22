@@ -98,4 +98,20 @@ withTempProject((projectRoot) => {
   assert(fs.readFileSync(filePath, 'utf8').includes('Repairs phase:1/screenshot'));
 });
 
+withTempProject((projectRoot) => {
+  const planned = path.join(projectRoot, '.planning', 'review-packages', 'planned.md');
+  const plannedMarkdown = [
+    '| Target | ID | Type | Required | Evidence | Status | Retries Remaining | Next Action |',
+    '|---|---|---|---|---|---|---|---|',
+    '| phase:1 | package | review_package | yes | .planning/review-packages/planned.md | resolved | 0 | none |',
+    '| phase:1 | diff | file_diff | yes | .planning/review-packages/planned.md | resolved | 0 | none |',
+  ].join('\n');
+  const report = validateExitEvidence(plannedMarkdown, {
+    projectRoot,
+    expectedPaths: [planned],
+  });
+  assert.equal(report.failures.length, 1);
+  assert.equal(report.failures[0].id, 'diff');
+});
+
 console.log('evidence contract tests passed');

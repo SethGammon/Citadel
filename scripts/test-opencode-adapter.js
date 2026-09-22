@@ -406,8 +406,13 @@ function testAgentToolRestrictionsProject() {
     // Read-only means read-only, not read-nothing: what the allow-list DOES grant
     // has to survive, or the restriction breaks the agent instead of bounding it.
     assert.equal(permissions.read, undefined, `${name} must keep the read access it was granted`);
-    assert.equal(permissions.grep, undefined, `${name} must keep grep`);
-    assert.equal(permissions.glob, undefined, `${name} must keep glob`);
+    if (name === 'phase-validator') {
+      assert.equal(permissions.grep, 'deny', 'phase-validator must not search source on opencode');
+      assert.equal(permissions.glob, 'deny', 'phase-validator must not enumerate source on opencode');
+    } else {
+      assert.equal(permissions.grep, undefined, `${name} must keep grep`);
+      assert.equal(permissions.glob, undefined, `${name} must keep glob`);
+    }
   }
 }
 

@@ -330,13 +330,21 @@ function testInitProjectSurfacesAmbiguousRuntimeAndStillProtectsRepo() {
     fs.mkdirSync(path.join(repository, '.codex'), { recursive: true });
 
     const { CITADEL_RUNTIME, ...envWithoutRuntime } = process.env;
+    const envWithoutRuntimeOrPath = Object.fromEntries(
+      Object.entries(envWithoutRuntime).filter(([key]) => key.toLowerCase() !== 'path'),
+    );
+    const emptyToolPath = path.join(repository, 'empty-tool-path');
+    fs.mkdirSync(emptyToolPath);
     const result = spawnSync(
       process.execPath,
       [path.join(CITADEL_ROOT, 'hooks_src', 'init-project.js')],
       {
         cwd: repository,
         encoding: 'utf8',
-        env: { ...envWithoutRuntime, CLAUDE_PROJECT_DIR: repository },
+        // Keep this a directory-marker test. Otherwise a runner path containing
+        // "codex", "claude", or "opencode" can win process-tree detection and
+        // make the assertion depend on whether wmic/tasklist happened to answer.
+        env: { ...envWithoutRuntimeOrPath, PATH: emptyToolPath, CLAUDE_PROJECT_DIR: repository },
         timeout: 30000,
       },
     );
@@ -376,13 +384,18 @@ function testInitProjectDoesNotCreateClaudeMarkerUnderAmbiguity() {
     fs.mkdirSync(path.join(repository, '.opencode'), { recursive: true });
 
     const { CITADEL_RUNTIME, ...envWithoutRuntime } = process.env;
+    const envWithoutRuntimeOrPath = Object.fromEntries(
+      Object.entries(envWithoutRuntime).filter(([key]) => key.toLowerCase() !== 'path'),
+    );
+    const emptyToolPath = path.join(repository, 'empty-tool-path');
+    fs.mkdirSync(emptyToolPath);
     const result = spawnSync(
       process.execPath,
       [path.join(CITADEL_ROOT, 'hooks_src', 'init-project.js')],
       {
         cwd: repository,
         encoding: 'utf8',
-        env: { ...envWithoutRuntime, CLAUDE_PROJECT_DIR: repository },
+        env: { ...envWithoutRuntimeOrPath, PATH: emptyToolPath, CLAUDE_PROJECT_DIR: repository },
         timeout: 30000,
       },
     );

@@ -135,7 +135,7 @@ trigger_keywords:
    a. Read `.claude/harness.json`, Citadel's shared config path for all runtimes including Codex (create with `{}` if missing)
    b. Add skill name to `registeredSkills` array
    c. Update `registeredSkillCount` to match array length
-5. Only add to CLAUDE.md if it has an explicit skills section listing available skills.
+5. Only add the skill to an active project instruction file that already has an explicit skills section. Codex uses `AGENTS.md`. Claude Code uses `CLAUDE.md` when present; with confirmed `AGENTS.md` support, it uses `AGENTS.md` by default if no project `CLAUDE.md` exists, or both when configured under **Project instructions**. Check the active setting before editing and preserve user-authored guidance.
 6. Run `/reload-skills` if the running Claude Code version supports it; the skill is live without a session restart. If unsupported, tell the user a fresh session is required before `/{name}` resolves.
 
 ### Step 5: VERIFY — Test on a Real Target

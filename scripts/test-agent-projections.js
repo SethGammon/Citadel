@@ -49,12 +49,32 @@ function main() {
     fail('Restricted Codex projection did not disclose and preserve the canonical tool policy');
   }
 
+  const validator = loadAgent(path.join(__dirname, '..', 'agents', 'phase-validator.md'));
+  if (JSON.stringify(validator.frontmatter.tools) !== JSON.stringify(['Read'])
+    || !validator.body.includes('Use at most one Read')
+    || !validator.body.includes('do not do it')) {
+    fail('Phase Validator is not bounded to HANDOFF-only validation');
+  }
+  const validatorToml = renderCodexToml(validator);
+  if (!validatorToml.includes('Use only these declared tools: Read.')
+    || /Use only these declared tools:[^\n]*(Grep|Glob)/.test(validatorToml)) {
+    fail('Phase Validator Codex projection expanded the bounded tool contract');
+  }
+
   const fleetSkill = fs.readFileSync(path.join(__dirname, '..', 'skills', 'fleet', 'SKILL.md'), 'utf8');
   if (/mode:\s*["']bypassPermissions["']/.test(fleetSkill)) {
     fail('Fleet skill still directs spawned agents to bypass native permissions');
   }
   if (!fleetSkill.includes("the host's native permission policy")) {
     fail('Fleet skill does not explicitly preserve the host permission policy');
+  }
+  const archonSkill = fs.readFileSync(path.join(__dirname, '..', 'skills', 'archon', 'SKILL.md'), 'utf8');
+  const campaignDocs = fs.readFileSync(path.join(__dirname, '..', 'docs', 'CAMPAIGNS.md'), 'utf8');
+  if (!archonSkill.includes('do not replace it with a raw general-purpose mega-prompt')
+    || !archonSkill.includes('never hardcode provider model IDs')
+    || !fleetSkill.includes('Never hardcode provider model IDs')
+    || !campaignDocs.includes('| Phase Type | Worker tier | Effort |')) {
+    fail('Runtime-neutral worker tiers or Marshal routing guidance is missing');
   }
 
   const arbiter = loadAgent(path.join(__dirname, '..', 'agents', 'arbiter.md'));
@@ -119,6 +139,19 @@ function main() {
   );
   if (!configuredProjection.includes('model_reasoning_effort = "ultra"')) {
     fail('Project generator did not load the governed model configuration');
+  }
+  projectCodexAgents({
+    citadelRoot: path.join(__dirname, '..'),
+    projectRoot,
+    agentName: 'phase-validator',
+  });
+  const validatorProjection = fs.readFileSync(
+    path.join(projectRoot, '.codex', 'agents', 'phase-validator.toml'),
+    'utf8',
+  );
+  if (!validatorProjection.includes('Use only these declared tools: Read.')
+    || validatorProjection.includes('Use only these declared tools: Read, Glob, Grep.')) {
+    fail('Generated Phase Validator projection did not retain its bounded tool contract');
   }
 
   const rejectedPlan = buildPlan(raw, parseArgs([
