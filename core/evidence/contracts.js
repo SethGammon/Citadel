@@ -71,11 +71,13 @@ function looksLikePath(value) {
   return /^[./\\\w-]+[\\/][^:*?"<>|]+$/.test(String(value || '')) || /\.[a-z0-9]+$/i.test(String(value || ''));
 }
 
-function pathExists(projectRoot, evidence) {
+function pathExists(projectRoot, evidence, expectedPaths = []) {
   const firstToken = String(evidence || '').split(/\s+/)[0];
   if (!looksLikePath(firstToken)) return true;
   if (/^https?:\/\//i.test(firstToken)) return true;
-  return fs.existsSync(path.resolve(projectRoot, firstToken));
+  const resolved = path.resolve(projectRoot, firstToken);
+  if (expectedPaths.some((candidate) => path.resolve(candidate) === resolved)) return true;
+  return fs.existsSync(resolved);
 }
 
 function validateEvidenceItem(item, options = {}) {
@@ -87,7 +89,10 @@ function validateEvidenceItem(item, options = {}) {
   if (item.required && !item.evidence) issues.push('missing evidence');
   if (item.required && !PASS_STATUSES.has(item.status)) issues.push(`status is not passing: ${item.status || '(blank)'}`);
 
-  if (item.evidence && ['screenshot', 'doc_update', 'file_diff', 'review_package'].includes(item.type) && !pathExists(projectRoot, item.evidence)) {
+  const expectedPaths = item.type === 'review_package' && Array.isArray(options.expectedPaths)
+    ? options.expectedPaths
+    : [];
+  if (item.evidence && ['screenshot', 'doc_update', 'file_diff', 'review_package'].includes(item.type) && !pathExists(projectRoot, item.evidence, expectedPaths)) {
     issues.push(`evidence path not found: ${item.evidence}`);
   }
   if (item.type === 'pr_link' && item.evidence && !/^https?:\/\/.+\/pull\/\d+/i.test(item.evidence)) {

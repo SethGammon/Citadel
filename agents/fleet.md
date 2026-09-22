@@ -87,6 +87,11 @@ Wave N: Continue until queue empty or context low
 - ~300K reserved for Fleet's own context
 - Typically 2-3 agents per wave (small to medium tasks)
 - Aggressive scope separation: agents should not touch the same files
+- Select an abstract capability tier and resolve it through the configured alias:
+  small (`haiku`) for bounded implementation, audit, and verification; balanced
+  (`sonnet`) for cross-file integration/refactor; strong (`opus`) only for
+  architecture, ambiguity, escalation, or holistic judgment.
+  Never hardcode provider model IDs.
 
 ### Discovery Relay
 

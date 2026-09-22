@@ -7,6 +7,7 @@ const path = require('path');
 const { execFileSync } = require('child_process');
 
 const { parseCampaignContent, parseFrontmatter } = require('../core/campaigns/parse-campaign');
+const { selectPackagePhase } = require('../core/campaigns/package-phase');
 const { isPhaseComplete } = require('../core/campaigns/update-campaign');
 const { extractCompletionOutcome } = require('../core/campaigns/outcomes');
 const { validateExitEvidence } = require('../core/evidence/contracts');
@@ -225,10 +226,7 @@ function completionRecordSummary(content) {
 
 function packagePhaseReadiness(parsed) {
   const phases = parsed.phases || [];
-  const packagePhase = phases.find((phase) => {
-    return String(phase.type || '').toLowerCase() === 'package' ||
-      /package|review/i.test(String(phase.name || ''));
-  });
+  const packagePhase = selectPackagePhase(phases);
   if (!packagePhase) return { hasPackagePhase: false, readyForPackage: false };
 
   const prior = phases.filter((phase) => phase.number < packagePhase.number);

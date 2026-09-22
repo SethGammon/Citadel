@@ -6,7 +6,9 @@ const path = require('path');
 
 const { parseExitEvidence, validateExitEvidence } = require('../evidence/contracts');
 const { getCampaignPaths, readCampaignFile } = require('./load-campaign');
-const { updatePhaseStatus } = require('./update-campaign');
+const { parseCampaignContent } = require('./parse-campaign');
+const { selectPackagePhase } = require('./package-phase');
+const { updatePhaseStatusContent } = require('./update-campaign');
 
 function normalizePath(value) {
   return String(value || '').replace(/\\/g, '/');
@@ -65,8 +67,8 @@ function evidenceResult(item, failures) {
     : 'pass';
 }
 
-function evidenceSummary(markdown, projectRoot) {
-  const report = validateExitEvidence(markdown, { projectRoot });
+function evidenceSummary(markdown, projectRoot, options = {}) {
+  const report = validateExitEvidence(markdown, { projectRoot, ...options });
   const items = parseExitEvidence(markdown);
   return {
     items: items.map((item) => ({
@@ -81,7 +83,7 @@ function evidenceSummary(markdown, projectRoot) {
 function renderReviewPackage(projectRoot, campaign, options = {}) {
   const now = options.now || new Date().toISOString();
   const targetKind = options.pr ? 'pull-request' : 'local-package';
-  const evidence = evidenceSummary(campaign.content, projectRoot);
+  const evidence = evidenceSummary(campaign.content, projectRoot, options.evidenceOptions);
   const git = readGitSnapshot(projectRoot);
   const campaignPath = relativePath(projectRoot, campaign.filePath);
   const packagePath = options.packagePath ? relativePath(projectRoot, options.packagePath) : '';
@@ -173,33 +175,122 @@ function updateReviewEvidence(content, replacement) {
   throw new Error('Campaign does not declare a review-package Exit Evidence row.');
 }
 
+function transactionPath(filePath, kind) {
+  return `${filePath}.${kind}-${process.pid}-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+}
+
+function commitFileTransaction(artifacts, operations = fs) {
+  const records = artifacts.map((artifact) => ({
+    ...artifact,
+    existed: operations.existsSync(artifact.filePath),
+    stagedPath: transactionPath(artifact.filePath, 'staged'),
+    backupPath: transactionPath(artifact.filePath, 'backup'),
+    backupCreated: false,
+    committed: false,
+  }));
+
+  try {
+    for (const record of records) {
+      operations.writeFileSync(record.stagedPath, record.content, 'utf8');
+    }
+  } catch (error) {
+    for (const record of records) {
+      try {
+        if (operations.existsSync(record.stagedPath)) operations.rmSync(record.stagedPath, { force: true });
+      } catch { /* preserve the original staging failure */ }
+    }
+    throw error;
+  }
+
+  try {
+    for (const record of records) {
+      if (record.existed) {
+        operations.renameSync(record.filePath, record.backupPath);
+        record.backupCreated = true;
+      }
+      operations.renameSync(record.stagedPath, record.filePath);
+      record.committed = true;
+    }
+  } catch (error) {
+    const rollbackErrors = [];
+    for (const record of [...records].reverse()) {
+      try {
+        if (record.committed && operations.existsSync(record.filePath)) {
+          operations.rmSync(record.filePath, { force: true });
+        }
+        if (record.backupCreated && operations.existsSync(record.backupPath)) {
+          operations.renameSync(record.backupPath, record.filePath);
+          record.backupCreated = false;
+        }
+        if (operations.existsSync(record.stagedPath)) {
+          operations.rmSync(record.stagedPath, { force: true });
+        }
+      } catch (rollbackError) {
+        rollbackErrors.push(`${record.filePath}: ${rollbackError.message}`);
+      }
+    }
+    if (rollbackErrors.length > 0) {
+      const backups = records
+        .filter((record) => record.backupCreated && operations.existsSync(record.backupPath))
+        .map((record) => record.backupPath);
+      const wrapped = new Error(
+        `File transaction failed: ${error.message}. Rollback incomplete: ${rollbackErrors.join('; ')}. ` +
+        `Recovery backups preserved: ${backups.join(', ') || '(none)'}`,
+      );
+      wrapped.cause = error;
+      wrapped.recoveryBackups = backups;
+      throw wrapped;
+    }
+    throw error;
+  }
+
+  for (const record of records) {
+    if (!record.backupCreated) continue;
+    try { operations.rmSync(record.backupPath, { force: true }); } catch { /* harmless recovery residue */ }
+  }
+}
+
 function packageDelivery(projectRoot, target, options = {}) {
   const root = path.resolve(projectRoot || process.cwd());
   const campaignPath = resolveCampaignPath(root, target);
   const campaign = readCampaignFile(campaignPath);
+  const packagePhase = selectPackagePhase(campaign.phases);
+  if (!packagePhase) throw new Error(`Campaign has no package phase: ${campaign.slug}`);
   const packageDir = path.join(root, '.planning', 'review-packages');
   const packagePath = path.join(packageDir, `${campaign.slug}.md`);
   const reviewEvidence = options.pr || relativePath(root, packagePath);
   const reviewType = options.pr ? 'pr_link' : 'review_package';
 
-  fs.mkdirSync(packageDir, { recursive: true });
-  if (!options.pr) fs.writeFileSync(packagePath, '', 'utf8');
-
-  const updated = updateReviewEvidence(fs.readFileSync(campaignPath, 'utf8'), {
+  let updated = updateReviewEvidence(campaign.content, {
     type: reviewType,
     evidence: reviewEvidence,
     nextAction: options.pr ? 'review pull request' : 'review local handoff package',
   });
-  fs.writeFileSync(campaignPath, updated, 'utf8');
-  const updatedCampaign = updatePhaseStatus(campaignPath, 4, 'complete');
+  updated = updatePhaseStatusContent(
+    updated,
+    packagePhase.number,
+    'complete',
+    path.basename(campaignPath),
+  );
+  const updatedCampaign = {
+    ...parseCampaignContent(updated, { slug: campaign.slug }),
+    filePath: campaignPath,
+  };
+  const expectedPaths = options.pr ? [] : [packagePath];
 
-  const packageMarkdown = renderReviewPackage(root, updatedCampaign, {
+  const renderPackage = options.renderPackage || renderReviewPackage;
+  const packageMarkdown = renderPackage(root, updatedCampaign, {
     now: options.now,
     note: options.note,
     pr: options.pr,
     packagePath,
+    evidenceOptions: { expectedPaths },
   });
-  fs.writeFileSync(packagePath, packageMarkdown, 'utf8');
+  fs.mkdirSync(packageDir, { recursive: true });
+  commitFileTransaction([
+    { filePath: packagePath, content: packageMarkdown },
+    { filePath: campaignPath, content: updated },
+  ], options.fileOperations || fs);
 
   return {
     slug: campaign.slug,
@@ -207,12 +298,15 @@ function packageDelivery(projectRoot, target, options = {}) {
     packagePath,
     reviewType,
     reviewEvidence,
-    readiness: evidenceSummary(updatedCampaign.content, root).ready ? 'ready' : 'needs-evidence',
+    readiness: evidenceSummary(updatedCampaign.content, root, { expectedPaths }).ready
+      ? 'ready'
+      : 'needs-evidence',
   };
 }
 
 module.exports = {
   evidenceSummary,
+  commitFileTransaction,
   packageDelivery,
   readGitSnapshot,
   renderReviewPackage,

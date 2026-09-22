@@ -395,6 +395,58 @@ withTempProject((projectRoot) => {
 });
 
 withTempProject((projectRoot) => {
+  write(path.join(projectRoot, '.planning', 'campaigns', 'package-manager-design.md'), [
+    '---',
+    'status: active',
+    '---',
+    '',
+    '# Campaign: Package Manager Design',
+    '',
+    'Status: active',
+    '',
+    '## Phases',
+    '',
+    '| # | Status | Type | Phase | Done When |',
+    '|---|--------|------|-------|-----------|',
+    '| 1 | complete | brief | Intake preflight | done |',
+    '| 2 | pending | design | Settle the interface each package manager implements | done |',
+    '| 3 | pending | build | Build | done |',
+    '| 8 | pending | package | Package for review | review package exists |',
+    '',
+    '## Exit Evidence',
+    '',
+    '| Target | ID | Type | Required | Evidence | Status | Retries Remaining | Next Action |',
+    '|---|---|---|---|---|---|---|---|',
+    '| phase:8 | review-package | review_package | yes | .planning/review-packages/package-manager-design.md | pending | 2 | package delivery for review |',
+  ].join('\n'));
+
+  const snapshot = collectDashboard({ projectRoot, now: '2026-06-04T12:00:00.000Z' });
+  assert.equal(snapshot.campaigns[0].packagePhase.phaseNumber, 8);
+  assert.equal(snapshot.campaigns[0].packagePhase.readyForPackage, false);
+  assert.notEqual(snapshot.campaigns[0].status, 'needs-review-package');
+  assert(!snapshot.repairs.some((repair) => repair.command === 'node scripts/package-delivery.js package-manager-design'));
+});
+
+withTempProject((projectRoot) => {
+  write(path.join(projectRoot, '.planning', 'campaigns', 'ambiguous-package.md'), [
+    '# Campaign: Ambiguous Package',
+    '',
+    'Status: active',
+    '',
+    '## Phases',
+    '',
+    '| # | Status | Type | Phase | Done When |',
+    '|---|--------|------|-------|-----------|',
+    '| 1 | pending | package | First package | done |',
+    '| 2 | pending | package | Second package | done |',
+  ].join('\n'));
+
+  const snapshot = collectDashboard({ projectRoot, now: '2026-06-04T12:00:00.000Z' });
+  assert.equal(snapshot.campaigns.length, 0);
+  assert.match(snapshot.skippedCampaigns[0].reason, /multiple package phases/);
+});
+
+withTempProject((projectRoot) => {
   write(path.join(projectRoot, '.planning', 'campaigns', 'complete-but-unpackaged.md'), [
     '---',
     'status: active',

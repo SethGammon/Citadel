@@ -48,7 +48,7 @@ Break the direction into 3-8 phases:
 1. Analyze scope: which files, directories, and systems are involved?
 2. Identify dependencies: what must happen before what?
 3. Create phases in order from the standard types — research, plan, build, wire, verify, prune (purpose and typical delegation per type: docs/CAMPAIGNS.md#phase-types).
-   - Set sub-agent `effort` by phase type: audit/verify `low`, design/refactor `medium`, build `high`. Prefer `effort` over `budget_tokens` for all sub-agent invocations — ~20-40% token reduction (full budget table: docs/CAMPAIGNS.md#phase-effort-budgets).
+   - Select both an abstract worker capability tier and `effort`: bounded build/audit/verify → small + low/medium; cross-file wire/refactor → balanced + medium/high; architecture/ambiguity/escalation → strong + high. Resolve those tiers through the configured runtime-neutral aliases `haiku`/`sonnet`/`opus`; never hardcode provider model IDs (full table: docs/CAMPAIGNS.md#phase-effort-budgets).
 4. For each phase, write machine-verifiable end conditions:
    - Every phase MUST have at least one non-manual condition
    - Condition types: `file_exists`, `command_passes`, `metric_threshold`, `visual_verify`, `manual`
@@ -82,6 +82,7 @@ For each phase:
    - For Amber/Red, shared-state, or nonrepeatable work, checkpoint policy is required. Hold the phase and every dependent phase until a verified checkpoint exists or a human records a scoped decision.
 2. **Log delegation start**: `node .citadel/scripts/telemetry-log.cjs --event agent-start --agent {delegate-name} --session {campaign-slug}`
 3. **Delegate**: Spawn a sub-agent with full context injection:
+   - Invoke Marshal for research/plan/build/wire/prune as declared in the phase table; do not replace it with a raw general-purpose mega-prompt. If nested skill invocation is unavailable, follow Marshal's understand → plan → execute → report protocol and record that fallback.
    - CLAUDE.md content and `.claude/agent-context/rules-summary.md`
    - **Map slice** (if `.planning/map/index.json` exists): run `node scripts/map-index.js --slice "<phase scope keywords>" --max-files 15` and inject results
    - Phase-specific direction and scope
@@ -101,7 +102,7 @@ For each phase:
    - Failed evidence with repair budget remaining: run again with `--write-repair`, keep the phase active, perform the repair task, and create a new attempt without rewriting the prior result.
    - Missing, stale, malformed, or incomplete evidence is `unknown`; exhausted repair budget holds advancement and joins the campaign's single human escalation.
    - For package/review phases, run `node scripts/package-delivery.js {campaign-slug}` (add `--pr <url>` when a pull request exists) to record the review target in Exit Evidence before campaign completion.
-4.5. **Validate handoff** — spawn a Phase Validator (subagent_type `citadel:phase-validator`, Haiku, read-only, effort: low) with the campaign slug, phase number and title, the exit conditions from the Phase End Conditions table, and the sub-agent's full HANDOFF (invocation template: docs/CAMPAIGNS.md#phase-validation). Parse the validator's JSON response:
+4.5. **Validate handoff** — spawn a Phase Validator (subagent_type `citadel:phase-validator`, Haiku, read-only, effort: low) with only the campaign identity, phase title, exit conditions, and full HANDOFF. Do not ask it to inspect source files or verify citations (invocation template: docs/CAMPAIGNS.md#phase-validation). Parse the validator's JSON response:
    - **`verdict: "pass"`**: proceed to step 5.
    - **`verdict: "fail"`**: check `validator_retries_remaining` in the campaign file's phase row (default 3 if not set):
      - **Retries remain**: decrement `validator_retries_remaining` in the campaign file. Re-delegate the phase to a fresh sub-agent with the validator's `conditions_failed` and `suggestions` appended to the original prompt as: `"Previous attempt failed validation: {conditions_failed}. Fix: {suggestions}."` Return to step 3.

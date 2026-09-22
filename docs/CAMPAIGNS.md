@@ -126,16 +126,23 @@ delegation pattern:
 
 ## Phase Effort Budgets
 
-Archon sets the `effort` parameter when invoking sub-agents (preferred over
-`budget_tokens` — ~20-40% token reduction):
+Archon selects both an abstract worker capability tier and `effort`. The tiers
+small, balanced, and strong resolve through the configured runtime-neutral aliases
+`haiku`, `sonnet`, and `opus`, respectively; never hardcode provider model IDs in
+campaign guidance.
 
-| Phase Type | Effort Level | Token Budget | Notes |
-|------------|-------------|--------------|-------|
-| audit      | low         | ~80K         | Read-heavy, minimal generation |
-| build      | high        | ~300K        | Full implementation, iterative |
-| refactor   | medium      | ~150K        | Structural changes, targeted scope |
-| design     | medium      | ~120K        | Planning + spec generation |
-| verify     | low         | ~60K         | Typecheck, test run, visual check |
+| Phase Type | Worker tier | Effort | Token Budget | Notes |
+|------------|-------------|--------|--------------|-------|
+| audit/research | small | low | ~80K | Read-heavy, bounded judgment |
+| build | small by default | medium | ~150K | Well-defined implementation; escalate cross-file ambiguity to balanced/high |
+| refactor/wire | balanced | medium | ~150K | Structural or integration work |
+| design/plan | strong | high | ~120K | Architecture and consequential tradeoffs |
+| verify/prune | small | low | ~60K | Deterministic checks or bounded removal |
+
+Strong workers are for architecture, ambiguity, escalation, or holistic judgment,
+not routine implementation. Archon invokes Marshal for research, plan, build, wire,
+and prune phases; a runtime without nested skill invocation must follow Marshal's
+understand → plan → execute → report protocol and record the fallback.
 
 ## Updating Phase Status
 
@@ -166,7 +173,8 @@ Agent(
   subagent_type: "citadel:phase-validator",
   prompt: "Campaign: {slug}. Phase {N} — {title}.
            Exit conditions: {conditions from Phase End Conditions table}.
-           HANDOFF: {full handoff text from sub-agent}",
+           HANDOFF: {full handoff text from sub-agent}.
+           Judge only this HANDOFF; do not inspect source files or verify citations.",
   effort: "low"
 )
 ```

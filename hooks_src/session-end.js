@@ -24,6 +24,7 @@
 const fs = require('fs');
 const path = require('path');
 const health = require('./harness-health-util');
+const configControl = require('../core/config');
 const { normalizeTrust } = require('../core/config/migrate');
 
 // Real token reader -- gracefully falls back if not available
@@ -423,6 +424,11 @@ function incrementTrustCounters() {
     }
 
     fs.writeFileSync(configPath, JSON.stringify(config, null, 2) + '\n', 'utf8');
+    const receiptPath = configControl.effectiveConfigPath(PROJECT_ROOT);
+    if (fs.existsSync(receiptPath)) {
+      const runtime = configControl.detectRuntimeContract(PROJECT_ROOT);
+      configControl.reconcileEffectiveConfig(PROJECT_ROOT, { runtime });
+    }
   } catch { /* non-critical -- never block session end */ }
 }
 

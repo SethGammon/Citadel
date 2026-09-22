@@ -90,13 +90,13 @@ function completeCampaign(filePath, projectRoot, options = {}) {
  * Valid status values (by convention): pending, in-progress, design-complete,
  * complete, partial, failed, skipped.
  *
- * @param {string} filePath    - Absolute path to the campaign markdown file
+ * @param {string} content     - Campaign markdown content
  * @param {number} phaseNumber - Phase number to update (matches Phase or #)
  * @param {string} newStatus   - New status string to write into the Status cell
- * @returns {object} Updated campaign object from readCampaignFile
+ * @param {string} sourceName  - Label used in validation errors
+ * @returns {string} Updated campaign markdown
  */
-function updatePhaseStatus(filePath, phaseNumber, newStatus) {
-  const content = fs.readFileSync(filePath, 'utf8');
+function updatePhaseStatusContent(content, phaseNumber, newStatus, sourceName = 'campaign') {
   const lineEnding = content.includes('\r\n') ? '\r\n' : '\n';
   const lines = content.split(/\r?\n/);
   const phaseValue = String(phaseNumber).trim();
@@ -166,7 +166,7 @@ function updatePhaseStatus(filePath, phaseNumber, newStatus) {
 
   if (!sawPhaseSection) {
     throw new Error(
-      `updatePhaseStatus: phase table section not found in ${path.basename(filePath)}`
+      `updatePhaseStatus: phase table section not found in ${sourceName}`
     );
   }
   if (!sawPhaseTableHeader) {
@@ -177,12 +177,12 @@ function updatePhaseStatus(filePath, phaseNumber, newStatus) {
       ? `missing ${missing.join(' and ')} column`
       : 'requires Phase/# and Status columns in the same header';
     throw new Error(
-      `updatePhaseStatus: phase table ${detail} in ${path.basename(filePath)}`
+      `updatePhaseStatus: phase table ${detail} in ${sourceName}`
     );
   }
   if (matchedRowIndex < 0) {
     throw new Error(
-      `updatePhaseStatus: phase ${phaseNumber} not found in ${path.basename(filePath)}`
+      `updatePhaseStatus: phase ${phaseNumber} not found in ${sourceName}`
     );
   }
 
@@ -196,6 +196,17 @@ function updatePhaseStatus(filePath, phaseNumber, newStatus) {
   lines[matchedRowIndex] = `${originalIndent}|${rowCells.join('|')}|`;
   const updatedContent = lines.join(lineEnding);
 
+  return updatedContent;
+}
+
+function updatePhaseStatus(filePath, phaseNumber, newStatus) {
+  const content = fs.readFileSync(filePath, 'utf8');
+  const updatedContent = updatePhaseStatusContent(
+    content,
+    phaseNumber,
+    newStatus,
+    path.basename(filePath),
+  );
   const temporaryPath = `${filePath}.tmp-${process.pid}-${Date.now()}-` +
     Math.random().toString(16).slice(2);
   try {
@@ -221,4 +232,5 @@ module.exports = {
   isPhaseComplete,
   updateCampaignStatus,
   updatePhaseStatus,
+  updatePhaseStatusContent,
 };

@@ -103,14 +103,21 @@ Blocking: {any blockers}
 
 ## Phase Types
 
-| Type | What Happens | Delegation |
-|------|-------------|------------|
-| `research` | Read-only investigation | Marshal assess mode |
-| `plan` | Architecture decisions | Marshal + architecture review |
-| `build` | Code changes | Marshal → sub-agents |
-| `wire` | Connect systems | Marshal with specific targets |
-| `verify` | Check everything works | Run tests, typecheck |
-| `prune` | Remove dead code, cleanup | Marshal with removal targets |
+| Type | What Happens | Delegation | Worker tier | Effort |
+|------|-------------|------------|-------------|--------|
+| `research` | Read-only investigation | Marshal assess mode | small | low |
+| `plan` | Architecture decisions | Marshal + architecture review | strong | high |
+| `build` | Code changes | Marshal → sub-agents | small; balanced if cross-file/ambiguous | medium/high |
+| `wire` | Connect systems | Marshal with specific targets | balanced | medium |
+| `verify` | Check everything works | Run tests, typecheck | small | low |
+| `prune` | Remove dead code, cleanup | Marshal with removal targets | small | low |
+
+Tiers are abstract capability classes: small, balanced, and strong. Resolve them
+through the configured runtime-neutral aliases `haiku`, `sonnet`, and `opus`,
+respectively. Never hardcode provider model IDs. Use strong only for architecture,
+ambiguity, escalation, or holistic judgment. Invoke Marshal for the listed phase
+types; if nested skill invocation is unavailable, explicitly follow Marshal's
+understand → plan → execute → report protocol and record the fallback.
 
 ## Delegation Pattern — Context Injection Required
 
