@@ -241,6 +241,13 @@ Skip low-confidence rules.
 
 ### Step 7: OUTPUT SUMMARY
 
+For the optional promotion in the summary, Codex uses `AGENTS.md`. Claude Code uses
+`CLAUDE.md` when the project has one; where its `AGENTS.md` capability is available,
+the default uses `AGENTS.md` if no project `CLAUDE.md` exists. The operator can
+configure Claude Code to load both under **Project instructions**. Check the active
+setting or startup notice before choosing a file, and do not duplicate a rule into
+an instruction file the runtime is not loading. Preserve user-authored guidance.
+
 ```
 === /learn: {Source} ===
 Mode: {campaign | evolve-{target} | lint-only | compile-only}
@@ -251,7 +258,7 @@ Wiki pages: .planning/wiki/{topic-1}.md, ...
 Lint: {conflicts found | clean} | {stale entries} | {coverage warnings}
 Memory blocks: {N} compiled | lint {PASS|FAIL} | .planning/memory/index.json
 Rules added to harness.json: {M} ({K} skipped — already exist)
-Next: review .planning/wiki/index.md — promote stable patterns to the project's runtime guidance (CLAUDE.md for Claude Code, AGENTS.md for Codex).
+Next: review .planning/wiki/index.md — promote stable patterns to the project's active instruction file(s).
 ```
 
 ## Fringe Cases
