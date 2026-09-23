@@ -91,7 +91,7 @@ If a coverage tool is configured, run it for the target file. Add tests for mean
 
 ## Quality Gates
 
-1. All tests pass — final run with `node scripts/run-with-timeout.js 300 <test-cmd>`. Skips must have documented reasons.
+1. All tests pass — final run with `node .citadel/scripts/run-with-timeout.js 300 <test-cmd>`. Skips must have documented reasons.
 2. No snapshot-only tests — every test asserts specific behavior.
 3. No implementation coupling — tests don't break on internal refactors. Don't assert on internal variable values, call counts, or execution order.
 4. No test interdependence — each test runnable in isolation.

@@ -182,7 +182,7 @@ function handleBashHangCheck() {
         `[Circuit Breaker] Command ran for ${duration}s (threshold: ${threshold}s). ` +
         `This may indicate a hang. Consider adding a timeout to the command.\n` +
         `  Command: ${(result.command || '').slice(0, 150)}\n` +
-        `  Use: node scripts/run-with-timeout.js ${threshold} <command>`,
+        `  Use: node .citadel/scripts/run-with-timeout.js ${threshold} <command>`,
         { slow: true, command: result.command, duration, threshold }
       );
     }

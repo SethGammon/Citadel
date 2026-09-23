@@ -649,6 +649,13 @@ function copySkillTree(sourceDir, targetDir) {
 }
 
 function syncSkills() {
+  if (PROJECT_IS_CITADEL_ROOT) {
+    // The plugin manifest already exposes ./skills/ directly; copies under
+    // .agents/skills/ would register every skill a second time (bare name
+    // alongside the plugin's "name (citadel)" entries).
+    console.log('Skipping .agents/skills sync on the Citadel repo itself (plugin exposes ./skills/ directly).');
+    return;
+  }
   console.log('Syncing skills to .agents/skills/...');
 
   const sourceDir = path.join(CITADEL_ROOT, 'skills');
@@ -841,7 +848,7 @@ function main() {
     console.log('Dry run complete. No files were written.');
   } else {
     console.log('Codex compatibility artifacts generated.');
-    console.log(`Plugin-bundled hooks are in \`${CODEX_PLUGIN_HOOKS_PATH}\`; \`scripts/install-hooks-codex.js\` is only needed for legacy \`.codex/hooks.json\` installs.`);
+    console.log(`Plugin-bundled hooks are in \`${CODEX_PLUGIN_HOOKS_PATH}\`.`);
   }
 }
 
