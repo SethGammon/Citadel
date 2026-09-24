@@ -19,6 +19,9 @@
  *   - custom: user-defined regex rules via harness.json
  *
  * Users can configure via harness.json verification.cold and qualityRules.custom.
+ * Individual warnings can be suppressed per file with an HTML comment marker:
+ *   <!-- citadel:ignore cross-reference -->   (one or more lenses, comma/space separated)
+ *   <!-- citadel:ignore -->                   (all lenses for this file)
  */
 
 const fs = require('fs');
@@ -43,22 +46,24 @@ function hookOutput(hookName, action, message, data = {}) {
 }
 
 // Read stdin for hook context
-let input = '';
-process.stdin.setEncoding('utf-8');
-process.stdin.on('data', chunk => { input += chunk; });
-process.stdin.on('end', () => {
-  try {
-    const ctx = JSON.parse(input);
-    // Prevent infinite loop — if this hook already fired, exit clean
-    if (ctx.stop_hook_active) {
-      process.exit(0);
-      return;
+if (require.main === module) {
+  let input = '';
+  process.stdin.setEncoding('utf-8');
+  process.stdin.on('data', chunk => { input += chunk; });
+  process.stdin.on('end', () => {
+    try {
+      const ctx = JSON.parse(input);
+      // Prevent infinite loop — if this hook already fired, exit clean
+      if (ctx.stop_hook_active) {
+        process.exit(0);
+        return;
+      }
+      run();
+    } catch {
+      run();
     }
-    run();
-  } catch {
-    run();
-  }
-});
+  });
+}
 
 // ── Cold-Path Lens Dispatch ─────────────────────────────────────────────────
 
@@ -79,7 +84,22 @@ const DEFAULT_COLD_LENSES = {
   '.md':   ['cross-reference', 'contractual'],
 };
 
-function selectColdPathLenses(file) {
+// Inline suppression: <!-- citadel:ignore cross-reference secrets --> disables
+// the named lenses for that file; a bare <!-- citadel:ignore --> disables all.
+const INLINE_IGNORE_RE = /<!--\s*citadel:ignore\b([^>]*)-->/gi;
+
+function parseInlineIgnores(content) {
+  const ignored = new Set();
+  if (typeof content !== 'string' || !content.includes('citadel:ignore')) return ignored;
+  for (const match of content.matchAll(INLINE_IGNORE_RE)) {
+    const names = match[1].split(/[\s,]+/).filter(Boolean);
+    if (names.length === 0) ignored.add('all');
+    for (const name of names) ignored.add(name);
+  }
+  return ignored;
+}
+
+function selectColdPathLenses(file, content) {
   const config = health.readConfig();
   const verification = config.verification || {};
   const disabled = new Set(verification.disabled || []);
@@ -103,7 +123,8 @@ function selectColdPathLenses(file) {
     lenses.push('secrets');
   }
 
-  return lenses.filter(l => !disabled.has(l));
+  const ignored = parseInlineIgnores(content);
+  return lenses.filter(l => !disabled.has(l) && !ignored.has('all') && !ignored.has(l));
 }
 
 function run() {
@@ -156,7 +177,7 @@ function run() {
       continue;
     }
 
-    const lenses = selectColdPathLenses(file);
+    const lenses = selectColdPathLenses(file, content);
 
     for (const lens of lenses) {
       const lensViolations = runColdLens(lens, file, content, config, builtInRules);
@@ -573,3 +594,9 @@ function lensCustom(file, content, config) {
 
   return violations;
 }
+
+module.exports = {
+  parseInlineIgnores,
+  selectColdPathLenses,
+  lensCrossReference,
+};

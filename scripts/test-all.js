@@ -96,6 +96,7 @@ const TELEMETRY_OTLP_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-telemetry-ot
 const STATE_HYGIENE_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-state-hygiene.js');
 const PERMISSION_AUDIT_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-permission-audit.js');
 const SECRETS_LENS_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-secrets-lens.js');
+const QUALITY_GATE_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-quality-gate.js');
 const DASHBOARD_WEB_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-dashboard-web.js');
 const DASHBOARD_PERF_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-dashboard-perf.js');
 const DASHBOARD_VISUAL_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-dashboard-visual.js');
@@ -361,6 +362,7 @@ const telemetryOtlpPassed = run('Telemetry OTLP Export Tests', TELEMETRY_OTLP_TE
 const stateHygienePassed = run('State Hygiene Tests', STATE_HYGIENE_TEST);
 const permissionAuditPassed = run('Permission Audit Tests', PERMISSION_AUDIT_TEST);
 const secretsLensPassed = run('Secrets Lens Tests', SECRETS_LENS_TEST);
+const qualityGatePassed = run('Quality Gate Tests', QUALITY_GATE_TEST);
 const dashboardWebPassed = run('Dashboard Web Tests', DASHBOARD_WEB_TEST);
 const dashboardPerfStatus = runWithAdvisory('Dashboard Performance Tests', DASHBOARD_PERF_TEST);
 const dashboardPerfPassed = dashboardPerfAccepted(dashboardPerfStatus);
@@ -454,6 +456,7 @@ console.log(`  Telemetry OTLP:     ${telemetryOtlpPassed ? 'PASS' : 'FAIL'}`);
 console.log(`  State hygiene:      ${stateHygienePassed ? 'PASS' : 'FAIL'}`);
 console.log(`  Permission audit:   ${permissionAuditPassed ? 'PASS' : 'FAIL'}`);
 console.log(`  Secrets lens:       ${secretsLensPassed ? 'PASS' : 'FAIL'}`);
+console.log(`  Quality gate:       ${qualityGatePassed ? 'PASS' : 'FAIL'}`);
 console.log(`  Dashboard web:      ${dashboardWebPassed ? 'PASS' : 'FAIL'}`);
 console.log(`  Dashboard perf:     ${dashboardPerfStatus.toUpperCase()}`);
 console.log(`  Dashboard visual:   ${dashboardVisualPassed ? 'PASS' : 'FAIL'}`);
@@ -474,7 +477,7 @@ for (const [label, passed] of unlockResults) {
 }
 console.log('');
 
-if (hooksPassed && securityPassed && contractsPassed && operationsProtocolPassed && appContractsPassed && supervisorClientPassed && runtimeRegistryPassed && runtimeMatrixPassed && hookEventsPassed && opencodeAdapterPassed && opencodeInstallPassed && opencodeSkillCommandPassed && skillsPassed && demoPassed && telemetryPassed && telemetryIntegrityPassed && memoryBlockPassed && repositoryMemoryPassed && evidenceContractPassed && sandboxProviderPassed && skillPackagingPassed && mapSubstratePassed && deliveryPassed && deliveryPackagePassed && continueActionPassed && nextActionPassed && routePreviewPassed && loopsPassed && operatingProofPassed && usefulnessTrialPassed && operatorConsolePassed && operatorJourneyPassed && firstUseOperatorPassed && verificationPlanPassed && prReadyPassed && stackPlanPassed && deployStewardPassed && agentsMdOnlyStewardPassed && coordinationPassed && hookInstallerPassed && campaignPassed && discoveryPassed && discoveryWriterPassed && momentumPassed && momentumWatcherPassed && policyPassed && claudeRuntimePassed && codexRuntimePassed && codexNativeIntegrationPassed && codexOperationalImprovementPassed && installerPassed && cliPackagePassed && projectBootstrapPassed && compatFixturePassed && backwardCompatPassed && costTrackerPassed && dashboardPassed && docSyncPassed && fleetSessionPassed && worktreeReadinessPassed && postEditTypecheckPassed && routingSyncPassed && watchDedupPassed && teammateRebalancePassed && docSurfacesPassed && siteStoryPassed && telemetryOtlpPassed && stateHygienePassed && permissionAuditPassed && secretsLensPassed && dashboardWebPassed && dashboardPerfPassed && dashboardVisualPassed && noopDetectPassed && releaseIntegrityPassed && activationTelemetryPassed && activationCohortPassed && githubTrafficSnapshotPassed && goldenPathPassed && goldenPathMatrixPassed && productBenchmarkPassed && productProofCohortPassed && sarifCoordinatesPassed && ecosystemCompatPassed && productProofReportPassed && unlockSuitePassed && upgradeSafetyPassed && sessionSafetyPassed && unattendedSafetyPassed) {
+if (hooksPassed && securityPassed && contractsPassed && operationsProtocolPassed && appContractsPassed && supervisorClientPassed && runtimeRegistryPassed && runtimeMatrixPassed && hookEventsPassed && opencodeAdapterPassed && opencodeInstallPassed && opencodeSkillCommandPassed && skillsPassed && demoPassed && telemetryPassed && telemetryIntegrityPassed && memoryBlockPassed && repositoryMemoryPassed && evidenceContractPassed && sandboxProviderPassed && skillPackagingPassed && mapSubstratePassed && deliveryPassed && deliveryPackagePassed && continueActionPassed && nextActionPassed && routePreviewPassed && loopsPassed && operatingProofPassed && usefulnessTrialPassed && operatorConsolePassed && operatorJourneyPassed && firstUseOperatorPassed && verificationPlanPassed && prReadyPassed && stackPlanPassed && deployStewardPassed && agentsMdOnlyStewardPassed && coordinationPassed && hookInstallerPassed && campaignPassed && discoveryPassed && discoveryWriterPassed && momentumPassed && momentumWatcherPassed && policyPassed && claudeRuntimePassed && codexRuntimePassed && codexNativeIntegrationPassed && codexOperationalImprovementPassed && installerPassed && cliPackagePassed && projectBootstrapPassed && compatFixturePassed && backwardCompatPassed && costTrackerPassed && dashboardPassed && docSyncPassed && fleetSessionPassed && worktreeReadinessPassed && postEditTypecheckPassed && routingSyncPassed && watchDedupPassed && teammateRebalancePassed && docSurfacesPassed && siteStoryPassed && telemetryOtlpPassed && stateHygienePassed && permissionAuditPassed && secretsLensPassed && qualityGatePassed && dashboardWebPassed && dashboardPerfPassed && dashboardVisualPassed && noopDetectPassed && releaseIntegrityPassed && activationTelemetryPassed && activationCohortPassed && githubTrafficSnapshotPassed && goldenPathPassed && goldenPathMatrixPassed && productBenchmarkPassed && productProofCohortPassed && sarifCoordinatesPassed && ecosystemCompatPassed && productProofReportPassed && unlockSuitePassed && upgradeSafetyPassed && sessionSafetyPassed && unattendedSafetyPassed) {
   console.log(suiteSuccessMessage(dashboardPerfStatus));
   console.log('Next steps:');
   console.log('  node scripts/skill-bench.js --list      see benchmark scenarios');
@@ -547,6 +550,7 @@ const telemetryOtlpFail = !telemetryOtlpPassed ? 128 : 0;
 const stateHygieneFail = !stateHygienePassed ? 512 : 0;
 const permissionAuditFail = !permissionAuditPassed ? 2 : 0;
 const secretsLensFail = !secretsLensPassed ? 2 : 0;
+const qualityGateFail = !qualityGatePassed ? 2 : 0;
 const dashboardWebFail = !dashboardWebPassed ? 4 : 0;
 const noopDetectFail = !noopDetectPassed ? 8 : 0;
 const releaseIntegrityFail = !releaseIntegrityPassed ? 16 : 0;
@@ -629,6 +633,7 @@ if (!telemetryOtlpPassed) console.log('Telemetry OTLP export tests failed. Fix m
 if (!stateHygienePassed) console.log('State hygiene tests failed. Fix expired-state sweeping in state-hygiene.js before shipping.');
 if (!permissionAuditPassed) console.log('Permission audit tests failed. Fix permission-events logging or report rendering before shipping.');
 if (!secretsLensPassed) console.log('Secrets lens tests failed. Fix the quality-gate secrets sweep before shipping.');
+if (!qualityGatePassed) console.log('Quality gate tests failed. Fix inline suppression or lens dispatch before shipping.');
 if (!dashboardWebPassed) console.log('Dashboard web tests failed. Fix scripts/dashboard-server.js or the dashboard/ UI before shipping.');
 if (dashboardPerfStatus === 'fail') console.log('Dashboard performance tests failed. Fix the measured dashboard regression before shipping.');
 if (dashboardPerfStatus === 'advisory') console.log('Dashboard performance timing is ADVISORY. Re-run on a quiet host before treating the budget as verified.');
