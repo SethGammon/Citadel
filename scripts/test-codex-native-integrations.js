@@ -207,6 +207,10 @@ function testGeneratedCodexArtifacts() {
       timeout: 20000,
     });
 
+    const guidance = fs.readFileSync(path.join(tmp, 'AGENTS.md'), 'utf8');
+    assert(guidance.includes('`$citadel.do setup`'), 'fallback guidance must use Codex plugin-skill syntax');
+    assert(!guidance.includes('/do setup'), 'fallback guidance must not emit Claude slash commands');
+
     const config = fs.readFileSync(path.join(tmp, '.codex', 'config.toml'), 'utf8');
     assert(config.includes('hooks = true'), 'Codex config must use canonical hooks feature');
     assert(!config.includes('codex_hooks = true'), 'Codex config must not emit deprecated codex_hooks feature');
