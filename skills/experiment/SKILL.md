@@ -44,7 +44,7 @@ For each iteration (up to budget):
 1. **Create isolation**: Spawn a sub-agent in a worktree (`isolation: "worktree"`)
 2. **Propose change**: The agent modifies files within scope to improve the metric.
    Provide context: baseline value, metric direction, scope, what previous iterations tried.
-3. **Measure**: Run the metric command in the worktree (via `node scripts/run-with-timeout.js 300`)
+3. **Measure**: Run the metric command in the worktree (via `node .citadel/scripts/run-with-timeout.js 300`)
 4. **Gate**: Run typecheck (also via timeout wrapper). If it fails, discard immediately.
 5. **Evaluate**:
    - Improved? → KEEP. Merge the worktree branch. New baseline = new value.

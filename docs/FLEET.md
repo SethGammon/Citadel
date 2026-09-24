@@ -229,7 +229,7 @@ intentionally.
 
 **Compare.** After all agents complete, the coordinator reads each HANDOFF,
 runs typecheck on each worktree's branch via
-`node scripts/run-with-timeout.js 300 <typecheck-cmd>`, records what was
+`node .citadel/scripts/run-with-timeout.js 300 <typecheck-cmd>`, records what was
 built, the typecheck result, and key decisions in the session file, then
 presents a comparison table:
 

@@ -24,7 +24,8 @@ function inspectClaudeGuidance(projectRoot, expectedOwnedContent = null, options
     && expectedOwnedContent !== null
     && rootContent === expectedOwnedContent;
   const candidates = [];
-  const userClaude = path.join(path.resolve(options.homeDir || os.homedir()), '.claude', 'CLAUDE.md');
+  const home = path.resolve(options.homeDir || os.homedir());
+  const userClaude = path.join(home, '.claude', 'CLAUDE.md');
   let current = path.resolve(projectRoot);
   while (true) {
     for (const relative of ['CLAUDE.md', 'CLAUDE.local.md', path.join('.claude', 'CLAUDE.md')]) {
@@ -33,6 +34,10 @@ function inspectClaudeGuidance(projectRoot, expectedOwnedContent = null, options
         && candidate !== userClaude
         && !(candidate === rootClaude && ownedRoot)) candidates.push(candidate);
     }
+    // The ancestor scan stops at the home directory: anything above it is not
+    // project guidance (and on a real machine would surface unrelated files
+    // like the user's own global CLAUDE.md as false blockers).
+    if (current === home) break;
     const parent = path.dirname(current);
     if (parent === current) break;
     current = parent;

@@ -148,7 +148,7 @@ Dispatch one agent per selected axis in an isolated worktree
 (Agent tool, `isolation: "worktree"`). Each agent receives:
 - The confirmed hypothesis and its falsification criterion
 - The specific files to modify
-- Verification oracle: `node scripts/run-with-timeout.js 300 node scripts/test-all.js`
+- Verification oracle: `node .citadel/scripts/run-with-timeout.js 300 node scripts/test-all.js`
 
 Each agent returns a structured result:
 `{ "axis", "skill", "delta", "mechanism_confirmed", "files_changed", "approach" }`

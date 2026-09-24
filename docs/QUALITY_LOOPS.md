@@ -85,7 +85,7 @@ Phase 3 dispatch playbooks by axis category:
 **technical axes** (test_coverage, hook_reliability, api_surface_consistency):
 - Spawn `/experiment` for measurable improvements with before/after comparison
 - Use speculative worktrees for approaches that might conflict (Agent + isolation: "worktree")
-- Run `node scripts/run-with-timeout.js 300 node scripts/test-all.js` as the verification oracle
+- Run `node .citadel/scripts/run-with-timeout.js 300 node scripts/test-all.js` as the verification oracle
 
 **documentation axes** (documentation_coverage, documentation_accuracy):
 - Direct: read current docs, identify specific gaps or inaccuracies, rewrite them

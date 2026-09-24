@@ -55,7 +55,7 @@ Use `/refactor` when you need to:
 
 ### Phase 1: BASELINE
 
-Run typecheck (via `node scripts/run-with-timeout.js 300 npm run typecheck`) and tests. Record error/failure counts — pre-existing issues are not your responsibility, but you must not add to them. Warn if there are uncommitted changes in files you plan to modify.
+Run typecheck (via `node .citadel/scripts/run-with-timeout.js 300 npm run typecheck`) and tests. Record error/failure counts — pre-existing issues are not your responsibility, but you must not add to them. Warn if there are uncommitted changes in files you plan to modify.
 
 ```
 Baseline established:

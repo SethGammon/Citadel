@@ -9,6 +9,11 @@ const path = require('path');
 
 const { buildPreview, keywordMatches, parseArgs, render, selectRoute } = require('./route-preview');
 
+// Hermetic runtime identity: force a single runtime so neither marker-dir
+// ambiguity in the checkout nor a caller-exported CITADEL_RUNTIME can leak
+// into activation decisions.
+process.env.CITADEL_RUNTIME = 'claude-code';
+
 assert.deepEqual(parseArgs(['--json', '--project-root', '.', '--', 'review', 'auth']).input, 'review auth');
 
 {

@@ -136,7 +136,7 @@ For each phase:
 
 #### Regression Guard (every build phase)
 
-1. Run typecheck via `node scripts/run-with-timeout.js 300`
+1. Run typecheck via `node .citadel/scripts/run-with-timeout.js 300`
 2. Compare error count to campaign baseline
 3. Escalation: 1-2 new errors — fix before continuing; 3-4 — log warning, attempt fixes, continue if resolved; 5+ — PARK the campaign
 4. If test suite exists: run it. New failures trigger the same escalation.
@@ -147,7 +147,7 @@ Scan modified files for: `transition-all` (name specific properties); `confirm()
 
 ### Step 5: VERIFY (after build phases)
 
-1. Run typecheck via `node scripts/run-with-timeout.js 300 <typecheck-cmd>`
+1. Run typecheck via `node .citadel/scripts/run-with-timeout.js 300 <typecheck-cmd>`
 2. Run test suite if configured (use timeout wrapper)
 3. If verification fails: record the failure, then decide:
    - **Fix if:** 1-2 failures and each has an isolated root cause
@@ -163,7 +163,7 @@ Scan modified files for: `transition-all` (name specific properties); `confirm()
 
 ### Step 7: COMPLETION
 
-1. Run final verification via `node scripts/run-with-timeout.js 300`
+1. Run final verification via `node .citadel/scripts/run-with-timeout.js 300`
 2. Confirm every required phase gate is current, subject-bound, `passed`, and complete, with no unresolved required checkpoint, human gate, dependency, or Arbiter block. Otherwise keep the campaign active or record a non-success terminal outcome such as `blocked-decision`; do not mark it completed.
 3. Update campaign status to `completed`
 3.5. **Propagate knowledge**: `npm run propagate -- --campaign {slug}`. If unavailable: add `<!-- TODO: run npm run propagate -- --campaign {slug} -->` to LEARNINGS.md.

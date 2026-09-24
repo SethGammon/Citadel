@@ -254,7 +254,7 @@ To preview what the installer would write without changing anything:
 node "$CITADEL_ROOT/scripts/install.js" --runtime codex --dry-run --json
 ```
 
-`scripts/install-hooks-codex.js` remains available for legacy per-project `.codex/hooks.json` installs, but plugin-bundled hooks are the preferred Codex path.
+Plugin-bundled hooks (`runtimes/codex/hooks.json`) are the Codex hook path; per-project `.codex/hooks.json` installs are no longer generated.
 
 The installer output names every Codex-specific external enable step and its
 observed or unknown status.

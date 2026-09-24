@@ -24,6 +24,12 @@ const fs = require('fs');
 const path = require('path');
 const os = require('os');
 
+// Hermetic runtime identity: the repo under test can carry multiple runtime
+// marker dirs (.claude, .codex, .opencode) on a developer machine, which makes
+// hook subprocesses throw CITADEL_RUNTIME_AMBIGUOUS. Pin a runtime unless the
+// caller already chose one.
+process.env.CITADEL_RUNTIME ||= 'claude-code';
+
 const PLUGIN_ROOT = path.resolve(__dirname, '..');
 const PROTECT_FILES_HOOK = path.join(PLUGIN_ROOT, 'hooks_src', 'protect-files.js');
 const QUALITY_GATE_HOOK = path.join(PLUGIN_ROOT, 'hooks_src', 'quality-gate.js');

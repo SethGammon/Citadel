@@ -134,7 +134,7 @@ Execute the improvement. Dispatch strategy depends on the axis category (expande
 
 | Category | Dispatch | Verification |
 |---|---|---|
-| technical | `/experiment` with before/after comparison; speculative worktrees (Agent + isolation: "worktree") for approaches that might conflict | `node scripts/run-with-timeout.js 300 node scripts/test-all.js` as the oracle |
+| technical | `/experiment` with before/after comparison; speculative worktrees (Agent + isolation: "worktree") for approaches that might conflict | `node .citadel/scripts/run-with-timeout.js 300 node scripts/test-all.js` as the oracle |
 | documentation | direct: read current docs, fix specific gaps; cross-reference every claim against source | structural verification before committing |
 | experience | structural fixes + doc updates; run the actual install flow in a clean temp dir; inject synthetic failures per the programmatic spec | `/qa` |
 | positioning | `/research` to verify the competitive landscape is accurate, then update README/FAQ/demo copy | `/qa` confirms the updated page renders |

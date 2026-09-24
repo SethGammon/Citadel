@@ -101,7 +101,7 @@ For each wave:
 
 After all waves:
 
-1. Run typecheck on the full project via `node scripts/run-with-timeout.js 300 <typecheck-cmd>`
+1. Run typecheck on the full project via `node .citadel/scripts/run-with-timeout.js 300 <typecheck-cmd>`
 2. Run tests if configured (also use the timeout wrapper) on the temporary integration branch. Any non-passing required check holds target-branch merge and terminal success; repair within budget or add the subject to the single human escalation.
 3. Reconfirm every merge candidate is current for the tested integration subject, with complete required `passed` evidence, no unresolved dependency/checkpoint/human gate, and no binding Arbiter block.
 4. Merge only the governed integration result into the target branch. A clean diff, clean branch, status label, vote, or conflict-free merge cannot substitute for the passed decision.
@@ -217,7 +217,7 @@ For decisions that cannot easily be undone, spawn 3 Phase Validators in parallel
 
 1. **Decompose into N strategies.** Each must target the exact same files and end goal, use a meaningfully different strategy (not style variations), and be feasible in a single agent session.
 2. **Spawn N agents in parallel** with `isolation: "worktree"`. Each gets the common direction, its own strategy description, its branch name, and the instruction to set `branch` and `worktree_status: active` in its campaign frontmatter. Scope overlap rules do NOT apply between speculative agents — they intentionally touch the same files.
-3. **Collect and compare.** For each agent: read the HANDOFF, run typecheck on its branch via `node scripts/run-with-timeout.js 300 <typecheck-cmd>`, record built/typecheck/decisions in the session file. Present a comparison table (Strategy | Branch | Typecheck | Key Decision | Notable Tradeoffs). If ALL N fail typecheck: present the table with all entries marked `FAIL typecheck` and ask the user to pick the least-broken approach or abort. Do not proceed to step 4 without a user decision.
+3. **Collect and compare.** For each agent: read the HANDOFF, run typecheck on its branch via `node .citadel/scripts/run-with-timeout.js 300 <typecheck-cmd>`, record built/typecheck/decisions in the session file. Present a comparison table (Strategy | Branch | Typecheck | Key Decision | Notable Tradeoffs). If ALL N fail typecheck: present the table with all entries marked `FAIL typecheck` and ask the user to pick the least-broken approach or abort. Do not proceed to step 4 without a user decision.
 4. **Archive losers, merge winner.** Winner: set campaign frontmatter `worktree_status: merged`, proceed with normal merge. Losers: set `worktree_status: archived`; do NOT delete branches (optional tag: `git tag archive/{loser-branch} {loser-branch}`). Add `## Speculative Comparison` to the session file: direction, N strategies, comparison table, winner, merge timestamp.
 
 ## Quick Mode

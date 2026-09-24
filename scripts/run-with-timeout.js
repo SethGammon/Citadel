@@ -3,7 +3,7 @@
 /**
  * run-with-timeout.js -- Cross-platform command timeout wrapper
  *
- * Usage: node scripts/run-with-timeout.js <seconds> <command> [args...]
+ * Usage: node .citadel/scripts/run-with-timeout.js <seconds> <command> [args...]
  *
  * Runs the command as a child process with a timeout. If the command
  * exceeds the time limit, it kills the process tree and exits with
@@ -26,8 +26,8 @@ const PROJECT_ROOT = process.env.CLAUDE_PROJECT_DIR || process.cwd();
 const args = process.argv.slice(2);
 if (args.length < 2) {
   process.stderr.write(
-    'Usage: node scripts/run-with-timeout.js <seconds> <command> [args...]\n' +
-    'Example: node scripts/run-with-timeout.js 300 npm test\n'
+    'Usage: node .citadel/scripts/run-with-timeout.js <seconds> <command> [args...]\n' +
+    'Example: node .citadel/scripts/run-with-timeout.js 300 npm test\n'
   );
   process.exit(1);
 }
@@ -50,13 +50,26 @@ let outputChunks = [];
 
 const isWindows = process.platform === 'win32';
 
-// On Windows, use shell to resolve commands like npm, npx
-const child = spawn(command, commandArgs, {
-  stdio: ['inherit', 'pipe', 'pipe'],
-  shell: isWindows,
-  cwd: PROJECT_ROOT,
-  env: process.env,
-});
+// Quote args for cmd.exe so values containing spaces or quotes survive the
+// shell round-trip (spawn(command, args, {shell:true}) concatenates them raw).
+const quoteArg = (a) => /[\s"&|<>^]/.test(a) ? `"${a.replace(/"/g, '\\"')}"` : a;
+const commandLine = [command, ...commandArgs.map(quoteArg)].join(' ');
+
+// On Windows, use shell to resolve commands like npm, npx. On POSIX, detached
+// so the timeout killer can signal the whole process group via -pid.
+const child = isWindows
+  ? spawn(commandLine, {
+      stdio: ['inherit', 'pipe', 'pipe'],
+      shell: true,
+      cwd: PROJECT_ROOT,
+      env: process.env,
+    })
+  : spawn(command, commandArgs, {
+      stdio: ['inherit', 'pipe', 'pipe'],
+      detached: true,
+      cwd: PROJECT_ROOT,
+      env: process.env,
+    });
 
 child.stdout.on('data', (chunk) => {
   process.stdout.write(chunk);

@@ -182,7 +182,7 @@ This writes:
 - `.codex-plugin/plugin.json`
 - `runtimes/codex/hooks.json`
 
-`scripts/install-hooks-codex.js` remains available for legacy per-project `.codex/hooks.json` installs, but plugin-bundled hooks are the preferred Codex path.
+Plugin-bundled hooks (`runtimes/codex/hooks.json`) are the Codex hook path; per-project `.codex/hooks.json` installs are no longer generated.
 
 ## Verify
 
