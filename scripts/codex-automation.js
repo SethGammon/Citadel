@@ -25,7 +25,7 @@ if (mode === 'plan') {
   print(createAutomationPlan({
     projectRoot: arg('--project-root', process.cwd()),
     type: arg('--type', 'schedule'),
-    command: arg('--command', '/do status'),
+    command: arg('--command', '$citadel.do status'),
     cadence: arg('--cadence', 'manual'),
     target: arg('--target', null),
     write: process.argv.includes('--write'),

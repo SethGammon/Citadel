@@ -12,6 +12,41 @@ const { toLegacyHookPayload } = require('../core/hooks/hook-context');
 
 const SECURITY_HOOKS = new Set(['protect-files', 'external-action-gate']);
 
+const FALLBACK_SKILL_NAMES = new Set([
+  'archon', 'autopilot', 'daemon', 'dashboard', 'design', 'do', 'evolve',
+  'experiment', 'fleet', 'houseclean', 'improve', 'learn', 'marshal',
+  'organize', 'postmortem', 'pr-watch', 'prd', 'qa', 'refactor', 'research',
+  'review', 'scaffold', 'schedule', 'session-handoff', 'setup',
+  'systematic-debugging', 'telemetry', 'test-gen', 'triage', 'unharness',
+  'verify', 'watch', 'wiki', 'workspace',
+]);
+
+let codexSkillNames = null;
+
+function getCodexSkillNames() {
+  if (codexSkillNames) return codexSkillNames;
+  try {
+    const names = fs.readdirSync(path.join(__dirname, '..', 'skills'), { withFileTypes: true })
+      .filter((entry) => entry.isDirectory())
+      .map((entry) => entry.name);
+    codexSkillNames = names.length > 0 ? new Set(names) : FALLBACK_SKILL_NAMES;
+  } catch {
+    codexSkillNames = FALLBACK_SKILL_NAMES;
+  }
+  return codexSkillNames;
+}
+
+// Codex invokes plugin skills as `$plugin.skill`, not `/skill`. Hooks emit
+// Claude-style `/cmd` hints in their text output; rewrite only tokens that
+// match a real Citadel skill name so paths like /usr/bin pass through.
+function translateSlashCommands(text) {
+  if (typeof text !== 'string' || !text.includes('/')) return text;
+  const names = getCodexSkillNames();
+  return text.replace(/(^|[\s"'`(\[])\/([a-z][a-z0-9-]*)\b/g, (match, prefix, name) => {
+    return names.has(name) ? `${prefix}$citadel.${name}` : match;
+  });
+}
+
 function isSecurityHook(hookName) {
   return SECURITY_HOOKS.has(hookName);
 }
@@ -346,7 +381,7 @@ function projectCodexContextOutput(stdout, eventName) {
   return JSON.stringify({
     hookSpecificOutput: {
       hookEventName: eventName,
-      additionalContext: context,
+      additionalContext: translateSlashCommands(context),
     },
   });
 }
@@ -381,7 +416,7 @@ function projectCodexPostCompactOutput(stdout) {
     ? parsed.message
     : stdout.trim();
 
-  return JSON.stringify({ systemMessage: message });
+  return JSON.stringify({ systemMessage: translateSlashCommands(message) });
 }
 
 function projectCodexOutput(result) {
@@ -411,7 +446,7 @@ function projectCodexOutput(result) {
     : null;
   if (typeof stopContext === 'string' && stopContext.trim()) {
     return {
-      stdout: JSON.stringify({ systemMessage: stopContext }),
+      stdout: JSON.stringify({ systemMessage: translateSlashCommands(stopContext) }),
       stderr,
     };
   }
@@ -470,5 +505,6 @@ module.exports = Object.freeze({
   projectCodexOutput,
   projectCodexContextOutput,
   projectCodexPostCompactOutput,
+  translateSlashCommands,
   validateSecurityEnvelope,
 });

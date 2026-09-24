@@ -37,6 +37,30 @@ async function run() {
   // Test 2: Verify adapter sets CITADEL_RUNTIME=codex
   // (We check this indirectly -- the adapter spawns the hook with this env var)
 
+  // Test 3: Slash-command hints are rewritten to Codex plugin-skill syntax
+  try {
+    const { translateSlashCommands, projectCodexContextOutput } = require(adapterPath);
+    const text = 'Run /do status, then /learn --compile. Paths like /usr/bin stay.';
+    const translated = translateSlashCommands(text);
+    if (!translated.includes('$citadel.do status')) {
+      errors.push(`Expected $citadel.do in translated text, got: ${translated}`);
+    }
+    if (!translated.includes('$citadel.learn --compile')) {
+      errors.push(`Expected $citadel.learn in translated text, got: ${translated}`);
+    }
+    if (!translated.includes('/usr/bin')) {
+      errors.push(`Non-skill path was rewritten: ${translated}`);
+    }
+    const projected = JSON.parse(
+      projectCodexContextOutput('Next: run /do continue', 'SessionStart')
+    );
+    if (projected.hookSpecificOutput.additionalContext !== 'Next: run $citadel.do continue') {
+      errors.push(`additionalContext not translated: ${projected.hookSpecificOutput.additionalContext}`);
+    }
+  } catch (err) {
+    errors.push(`Slash-command translation check failed: ${err.message}`);
+  }
+
   if (errors.length > 0) {
     return { pass: false, message: errors.join('; ') };
   }

@@ -301,12 +301,12 @@ const report = {
       'Open Codex and select the target project.',
       install ? 'Citadel Harness is installed; start a new local task so Codex loads it.' : 'Open Plugins, choose the Citadel Local Plugins marketplace, and select Add to Codex for Citadel Harness.',
       'Review and trust the Citadel hooks through /hooks when Codex asks.',
-      'Run a real request such as /do review README.md; first-use state initializes automatically.',
+      'Run a real request such as $citadel.do review README.md; first-use state initializes automatically.',
     ],
     codexCli: [
       addMarketplace ? 'Run codex from the target project.' : `Run codex plugin marketplace add ${q(pluginRoot)} if you want CLI marketplace registration.`,
       installPlugin ? 'Citadel Harness is installed from citadel-local.' : 'Run codex plugin add citadel@citadel-local.',
-      'Start a new task, review Citadel through /hooks, then run /do review README.md.',
+      'Start a new task, review Citadel through /hooks, then run $citadel.do review README.md.',
     ],
   },
 };
