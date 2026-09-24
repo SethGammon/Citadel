@@ -189,7 +189,6 @@ function generateConfigToml() {
       startup_timeout_sec: 10,
       tool_timeout_sec: 30,
       required: false,
-      instructions: 'Use citadel_status to orient on campaign, fleet, telemetry, and artifact state before invoking Citadel workflows.',
     },
   })];
   const mergedServers = new Map();
@@ -216,8 +215,11 @@ function generateConfigToml() {
   }
 
   // On Windows, PowerShell 5 fails to load its managed runtime in some environments
-  // (error 8009001d). Emit the [windows] agent_shell override and set SHELL in the
-  // env policy so both the Codex shell selector and any sub-invocations use Git Bash.
+  // (error 8009001d). Set SHELL in the env policy so sub-invocations use Git Bash.
+  // The [windows] section only gets keys released Codex versions recognize:
+  // `sandbox_private_desktop` (defaults to true upstream) and `agent_shell`
+  // (openai/codex#16717, not yet shipped) are ignored by current releases and
+  // would trigger "unrecognized configuration setting" warnings.
   let shellEnvVars = 'CITADEL_RUNTIME = "codex"';
   let windowsSection = '';
   if (process.platform === 'win32') {
@@ -229,8 +231,6 @@ function generateConfigToml() {
 # Prevents "Loading managed Windows PowerShell failed with error 8009001d" errors.
 [windows]
 sandbox = "elevated"
-sandbox_private_desktop = true
-agent_shell = "git-bash"
 `;
     }
   }
@@ -356,6 +356,9 @@ function mcpServerToToml(name, config) {
   if (config._codex && typeof config._codex === 'object') {
     for (const [k, v] of Object.entries(config._codex)) {
       if (v === null || v === undefined) continue;
+      // `instructions` is Citadel usage metadata, not a Codex mcp_servers
+      // field; emitting it triggers "unrecognized configuration" warnings.
+      if (k === 'instructions') continue;
       const rendered = tomlValue(v);
       if (rendered !== null) lines.push(`${k} = ${rendered}`);
     }
@@ -393,7 +396,6 @@ function generatePluginMcpConfig() {
       startup_timeout_sec: 10,
       tool_timeout_sec: 30,
       required: false,
-      instructions: 'Use citadel_status to orient on campaign, fleet, telemetry, and artifact state before invoking Citadel workflows.',
     },
   };
   const config = existing && typeof existing === 'object' && !Array.isArray(existing)
