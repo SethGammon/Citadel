@@ -19,9 +19,9 @@
  *   - custom: user-defined regex rules via harness.json
  *
  * Users can configure via harness.json verification.cold and qualityRules.custom.
- * Individual warnings can be suppressed per file with an HTML comment marker:
- *   <!-- citadel:ignore cross-reference -->   (one or more lenses, comma/space separated)
- *   <!-- citadel:ignore -->                   (all lenses for this file)
+ * Markdown cross-reference warnings can be suppressed per file with a
+ * standalone <!-- citadel:ignore cross-reference --> comment outside code fences.
+ * No other lens can be suppressed inline; project configuration still applies.
  */
 
 const fs = require('fs');
@@ -84,17 +84,33 @@ const DEFAULT_COLD_LENSES = {
   '.md':   ['cross-reference', 'contractual'],
 };
 
-// Inline suppression: <!-- citadel:ignore cross-reference secrets --> disables
-// the named lenses for that file; a bare <!-- citadel:ignore --> disables all.
-const INLINE_IGNORE_RE = /<!--\s*citadel:ignore\b([^>]*)-->/gi;
-
+// Only an explicit, standalone Markdown cross-reference waiver is supported.
+// Examples in fenced/indented code and inline code must remain inert.
 function parseInlineIgnores(content) {
   const ignored = new Set();
   if (typeof content !== 'string' || !content.includes('citadel:ignore')) return ignored;
-  for (const match of content.matchAll(INLINE_IGNORE_RE)) {
-    const names = match[1].split(/[\s,]+/).filter(Boolean);
-    if (names.length === 0) ignored.add('all');
-    for (const name of names) ignored.add(name);
+  let fence = null;
+  for (const line of content.split(/\r?\n/)) {
+    // Recognize container-prefixed fences too, so a list's lightly indented
+    // example cannot masquerade as a standalone waiver. On ambiguous/unclosed
+    // fences, conservatively keep ignoring markers through the end of the file.
+    const fenceLine = line.replace(/^(?: {0,3}>[ \t]?)+/, '')
+      .replace(/^ {0,3}(?:[-+*]|\d{1,9}[.)])[ \t]+/, '');
+    const boundary = fenceLine.match(/^ {0,3}(`{3,}|~{3,})(.*)$/);
+    if (fence) {
+      if (boundary && boundary[1][0] === fence.char &&
+          boundary[1].length >= fence.length && /^[ \t]*$/.test(boundary[2])) {
+        fence = null;
+      }
+      continue;
+    }
+    if (boundary && (boundary[1][0] === '~' || !boundary[2].includes('`'))) {
+      fence = { char: boundary[1][0], length: boundary[1].length };
+      continue;
+    }
+    if (/^ {0,3}<!--[ \t]*citadel:ignore[ \t]+cross-reference[ \t]*-->[ \t]*$/.test(line)) {
+      ignored.add('cross-reference');
+    }
   }
   return ignored;
 }
@@ -123,8 +139,8 @@ function selectColdPathLenses(file, content) {
     lenses.push('secrets');
   }
 
-  const ignored = parseInlineIgnores(content);
-  return lenses.filter(l => !disabled.has(l) && !ignored.has('all') && !ignored.has(l));
+  const ignored = ext === '.md' ? parseInlineIgnores(content) : new Set();
+  return lenses.filter(l => !disabled.has(l) && !ignored.has(l));
 }
 
 function run() {
