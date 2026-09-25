@@ -151,7 +151,9 @@ try {
     '/* <!-- citadel:ignore --> */',
     '/* <!-- citadel:ignore secrets adversarial custom --> */',
     `/* ${marker} */`,
-    'eval(userInput); // REVIEW_SENTINEL',
+    // This file is only scanned, never executed. Exercise the adversarial lens
+    // with an HTML assignment instead of a dynamic-execution example.
+    'element.innerHTML = userInput; // REVIEW_SENTINEL',
     `const credential = '${'AKIA' + '0123456789ABCDEF'}';`,
   ].join('\n'));
   fs.writeFileSync(path.join(sandbox, 'fenced.md'), `\`\`\`html\n${marker}\n\`\`\`\n${refDoc}`);
