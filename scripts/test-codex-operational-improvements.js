@@ -6,7 +6,7 @@ const assert = require('assert');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
-const { execFileSync } = require('child_process');
+const { execFileSync, spawnSync } = require('child_process');
 
 const {
   buildAppServerApprovalResponse,
@@ -159,6 +159,33 @@ function testPluginMarketplaceSmoke() {
   }
 }
 
+function testFallbackSkillOwnership() {
+  const tmp = tempProject('citadel-fallback-skill-ownership-');
+  try {
+    const userSkill = path.join(tmp, '.agents', 'skills', 'review', 'SKILL.md');
+    fs.mkdirSync(path.dirname(userSkill), { recursive: true });
+    fs.writeFileSync(userSkill, 'user-owned review skill\n');
+    const compat = path.join(CITADEL_ROOT, 'scripts', 'codex-compat.js');
+    const run = () => execFileSync(process.execPath, [compat, tmp], {
+      cwd: CITADEL_ROOT, stdio: 'pipe', encoding: 'utf8', timeout: 30000,
+    });
+    run();
+    assert.strictEqual(fs.readFileSync(userSkill, 'utf8'), 'user-owned review skill\n');
+    const receiptPath = path.join(tmp, '.citadel', 'codex-skill-ownership.json');
+    const receipt = JSON.parse(fs.readFileSync(receiptPath, 'utf8'));
+    assert(!receipt.skills.review, 'pre-existing user skill must not be claimed');
+    assert(receipt.skills.fleet, 'new fallback skill must have an ownership digest');
+    const managed = path.join(tmp, '.agents', 'skills', 'fleet', 'SKILL.md');
+    fs.appendFileSync(managed, '\nuser edit\n');
+    run();
+    assert(fs.readFileSync(managed, 'utf8').endsWith('\nuser edit\n'),
+      'modified managed skill must not be overwritten on fallback refresh');
+    assert.strictEqual(fs.readFileSync(userSkill, 'utf8'), 'user-owned review skill\n');
+  } finally {
+    fs.rmSync(tmp, { recursive: true, force: true });
+  }
+}
+
 function testCodexInstallScript() {
   const tmp = tempProject('citadel-codex-install-');
   const projectRoot = path.join(tmp, 'project');
@@ -174,6 +201,7 @@ function testCodexInstallScript() {
       projectRoot,
       '--plugin-root',
       pluginRoot,
+      '--fallback',
       '--json',
     ], {
       cwd: CITADEL_ROOT,
@@ -183,7 +211,7 @@ function testCodexInstallScript() {
     });
     const report = JSON.parse(output);
     assert(report.pass, JSON.stringify(report.steps.filter((step) => !step.pass), null, 2));
-    assert.equal(report.mode, 'plugin-and-project');
+    assert.equal(report.mode, 'project-fallback');
     assert(report.steps.some((step) => step.name === 'Refresh Citadel Codex plugin artifacts'));
     assert(report.steps.some((step) => step.name === 'Write and validate local Codex plugin marketplace'));
     assert(report.steps.some((step) => step.name === 'Verify Codex project readiness'));
@@ -218,6 +246,15 @@ function testCodexInstallScript() {
     assert.equal(noRefreshReport.mode, 'plugin-only');
     assert(!noRefreshReport.steps.some((step) => step.name === 'Refresh Citadel Codex plugin artifacts'));
     assert(noRefreshReport.steps.some((step) => step.name === 'Write and validate local Codex plugin marketplace'));
+    const blocked = spawnSync(process.execPath, [
+      path.join(CITADEL_ROOT, 'scripts', 'codex-install.js'),
+      '--project-root', projectRoot, '--plugin-root', pluginRoot,
+      '--install', '--dry-run', '--json',
+    ], { cwd: CITADEL_ROOT, encoding: 'utf8', timeout: 20000 });
+    assert.strictEqual(blocked.status, 2, blocked.stderr);
+    const blockedReport = JSON.parse(blocked.stdout);
+    assert(blockedReport.blockers.some((item) => item.startsWith('.agents/skills/')));
+    assert.strictEqual(blockedReport.steps.length, 0, 'plugin registration must not start before migration');
     assert.deepEqual(snapshotSourcePluginArtifacts(), sourceArtifactsBefore, 'staged installs must not mutate an immutable source checkout');
   } finally {
     fs.rmSync(tmp, { recursive: true, force: true });
@@ -461,6 +498,7 @@ function testAppServerCaptureVerification() {
 
 testReadinessCheck();
 testPluginMarketplaceSmoke();
+testFallbackSkillOwnership();
 testCodexInstallScript();
 testCodexReviewIngestion();
 testCodexReviewFetchScript();

@@ -134,7 +134,8 @@ Options:
   --plugin-root PATH        Citadel clone; defaults to this script's parent directory.
   --install                 Add the marketplace and install citadel@citadel-local.
   --install-plugin          Run: codex plugin add citadel@citadel-local.
-  --plugin-only             Prepare the Citadel plugin and marketplace only.
+  --plugin-only             Prepare only the plugin (the default).
+  --fallback                Explicitly generate project-local fallback artifacts instead of installing the plugin.
   --skip-plugin-refresh     Do not regenerate plugin-root Codex artifacts.
   --skip-windows-check      Skip Windows-specific Codex readiness check.
   --add-marketplace         Run: codex plugin marketplace add <plugin-root>.
@@ -151,11 +152,16 @@ Common use:
 const dryRun = has('--dry-run');
 const jsonOnly = has('--json');
 const install = has('--install');
-const pluginOnly = has('--plugin-only');
+const fallback = has('--fallback');
+const pluginOnly = !fallback;
 const skipPluginRefresh = has('--skip-plugin-refresh');
 const skipWindowsCheck = has('--skip-windows-check');
 const addMarketplace = install || has('--add-marketplace');
 const installPlugin = install || has('--install-plugin');
+if (fallback && (has('--plugin-only') || addMarketplace || installPlugin)) {
+  process.stderr.write('Choose plugin installation or --fallback project artifacts, not both.\n');
+  process.exit(2);
+}
 const pluginRoot = path.resolve(arg('--plugin-root', DEFAULT_PLUGIN_ROOT));
 const projectRoot = path.resolve(arg('--project-root', arg('--target-project', process.cwd())));
 
@@ -186,6 +192,37 @@ if (missingScripts.length > 0) {
   }
   process.exitCode = 1;
   return;
+}
+
+if (installPlugin) {
+  const localSkills = path.join(projectRoot, '.agents', 'skills');
+  const sourceSkills = path.join(pluginRoot, 'skills');
+  const legacy = [];
+  const localHooks = path.join(projectRoot, '.codex', 'hooks.json');
+  if (fs.existsSync(localHooks) && fs.readFileSync(localHooks, 'utf8').includes('codex-adapter')) {
+    legacy.push('.codex/hooks.json');
+  }
+  if (fs.existsSync(sourceSkills)) {
+    for (const name of fs.readdirSync(sourceSkills)) {
+      if (fs.existsSync(path.join(sourceSkills, name, 'SKILL.md'))
+        && fs.existsSync(path.join(localSkills, name, 'SKILL.md'))) {
+        legacy.push(`.agents/skills/${name}/SKILL.md`);
+      }
+    }
+  }
+  if (legacy.length) {
+    const report = {
+      pluginRoot, projectRoot, pass: false, mode: 'plugin-only', steps: [],
+      blockers: legacy,
+      diagnostics: [{ code: 'CODEX_FALLBACK_MIGRATION_REQUIRED',
+        message: 'Project-local Citadel hooks or same-named skills may duplicate the plugin. Verify ownership and migrate them before plugin installation; user-authored or modified files must be preserved.' }],
+      nextSteps: { codexApp: [], codexCli: [] },
+    };
+    if (jsonOnly) console.log(JSON.stringify(report, null, 2));
+    else console.error(`${report.diagnostics[0].message}\n${legacy.join('\n')}`);
+    process.exitCode = 2;
+    return;
+  }
 }
 
 const beforeInventory = inspectInstallInventory(projectRoot, { runtime: 'codex' });
@@ -283,7 +320,7 @@ const report = {
   pluginRoot,
   projectPluginRoot,
   projectRoot,
-  mode: pluginOnly ? 'plugin-only' : 'plugin-and-project',
+  mode: pluginOnly ? 'plugin-only' : 'project-fallback',
   dryRun,
   install,
   addMarketplace,

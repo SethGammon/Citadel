@@ -107,21 +107,55 @@ function proposeClaudeProjection(options) {
   };
 }
 
-function codexSkillEffects(target, source) {
+function codexSkillEffects(target, source, mode, ownedPaths) {
   const skillsRoot = path.join(source, 'skills');
   if (!fs.existsSync(skillsRoot)) return [];
   return fs.readdirSync(skillsRoot, { withFileTypes: true })
     .filter((entry) => entry.isDirectory() && fs.existsSync(path.join(skillsRoot, entry.name, 'SKILL.md')))
     .sort((left, right) => left.name.localeCompare(right.name))
-    .map((entry) => fileProposal(
-      'codex', 'skill', target, `.agents/skills/${entry.name}/SKILL.md`,
-      fs.readFileSync(path.join(skillsRoot, entry.name, 'SKILL.md')), 'owned', 'delete_if_exact',
-    ));
+    .flatMap((entry) => {
+      const relative = `.agents/skills/${entry.name}/SKILL.md`;
+      const existing = snapshot(target, relative).exists;
+      if (mode === 'plugin') return existing && !ownedPaths.has(relative)
+        ? [unknownFileProposal('codex', 'legacy-local-skill', target, relative,
+          'Project-local skill may duplicate the plugin skill; inspect ownership before removing it')]
+        : [];
+      if (existing && !ownedPaths.has(relative)) return [unknownFileProposal(
+        'codex', 'skill-collision', target, relative,
+        'Existing project skill has no verified Citadel adoption ownership; preserve it for manual review',
+      )];
+      return [fileProposal('codex', 'skill', target, relative,
+        fs.readFileSync(path.join(skillsRoot, entry.name, 'SKILL.md')), 'owned', 'delete_if_exact')];
+    });
 }
 
 function proposeCodexProjection(options) {
   const target = path.resolve(options.target);
   const source = path.resolve(options.source);
+  const mode = options.mode || 'plugin';
+  if (!['plugin', 'fallback'].includes(mode)) throw new Error(`Unknown Codex projection mode: ${mode}`);
+  const ownedPaths = new Set(options.ownedPaths || []);
+  const configReview = unknownFileProposal(
+    'codex', 'config.toml', target, '.codex/config.toml',
+    'No safe structural TOML writer or Citadel-owned config member is established',
+  );
+  if (mode === 'plugin') {
+    const localHooks = path.join(target, '.codex', 'hooks.json');
+    const legacyHooks = !ownedPaths.has('.codex/hooks.json') && fs.existsSync(localHooks)
+      && fs.readFileSync(localHooks, 'utf8').includes('codex-adapter');
+    return {
+      runtime: 'codex',
+      status: 'plugin_registration_required',
+      proposed_effects: [
+        ...(legacyHooks ? [unknownFileProposal('codex', 'legacy-local-hooks', target, '.codex/hooks.json',
+          'Project-local Citadel hooks may duplicate plugin hooks; inspect receipt and preserve user hooks')] : []),
+        ...codexSkillEffects(target, source, mode, ownedPaths),
+        configReview,
+        unknownProposal('codex', 'plugin-registration',
+          'Codex plugin UI and CLI registration cannot be enumerated and unregistered by exact project scope here'),
+      ],
+    };
+  }
   const hooksTemplate = JSON.parse(
     fs.readFileSync(path.join(source, 'hooks', 'hooks-template.json'), 'utf8')
       .replace(/\$\{CLAUDE_PLUGIN_ROOT\}/g, source.replace(/\\/g, '/')),
@@ -138,27 +172,13 @@ function proposeCodexProjection(options) {
     preserveMarker: 'codex-adapter',
   });
   const hookContent = Buffer.from(`${JSON.stringify({ hooks: mergedHooks }, null, 2)}\n`);
-  const pluginRecord = Buffer.from(`${JSON.stringify({
-    schema_version: 1,
-    name: 'citadel-local',
-    plugins: [{
-      name: 'citadel',
-      source: { source: 'local', path: source.replace(/\\/g, '/') },
-      policy: { installation: 'AVAILABLE', authentication: 'ON_INSTALL' },
-    }],
-  }, null, 2)}\n`);
   return {
     runtime: 'codex',
-    status: 'planned_with_unknown_config_and_external_registration',
+    status: 'project_fallback_without_plugin_registration',
     proposed_effects: [
       fileProposal('codex', 'shared-hooks', target, hookRelative, hookContent),
-      fileProposal('codex', 'plugin-marketplace', target, '.agents/plugins/marketplace.json', pluginRecord),
-      ...codexSkillEffects(target, source),
-      unknownFileProposal(
-        'codex', 'config.toml', target, '.codex/config.toml',
-        'No safe structural TOML writer or Citadel-owned config member is established',
-      ),
-      unknownProposal('codex', 'plugin-registration', 'Codex plugin UI and CLI registration cannot be enumerated and unregistered by exact project scope here'),
+      ...codexSkillEffects(target, source, mode, ownedPaths),
+      configReview,
     ],
   };
 }

@@ -283,14 +283,13 @@ try {
     assert.strictEqual(fs.readFileSync(path.join(root, '.claude', 'settings.json'), 'utf8'), original);
   });
 
-  test('Codex projection is read-only, owns skills, restores shared hooks, and keeps unregister unknown', () => {
+  test('explicit Codex fallback owns new skills and restores shared hooks without plugin registration', () => {
     const original = `${JSON.stringify({ hooks: { Stop: [] }, user: true }, null, 2)}\n`;
     const root = target(path.join(suite, 'codex'), { '.codex/hooks.json': original });
     const before = treeDigest(root);
-    const projection = proposeCodexProjection({ target: root, source: sourceV1 });
+    const projection = proposeCodexProjection({ target: root, source: sourceV1, mode: 'fallback' });
     assert.strictEqual(treeDigest(root), before);
-    assert(projection.proposed_effects.some((effect) => effect.surface === 'plugin-registration'
-      && effect.removal.evidence_status === 'unknown'));
+    assert(!projection.proposed_effects.some((effect) => effect.surface === 'plugin-registration'));
     const plan = createAdoptionPlan({ source: sourceV1, target: root, runtimeProjections: [projection] });
     confirm(plan, controlRoot);
     assert(fs.existsSync(path.join(root, '.agents', 'skills', 'review', 'SKILL.md')));
@@ -302,12 +301,63 @@ try {
     assert(!fs.existsSync(path.join(root, '.agents', 'skills', 'review', 'SKILL.md')));
   });
 
+  test('Codex plugin projection preserves unowned local hooks and skill collisions', () => {
+    const hooks = `${JSON.stringify({ hooks: { Stop: [{ hooks: [{ command: 'node codex-adapter.js' }] }] } })}\n`;
+    const skill = 'user-authored review guidance\n';
+    const root = target(path.join(suite, 'codex-plugin'), {
+      '.codex/hooks.json': hooks,
+      '.agents/skills/review/SKILL.md': skill,
+    });
+    const before = treeDigest(root);
+    const projection = proposeCodexProjection({ target: root, source: sourceV1 });
+    assert.strictEqual(treeDigest(root), before);
+    assert.strictEqual(projection.status, 'plugin_registration_required');
+    assert(!projection.proposed_effects.some((effect) => ['create', 'replace'].includes(effect.action)));
+    assert(projection.proposed_effects.some((effect) => effect.surface === 'legacy-local-hooks'));
+    assert(projection.proposed_effects.some((effect) => effect.surface === 'legacy-local-skill'));
+    assert(projection.proposed_effects.some((effect) => effect.surface === 'plugin-registration'));
+    confirm(createAdoptionPlan({ source: sourceV1, target: root, runtimeProjections: [projection] }), controlRoot);
+    assert.strictEqual(fs.readFileSync(path.join(root, '.codex', 'hooks.json'), 'utf8'), hooks);
+    assert.strictEqual(fs.readFileSync(path.join(root, '.agents', 'skills', 'review', 'SKILL.md'), 'utf8'), skill);
+  });
+
+  test('plugin migration prunes only unchanged fallback-owned copies', () => {
+    const original = `${JSON.stringify({ hooks: { Stop: [] }, user: true }, null, 2)}\n`;
+    const root = target(path.join(suite, 'codex-migration'), { '.codex/hooks.json': original });
+    const fallback = proposeCodexProjection({ target: root, source: sourceV1, mode: 'fallback' });
+    confirm(createAdoptionPlan({ source: sourceV1, target: root, runtimeProjections: [fallback] }), controlRoot);
+    const plugin = proposeCodexProjection({ target: root, source: sourceV2, mode: 'plugin',
+      ownedPaths: ['.codex/hooks.json', '.agents/skills/review/SKILL.md'] });
+    const update = createUpdatePlan({ source: sourceV2, target: root, controlRoot,
+      migration: baselineMigration(), runtimeProjections: [plugin] });
+    confirm(update, controlRoot);
+    assert.strictEqual(fs.readFileSync(path.join(root, '.codex', 'hooks.json'), 'utf8'), original);
+    assert(!fs.existsSync(path.join(root, '.agents', 'skills', 'review', 'SKILL.md')));
+  });
+
+  test('plugin migration retains a user-edited fallback skill', () => {
+    const root = target(path.join(suite, 'codex-migration-edited'));
+    const fallback = proposeCodexProjection({ target: root, source: sourceV1, mode: 'fallback' });
+    confirm(createAdoptionPlan({ source: sourceV1, target: root, runtimeProjections: [fallback] }), controlRoot);
+    const skillPath = path.join(root, '.agents', 'skills', 'review', 'SKILL.md');
+    fs.appendFileSync(skillPath, '\nuser edit\n');
+    const edited = fs.readFileSync(skillPath, 'utf8');
+    const plugin = proposeCodexProjection({ target: root, source: sourceV2, mode: 'plugin',
+      ownedPaths: ['.codex/hooks.json'] });
+    const update = createUpdatePlan({ source: sourceV2, target: root, controlRoot,
+      migration: baselineMigration(), runtimeProjections: [plugin] });
+    assert(update.warnings.some((warning) => warning.code === 'STALE_PROJECTION_RETAINED'));
+    confirm(update, controlRoot);
+    assert.strictEqual(fs.readFileSync(skillPath, 'utf8'), edited);
+  });
+
   test('update prunes an unchanged stale owned runtime projection from the prior receipt', () => {
     const root = target(path.join(suite, 'stale-projection'));
-    const first = proposeCodexProjection({ target: root, source: sourceV1 });
+    const first = proposeCodexProjection({ target: root, source: sourceV1, mode: 'fallback' });
     confirm(createAdoptionPlan({ source: sourceV1, target: root, runtimeProjections: [first] }), controlRoot);
     assert(fs.existsSync(path.join(root, '.agents', 'skills', 'review', 'SKILL.md')));
-    const next = proposeCodexProjection({ target: root, source: sourceV2 });
+    const next = proposeCodexProjection({ target: root, source: sourceV2, mode: 'fallback',
+      ownedPaths: ['.agents/skills/review/SKILL.md'] });
     next.proposed_effects = next.proposed_effects.filter((effect) => effect.surface !== 'skill');
     const update = createUpdatePlan({
       source: sourceV2, target: root, controlRoot,

@@ -23,6 +23,7 @@
     "core/contracts/skill-manifest.js",
     "core/distribution/fs-safety.js",
     "core/evidence/contracts.js",
+    "core/forks/launcher.js",
     "core/intake/deliver.js",
     "core/map/index.js",
     "core/memory/repository-store.js",

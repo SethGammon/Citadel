@@ -267,6 +267,7 @@ function testInstalledCodexMcpEntrypoints() {
       path.join(pluginRoot, 'scripts', 'codex-install.js'),
       '--plugin-root', pluginRoot,
       '--project-root', projectRoot,
+      '--fallback',
       '--skip-windows-check',
       '--json',
     ], {
@@ -291,6 +292,9 @@ function testInstalledCodexMcpEntrypoints() {
 
     const config = fs.readFileSync(path.join(projectRoot, '.codex', 'config.toml'), 'utf8');
     assert(!config.includes('${CLAUDE_PLUGIN_ROOT}'));
+    assert(!/^instructions\s*=/m.test(config), 'Codex MCP config must omit unsupported instructions');
+    assert(!/^agent_shell\s*=/m.test(config), 'Codex Windows config must omit unsupported agent_shell');
+    assert(!/^sandbox_private_desktop\s*=/m.test(config), 'Codex Windows config must omit unsupported sandbox_private_desktop');
     const commonRequests = [
       { jsonrpc: '2.0', id: 1, method: 'initialize', params: { protocolVersion: '2025-06-18', capabilities: {}, clientInfo: { name: 'citadel-regression-test', version: '1' } } },
       { jsonrpc: '2.0', id: 2, method: 'tools/list', params: {} },

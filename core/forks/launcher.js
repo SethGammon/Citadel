@@ -42,7 +42,9 @@ function findOnPath(command, env) {
   if (command.includes('/') || command.includes('\\') || path.isAbsolute(command)) {
     return fs.existsSync(command) ? command : null;
   }
-  const extensions = [...DIRECT_EXTENSIONS, ...SHIM_EXTENSIONS];
+  const explicitExtension = path.extname(command).toLowerCase();
+  const extensions = [...DIRECT_EXTENSIONS, ...SHIM_EXTENSIONS].includes(explicitExtension)
+    ? [''] : [...DIRECT_EXTENSIONS, ...SHIM_EXTENSIONS];
   for (const directory of candidateDirectories(command, env)) {
     for (const extension of extensions) {
       const candidate = path.join(directory, `${command}${extension}`);
@@ -57,11 +59,12 @@ function findOnPath(command, env) {
 function nodeEntrypoint(command, resolved, platform = process.platform) {
   const platformPath = platform === 'win32' ? path.win32 : path;
   const root = platformPath.dirname(resolved);
-  if (command === 'codex') return platformPath.join(root, 'node_modules', '@openai', 'codex', 'bin', 'codex.js');
-  if (command === 'claude') return platformPath.join(root, 'node_modules', '@anthropic-ai', 'claude-code', 'cli.js');
-  if (command === 'npm') return platformPath.join(root, 'node_modules', 'npm', 'bin', 'npm-cli.js');
-  if (command === 'npx') return platformPath.join(root, 'node_modules', 'npm', 'bin', 'npx-cli.js');
-  if (command === 'corepack') return platformPath.join(root, 'node_modules', 'corepack', 'dist', 'corepack.js');
+  const name = platformPath.basename(command).replace(/\.(?:cmd|bat)$/i, '').toLowerCase();
+  if (name === 'codex') return platformPath.join(root, 'node_modules', '@openai', 'codex', 'bin', 'codex.js');
+  if (name === 'claude') return platformPath.join(root, 'node_modules', '@anthropic-ai', 'claude-code', 'cli.js');
+  if (name === 'npm') return platformPath.join(root, 'node_modules', 'npm', 'bin', 'npm-cli.js');
+  if (name === 'npx') return platformPath.join(root, 'node_modules', 'npm', 'bin', 'npx-cli.js');
+  if (name === 'corepack') return platformPath.join(root, 'node_modules', 'corepack', 'dist', 'corepack.js');
   return null;
 }
 

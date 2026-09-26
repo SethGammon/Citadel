@@ -254,7 +254,7 @@ To preview what the installer would write without changing anything:
 node "$CITADEL_ROOT/scripts/install.js" --runtime codex --dry-run --json
 ```
 
-`scripts/install-hooks-codex.js` remains available for legacy per-project `.codex/hooks.json` installs, but plugin-bundled hooks are the preferred Codex path.
+For a project where plugin installation is unavailable, use `--fallback` explicitly; it cannot be combined with plugin installation. `scripts/install-hooks-codex.js` is a legacy fallback-only hook path and must not be run alongside plugin-bundled hooks. Migration preserves unowned or modified project files for review.
 
 The installer output names every Codex-specific external enable step and its
 observed or unknown status.

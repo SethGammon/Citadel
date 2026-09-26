@@ -646,10 +646,11 @@ function adoptionScenario(suite) {
     'adopt', 'plan', sourceV1,
     '--target', target,
     '--project-runtime', 'codex',
+    '--codex-mode', 'fallback',
     '--out', planFile,
     '--json',
   ], {
-    display: 'adopt plan <citadel-v1> --target <project> --project-runtime codex --out <plan> --json',
+    display: 'adopt plan <citadel-v1> --target <project> --project-runtime codex --codex-mode fallback --out <plan> --json',
   }).json;
   assert.equal(git(target, ['rev-parse', 'HEAD']), beforePlanHead);
   assert.equal(fs.existsSync(path.join(target, '.citadel', 'adoption', 'active-receipt.json')), false);
@@ -681,6 +682,7 @@ function adoptionScenario(suite) {
     '--target', target,
     '--migration', migrationFile,
     '--project-runtime', 'codex',
+    '--codex-mode', 'fallback',
     '--control-root', controlRoot,
     '--out', updateFile,
     '--json',

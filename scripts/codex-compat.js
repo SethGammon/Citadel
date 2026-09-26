@@ -18,14 +18,15 @@
  *   node scripts/codex-compat.js /path/to/project   # explicit project path
  *   node scripts/codex-compat.js --dry-run           # show what would be generated
  *
- * Generated files include headers marking them as Citadel-managed.
- * Re-running is idempotent -- overwrites generated files, never touches hand-authored ones.
+ * Generated skill trees have an exact-digest ownership receipt. A refresh
+ * preserves unowned or edited skill trees for manual review.
  */
 
 'use strict';
 
 const fs   = require('fs');
 const path = require('path');
+const crypto = require('crypto');
 const { translateCodexPluginHooks } = require('../runtimes/codex/generators/install-hooks');
 const { parseProjectSpec, validateProjectSpec } = require('../core/project/load-project-spec');
 const { renderCodexGuidance } = require('../core/project/render-codex-guidance');
@@ -189,7 +190,6 @@ function generateConfigToml() {
       startup_timeout_sec: 10,
       tool_timeout_sec: 30,
       required: false,
-      instructions: 'Use citadel_status to orient on campaign, fleet, telemetry, and artifact state before invoking Citadel workflows.',
     },
   })];
   const mergedServers = new Map();
@@ -216,8 +216,8 @@ function generateConfigToml() {
   }
 
   // On Windows, PowerShell 5 fails to load its managed runtime in some environments
-  // (error 8009001d). Emit the [windows] agent_shell override and set SHELL in the
-  // env policy so both the Codex shell selector and any sub-invocations use Git Bash.
+  // (error 8009001d). Keep the supported sandbox setting and SHELL environment
+  // hint, without emitting unrecognized agent_shell/private-desktop keys.
   let shellEnvVars = 'CITADEL_RUNTIME = "codex"';
   let windowsSection = '';
   if (process.platform === 'win32') {
@@ -225,12 +225,9 @@ function generateConfigToml() {
     if (fs.existsSync(gitBash)) {
       shellEnvVars += `, SHELL = "${gitBash}"`;
       windowsSection = `
-# Route Codex shell execution through Git Bash instead of PowerShell on Windows.
-# Prevents "Loading managed Windows PowerShell failed with error 8009001d" errors.
+# Keep the supported Windows sandbox setting; SHELL is set above for subprocesses.
 [windows]
 sandbox = "elevated"
-sandbox_private_desktop = true
-agent_shell = "git-bash"
 `;
     }
   }
@@ -356,6 +353,10 @@ function mcpServerToToml(name, config) {
   if (config._codex && typeof config._codex === 'object') {
     for (const [k, v] of Object.entries(config._codex)) {
       if (v === null || v === undefined) continue;
+      if (k === 'instructions') {
+        console.warn(`  warning: mcp_servers.${name}: unsupported instructions field omitted`);
+        continue;
+      }
       const rendered = tomlValue(v);
       if (rendered !== null) lines.push(`${k} = ${rendered}`);
     }
@@ -393,7 +394,6 @@ function generatePluginMcpConfig() {
       startup_timeout_sec: 10,
       tool_timeout_sec: 30,
       required: false,
-      instructions: 'Use citadel_status to orient on campaign, fleet, telemetry, and artifact state before invoking Citadel workflows.',
     },
   };
   const config = existing && typeof existing === 'object' && !Array.isArray(existing)
@@ -648,8 +648,30 @@ function copySkillTree(sourceDir, targetDir) {
   });
 }
 
+function skillTreeDigest(directory) {
+  const digest = crypto.createHash('sha256');
+  function visit(current, relative = '') {
+    for (const entry of fs.readdirSync(current, { withFileTypes: true }).sort((a, b) => a.name.localeCompare(b.name))) {
+      const child = path.join(current, entry.name);
+      const childRelative = path.join(relative, entry.name).replace(/\\/g, '/');
+      if (entry.isSymbolicLink()) throw new Error(`Skill tree contains a symlink: ${childRelative}`);
+      if (entry.isDirectory()) visit(child, childRelative);
+      else if (entry.isFile()) {
+        digest.update(childRelative).update('\0').update(fs.readFileSync(child)).update('\0');
+      }
+    }
+  }
+  visit(directory);
+  return digest.digest('hex');
+}
+
 function syncSkills() {
   console.log('Syncing skills to .agents/skills/...');
+
+  if (PROJECT_IS_CITADEL_ROOT) {
+    console.log('  Plugin uses ./skills/ directly; skipping duplicate local skill copies.');
+    return;
+  }
 
   const sourceDir = path.join(CITADEL_ROOT, 'skills');
   if (!fs.existsSync(sourceDir)) {
@@ -658,6 +680,24 @@ function syncSkills() {
   }
 
   const targetBase = path.join(PROJECT_ROOT, '.agents', 'skills');
+  const ownershipPath = path.join(PROJECT_ROOT, '.citadel', 'codex-skill-ownership.json');
+  for (const pathToCheck of [path.join(PROJECT_ROOT, '.agents'), targetBase,
+    path.dirname(ownershipPath), ownershipPath]) {
+    let targetStat = null;
+    try { targetStat = fs.lstatSync(pathToCheck); }
+    catch (error) { if (error.code !== 'ENOENT') throw error; }
+    if (targetStat?.isSymbolicLink()) {
+      console.warn(`  warning: preserving skills because a target path is a symlink: ${pathToCheck}`);
+      return;
+    }
+  }
+  const prior = readJSON(ownershipPath);
+  if (fs.existsSync(ownershipPath) && (prior?.schema_version !== 1
+    || !prior.skills || typeof prior.skills !== 'object' || Array.isArray(prior.skills))) {
+    console.warn('  warning: skill ownership receipt is invalid; preserving existing skill trees.');
+    return;
+  }
+  const owned = { ...(prior?.skills || {}) };
   const skillDirs = fs.readdirSync(sourceDir).filter(d =>
     fs.existsSync(path.join(sourceDir, d, 'SKILL.md'))
   );
@@ -667,6 +707,19 @@ function syncSkills() {
     const sourceSkillDir = path.join(sourceDir, skillName);
     const sourcePath = path.join(sourceSkillDir, 'SKILL.md');
     const targetDir  = path.join(targetBase, skillName);
+    let targetStat = null;
+    try { targetStat = fs.lstatSync(targetDir); }
+    catch (error) { if (error.code !== 'ENOENT') throw error; }
+    if (targetStat) {
+      let currentDigest = null;
+      try {
+        if (targetStat.isDirectory()) currentDigest = skillTreeDigest(targetDir);
+      } catch { /* preserve an unreadable or symlinked tree */ }
+      if (!owned[skillName] || owned[skillName] !== currentDigest) {
+        console.warn(`  warning: preserving unowned or modified .agents/skills/${skillName}; review manually.`);
+        continue;
+      }
+    }
 
     // Copy the entire skill directory (SKILL.md + scripts/, references/,
     // assets/, __benchmarks__/, etc.). Excluded names from SKILL_COPY_EXCLUDES
@@ -681,8 +734,12 @@ function syncSkills() {
       generateOpenAIYaml(targetDir, fm);
     }
 
+    if (!DRY_RUN) owned[skillName] = skillTreeDigest(targetDir);
+
     synced++;
   }
+
+  writeFile(ownershipPath, `${JSON.stringify({ schema_version: 1, skills: owned }, null, 2)}\n`);
 
   console.log(`  ${synced} skills synced (full directory tree).`);
 }

@@ -10,6 +10,8 @@ const {
   proposeCodexProjection,
 } = require('../core/adoption');
 const fs = require('fs');
+const { readReceipt } = require('../core/adoption/planner');
+const { snapshot } = require('../core/adoption/footprint');
 
 function parse(argv) {
   const positional = [];
@@ -312,7 +314,7 @@ function printPlan(plan, flags) {
 function usage() {
   return [
     'Usage:',
-    '  node scripts/adopt.js plan [source] [--target <path>] [--allow-dirty-source] [--out <plan.json>] [--json]',
+    '  node scripts/adopt.js plan [source] [--target <path>] [--project-runtime codex] [--codex-mode plugin|fallback] [--allow-dirty-source] [--out <plan.json>] [--json]',
     '  node scripts/adopt.js apply <plan.json> [--confirm <token>] [--json]',
     '  node scripts/adopt.js doctor [--target <path>] [--json]',
     '  node scripts/adopt.js update plan <source> --migration <file> [--target <path>] [--json]',
@@ -336,7 +338,21 @@ function runtimeProjections(flags, target, source) {
     projections.push(proposeClaudeProjection({ target, source }));
   }
   if (requested.includes('codex') || requested.includes('both')) {
-    projections.push(proposeCodexProjection({ target, source }));
+    const mode = flags['codex-mode'] || 'plugin';
+    let ownedPaths = [];
+    try {
+      const prior = readReceipt(target, { controlRoot: path.resolve(flags['control-root'] || defaultControlRoot()) });
+      ownedPaths = (prior?.footprint?.entries || [])
+        .filter((entry) => entry.path === '.codex/hooks.json'
+          || (entry.path.startsWith('.agents/skills/') && entry.path.endsWith('/SKILL.md')))
+        .filter((entry) => {
+          const current = snapshot(target, entry.path);
+          return current.exists && current.digest === entry.installed_digest
+            && current.bytes === entry.installed_bytes;
+        })
+        .map((entry) => entry.path);
+    } catch { /* the plan's receipt validation reports the actual blocker */ }
+    projections.push(proposeCodexProjection({ target, source, mode, ownedPaths }));
   }
   return projections;
 }
