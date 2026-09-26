@@ -57,7 +57,7 @@ function readJsonIfExists(filePath, options = {}) {
 function createAutomationPlan(options = {}) {
   const projectRoot = path.resolve(options.projectRoot || process.cwd());
   const type = options.type || 'schedule';
-  const command = options.command || '/do status';
+  const command = options.command || '$citadel.do status';
   const cadence = options.cadence || options.interval || 'manual';
   const id = options.id || `codex-${type}-${slugify(command)}-${nowIso(options).replace(/[:.]/g, '-')}`;
   const target = options.target || (type === 'daemon' ? 'background-worktree' : 'local-project');
