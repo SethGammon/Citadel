@@ -57,17 +57,24 @@ try {
     assert.equal(selectClaudeGuidanceTarget({ claudeVersion, agentsMdCapability }).filePath, expected);
   }
 
-  const homeRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'citadel-project-bootstrap-home-'));
+  const guidanceRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'citadel-project-bootstrap-guidance-'));
+  const homeRoot = path.join(guidanceRoot, 'home');
   try {
     const nested = path.join(homeRoot, 'work', 'project');
     fs.mkdirSync(path.join(homeRoot, '.claude'), { recursive: true });
     fs.mkdirSync(nested, { recursive: true });
-    fs.writeFileSync(path.join(homeRoot, '.claude', 'CLAUDE.md'), 'user global guidance');
-    assert.deepEqual(inspectClaudeGuidance(nested, null, { homeDir: homeRoot }).blockingPaths, []);
+    const userClaude = path.join(homeRoot, '.claude', 'CLAUDE.md');
+    fs.writeFileSync(userClaude, 'user global guidance');
+    const initial = inspectClaudeGuidance(nested, null, { homeDir: homeRoot }).blockingPaths;
+    assert(!initial.includes(userClaude), 'the user-global Claude file is not an ancestor project instruction');
     fs.writeFileSync(path.join(homeRoot, 'CLAUDE.md'), 'ancestor project guidance');
     assert(inspectClaudeGuidance(nested, null, { homeDir: homeRoot }).blockingPaths.includes(path.join(homeRoot, 'CLAUDE.md')));
+    const outsideHome = path.join(guidanceRoot, 'CLAUDE.md');
+    fs.writeFileSync(outsideHome, 'valid ancestor above the injected home');
+    assert(inspectClaudeGuidance(nested, null, { homeDir: homeRoot }).blockingPaths.includes(outsideHome),
+      'valid project ancestors above home must remain visible');
   } finally {
-    fs.rmSync(homeRoot, { recursive: true, force: true });
+    fs.rmSync(guidanceRoot, { recursive: true, force: true });
   }
 
   const nativeRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'citadel-project-bootstrap-native-'));

@@ -90,9 +90,16 @@ function testUnifiedDispatcherDryRun() {
       '--dry-run',
       '--json',
     ]);
-    assert.equal(codexInstall.mode, 'plugin-and-project');
-    assert(codexInstall.steps.some((step) => step.name === 'Generate Codex project artifacts'),
-      'Codex install must register project-native MCP configuration before startup');
+    assert.equal(codexInstall.mode, 'plugin-only');
+    assert(!codexInstall.steps.some((step) => step.name === 'Generate Codex project artifacts'),
+      'plugin install must not generate duplicate project-local skills');
+
+    const codexFallback = runJson([
+      path.join(CITADEL_ROOT, 'scripts', 'install.js'),
+      '--runtime', 'codex', '--project-root', tmp, '--fallback', '--dry-run', '--json',
+    ]);
+    assert.equal(codexFallback.mode, 'project-fallback');
+    assert(codexFallback.steps.some((step) => step.name === 'Generate Codex project artifacts'));
 
     const claude = runJson([
       path.join(CITADEL_ROOT, 'scripts', 'install.js'),

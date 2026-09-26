@@ -64,10 +64,10 @@ Then install or enable the plugin:
 Once enabled, run:
 
 ```text
-/do setup --express
+$citadel.do setup --express
 ```
 
-`--add-marketplace` asks Codex CLI to register the local marketplace. Omit it when you only want the script to prepare files and print the app/CLI steps. Use `--plugin-only` when you want to prepare the Citadel plugin package without generating target-project fallback artifacts.
+`--add-marketplace` asks Codex CLI to register the local marketplace. Plugin-only preparation is the default and does not copy skills or hooks into the target project. Use `--fallback` only when plugin installation is unavailable; do not combine it with plugin registration or installation.
 
 ## Development-Only Repository Marketplace
 
@@ -96,7 +96,7 @@ also verifies the target project and records readiness evidence.
 - `runtimes/codex/hooks.json` bundles translated Codex hook commands outside Claude Code's conventional auto-discovery path. These hooks are guardrails on covered local tool paths, not a universal sandbox.
 - `.mcp.json` exposes the `citadel-state` MCP server.
 - `.agents/plugins/marketplace.json` exposes the local marketplace Codex can browse.
-- Target-project `AGENTS.md`, `.codex/config.toml`, `.codex/agents/*.toml`, `.agents/skills/*`, `.codex-plugin/plugin.json`, and `runtimes/codex/hooks.json` are generated as a verified fallback for projects where plugin install is not available yet.
+- Only explicit `--fallback` generates target-project `AGENTS.md`, `.codex/config.toml`, `.codex/agents/*.toml`, `.agents/skills/*`, `.codex-plugin/plugin.json`, and `runtimes/codex/hooks.json` for projects where plugin install is not available yet.
 - `.planning/verification/codex-readiness.json` records the readiness checks.
 - On Windows, the installer runs the Codex sandbox/shell readiness check unless `--skip-windows-check` is passed.
 
@@ -104,7 +104,7 @@ Useful variants:
 
 ```bash
 node ~/Citadel/scripts/codex-install.js --dry-run
-node ~/Citadel/scripts/codex-install.js --plugin-only
+node ~/Citadel/scripts/codex-install.js --fallback --project-root /path/to/your-project
 node ~/Citadel/scripts/codex-install.js --project-root /path/to/your-project
 npm run codex:install -- --project-root /path/to/your-project
 npm run codex:verify
@@ -154,7 +154,7 @@ The installer is equivalent to running the old sequence:
 ```bash
 node /path/to/Citadel/scripts/codex-compat.js /path/to/Citadel
 node /path/to/Citadel/scripts/codex-plugin-smoke.js --project-root /path/to/Citadel --write
-node /path/to/Citadel/scripts/codex-compat.js /path/to/your-project
+node /path/to/Citadel/scripts/codex-compat.js /path/to/your-project # explicit fallback only
 node /path/to/Citadel/scripts/codex-readiness-check.js --project-root /path/to/your-project --write
 ```
 
@@ -170,7 +170,7 @@ For projects where plugin install is not available, generate the Codex-facing ar
 
 ```bash
 cd /path/to/your-project
-node /path/to/Citadel/scripts/codex-install.js --project-root . --skip-plugin-refresh
+node /path/to/Citadel/scripts/codex-install.js --project-root . --fallback --skip-plugin-refresh
 ```
 
 This writes:
@@ -179,10 +179,13 @@ This writes:
 - `.codex/config.toml` with `hooks = true`, history, agents, shell policy, and `citadel-state` MCP config
 - `.codex/agents/*.toml`
 - `.agents/skills/*`
+- `.citadel/codex-skill-ownership.json`, a local digest receipt. Refreshes leave pre-existing or edited skill trees untouched and require manual review instead of overwriting them.
 - `.codex-plugin/plugin.json`
 - `runtimes/codex/hooks.json`
 
-`scripts/install-hooks-codex.js` remains available for legacy per-project `.codex/hooks.json` installs, but plugin-bundled hooks are the preferred Codex path.
+`scripts/install-hooks-codex.js` is for explicit legacy fallback only. Do not run it when the Citadel plugin is enabled: plugin-bundled hooks would otherwise register twice. The plugin installer refuses to proceed when project-local Citadel hooks or same-named skills are present. For governed adoption, an update can remove only unchanged, receipt-verified copies. For direct fallback generation, use `.citadel/codex-skill-ownership.json` to verify unchanged copies before a manual migration; review unowned or modified files and preserve other hooks and skills. Never delete the whole `.agents/skills` or `.codex/hooks.json` surface just to make the check pass.
+
+Governed adoption uses plugin mode by default with `--project-runtime codex`; it does not project local hooks or skills. Choose `--codex-mode fallback` only when using project-local artifacts without the plugin. A later update back to plugin mode prunes only exact, receipt-owned fallback files and restores the pre-image of shared hook settings; modified or unowned files remain for review.
 
 ## Verify
 

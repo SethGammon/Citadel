@@ -8,6 +8,8 @@
  * Runs the command as a child process with a timeout. If the command
  * exceeds the time limit, it kills the process tree and exits with
  * a clear message.
+ * On Windows, executable images and known Node-package shims such as npm/npx
+ * are supported; arbitrary batch shims fail closed rather than using cmd.exe.
  *
  * After completion (normal or timeout), writes the result to
  * .planning/telemetry/last-command-result.json for watchdog pickup.
@@ -18,6 +20,7 @@
 const { spawn } = require('child_process');
 const path = require('path');
 const fs = require('fs');
+const { platformInvocation } = require('../core/forks/launcher');
 
 const PROJECT_ROOT = process.env.CLAUDE_PROJECT_DIR || process.cwd();
 
@@ -32,8 +35,8 @@ if (args.length < 2) {
   process.exit(1);
 }
 
-const timeoutSec = parseInt(args[0], 10);
-if (isNaN(timeoutSec) || timeoutSec <= 0) {
+const timeoutSec = Number(args[0]);
+if (!Number.isSafeInteger(timeoutSec) || timeoutSec <= 0) {
   process.stderr.write(`[timeout] Invalid timeout: "${args[0]}". Must be a positive integer (seconds).\n`);
   process.exit(1);
 }
@@ -50,10 +53,20 @@ let outputChunks = [];
 
 const isWindows = process.platform === 'win32';
 
-// On Windows, use shell to resolve commands like npm, npx
-const child = spawn(command, commandArgs, {
+// Never interpolate argv into a shell. Windows npm/npx shims are resolved to
+// their JavaScript entrypoints, while executable images launch directly.
+let invocation;
+try {
+  invocation = platformInvocation({ command, args: commandArgs });
+} catch (error) {
+  process.stderr.write(`[timeout] Failed to resolve command safely: ${error.message}\n`);
+  process.exit(1);
+}
+const child = spawn(invocation.command, invocation.args, {
   stdio: ['inherit', 'pipe', 'pipe'],
-  shell: isWindows,
+  shell: false,
+  windowsVerbatimArguments: false,
+  detached: !isWindows,
   cwd: PROJECT_ROOT,
   env: process.env,
 });
@@ -80,7 +93,11 @@ const timer = setTimeout(() => {
   try {
     if (isWindows) {
       // taskkill /T kills the tree, /F forces it
-      spawn('taskkill', ['/pid', child.pid.toString(), '/T', '/F'], { stdio: 'ignore' });
+      const killer = spawn('taskkill', ['/pid', child.pid.toString(), '/T', '/F'], { stdio: 'ignore', shell: false });
+      killer.on('error', () => { try { child.kill('SIGKILL'); } catch { /* already dead */ } });
+      killer.on('close', (code) => {
+        if (code !== 0) { try { child.kill('SIGKILL'); } catch { /* already dead */ } }
+      });
     } else {
       // Negative PID kills the process group
       process.kill(-child.pid, 'SIGKILL');
@@ -111,7 +128,7 @@ child.on('close', (exitCode) => {
   if (timedOut) {
     process.exit(124); // Standard timeout exit code (matches GNU timeout)
   } else {
-    process.exit(exitCode || 0);
+    process.exit(typeof exitCode === 'number' ? exitCode : 1);
   }
 });
 
