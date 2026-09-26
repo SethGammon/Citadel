@@ -19,6 +19,9 @@
  *   - custom: user-defined regex rules via harness.json
  *
  * Users can configure via harness.json verification.cold and qualityRules.custom.
+ * Markdown cross-reference warnings can be suppressed per file with a
+ * standalone <!-- citadel:ignore cross-reference --> comment outside code fences.
+ * No other lens can be suppressed inline; project configuration still applies.
  */
 
 const fs = require('fs');
@@ -43,22 +46,24 @@ function hookOutput(hookName, action, message, data = {}) {
 }
 
 // Read stdin for hook context
-let input = '';
-process.stdin.setEncoding('utf-8');
-process.stdin.on('data', chunk => { input += chunk; });
-process.stdin.on('end', () => {
-  try {
-    const ctx = JSON.parse(input);
-    // Prevent infinite loop — if this hook already fired, exit clean
-    if (ctx.stop_hook_active) {
-      process.exit(0);
-      return;
+if (require.main === module) {
+  let input = '';
+  process.stdin.setEncoding('utf-8');
+  process.stdin.on('data', chunk => { input += chunk; });
+  process.stdin.on('end', () => {
+    try {
+      const ctx = JSON.parse(input);
+      // Prevent infinite loop — if this hook already fired, exit clean
+      if (ctx.stop_hook_active) {
+        process.exit(0);
+        return;
+      }
+      run();
+    } catch {
+      run();
     }
-    run();
-  } catch {
-    run();
-  }
-});
+  });
+}
 
 // ── Cold-Path Lens Dispatch ─────────────────────────────────────────────────
 
@@ -79,7 +84,38 @@ const DEFAULT_COLD_LENSES = {
   '.md':   ['cross-reference', 'contractual'],
 };
 
-function selectColdPathLenses(file) {
+// Only an explicit, standalone Markdown cross-reference waiver is supported.
+// Examples in fenced/indented code and inline code must remain inert.
+function parseInlineIgnores(content) {
+  const ignored = new Set();
+  if (typeof content !== 'string' || !content.includes('citadel:ignore')) return ignored;
+  let fence = null;
+  for (const line of content.split(/\r?\n/)) {
+    // Recognize container-prefixed fences too, so a list's lightly indented
+    // example cannot masquerade as a standalone waiver. On ambiguous/unclosed
+    // fences, conservatively keep ignoring markers through the end of the file.
+    const fenceLine = line.replace(/^(?: {0,3}>[ \t]?)+/, '')
+      .replace(/^ {0,3}(?:[-+*]|\d{1,9}[.)])[ \t]+/, '');
+    const boundary = fenceLine.match(/^ {0,3}(`{3,}|~{3,})(.*)$/);
+    if (fence) {
+      if (boundary && boundary[1][0] === fence.char &&
+          boundary[1].length >= fence.length && /^[ \t]*$/.test(boundary[2])) {
+        fence = null;
+      }
+      continue;
+    }
+    if (boundary && (boundary[1][0] === '~' || !boundary[2].includes('`'))) {
+      fence = { char: boundary[1][0], length: boundary[1].length };
+      continue;
+    }
+    if (/^ {0,3}<!--[ \t]*citadel:ignore[ \t]+cross-reference[ \t]*-->[ \t]*$/.test(line)) {
+      ignored.add('cross-reference');
+    }
+  }
+  return ignored;
+}
+
+function selectColdPathLenses(file, content) {
   const config = health.readConfig();
   const verification = config.verification || {};
   const disabled = new Set(verification.disabled || []);
@@ -103,7 +139,8 @@ function selectColdPathLenses(file) {
     lenses.push('secrets');
   }
 
-  return lenses.filter(l => !disabled.has(l));
+  const ignored = ext === '.md' ? parseInlineIgnores(content) : new Set();
+  return lenses.filter(l => !disabled.has(l) && !ignored.has(l));
 }
 
 function run() {
@@ -156,7 +193,7 @@ function run() {
       continue;
     }
 
-    const lenses = selectColdPathLenses(file);
+    const lenses = selectColdPathLenses(file, content);
 
     for (const lens of lenses) {
       const lensViolations = runColdLens(lens, file, content, config, builtInRules);
@@ -573,3 +610,9 @@ function lensCustom(file, content, config) {
 
   return violations;
 }
+
+module.exports = {
+  parseInlineIgnores,
+  selectColdPathLenses,
+  lensCrossReference,
+};
