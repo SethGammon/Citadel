@@ -108,7 +108,10 @@ After all waves:
 5. Update the session file to `completed` only when all required tasks and full-project gates passed. Otherwise use `needs-continue` and preserve held subjects; dependency-independent reversible work may still be packaged.
 6. Log: `node .citadel/scripts/telemetry-log.cjs --event campaign-complete --agent fleet --session {session-slug}`
 7. **Update momentum** (cross-session synthesis): `node .citadel/scripts/momentum-synthesize.cjs`
-7.5. **Propagate knowledge**: run `npm run propagate -- --campaign {slug}` once per campaign that completed this session (not per wave). If `npm run propagate` is unavailable, note each slug in the fleet session file under `## Pending Propagation`.
+7.5. **Knowledge handoff** (once per campaign that completed this session, not per wave):
+   - Review the active project instructions and `.citadel/project.md` (if present). The Learn skill writes `.planning/wiki/`, `.planning/memory/`, and possibly `.claude/harness.json`; do not invoke it if any of those writes conflict with project restrictions.
+   - If a completed campaign file exists and the Learn skill is installed and permitted, invoke it once for that campaign (`/learn {slug}` in Claude Code, `$citadel.learn {slug}` in Codex). This is a Citadel skill invocation, not an npm command in the adopted project.
+   - If the campaign file is missing or Learn is absent, disallowed, or deferred, record each slug, source campaign path (or missing-source reason), owner, and next permitted extraction or review action under `## Knowledge Follow-up` in the fleet session file. Do not claim compilation occurred.
 8. Output final HANDOFF
 
 ## Fleet Session File Format

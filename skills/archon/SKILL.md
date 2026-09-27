@@ -166,7 +166,10 @@ Scan modified files for: `transition-all` (name specific properties); `confirm()
 1. Run final verification via `node scripts/run-with-timeout.js 300`
 2. Confirm every required phase gate is current, subject-bound, `passed`, and complete, with no unresolved required checkpoint, human gate, dependency, or Arbiter block. Otherwise keep the campaign active or record a non-success terminal outcome such as `blocked-decision`; do not mark it completed.
 3. Update campaign status to `completed`
-3.5. **Propagate knowledge**: `npm run propagate -- --campaign {slug}`. If unavailable: add `<!-- TODO: run npm run propagate -- --campaign {slug} -->` to LEARNINGS.md.
+3.5. **Knowledge handoff**:
+   - Review the active project instructions and `.citadel/project.md` (if present). The Learn skill writes `.planning/wiki/`, `.planning/memory/`, and possibly `.claude/harness.json`; do not invoke it if any of those writes conflict with project restrictions.
+   - If the Learn skill is installed and permitted, invoke it once for this completed campaign (`/learn {slug}` in Claude Code, `$citadel.learn {slug}` in Codex). This is a Citadel skill invocation, not an npm command in the adopted project.
+   - If Learn is absent, disallowed, or deferred, add `## Knowledge Follow-up` to the campaign file with the slug, source campaign path, reason, owner, and next permitted extraction or review action. Do not add an unavailable-command TODO or claim compilation occurred.
 4. Move campaign file to `.planning/campaigns/completed/`
 5. Release scope claims
 6. Log completion: `node .citadel/scripts/telemetry-log.cjs --event campaign-complete --agent archon --session {campaign-slug}`
