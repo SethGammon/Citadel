@@ -370,6 +370,22 @@ try {
     fs.writeFileSync(destination, data);
   }
   const productRoot = path.join(extracted, `citadel-${product.manifest.version}`);
+  assert(!productPaths.has('skills/learn/SKILL.md'), 'slim release unexpectedly includes the source-only Learn skill');
+  for (const relative of [...productPaths].filter((item) => /^skills\/[^/]+\/SKILL\.md$/.test(item))) {
+    const content = fs.readFileSync(path.join(productRoot, ...relative.split('/')), 'utf8');
+    assert.doesNotMatch(content, /npm run propagate\b/, `${relative} references an unavailable propagation command`);
+  }
+  for (const [skill, step] of [['archon', '3.5'], ['fleet', '7.5']]) {
+    const content = fs.readFileSync(path.join(productRoot, 'skills', skill, 'SKILL.md'), 'utf8');
+    const handoff = content.split(/\r?\n/).find((line) => line.startsWith(`${step}. **Knowledge handoff**`));
+    assert(handoff, `release ${skill} lost its knowledge handoff`);
+    assert.match(handoff, /Knowledge Follow-up/, `release ${skill} needs an actionable follow-up`);
+    assert.match(handoff, /source path|campaign slug and source path/, `release ${skill} needs the campaign source`);
+    assert.match(handoff, /owner.*next permitted review action/, `release ${skill} needs an owner and next action`);
+    assert.match(handoff, /project knowledge and memory restrictions/, `release ${skill} must honor project restrictions`);
+    assert.match(handoff, /slim release does not include Learn/, `release ${skill} must disclose the missing Learn skill`);
+    assert.doesNotMatch(handoff, /\/learn|npm\s+(?:run|exec)\b/i, `release ${skill} must not invoke omitted skills or project npm scripts`);
+  }
   execFileSync(process.execPath, ['-e', "require('./runtimes/opencode/plugin/hook-runner.js')"], { cwd: productRoot, stdio: 'pipe' });
   execFileSync(process.execPath, ['-e', "import('./runtimes/opencode/plugin/index.mjs')"], { cwd: productRoot, stdio: 'pipe' });
   const healthOutput = execFileSync(process.execPath, [path.join(productRoot, 'scripts', 'health.js')], { cwd: productRoot, encoding: 'utf8' });

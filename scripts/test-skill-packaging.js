@@ -54,4 +54,33 @@ withTempProject((projectRoot) => {
   assert.equal(JSON.parse(cli).skills.length, 1);
 });
 
+withTempProject((projectRoot) => {
+  fs.writeFileSync(path.join(projectRoot, 'go.mod'), 'module example.test/citadel-consumer\n\ngo 1.23\n');
+  fs.writeFileSync(path.join(projectRoot, 'AGENTS.md'), 'Do not compile project memory or quality rules without review.\n');
+  assert(!fs.existsSync(path.join(projectRoot, 'package.json')), 'non-Node consumer fixture must have no npm scripts');
+  assert(fs.existsSync(path.join(__dirname, '..', 'skills', 'learn', 'SKILL.md')), 'source plugin must provide the optional Learn skill');
+  const sourceManifest = require('../package.json');
+  assert(sourceManifest.files.includes('!skills/learn/**'), 'private npm pack must not be mistaken for an installation with Learn');
+
+  for (const [name, start, end] of [
+    ['archon', '3.5. **Knowledge handoff**:', '4. Move campaign file'],
+    ['fleet', '7.5. **Knowledge handoff**', '8. Output final HANDOFF'],
+  ]) {
+    const skill = fs.readFileSync(path.join(__dirname, '..', 'skills', name, 'SKILL.md'), 'utf8');
+    const sectionStart = skill.indexOf(start);
+    const sectionEnd = skill.indexOf(end, sectionStart);
+    assert(sectionStart >= 0 && sectionEnd > sectionStart, `${name} completion lost its knowledge handoff boundary`);
+    const section = skill.slice(sectionStart, sectionEnd);
+    assert.doesNotMatch(section, /npm\s+(?:run|exec)\b/i, `${name} completion requires npm in a non-Node project`);
+    assert.match(section, /active project instructions/, `${name} must check project restrictions`);
+    assert.match(section, /do not invoke it if any of those writes conflict/, `${name} must honor restricted knowledge writes`);
+    assert.match(section, /Learn skill is installed and permitted/, `${name} must gate the optional skill invocation`);
+    assert.match(section, /\/learn \{slug\}.*\$citadel\.learn \{slug\}/, `${name} must use runtime-native skill invocation`);
+    assert.match(section, /## Knowledge Follow-up/, `${name} must record an actionable deferred handoff`);
+    assert.match(section, /source campaign path.*owner, and next permitted/, `${name} deferred handoff needs a source, owner, and action`);
+  }
+  const fleet = fs.readFileSync(path.join(__dirname, '..', 'skills', 'fleet', 'SKILL.md'), 'utf8');
+  assert.match(fleet, /If a completed campaign file exists and the Learn skill is installed/, 'Fleet must not invoke Learn without its campaign source');
+});
+
 console.log('skill packaging tests passed');

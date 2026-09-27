@@ -1072,15 +1072,19 @@ function sanitizeReleaseInstructions(entries, knownSkillNames) {
         daemonSection,
         '### Step 2.5: CONTINUATION BOUNDARY\n\nFor multi-session work, persist the campaign state and stop at the explicit Needs You / Resume boundary. Do not create a resident background owner.\n\n'
       );
+      const knowledgeSection = /^3\.5\. \*\*Knowledge handoff\*\*:[\s\S]*?(?=^4\. Move campaign file)/m;
+      if (!knowledgeSection.test(source)) throw new Error('Release Archon projection cannot find the knowledge handoff');
       source = source.replace(
-        /^3\.5\. \*\*Propagate knowledge\*\*:.*$/m,
-        '3.5. Record reusable knowledge in the campaign file for later review.'
+        knowledgeSection,
+        '3.5. **Knowledge handoff**: Record reusable findings, the campaign slug and source path, an owner, and the next permitted review action under `## Knowledge Follow-up` in the campaign file. Honor project knowledge and memory restrictions; the slim release does not include Learn. Do not run an adopted project\'s npm scripts or claim compilation occurred.\n'
       );
     }
     if (entry.name === 'skills/fleet/SKILL.md') {
+      const knowledgeSection = /^7\.5\. \*\*Knowledge handoff\*\*[\s\S]*?(?=^8\. Output final HANDOFF)/m;
+      if (!knowledgeSection.test(source)) throw new Error('Release Fleet projection cannot find the knowledge handoff');
       source = source.replace(
-        /^7\.5\. \*\*Propagate knowledge\*\*:.*$/m,
-        '7.5. Record reusable knowledge in the fleet session file for later review.'
+        knowledgeSection,
+        '7.5. **Knowledge handoff**: Once per completed campaign, record its slug, source path, reusable findings, an owner, and the next permitted review action under `## Knowledge Follow-up` in the fleet session file. Honor project knowledge and memory restrictions; the slim release does not include Learn. Do not run an adopted project\'s npm scripts or claim compilation occurred.\n'
       );
     }
     if (entry.name === 'skills/dashboard/SKILL.md') {
