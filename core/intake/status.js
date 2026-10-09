@@ -3,7 +3,7 @@
 const { parseFrontmatter } = require('../campaigns/parse-campaign');
 
 const PENDING_STATUSES = Object.freeze(['pending']);
-const IN_PROGRESS_STATUSES = Object.freeze(['in-progress', 'briefed']);
+const IN_PROGRESS_STATUSES = Object.freeze(['in-progress', 'briefed', 'approved']);
 const INACTIVE_STATUSES = Object.freeze([
   'completed', 'archived', 'closed', 'deferred', 'rejected', 'cancelled',
 ]);

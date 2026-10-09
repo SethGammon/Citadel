@@ -111,6 +111,14 @@ try {
   assert.equal(inactive.pendingCount, 0, 'terminal and unrecognised statuses must not count as pending');
   assert.equal(countPendingIntakeItems(inactiveDir), 0);
 
+  const approvedRoot = path.join(root, 'approved');
+  const approvedDir = writeIntake(approvedRoot, { 'approved.md': '---\nstatus: approved\n---\n' });
+  const approved = runIntakeScan(approvedRoot);
+  assert.equal(approved.inProgressCount, 1, 'approved work must remain visible like briefed work');
+  assert.equal(approved.pendingCount, 0, 'approved work does not need another briefing');
+  assert.equal(approved.unrecognisedCount, 0);
+  assert.equal(countPendingIntakeItems(approvedDir), 0);
+
   const mixedRoot = path.join(root, 'mixed');
   const mixedDir = writeIntake(mixedRoot, {
     'no-status.md': '---\ntitle: "untitled"\n---\n',
