@@ -32,7 +32,7 @@ Use Archon for multi-session work needing persistent state, quality judgment, an
 
 On every invocation:
 
-1. Read CLAUDE.md
+1. Read AGENTS.md, then CLAUDE.md if present
 2. Check `.planning/campaigns/` for active campaigns (not in `completed/`)
 3. Check `.planning/coordination/claims/` for scope claims from other agents
 4. Determine mode:

@@ -24,6 +24,7 @@
     "intake-scanner": "persistence",
     "session-end": "persistence",
     "file-changed": "persistence",
+    "instructions-watch": "persistence",
     "cwd-changed": "persistence",
     "subagent-start": "parallel",
     "subagent-stop": "parallel",

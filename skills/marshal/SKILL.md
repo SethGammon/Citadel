@@ -41,7 +41,7 @@ Use Marshal when the task is:
 
 Parse the user's direction into structured intent:
 
-1. Read CLAUDE.md to understand the project's architecture and conventions
+1. Read AGENTS.md, then CLAUDE.md if present, to understand the project's architecture and conventions
 2. Identify: scope (which files/directories), perspective (user, developer, admin),
    mode (audit, fix, build, improve, map), depth (surface scan vs deep investigation)
 3. If the direction is ambiguous, make a reasonable interpretation and state it.

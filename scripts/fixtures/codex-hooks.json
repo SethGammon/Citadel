@@ -202,6 +202,16 @@
             "timeout": 5
           }
         ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node ${CITADEL_ROOT}/codex-adapter.js instructions-watch",
+            "statusMessage": "Citadel: instructions-watch",
+            "timeout": 5
+          }
+        ]
       }
     ],
     "SessionEnd": [

@@ -15,6 +15,8 @@ const activation = require('../core/telemetry/activation');
 const configControl = require('../core/config');
 const { ensureMachineLocalExcludes } = require('../core/runtime/install-contract');
 const { RuntimeDetectionError } = require('../core/runtime/detect-runtime');
+const { syncAgentContext } = require('../core/project/agent-context');
+const { recordInstructionLoad } = require('../core/hooks/instructions-state');
 
 const PLUGIN_ROOT = path.resolve(__dirname, '..');
 const PROJECT_ROOT = process.env.CLAUDE_PROJECT_DIR || process.cwd();
@@ -148,19 +150,6 @@ function ensureDir(dir) {
   }
 }
 
-function copyDirRecursive(src, dest) {
-  ensureDir(dest);
-  for (const entry of fs.readdirSync(src, { withFileTypes: true })) {
-    const srcPath = path.join(src, entry.name);
-    const destPath = path.join(dest, entry.name);
-    if (entry.isDirectory()) {
-      copyDirRecursive(srcPath, destPath);
-    } else {
-      fs.copyFileSync(srcPath, destPath);
-    }
-  }
-}
-
 /**
  * Copy files from src to dest, but only if they don't already exist.
  * Preserves user customizations to templates.
@@ -288,14 +277,20 @@ function main() {
     // that may have neither .claude/ nor .codex/ (e.g. .codex/ + .opencode/),
     // turning a temporary ambiguity into a permanent one. A genuinely fresh
     // project (no markers at all) is unaffected and keeps the existing default.
+    // Existing copies are refreshed only where a file is an unmodified earlier
+    // template; a redirected (symlinked) directory is not ours to write through.
     if (!authority.runtimeDetectionError) {
       const pluginAgentContext = path.join(PLUGIN_ROOT, 'templates', 'agent-context');
       const runtimeDirectory = authority.runtime === 'codex' ? '.codex' : '.claude';
       const agentContext = path.join(PROJECT_ROOT, runtimeDirectory, 'agent-context');
-      if (!fs.existsSync(agentContext) && fs.existsSync(pluginAgentContext)) {
-        copyDirRecursive(pluginAgentContext, agentContext);
-      }
+      const redirected = fs.existsSync(agentContext) && fs.lstatSync(agentContext).isSymbolicLink();
+      if (!redirected) syncAgentContext(pluginAgentContext, agentContext);
     }
+
+    // 5a. InstructionsLoaded does not fire when Claude Code reads AGENTS.md
+    // directly, so record the root AGENTS.md load here for doc-sync.
+    const agentsGuidance = path.join(PROJECT_ROOT, 'AGENTS.md');
+    if (fs.existsSync(agentsGuidance)) recordInstructionLoad(PROJECT_ROOT, agentsGuidance);
 
     // 6. Write .citadel-root marker (plugin path for reference)
     const citadelDir = path.join(PROJECT_ROOT, '.citadel');

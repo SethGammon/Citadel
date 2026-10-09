@@ -50,7 +50,7 @@ const BUNDLE_CATALOG = deepFreeze({
         'cost-tracker', 'post-tool-batch', 'pre-compact', 'post-compact',
         'init-project', 'user-prompt-submit', 'user-prompt-expansion',
         'restore-compact', 'intake-scanner', 'session-end', 'file-changed',
-        'cwd-changed',
+        'cwd-changed', 'instructions-watch',
       ],
       state: ['.planning/campaigns', '.planning/fleet', '.planning/telemetry'],
     },

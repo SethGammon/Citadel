@@ -122,7 +122,7 @@ understand → plan → execute → report protocol and record the fallback.
 ## Delegation Pattern — Context Injection Required
 
 Every sub-agent MUST receive:
-- Project's CLAUDE.md (conventions, architecture)
+- Project guidance: AGENTS.md, plus CLAUDE.md if present (conventions, architecture)
 - Agent context from `.claude/agent-context/rules-summary.md`
 - Phase-specific direction and scope boundaries
 - Quality gates for the phase
@@ -150,5 +150,5 @@ If a sub-agent's HANDOFF reports repeated failures on the same issue:
 Campaign files are the ONLY persistent state. Each new invocation is amnesiac.
 Rebuild context from:
 1. Campaign file (state, decisions, ledger)
-2. CLAUDE.md (project conventions)
+2. AGENTS.md, then CLAUDE.md if present (project conventions)
 3. Recently modified files (what changed since last invocation)

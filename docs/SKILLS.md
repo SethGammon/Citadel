@@ -48,7 +48,7 @@ What does it NOT do? Clear boundaries prevent misuse.
 
 Step-by-step instructions. This is what Claude follows.
 
-1. Read CLAUDE.md to understand project conventions
+1. Read AGENTS.md (then CLAUDE.md if present) to understand project conventions
 2. {Specific action}
 3. {Specific action}
 4. ...
@@ -107,7 +107,7 @@ expectations for what it will produce.
 The recipe. Numbered steps that Claude follows in order.
 
 **Tips for good protocols:**
-- Start with "Read CLAUDE.md" — every skill should respect project conventions
+- Start with "Read AGENTS.md, then CLAUDE.md if present" — every skill should respect project conventions
 - Be specific: "Run `npm test`" not "verify the code works"
 - Include decision points: "If tests fail, try X. If X fails, report and stop."
 - Include iteration limits: "Retry up to 3 times" prevents infinite loops

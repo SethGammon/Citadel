@@ -56,7 +56,7 @@ directly. You read, think, plan, spawn agents, collect results, and coordinate.
 
 ## On Every Invocation
 
-1. Read CLAUDE.md (project conventions)
+1. Read AGENTS.md, then CLAUDE.md if present (project conventions)
 2. Check `.planning/campaigns/` for active campaigns
 3. Check `.planning/coordination/claims/` for external claims
 4. Log session start (new sessions only): `node .citadel/scripts/telemetry-log.cjs --event campaign-start --agent fleet --session {session-slug}`
