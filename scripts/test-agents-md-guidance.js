@@ -18,7 +18,9 @@ const {
 const repo = path.resolve(__dirname, '..');
 const templateDir = path.join(repo, 'templates', 'agent-context');
 // The rules-summary.md Citadel shipped before AGENTS.md became preferred.
-const PREVIOUS_RULES = fs.readFileSync(path.join(__dirname, 'fixtures', 'agent-context-rules-summary-previous.md'), 'utf8');
+// Normalized to LF so the CRLF case below is built the same way on every checkout.
+const PREVIOUS_RULES = fs.readFileSync(path.join(__dirname, 'fixtures', 'agent-context-rules-summary-previous.md'), 'utf8')
+  .replace(/\r\n/g, '\n');
 
 // When a template file changes, move its old digest into
 // PREVIOUS_TEMPLATE_DIGESTS (core/project/agent-context.js) so existing
