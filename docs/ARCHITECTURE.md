@@ -65,7 +65,7 @@ is therefore non-final with `command: null`, `canRunNow: false`, and boundary
 
 ## Hooks
 
-Automatic Node.js scripts: <!-- GENERATED: hook-script-count -->35<!-- /GENERATED --> hook scripts covering <!-- GENERATED: hook-event-count -->29<!-- /GENERATED --> lifecycle events.
+Automatic Node.js scripts: <!-- GENERATED: hook-script-count -->36<!-- /GENERATED --> hook scripts covering <!-- GENERATED: hook-event-count -->29<!-- /GENERATED --> lifecycle events.
 
 | Category | Key Hooks | Purpose |
 |----------|-----------|---------|

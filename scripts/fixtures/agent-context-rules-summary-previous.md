@@ -5,10 +5,8 @@ minimum set of rules needed to work safely in this project.
 
 ## Core Rules
 
-1. **Read the project guidance before making changes.** Read AGENTS.md first,
-   then CLAUDE.md if it also exists; where they conflict, AGENTS.md wins. They
-   define the project's architecture, conventions, and constraints. An agent
-   that ignores them creates rework.
+1. **Read CLAUDE.md before making changes.** It defines the project's architecture,
+   conventions, and constraints. An agent that ignores CLAUDE.md creates rework.
 
 2. **Do not modify files outside your assigned scope.** If your task says
    "modify src/api/", do not touch src/frontend/. If you discover something

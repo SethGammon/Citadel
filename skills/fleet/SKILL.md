@@ -42,7 +42,7 @@ Use for 3+ independent work streams that can run simultaneously in isolated work
 
 ### Step 1: WAKE UP
 
-1. Read CLAUDE.md (project conventions)
+1. Read AGENTS.md, then CLAUDE.md if present (project conventions)
 2. Check `.planning/campaigns/` for active campaigns
 3. Check `.planning/coordination/claims/` for external claims
 4. Determine input mode: directed, spec-driven, continuing, or undirected

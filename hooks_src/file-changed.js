@@ -8,7 +8,7 @@
  * files it's monitoring actually change, instead of Citadel polling.
  *
  * Key behaviors:
- *   - CLAUDE.md or rules/*.md changed → queue doc-sync review
+ *   - AGENTS.md, CLAUDE.md or rules/*.md changed → queue doc-sync review
  *     (same queue as instructions-loaded.js, different trigger)
  *   - hooks_src/*.js changed → log reload advisory to telemetry
  *   - skills/**\/SKILL.md changed → queue skill-lint review
@@ -62,8 +62,8 @@ function main() {
       return;
     }
 
-    // CLAUDE.md or rules/*.md changed → queue doc-sync review
-    const isInstructions = relative === 'CLAUDE.md' ||
+    // AGENTS.md, CLAUDE.md or rules/*.md changed → queue doc-sync review
+    const isInstructions = relative === 'AGENTS.md' || relative === 'CLAUDE.md' ||
       /^\.claude\/rules\/.*\.md$/.test(relative);
 
     if (isInstructions) {

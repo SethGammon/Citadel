@@ -1,5 +1,5 @@
 {
-  "installedCount": 20,
+  "installedCount": 21,
   "skippedCount": 18,
   "installed": [
     "PermissionRequest:permission-request",
@@ -16,6 +16,7 @@
     "PreToolUse:protect-files",
     "SessionEnd:session-end",
     "SessionStart:init-project",
+    "SessionStart:instructions-watch",
     "SessionStart:intake-scanner",
     "SessionStart:restore-compact",
     "Stop:quality-gate",

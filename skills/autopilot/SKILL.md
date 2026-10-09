@@ -145,7 +145,7 @@ Description of what needs to be done...
 
 ## Quality Gates
 
-- Never build without reading CLAUDE.md first
+- Never build without reading the project guidance (AGENTS.md, then CLAUDE.md) first
 - Run typecheck after every file change
 - Mark items as completed only when verification passes
 - If an item is blocked, record the reason and move on

@@ -220,6 +220,17 @@
             "commandWindows": "node -e \"require(require('path').join(process.env.PLUGIN_ROOT,'hooks_src','codex-adapter.js')).main(process.argv[1],{structuredSecurityBlocks:true})\" intake-scanner"
           }
         ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${PLUGIN_ROOT}/hooks_src/codex-adapter.js\" instructions-watch",
+            "statusMessage": "Citadel: instructions-watch",
+            "timeout": 5,
+            "commandWindows": "node -e \"require(require('path').join(process.env.PLUGIN_ROOT,'hooks_src','codex-adapter.js')).main(process.argv[1],{structuredSecurityBlocks:true})\" instructions-watch"
+          }
+        ]
       }
     ],
     "SessionEnd": [
