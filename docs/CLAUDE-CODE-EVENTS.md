@@ -90,13 +90,18 @@ user prompt is processed.
 **What it's for:** Session initialization - scaffolding project state, restoring
 saved context, detecting pending work.
 
-**Citadel use:** Three hooks registered here, each with a distinct purpose:
+**Citadel use:** Four hooks registered here, each with a distinct purpose:
 - `init-project.js` - scaffolds `.planning/`, `.citadel/scripts/` delegates,
-  and `_templates/` if not present (idempotent - safe to re-run every session)
+  and `_templates/` if not present (idempotent - safe to re-run every session).
+  It also refreshes unmodified delegated-agent context files and records the
+  root `AGENTS.md` load for doc-sync, since InstructionsLoaded does not fire
+  for a directly read `AGENTS.md`
 - `restore-compact.js` - if this session follows a compaction, restores the
   saved context snapshot so campaign state isn't lost
 - `intake-scanner.js` - scans `.planning/intake/` for pending work items and
   surfaces a count so Claude knows there's a queue to process
+- `instructions-watch.js` - returns `watchPaths` for `AGENTS.md`, `CLAUDE.md`
+  and `.claude/rules/**/*.md` so FileChanged fires for them (Claude Code only)
 
 ---
 
@@ -436,6 +441,11 @@ file. If the current mtime is newer than the stored value, appends a
 for the doc-sync pipeline: CLAUDE.md updated → queue entry → `/learn` processes
 queue → knowledge wiki updated.
 
+Claude Code does not fire this event when it reads `AGENTS.md` directly as
+project instructions (it does when a `CLAUDE.md` imports or symlinks it), so
+`init-project.js` records the root `AGENTS.md` at SessionStart through the same
+`core/hooks/instructions-state.js` bookkeeping.
+
 ---
 
 ## Environment Events
@@ -451,8 +461,13 @@ or deleted.
 in Citadel's `/watch` skill. Claude Code can watch specific files and fire this event
 when they change, instead of a script polling on an interval.
 
+Claude Code watches only the filenames in a FileChanged matcher plus the
+`watchPaths` returned by SessionStart hooks. Citadel's FileChanged entry has no
+matcher (OpenCode's runner would apply it to tool names), so
+`instructions-watch.js` supplies the instruction files as `watchPaths`.
+
 **Citadel use:** `file-changed.js` - three behaviors depending on what changed:
-- `CLAUDE.md` or `.claude/rules/*.md` → appends to `doc-sync-queue.jsonl`
+- `AGENTS.md`, `CLAUDE.md` or `.claude/rules/*.md` → appends to `doc-sync-queue.jsonl`
   (same queue as InstructionsLoaded; different trigger, same consumer)
 - `hooks_src/*.js` → writes an advisory audit entry flagging that hook scripts
   changed and `install-hooks.js` should be re-run
@@ -670,6 +685,7 @@ SubagentStop        ← agent session ends
 | `init-project.js` | Setup, SessionStart | None | No |
 | `restore-compact.js` | SessionStart (compact) | None | No |
 | `intake-scanner.js` | SessionStart | Plain text (work item count) | No |
+| `instructions-watch.js` | SessionStart | `hookSpecificOutput.watchPaths` (Claude Code only) | No |
 | `session-end.js` | SessionEnd | None | No |
 | `pre-compact.js` | PreCompact | None | No |
 | `post-compact.js` | PostCompact | None | No |

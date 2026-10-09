@@ -37,12 +37,13 @@ contains 31 events; Citadel implements 29 and reports `MessageDisplay` and
 | `init-project.js` | SessionStart + Setup | Scaffold .planning/ state; also runs in --init-only mode |
 | `restore-compact.js` | SessionStart (compact) | Restore context after compression |
 | `intake-scanner.js` | SessionStart | Report pending work items |
+| `instructions-watch.js` | SessionStart | Return AGENTS.md, CLAUDE.md and rules files as FileChanged `watchPaths` (Claude Code only) |
 | `session-end.js` | SessionEnd | Flush session telemetry and opted-in durable repository memory |
 | `subagent-start.js` | SubagentStart | Bind fleet agent identity at spawn time |
 | `subagent-stop.js` | SubagentStop | Log agent completion + flag abnormal exits |
 | `teammate-idle.js` | TeammateIdle | Log teammate idle events (multi-instance fleet) |
 | `permission-request.js` | PermissionRequest + PermissionDenied | Auto-approve safe Citadel ops, log all decisions |
-| `instructions-loaded.js` | InstructionsLoaded | Detect CLAUDE.md reloads, queue doc-sync |
+| `instructions-loaded.js` | InstructionsLoaded | Detect CLAUDE.md reloads, queue doc-sync (AGENTS.md is recorded by `init-project.js`) |
 | `file-changed.js` | FileChanged | React to file-on-disk changes; queue doc-sync and skill-lint; sync eligible opted-in memory files |
 | `cwd-changed.js` | CwdChanged | Log directory changes; flag when moving outside project root |
 | `config-change.js` | ConfigChange | Detect harness.json / settings.json changes mid-session |
@@ -65,7 +66,7 @@ for a particular project.
 | `Setup` | `--init-only` or `--maintenance` mode | No | `init-project.js` |
 | `UserPromptSubmit` | Before Claude processes each user prompt | Yes | `user-prompt-submit.js` |
 | `UserPromptExpansion` | Slash command expands | Yes | `user-prompt-expansion.js` |
-| `SessionStart` | New conversation begins | No | `init-project.js`, `restore-compact.js`, `intake-scanner.js` |
+| `SessionStart` | New conversation begins | No | `init-project.js`, `restore-compact.js`, `intake-scanner.js`, `instructions-watch.js` |
 | `PreToolUse` | Before a tool executes | Yes (exit 2) | `protect-files.js`, `external-action-gate.js`, `governance.js` |
 | `PostToolUse` | After a tool completes | No | `post-edit.js`, `organize-enforce.js`, `circuit-breaker.js`, `cost-tracker.js`, `complexity-check.js` |
 | `PostToolBatch` | After ALL parallel tools in a wave settle | No | `post-tool-batch.js` |

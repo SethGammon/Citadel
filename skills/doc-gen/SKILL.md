@@ -46,7 +46,7 @@ Mode auto-detected from target:
 
 ### Phase 1: DETECT STYLE
 
-1. Read CLAUDE.md for doc conventions
+1. Read AGENTS.md (then CLAUDE.md if present) for doc conventions
 2. Search for existing doc comments in the target area — note density, tone, tags used, and line length
 3. Default when no existing docs: JSDoc (`@param`, `@returns`, `@throws`, `@example`) for TS/JS; Google-style for Python; idiomatic format for others
 

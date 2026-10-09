@@ -221,6 +221,15 @@
             "timeout": 5
           }
         ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node ${CLAUDE_PLUGIN_ROOT}/hooks_src/instructions-watch.js",
+            "timeout": 5
+          }
+        ]
       }
     ],
     "SessionEnd": [

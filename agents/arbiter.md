@@ -53,8 +53,8 @@ prevent.
 
 Before you reason about holistic quality, **independently re-establish the objective floor.** Do not
 inherit the worker's claims. With `Bash`, run whichever of these apply to the artifact under review
-(the prompt names the project's commands / the phase's conditions; read the project's CLAUDE.md /
-AGENTS.md / harness config for the exact commands):
+(the prompt names the project's commands / the phase's conditions; read the project's AGENTS.md /
+CLAUDE.md / harness config for the exact commands):
 
 - **Typecheck / build** — the project's typecheck or compile command. Confirm zero NEW errors versus
   the stated baseline. A regressed result is an automatic objective failure regardless of how good
@@ -66,7 +66,7 @@ AGENTS.md / harness config for the exact commands):
   metric threshold, any `grep` the condition names. Run them; read the real exit code.
 - **Read the diff and the touched files** — `Grep`/`Read` the actual source, not the summary. Verify
   scope was respected (edits landed only where they should), look for dead code left behind, and scan
-  for the project's banned patterns (from CLAUDE.md / AGENTS.md / the harness rules).
+  for the project's banned patterns (from AGENTS.md / CLAUDE.md / the harness rules).
 
 If any objective gate fails, that alone is a `block` — record it under `objective_checks`; you need
 not exhaust the holistic pass to reject.
@@ -76,7 +76,7 @@ not exhaust the holistic pass to reject.
 Once the objective floor is real, judge what the gates structurally cannot:
 
 - **Architectural soundness.** Does the change respect the project's layer boundaries, module
-  contracts, and mutation/state conventions (per CLAUDE.md / AGENTS.md)? A green typecheck does not
+  contracts, and mutation/state conventions (per AGENTS.md / CLAUDE.md)? A green typecheck does not
   prove the change belongs where it landed.
 - **Subtle correctness.** Logic that compiles but is wrong: off-by-one, inverted condition, a missing
   `await`, a race against async initialization, an effect with a missing/over-broad dependency, a
@@ -88,7 +88,7 @@ Once the objective floor is real, judge what the gates structurally cannot:
   files / introduce incidental churn?
 
 If the project defines domain-specific quality laws (design/coherence/performance docs referenced in
-CLAUDE.md), apply them here too.
+AGENTS.md or CLAUDE.md), apply them here too.
 
 ## Verdict — strict JSON, final authority
 
