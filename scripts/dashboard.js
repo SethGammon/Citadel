@@ -6,7 +6,7 @@ const fs = require('fs');
 const path = require('path');
 const { execFileSync } = require('child_process');
 
-const { parseCampaignContent, parseFrontmatter } = require('../core/campaigns/parse-campaign');
+const { parseCampaignContent } = require('../core/campaigns/parse-campaign');
 const { selectPackagePhase } = require('../core/campaigns/package-phase');
 const { isPhaseComplete } = require('../core/campaigns/update-campaign');
 const { extractCompletionOutcome } = require('../core/campaigns/outcomes');
@@ -17,6 +17,7 @@ const { getClaimStatus } = require('../core/coordination/claims');
 const { readCostDashboard } = require('./telemetry-stats');
 const { listReadinessReports } = require('../core/worktree/readiness');
 const configControl = require('../core/config');
+const { classifyIntakeStatus, isIntakeItemFile } = require('../core/intake/status');
 
 const DEFAULT_RECENT_LIMIT = 10;
 const ROUTINE_QUOTA_CAP = 15;
@@ -635,12 +636,10 @@ function readQueueCounts(projectRoot) {
 }
 
 function countPendingIntakeItems(intakeDir) {
-  return listFiles(intakeDir, (entry) => entry.endsWith('.md') && entry !== '_TEMPLATE.md')
+  return listFiles(intakeDir, isIntakeItemFile)
     .filter((filePath) => {
       const content = readText(filePath);
-      if (!content) return false;
-      const frontmatter = parseFrontmatter(content);
-      return String(frontmatter.status || 'pending').toLowerCase() === 'pending';
+      return content !== null && classifyIntakeStatus(content) === 'pending';
     }).length;
 }
 
@@ -1487,6 +1486,7 @@ if (require.main === module) {
 module.exports = {
   classifyHookProblem,
   collectDashboard,
+  countPendingIntakeItems,
   renderDashboard,
   readHookOverhead,
   readOperatorArtifacts,

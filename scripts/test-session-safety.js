@@ -83,6 +83,62 @@ try {
       assert.equal(data.inProgressCount, 1);
     }
   }
+
+  // Hook and dashboard classify intake statuses from frontmatter alone and agree.
+  const { countPendingIntakeItems } = require('./dashboard');
+  const runIntakeScan = (projectRoot) => {
+    const output = execFileSync(process.execPath, [path.join(repo, 'hooks_src/intake-scanner.js')], {
+      cwd: projectRoot, encoding: 'utf8', env: { ...process.env, CLAUDE_PROJECT_DIR: projectRoot, CITADEL_UI: 'true' },
+    });
+    return output ? JSON.parse(output).data : { pendingCount: 0, inProgressCount: 0, unrecognisedCount: 0 };
+  };
+  const writeIntake = (projectRoot, items) => {
+    const dir = path.join(projectRoot, '.planning', 'intake');
+    fs.mkdirSync(dir, { recursive: true });
+    for (const [name, content] of Object.entries(items)) fs.writeFileSync(path.join(dir, name), content);
+    return dir;
+  };
+
+  const inactiveRoot = path.join(root, 'inactive');
+  const inactiveDir = writeIntake(inactiveRoot, {
+    'closed.md': '---\nstatus: closed\n---\n',
+    'deferred.md': '---\nstatus: deferred\n---\n',
+    'completed.md': '---\nstatus: completed\n---\n',
+    'archived.md': '---\nstatus: archived\n---\n',
+    'unknown.md': '---\nstatus: wontfix\n---\n',
+  });
+  const inactive = runIntakeScan(inactiveRoot);
+  assert.equal(inactive.pendingCount, 0, 'terminal and unrecognised statuses must not count as pending');
+  assert.equal(countPendingIntakeItems(inactiveDir), 0);
+
+  const approvedRoot = path.join(root, 'approved');
+  const approvedDir = writeIntake(approvedRoot, { 'approved.md': '---\nstatus: approved\n---\n' });
+  const approved = runIntakeScan(approvedRoot);
+  assert.equal(approved.inProgressCount, 1, 'approved work must remain visible like briefed work');
+  assert.equal(approved.pendingCount, 0, 'approved work does not need another briefing');
+  assert.equal(approved.unrecognisedCount, 0);
+  assert.equal(countPendingIntakeItems(approvedDir), 0);
+
+  const mixedRoot = path.join(root, 'mixed');
+  const mixedDir = writeIntake(mixedRoot, {
+    'no-status.md': '---\ntitle: "untitled"\n---\n',
+    'body-override.md': '---\nstatus: pending\n---\n\nExample:\nstatus: completed\n',
+    'case-variant.md': '---\nStatus: Pending\n---\n',
+    'unknown.md': '---\nstatus: wontfix\n---\n',
+    'briefed.md': '---\nstatus: briefed\n---\n',
+    '_TEMPLATE.md': '---\nstatus: pending\n---\n',
+  });
+  const mixedOutput = execFileSync(process.execPath, [path.join(repo, 'hooks_src/intake-scanner.js')], {
+    cwd: mixedRoot, encoding: 'utf8', env: { ...process.env, CLAUDE_PROJECT_DIR: mixedRoot, CITADEL_UI: 'false' },
+  });
+  for (const leaked of ['wontfix', 'no-status', 'body-override', 'case-variant', 'untitled']) {
+    assert(!mixedOutput.includes(leaked), 'intake output must stay count-only');
+  }
+  const mixed = runIntakeScan(mixedRoot);
+  assert.equal(mixed.pendingCount, 3);
+  assert.equal(mixed.inProgressCount, 1);
+  assert.equal(mixed.unrecognisedCount, 1);
+  assert.equal(countPendingIntakeItems(mixedDir), mixed.pendingCount, 'hook and dashboard must report the same pending count');
   console.log('Session safety tests passed: fork permissions, native trust, delegate retirement and count-only intake.');
 } finally {
   fs.rmSync(root, { recursive: true, force: true });
