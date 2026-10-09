@@ -38,6 +38,25 @@ function listTemplateFiles(templateDir, relative = '') {
   return files;
 }
 
+// Inspect the entry itself (including dangling and hard links) and each
+// component down to the runtime directory. Never follow a redirected parent.
+function isRedirected(target, boundary) {
+  let current = path.resolve(target);
+  const stop = path.resolve(boundary);
+  for (;;) {
+    try {
+      const stat = fs.lstatSync(current);
+      if (stat.isSymbolicLink() || (stat.isFile() && stat.nlink > 1)) return true;
+    } catch (error) {
+      if (error.code !== 'ENOENT') return true;
+    }
+    if (current === stop) return false;
+    const parent = path.dirname(current);
+    if (parent === current) return true;
+    current = parent;
+  }
+}
+
 /**
  * Create or refresh a project's agent-context directory from the template.
  *
@@ -48,12 +67,18 @@ function listTemplateFiles(templateDir, relative = '') {
 function syncAgentContext(templateDir, targetDir) {
   const result = { created: [], refreshed: [], preserved: [] };
   if (!fs.existsSync(templateDir)) return result;
+  const boundary = path.dirname(path.resolve(targetDir));
 
   for (const relative of listTemplateFiles(templateDir)) {
     const source = path.join(templateDir, relative);
     const target = path.join(targetDir, relative);
     const key = relative.split(path.sep).join('/');
     const template = fs.readFileSync(source);
+
+    if (isRedirected(target, boundary)) {
+      result.preserved.push(key);
+      continue;
+    }
 
     if (!fs.existsSync(target)) {
       fs.mkdirSync(path.dirname(target), { recursive: true });

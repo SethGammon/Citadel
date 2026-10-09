@@ -31,7 +31,10 @@ const CURRENT_TEMPLATE_DIGESTS = Object.freeze({
 
 let passed = 0;
 function test(name, fn) {
-  fn();
+  if (fn() === false) {
+    console.log(`  SKIP ${name}: file symlinks require Windows privileges`);
+    return;
+  }
   passed += 1;
   console.log(`  PASS ${name}`);
 }
@@ -92,6 +95,55 @@ try {
     fs.writeFileSync(path.join(context, 'rules-summary.md'), PREVIOUS_RULES);
     runHook('init-project.js', project, { CITADEL_RUNTIME: 'claude-code' });
     assert.match(fs.readFileSync(path.join(context, 'rules-summary.md'), 'utf8'), /Read AGENTS\.md first/);
+  });
+
+  test('sync preserves linked context directories and redirected runtime parents', () => {
+    const outside = path.join(root, 'outside-directory');
+    fs.mkdirSync(outside);
+    const externalFile = path.join(outside, 'rules-summary.md');
+    fs.writeFileSync(externalFile, PREVIOUS_RULES);
+    const direct = path.join(root, 'linked-context');
+    fs.symlinkSync(outside, direct, process.platform === 'win32' ? 'junction' : 'dir');
+    assert.deepEqual(syncAgentContext(templateDir, direct).refreshed, []);
+    assert.equal(fs.readFileSync(externalFile, 'utf8'), PREVIOUS_RULES);
+
+    const project = path.join(root, 'linked-runtime');
+    fs.mkdirSync(project);
+    fs.symlinkSync(outside, path.join(project, '.claude'), process.platform === 'win32' ? 'junction' : 'dir');
+    syncAgentContext(templateDir, path.join(project, '.claude', 'agent-context'));
+    assert(!fs.existsSync(path.join(outside, 'agent-context')), 'must not create context through a linked runtime parent');
+  });
+
+  test('sync preserves existing and dangling file symlinks', () => {
+    const target = path.join(root, 'linked-files', 'agent-context');
+    fs.mkdirSync(target, { recursive: true });
+    const linkedFile = path.join(target, 'rules-summary.md');
+    const externalFile = path.join(root, 'external-rules.md');
+    fs.writeFileSync(externalFile, PREVIOUS_RULES);
+    try {
+      fs.symlinkSync(externalFile, linkedFile, 'file');
+    } catch (error) {
+      if (process.platform === 'win32' && error.code === 'EPERM') return false;
+      throw error;
+    }
+    assert.deepEqual(syncAgentContext(templateDir, target).preserved, ['rules-summary.md']);
+    assert.equal(fs.readFileSync(externalFile, 'utf8'), PREVIOUS_RULES);
+
+    fs.unlinkSync(linkedFile);
+    const absentFile = path.join(root, 'external-missing.md');
+    fs.symlinkSync(absentFile, linkedFile, 'file');
+    assert.deepEqual(syncAgentContext(templateDir, target).preserved, ['rules-summary.md']);
+    assert(!fs.existsSync(absentFile), 'must not create an external file through a dangling link');
+  });
+
+  test('sync preserves hard-linked context files', () => {
+    const target = path.join(root, 'hard-linked-files', 'agent-context');
+    fs.mkdirSync(target, { recursive: true });
+    const externalFile = path.join(root, 'hard-linked-external.md');
+    fs.writeFileSync(externalFile, PREVIOUS_RULES);
+    fs.linkSync(externalFile, path.join(target, 'rules-summary.md'));
+    assert.deepEqual(syncAgentContext(templateDir, target).preserved, ['rules-summary.md']);
+    assert.equal(fs.readFileSync(externalFile, 'utf8'), PREVIOUS_RULES);
   });
 
   test('init-project queues doc-sync when AGENTS.md changed since the last session', () => {
