@@ -10,6 +10,7 @@
 const fs = require('fs');
 const path = require('path');
 const health = require('./harness-health-util');
+const { classifyIntakeStatus, isIntakeItemFile } = require('../core/intake/status');
 
 const CITADEL_UI = process.env.CITADEL_UI === 'true';
 
@@ -78,9 +79,7 @@ function run() {
     } catch { /* non-critical */ }
   }
 
-  const files = fs.readdirSync(INTAKE_DIR).filter(f =>
-    f.endsWith('.md') && !f.startsWith('_') && !f.startsWith('.')
-  );
+  const files = fs.readdirSync(INTAKE_DIR).filter(isIntakeItemFile);
 
   if (files.length === 0 && stagedCount === 0) {
     process.exit(0);
@@ -99,23 +98,14 @@ function run() {
       );
       continue;
     }
-    const statusMatch = content.match(/^status:[ \t]*(pending|in-progress|briefed|completed|archived)[ \t]*$/m);
-    const status = statusMatch ? statusMatch[1] : 'pending';
-
-    if (status === 'completed' || status === 'archived') continue;
-
-    items.push({
-      file: file.replace('.md', ''),
-      status,
-    });
+    // Frontmatter-only classification shared with the dashboard. Unrecognised
+    // statuses are counted in metadata but never reported as pending.
+    items.push({ classification: classifyIntakeStatus(content) });
   }
 
-  if (items.length === 0 && stagedCount === 0) {
-    process.exit(0);
-  }
-
-  const pending = items.filter(i => i.status === 'pending');
-  const inProgress = items.filter(i => i.status === 'in-progress' || i.status === 'briefed');
+  const pending = items.filter(i => i.classification === 'pending');
+  const inProgress = items.filter(i => i.classification === 'in-progress');
+  const unrecognised = items.filter(i => i.classification === 'unrecognised');
 
   if (pending.length === 0 && inProgress.length === 0 && stagedCount === 0) {
     process.exit(0);
@@ -143,6 +133,7 @@ function run() {
   hookOutput('intake-scanner', 'allowed', lines.join('\n'), {
     pendingCount: pending.length,
     inProgressCount: inProgress.length,
+    unrecognisedCount: unrecognised.length,
   });
   process.exit(0);
 }
