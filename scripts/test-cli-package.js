@@ -10,6 +10,10 @@ const zlib = require('zlib');
 const { spawnSync } = require('child_process');
 const cli = require('../core/cli/package-cli');
 
+// Runtime detection must come from each case's own arguments and markers, not
+// from a runtime pinned by the session running the suite.
+delete process.env.CITADEL_RUNTIME;
+
 const ROOT = path.resolve(__dirname, '..');
 const BIN = path.join(ROOT, 'bin', 'citadel.js');
 
