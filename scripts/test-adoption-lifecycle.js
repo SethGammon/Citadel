@@ -15,6 +15,10 @@ const packageCli = require('../core/cli/package-cli');
 const { ACTIVE_RECEIPT, LOCK_PATH } = require('../core/adoption/footprint');
 const { __test: { publishPlanOutput } } = require('./adopt');
 
+// Runtime detection must come from each case's own markers, not from a runtime
+// pinned by the session running the suite.
+delete process.env.CITADEL_RUNTIME;
+
 let passed = 0;
 
 function run(command, args, cwd) {
@@ -408,7 +412,11 @@ try {
       'Codex sessions must receive delegated-agent context in the Codex namespace');
     assert(!fs.existsSync(path.join(root, '.claude')),
       'Codex initialization must not create a Claude runtime marker');
-    assert.strictEqual(configControl.detectRuntimeContract(root).id, 'codex');
+    // This assertion exercises the installed marker. The parent shell may
+    // itself mention a runtime even after CITADEL_RUNTIME has been cleared.
+    assert.strictEqual(configControl.detectRuntimeContract(root, {
+      env: {}, execFileSync: () => '',
+    }).id, 'codex');
     assert.deepStrictEqual(packageCli.detectRuntime([], {
       cwd: root,
       env: {},
