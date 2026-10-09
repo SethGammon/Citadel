@@ -15,6 +15,10 @@ const packageCli = require('../core/cli/package-cli');
 const { ACTIVE_RECEIPT, LOCK_PATH } = require('../core/adoption/footprint');
 const { __test: { publishPlanOutput } } = require('./adopt');
 
+// Runtime detection must come from each case's own markers, not from a runtime
+// pinned by the session running the suite.
+delete process.env.CITADEL_RUNTIME;
+
 let passed = 0;
 
 function run(command, args, cwd) {
