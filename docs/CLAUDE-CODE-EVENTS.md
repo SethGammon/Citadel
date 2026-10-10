@@ -264,6 +264,23 @@ cross-reference (referenced file paths that don't exist), and custom rules from
 `harness.json`. Violations are added to Claude's context by default. If
 `qualityRules.blocking` is enabled, the Stop hook emits a block decision instead.
 
+Intentional cross-reference findings, such as a doc that names a file that
+doesn't exist yet, can be waived in two ways:
+
+- **Whole file:** a standalone `<!-- citadel:ignore cross-reference -->` line in
+  the Markdown file waives every cross-reference finding in that file.
+- **Single finding:** list the finding's fingerprint in a `.citadelignore` file at
+  the project root, one per line, the same way `.gitleaksignore` works. Every
+  cross-reference finding prints its fingerprint:
+
+  ```
+  # .citadelignore — blank lines and # comments are skipped
+  guides/plan.md:cross-reference:src/planned/feature.ts
+  ```
+
+Fingerprints only waive cross-reference findings. Entries for other lenses
+(secrets, adversarial, custom, and so on) have no effect.
+
 Guards against infinite loops via `stop_hook_active` check.
 
 ---

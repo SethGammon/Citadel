@@ -89,6 +89,29 @@ jobs:
       - name: Run strict verification suite
         run: node scripts/test-all.js --strict
 
+  test-windows-git-bash:
+    name: node 22 on windows-latest (git bash)
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: bash
+    env:
+      # Match an interactive Git Bash so activeShell() selects the posix
+      # quoting dialect; the default windows job exercises powershell.
+      TERM: xterm-256color
+      SHELL: /usr/bin/bash
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+      - name: Assert posix shell dialect is active
+        run: node -e "const s = require('./core/utils/config-command').activeShell(); if (s !== 'posix') { console.error('expected posix shell dialect, got ' + s); process.exit(1); }"
+      - name: Run strict verification suite
+        run: node scripts/test-all.js --strict
+
   golden-path-evidence:
     name: golden path on ${{ matrix.slug }}
     runs-on: ${{ matrix.os }}
