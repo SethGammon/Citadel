@@ -11,6 +11,11 @@
  * check).
  * Allows writes to the Claude Code native auto-memory directory under the
  * user home even though it sits outside the project root.
+ * Allows writes to the current session's scratchpad directory under the
+ * system temp root (<tmp>/claude[-*]/<slug>/<session_id>/scratchpad/).
+ * Treats linked git worktrees of this repository as part of the project:
+ * paths inside one are checked relative to that worktree's root, so isolated
+ * parallel agents get the same protections as the main checkout.
  * Every block reason is mirrored to stderr so runtimes that only surface
  * stderr still show why an action was stopped.
  * Protected paths are configurable via harness.json protectedFiles array.
@@ -33,6 +38,7 @@ const os = require('os');
 const path = require('path');
 const health = require('./harness-health-util');
 const { findActiveCampaign } = require('../core/campaigns/load-campaign');
+const { listWorktreeRoots } = require('../core/worktree/create');
 
 const PROJECT_ROOT = health.PROJECT_ROOT;
 
@@ -126,16 +132,24 @@ function run(input) {
   // blocked by basename below.
   const normalizedPath = path.normalize(health.canonicalizePath(filePath));
   const normalizedRoot = path.normalize(health.canonicalizePath(PROJECT_ROOT));
-  const rootRelativePath = path.relative(normalizedRoot, normalizedPath);
-  const insideProject = rootRelativePath === '' || (
-    rootRelativePath !== '..'
-    && !rootRelativePath.startsWith(`..${path.sep}`)
-    && !path.isAbsolute(rootRelativePath)
-  );
+  let rootRelativePath = path.relative(normalizedRoot, normalizedPath);
+  let insideProject = isContained(rootRelativePath);
 
-  // Claude Code native auto-memory lives outside the project root by design.
-  // Allow those writes before the outside-project-root block below.
-  if (toolName !== 'Read' && !insideProject && isNativeMemoryPath(normalizedPath)) {
+  // A linked worktree is its own checkout: whether it lives outside the
+  // project or nested under it (.claude/worktrees/<name>), match patterns
+  // against the path relative to the worktree root.
+  if (toolName !== 'Read' && (!insideProject || /(^|[\\/])\.?worktrees[\\/]/.test(rootRelativePath))) {
+    const worktreeRelative = relativeToLinkedWorktree(normalizedPath, normalizedRoot);
+    if (worktreeRelative !== null) {
+      rootRelativePath = worktreeRelative;
+      insideProject = true;
+    }
+  }
+
+  // Claude Code native auto-memory and the session scratchpad live outside
+  // the project root by design. Allow those writes before the block below.
+  if (toolName !== 'Read' && !insideProject
+    && (isNativeMemoryPath(normalizedPath) || isSessionScratchpadPath(normalizedPath, event.session_id))) {
     process.exit(0);
   }
 
@@ -272,6 +286,63 @@ function checkCampaignScope(relativePath, toolName, _filePath) {
   } catch {
     // Any unexpected error — skip scope check silently (never block on check failure)
   }
+}
+
+function isContained(relativePath) {
+  return relativePath === '' || (
+    relativePath !== '..'
+    && !relativePath.startsWith(`..${path.sep}`)
+    && !path.isAbsolute(relativePath)
+  );
+}
+
+/**
+ * When `normalizedPath` lies inside a linked git worktree of this repository
+ * (not the main checkout), return its path relative to that worktree's root;
+ * otherwise null. The innermost matching worktree wins.
+ *
+ * @param {string} normalizedPath - Canonical absolute path
+ * @param {string} normalizedRoot - Canonical project root
+ * @returns {string|null}
+ */
+function relativeToLinkedWorktree(normalizedPath, normalizedRoot) {
+  const fold = (p) => (process.platform === 'win32' ? p.toLowerCase() : p);
+  let best = null;
+  for (const root of listWorktreeRoots(normalizedRoot)) {
+    const canonicalRoot = path.normalize(health.canonicalizePath(root));
+    if (fold(canonicalRoot) === fold(normalizedRoot)) continue;
+    const rel = path.relative(canonicalRoot, normalizedPath);
+    if (isContained(rel) && (best === null || rel.length < best.length)) best = rel;
+  }
+  return best;
+}
+
+/**
+ * True when an absolute, normalized path points into this session's Claude
+ * Code scratchpad: <tmp>/claude[-<suffix>]/<slug>/<session_id>/scratchpad/.
+ * <tmp> is CLAUDE_CODE_TMPDIR, os.tmpdir(), or /tmp on POSIX. Without a
+ * session_id in the hook input any session segment matches.
+ *
+ * @param {string} normalizedPath - Result of path.normalize(path.resolve(...))
+ * @param {string|undefined} sessionId - session_id from the hook input
+ * @returns {boolean}
+ */
+function isSessionScratchpadPath(normalizedPath, sessionId) {
+  const fold = (p) => (process.platform === 'win32' ? p.toLowerCase() : p);
+  const tmpRoots = [process.env.CLAUDE_CODE_TMPDIR, os.tmpdir()];
+  if (process.platform !== 'win32') tmpRoots.push('/tmp');
+  const target = fold(normalizedPath);
+  for (const tmp of tmpRoots.filter(Boolean)) {
+    const root = fold(path.normalize(health.canonicalizePath(tmp)));
+    if (!target.startsWith(root + path.sep)) continue;
+    const segments = target.slice(root.length + 1).split(path.sep).filter(Boolean);
+    if (segments.length < 4) continue;
+    const [claudeDir, , session, leaf] = segments;
+    if (!/^claude(-[^\\/]+)?$/.test(claudeDir) || leaf !== 'scratchpad') continue;
+    if (sessionId && session !== fold(String(sessionId))) continue;
+    return true;
+  }
+  return false;
 }
 
 /**

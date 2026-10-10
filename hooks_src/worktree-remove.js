@@ -10,6 +10,9 @@
  *   3. Update the fleet session file to mark the agent as complete
  *   4. Queue a merge conflict check if the worktree had changes (Tier 9 prep)
  *   5. Clean up any scope claims the worktree's agent held
+ *   6. Remove the worktree directory (git worktree remove --force, branch kept).
+ *      Required because worktree-setup.js owns creation: once a WorktreeCreate
+ *      hook is registered, Claude Code treats exit 0 here as "removed".
  *
  * Fringe cases:
  * - Worktree removed without corresponding fleet session: log and skip
@@ -22,6 +25,7 @@
 const fs = require('fs');
 const path = require('path');
 const health = require('./harness-health-util');
+const { removeWorktree, worktreeBranch } = require('../core/worktree/create');
 
 const PROJECT_ROOT = health.PROJECT_ROOT;
 
@@ -35,7 +39,8 @@ function main() {
 
     const worktreePath = event.worktree_path || event.path || null;
     const worktreeName = worktreePath ? path.basename(worktreePath) : null;
-    const branchName = event.branch || event.branch_name || null;
+    const branchName = event.branch || event.branch_name
+      || (worktreePath ? worktreeBranch(worktreePath) : null);
 
     health.increment('worktree-remove', 'count');
 
@@ -72,6 +77,15 @@ function main() {
 
     // Update fleet session if this worktree was part of one
     updateFleetSession(worktreeName, branchName);
+
+    if (worktreePath) {
+      try {
+        removeWorktree({ projectRoot: PROJECT_ROOT, worktreePath });
+      } catch (err) {
+        process.stderr.write(`[worktree-remove] git worktree remove failed for ${worktreePath}: ${err.message}\n`);
+        process.exit(1);
+      }
+    }
 
     process.exit(0);
   });

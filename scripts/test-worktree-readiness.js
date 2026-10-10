@@ -136,11 +136,55 @@ function listen(port = 0) {
       env: { ...process.env, CLAUDE_PROJECT_DIR: projectRoot },
     });
 
-    assert.equal(output.trim(), 'ok');
+    assert.equal(output.trim(), worktreePath, 'hook must echo the worktree path it was given');
     const reports = listReadinessReports(projectRoot);
     assert.equal(reports.length, 1, 'worktree-setup hook should write readiness evidence');
     assert.equal(reports[0].branch, 'codex/hook-ready');
     assert.equal(reports[0].status, 'ready');
+  });
+
+  // WorktreeCreate replaces Claude Code's native `git worktree add`: given only
+  // a name, the hook must create the checkout and print its path last on stdout.
+  // WorktreeRemove must then delete it (exit 0 means "removed" to Claude Code).
+  await withTempProject(async (projectRoot) => {
+    const gitIn = (args) => execFileSync('git', args, { cwd: projectRoot, encoding: 'utf8' });
+    gitIn(['init', '-q']);
+    gitIn(['-c', 'user.email=t@example.com', '-c', 'user.name=t', 'commit', '-q', '--allow-empty', '-m', 'init']);
+    const hookEnv = { ...process.env, CLAUDE_PROJECT_DIR: projectRoot };
+
+    const stdout = execFileSync(process.execPath, [
+      path.join(__dirname, '..', 'hooks_src', 'worktree-setup.js'),
+    ], { cwd: projectRoot, input: JSON.stringify({ name: 'bold-oak-a3f2' }), encoding: 'utf8', env: hookEnv });
+    const lines = stdout.trim().split(/\r?\n/);
+    const created = lines[lines.length - 1];
+    const expected = path.join(fs.realpathSync.native(projectRoot), '.claude', 'worktrees', 'bold-oak-a3f2');
+    assert.equal(path.resolve(created).toLowerCase(), expected.toLowerCase(), 'last stdout line must be the worktree path');
+    assert(fs.existsSync(path.join(created, '.git')), 'worktree checkout must exist');
+    assert.equal(execFileSync('git', ['rev-parse', '--abbrev-ref', 'HEAD'], { cwd: created, encoding: 'utf8' }).trim(), 'worktree-bold-oak-a3f2');
+
+    const again = execFileSync(process.execPath, [
+      path.join(__dirname, '..', 'hooks_src', 'worktree-setup.js'),
+    ], { cwd: projectRoot, input: JSON.stringify({ name: 'bold-oak-a3f2' }), encoding: 'utf8', env: hookEnv });
+    assert.equal(again.trim().split(/\r?\n/).pop(), created, 'existing worktree must be reused');
+
+    const bad = require('child_process').spawnSync(process.execPath, [
+      path.join(__dirname, '..', 'hooks_src', 'worktree-setup.js'),
+    ], { cwd: projectRoot, input: JSON.stringify({ name: '../escape' }), encoding: 'utf8', env: hookEnv });
+    assert.notEqual(bad.status, 0, 'invalid names must fail creation');
+    assert.equal(bad.stdout.trim(), '', 'failed creation must not print a path');
+
+    execFileSync(process.execPath, [
+      path.join(__dirname, '..', 'hooks_src', 'worktree-remove.js'),
+    ], { cwd: projectRoot, input: JSON.stringify({ worktree_path: created }), encoding: 'utf8', env: hookEnv });
+    assert(!fs.existsSync(created), 'worktree-remove must delete the worktree directory');
+    assert.equal(gitIn(['branch', '--list', 'worktree-bold-oak-a3f2']).trim().replace(/^[*+ ]+/, ''), 'worktree-bold-oak-a3f2',
+      'branch is kept for merge review');
+
+    const mainRemove = require('child_process').spawnSync(process.execPath, [
+      path.join(__dirname, '..', 'hooks_src', 'worktree-remove.js'),
+    ], { cwd: projectRoot, input: JSON.stringify({ worktree_path: projectRoot }), encoding: 'utf8', env: hookEnv });
+    assert.equal(mainRemove.status, 0);
+    assert(fs.existsSync(path.join(projectRoot, '.git')), 'worktree-remove must never touch the main checkout');
   });
 
   console.log('worktree readiness tests passed');

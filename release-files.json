@@ -48,6 +48,7 @@
     "core/utils/path-helpers.js",
     "core/utils/config-command.js",
     "core/verification/profiles.js",
+    "core/worktree/create.js",
     "core/worktree/readiness.js",
     "docs/ARCHITECTURE.md",
     "docs/CAMPAIGNS.md",
