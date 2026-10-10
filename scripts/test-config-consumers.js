@@ -66,7 +66,9 @@ assert.equal(bootstrapMarshal.activation.decision.bundleId, 'operations');
 assert.equal(bootstrapMarshal.activation.decision.status, 'disabled');
 assert.equal(bootstrapMarshal.boundary, 'product-bundle-activation');
 assert.equal(bootstrapMarshal.canRunNow, false);
-assert.match(bootstrapMarshal.approval, /citadel-config\.js enable --project-root /);
+// The script path is shell-quoted when it is not shell-safe for the active
+// shell, e.g. a Windows path with backslashes under Git Bash (posix dialect).
+assert.match(bootstrapMarshal.approval, /citadel-config\.js'? enable --project-root /);
 assert.match(bootstrapMarshal.approval, / operations .*--apply/);
 assert.match(bootstrapMarshal.approval, new RegExp(root.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
 
