@@ -9,6 +9,8 @@
  *   (c) markers in Markdown code examples are inert
  *   (d) files without a marker are unaffected
  *   (e) the cross-reference lens itself is unchanged (marker lives upstream)
+ *   (f) .citadelignore fingerprints waive single cross-reference findings
+ *       only; entries for other lenses have no effect
  *
  * Stdlib only. No network, no LLM.
  *
@@ -31,6 +33,8 @@ const originalReadConfig = health.readConfig;
 let config = {};
 health.readConfig = () => config;
 const {
+  parseIgnoreFile,
+  isIgnoredViolation,
   parseInlineIgnores,
   selectColdPathLenses,
   lensCrossReference,
@@ -134,6 +138,27 @@ check('project-level disabled configuration composes with inline waiver',
   JSON.stringify(selectColdPathLenses('src/app.js', marker)) === JSON.stringify(['adversarial', 'custom', 'secrets']));
 health.readConfig = originalReadConfig;
 
+// .citadelignore: line-based fingerprints, like .gitleaksignore.
+const fingerprints = parseIgnoreFile([
+  '# planned files',
+  '',
+  '  docs/plan.md:cross-reference:planned/feature.ts  ',
+  'docs\\win.md:cross-reference:planned/feature.ts',
+  'src/app.js:secrets:aws-access-key-id',
+].join('\r\n'));
+check('ignore file skips blanks and comments, trims, normalizes separators',
+  fingerprints.size === 3 && fingerprints.has('docs/plan.md:cross-reference:planned/feature.ts')
+  && fingerprints.has('docs/win.md:cross-reference:planned/feature.ts'));
+const [refViolation] = lensCrossReference('docs/plan.md', refDoc);
+check('cross-reference findings carry a fingerprint',
+  refViolation && refViolation.fingerprint === 'docs/plan.md:cross-reference:planned/feature.ts');
+check('listed cross-reference fingerprint is ignored', isIgnoredViolation(refViolation, fingerprints));
+check('fingerprint for another file is not ignored',
+  !isIgnoredViolation({ ...refViolation, fingerprint: 'docs/other.md:cross-reference:planned/feature.ts' }, fingerprints));
+check('non-ignorable lenses cannot be waived by fingerprint',
+  !isIgnoredViolation({ file: 'src/app.js', lens: 'secrets', fingerprint: 'src/app.js:secrets:aws-access-key-id' }, fingerprints));
+check('missing or non-string ignore content yields no fingerprints', parseIgnoreFile(undefined).size === 0);
+
 // Exercise the actual stdin runner, config loading, dispatch and blocking output.
 const sandbox = fs.mkdtempSync(path.join(os.tmpdir(), 'citadel-quality-gate-'));
 try {
@@ -143,7 +168,7 @@ try {
   fs.writeFileSync(path.join(sandbox, '.claude', 'harness.json'), JSON.stringify({
     qualityRules: { blocking: true, custom: [{ pattern: 'REVIEW_SENTINEL', message: 'Custom check survived' }] },
   }));
-  const files = ['source.js', 'fenced.md', 'waived.md'];
+  const files = ['source.js', 'fenced.md', 'waived.md', 'listed.md'];
   for (const file of files) fs.writeFileSync(path.join(sandbox, file), 'baseline\n');
   git(['add', ...files]);
   git(['-c', 'user.name=Test', '-c', 'user.email=test@example.invalid', 'commit', '-m', 'fixture']);
@@ -158,6 +183,15 @@ try {
   ].join('\n'));
   fs.writeFileSync(path.join(sandbox, 'fenced.md'), `\`\`\`html\n${marker}\n\`\`\`\n${refDoc}`);
   fs.writeFileSync(path.join(sandbox, 'waived.md'), markedDoc);
+  // listed.md has one waived and one live reference; source.js tries to waive
+  // a secrets finding, which must have no effect.
+  fs.writeFileSync(path.join(sandbox, 'listed.md'), `${refDoc}\nAlso \`planned/other.ts\`.\n`);
+  fs.writeFileSync(path.join(sandbox, '.citadelignore'), [
+    '# intentional forward references',
+    'listed.md:cross-reference:planned/feature.ts',
+    'source.js:secrets:aws-access-key-id',
+    '',
+  ].join('\n'));
   const result = spawnSync(process.execPath, [path.join(__dirname, '..', 'hooks_src', 'quality-gate.js')], {
     cwd: sandbox, input: '{}', encoding: 'utf8', timeout: 15000,
     env: { ...process.env, CITADEL_RUNTIME: 'claude-code', CITADEL_UI: 'false',
@@ -171,7 +205,11 @@ try {
   }
   assert(output.reason.includes('fenced.md: [cross-reference]'), output.reason);
   assert(!output.reason.includes('waived.md:'), output.reason);
+  assert(!output.reason.includes('listed.md:cross-reference:planned/feature.ts'), output.reason);
+  assert(output.reason.includes('(fingerprint: listed.md:cross-reference:planned/other.ts)'), output.reason);
+  assert(output.reason.includes('.citadelignore'), output.reason);
   check('blocking Stop hook preserves source checks and fenced-document warnings', true);
+  check('.citadelignore waives only listed cross-reference fingerprints end to end', true);
 } catch (error) {
   check('blocking Stop hook preserves source checks and fenced-document warnings', false, error.message);
 } finally {

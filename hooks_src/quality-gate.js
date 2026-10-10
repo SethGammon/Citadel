@@ -21,7 +21,12 @@
  * Users can configure via harness.json verification.cold and qualityRules.custom.
  * Markdown cross-reference warnings can be suppressed per file with a
  * standalone <!-- citadel:ignore cross-reference --> comment outside code fences.
- * No other lens can be suppressed inline; project configuration still applies.
+ * Individual cross-reference findings can be suppressed by listing their
+ * fingerprint in a .citadelignore file at the project root, one per line,
+ * like .gitleaksignore:
+ *   docs/plan.md:cross-reference:src/planned/feature.ts
+ * Blank lines and lines starting with # are ignored. Each finding prints its
+ * fingerprint. No other lens can be suppressed; project configuration still applies.
  */
 
 const fs = require('fs');
@@ -115,6 +120,46 @@ function parseInlineIgnores(content) {
   return ignored;
 }
 
+// ── Fingerprint Ignore File ─────────────────────────────────────────────────
+
+const IGNORE_FILE = '.citadelignore';
+// Lenses whose findings may be waived by fingerprint. Kept in step with the
+// inline waiver: only advisory documentation drift, never source checks.
+const IGNORABLE_LENSES = new Set(['cross-reference']);
+
+/**
+ * Parse .citadelignore content into a Set of fingerprints
+ * (`<file>:<lens>:<target>`). Blank lines and `#` comments are skipped;
+ * surrounding whitespace is trimmed and Windows separators are normalized.
+ *
+ * @param {string} content
+ * @returns {Set<string>}
+ */
+function parseIgnoreFile(content) {
+  const fingerprints = new Set();
+  if (typeof content !== 'string') return fingerprints;
+  for (const raw of content.split(/\r?\n/)) {
+    const line = raw.trim();
+    if (!line || line.startsWith('#')) continue;
+    fingerprints.add(line.replace(/\\/g, '/'));
+  }
+  return fingerprints;
+}
+
+function loadIgnoreFingerprints(projectDir) {
+  try {
+    return parseIgnoreFile(fs.readFileSync(path.join(projectDir, IGNORE_FILE), 'utf8'));
+  } catch {
+    return new Set();
+  }
+}
+
+function isIgnoredViolation(violation, fingerprints) {
+  return Boolean(violation.fingerprint)
+    && IGNORABLE_LENSES.has(violation.lens)
+    && fingerprints.has(violation.fingerprint);
+}
+
 function selectColdPathLenses(file, content) {
   const config = health.readConfig();
   const verification = config.verification || {};
@@ -180,6 +225,7 @@ function run() {
 
   const violations = [];
   const builtInRules = config.qualityRules?.builtIn || ['no-confirm-alert', 'no-transition-all'];
+  const ignoredFingerprints = loadIgnoreFingerprints(projectDir);
 
   for (const file of changedFiles) {
     const fullPath = path.join(projectDir, file);
@@ -197,7 +243,7 @@ function run() {
 
     for (const lens of lenses) {
       const lensViolations = runColdLens(lens, file, content, config, builtInRules);
-      violations.push(...lensViolations);
+      violations.push(...lensViolations.filter(v => !isIgnoredViolation(v, ignoredFingerprints)));
     }
   }
 
@@ -206,9 +252,13 @@ function run() {
     const msg = [
       `[Quality Gate] ${violations.length} issue(s) in recently modified files:`,
       '',
-      ...violations.map(v => `  ${v.file}: [${v.lens || v.rule}] ${v.message}`),
+      ...violations.map(v => `  ${v.file}: [${v.lens || v.rule}] ${v.message}`
+        + (v.fingerprint ? ` (fingerprint: ${v.fingerprint})` : '')),
       '',
       'Fix these before finalizing your work.',
+      ...(violations.some(v => v.fingerprint)
+        ? [`Intentional findings with a fingerprint can be listed in ${IGNORE_FILE}, one per line.`]
+        : []),
     ].join('\n');
 
     if (CITADEL_UI) {
@@ -468,6 +518,7 @@ function lensCrossReference(file, content) {
         file,
         lens: 'cross-reference',
         message: `References non-existent file: ${refPath}`,
+        fingerprint: `${file}:cross-reference:${refPath}`,
       });
     }
   }
@@ -612,6 +663,8 @@ function lensCustom(file, content, config) {
 }
 
 module.exports = {
+  parseIgnoreFile,
+  isIgnoredViolation,
   parseInlineIgnores,
   selectColdPathLenses,
   lensCrossReference,
