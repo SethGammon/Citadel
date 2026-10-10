@@ -24,7 +24,7 @@
  * Individual cross-reference findings can be suppressed by listing their
  * fingerprint in a .citadelignore file at the project root, one per line,
  * like .gitleaksignore:
- *   docs/plan.md:cross-reference:src/planned/feature.ts
+ *   guides/plan.md:cross-reference:src/planned/feature.ts
  * Blank lines and lines starting with # are ignored. Each finding prints its
  * fingerprint. No other lens can be suppressed; project configuration still applies.
  */

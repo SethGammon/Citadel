@@ -275,7 +275,7 @@ doesn't exist yet, can be waived in two ways:
 
   ```
   # .citadelignore — blank lines and # comments are skipped
-  docs/plan.md:cross-reference:src/planned/feature.ts
+  guides/plan.md:cross-reference:src/planned/feature.ts
   ```
 
 Fingerprints only waive cross-reference findings. Entries for other lenses
