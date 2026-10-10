@@ -603,9 +603,9 @@ test('subagent-stop: writes audit entry on abnormal termination', () => {
 
 // ── worktree-remove.js ──
 
-test('worktree-remove: exits 0', () => {
+test('worktree-remove: already-missing directory exits 0', () => {
   const r = fireHook('worktree-remove.js',
-    { worktree_path: '/tmp/test-worktree', branch: 'fleet/agent-1' },
+    { worktree_path: path.join(rDir, 'already-removed-worktree'), branch: 'fleet/agent-1' },
     rDir
   );
   if (r.exitCode !== 0) return `exit ${r.exitCode}`;
@@ -614,7 +614,7 @@ test('worktree-remove: exits 0', () => {
 test('worktree-remove: writes telemetry', () => {
   const before = countLines(rDir, '.planning/telemetry/hook-timing.jsonl');
   fireHook('worktree-remove.js',
-    { worktree_path: '/tmp/test-worktree-2', branch: 'fleet/agent-2' },
+    { worktree_path: path.join(rDir, 'already-removed-worktree-2'), branch: 'fleet/agent-2' },
     rDir
   );
   const after = countLines(rDir, '.planning/telemetry/hook-timing.jsonl');

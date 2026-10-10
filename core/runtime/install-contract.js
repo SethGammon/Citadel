@@ -22,6 +22,7 @@ const MACHINE_LOCAL_PATTERNS = Object.freeze([
   '.claude/settings.json',
   '.claude/settings.local.json',
   '.claude/agent-context/',
+  '.claude/worktrees/',
   '.codex/',
   '.agents/',
   '.opencode/',
@@ -201,10 +202,28 @@ function ensureMachineLocalExcludes(projectRoot, options = {}) {
   const existing = fileSystem.existsSync(excludePath)
     ? fileSystem.readFileSync(excludePath, 'utf8')
     : '';
-  if (existing.includes(LOCAL_EXCLUDE_BEGIN)) {
+  const block = localExcludeText();
+  const begin = existing.indexOf(LOCAL_EXCLUDE_BEGIN);
+  const endMarker = begin >= 0 ? existing.indexOf(LOCAL_EXCLUDE_END, begin) : -1;
+  let next;
+  if (begin >= 0 && endMarker >= 0) {
+    // Reconcile a block written by an older Citadel so newly added
+    // machine-local patterns reach existing checkouts.
+    const blockEnd = existing.indexOf('\n', endMarker);
+    const current = existing.slice(begin, blockEnd < 0 ? existing.length : blockEnd + 1);
+    if (current.replace(/\r\n/g, '\n').replace(/\n?$/, '\n') === block) {
+      plan.skipped = true;
+      plan.reason = 'Citadel machine-local block already present';
+      return plan;
+    }
+    next = `${existing.slice(0, begin)}${block}${blockEnd < 0 ? '' : existing.slice(blockEnd + 1)}`;
+  } else if (begin >= 0) {
     plan.skipped = true;
-    plan.reason = 'Citadel machine-local block already present';
+    plan.reason = 'Citadel machine-local block has no end marker; left unchanged';
     return plan;
+  } else {
+    const prefix = existing.length > 0 && !existing.endsWith('\n') ? '\n' : '';
+    next = `${existing}${prefix}${block}`;
   }
   if (options.dryRun) {
     plan.skipped = true;
@@ -213,8 +232,7 @@ function ensureMachineLocalExcludes(projectRoot, options = {}) {
   }
 
   fileSystem.mkdirSync(path.dirname(excludePath), { recursive: true });
-  const prefix = existing.length > 0 && !existing.endsWith('\n') ? '\n' : '';
-  fileSystem.writeFileSync(excludePath, `${existing}${prefix}${localExcludeText()}`, 'utf8');
+  fileSystem.writeFileSync(excludePath, next, 'utf8');
   plan.written = true;
   return plan;
 }

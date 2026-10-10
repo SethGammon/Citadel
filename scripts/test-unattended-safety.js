@@ -131,6 +131,7 @@ async function main() {
       if (name === 'path') return path;
       if (name === './harness-health-util') return { PROJECT_ROOT: root, validatePath: () => ({ safe: true }), logTiming() {}, writeAuditLog() {} };
       if (name === '../core/worktree/readiness') return { checkWorktreeReadiness: async () => { reports++; return { status: 'warning' }; } };
+      if (name === '../core/worktree/create') return { createWorktree() { throw Error('creation not expected when path is given'); } };
       throw Error('Unexpected access: ' + name);
     }, process: { stderr: { write() {} } } };
     vm.createContext(hook);

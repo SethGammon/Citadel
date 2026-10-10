@@ -459,6 +459,63 @@ function main() {
     );
   });
 
+  // ── 7b. Linked Worktrees and Session Scratchpad ──
+
+  console.log('\n▶ Linked Worktrees and Session Scratchpad');
+
+  function runProtectFilesIn(projectDir, toolName, filePath, extra = {}) {
+    return spawnSync(process.execPath, [PROTECT_FILES_HOOK], {
+      input: JSON.stringify({ tool_name: toolName, tool_input: { file_path: filePath }, ...extra.event }),
+      encoding: 'utf8',
+      cwd: PLUGIN_ROOT,
+      env: { ...process.env, CLAUDE_PROJECT_DIR: projectDir, ...extra.env },
+    });
+  }
+
+  test('protect-files treats linked git worktrees as inside the project', () => {
+    const tmpRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'citadel-wt-'));
+    try {
+      const repo = path.join(tmpRoot, 'repo');
+      fs.mkdirSync(repo);
+      const git = (args) => execFileSync('git', args, { cwd: repo, encoding: 'utf8' });
+      git(['init', '-q']);
+      git(['-c', 'user.email=t@example.com', '-c', 'user.name=t', 'commit', '-q', '--allow-empty', '-m', 'init']);
+      const sibling = path.join(tmpRoot, 'repo-agent-1');
+      const nested = path.join(repo, '.claude', 'worktrees', 'agent-2');
+      git(['worktree', 'add', '-q', '-b', 'agent-1', sibling]);
+      git(['worktree', 'add', '-q', '-b', 'agent-2', nested]);
+
+      for (const wt of [sibling, nested]) {
+        const ok = runProtectFilesIn(repo, 'Write', path.join(wt, 'src', 'a.js'));
+        assert(ok.status === 0, `Expected allow in worktree ${wt}, got ${ok.status}: ${ok.stderr}`);
+        const env = runProtectFilesIn(repo, 'Write', path.join(wt, '.env'));
+        assert(env.status === 2, `Expected .env block in worktree ${wt}, got ${env.status}`);
+        const prot = runProtectFilesIn(repo, 'Edit', path.join(wt, '.claude', 'harness.json'));
+        assert(prot.status === 2, `Expected protected-pattern block in worktree ${wt}, got ${prot.status}`);
+      }
+      const stray = runProtectFilesIn(repo, 'Write', path.join(tmpRoot, 'not-a-worktree', 'a.js'));
+      assert(stray.status === 2, `Expected block outside any worktree, got ${stray.status}`);
+    } finally {
+      fs.rmSync(tmpRoot, { recursive: true, force: true });
+    }
+  });
+
+  test('protect-files allows writes to the current session scratchpad only', () => {
+    const tmpRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'citadel-scratch-'));
+    try {
+      const pad = (session) => path.join(tmpRoot, 'claude', 'C--proj', session, 'scratchpad', 'notes.txt');
+      const extra = { env: { CLAUDE_CODE_TMPDIR: tmpRoot }, event: { session_id: 'sess-1' } };
+      const own = runProtectFilesIn(envProj, 'Write', pad('sess-1'), extra);
+      assert(own.status === 0, `Expected allow for own scratchpad, got ${own.status}: ${own.stderr}`);
+      const other = runProtectFilesIn(envProj, 'Write', pad('sess-2'), extra);
+      assert(other.status === 2, `Expected block for another session's scratchpad, got ${other.status}`);
+      const notPad = runProtectFilesIn(envProj, 'Write', path.join(tmpRoot, 'claude', 'C--proj', 'sess-1', 'other', 'x.txt'), extra);
+      assert(notPad.status === 2, `Expected block outside scratchpad, got ${notPad.status}`);
+    } finally {
+      fs.rmSync(tmpRoot, { recursive: true, force: true });
+    }
+  });
+
   // ── 8. Bash .env Write Gate ──
 
   console.log('\n▶ Bash .env Write Gate');
