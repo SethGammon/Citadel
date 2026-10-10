@@ -33,16 +33,19 @@ async function main(input) {
   let worktreePath = input.path || null;
   let branch = input.branch || null;
 
-  if (!worktreePath) {
+  if (worktreePath) {
+    // Only a caller-supplied path is untrusted. A path createWorktree builds
+    // is never passed through a shell, and the project root may legally
+    // contain characters such as '&' (e.g. a checkout under "R&D").
+    const pathCheck = health.validatePath(worktreePath);
+    if (!pathCheck.safe) {
+      throw new Error(`possible injection in worktree path — ${pathCheck.violation}`);
+    }
+  } else {
     if (!input.name) throw new Error('hook input has neither "name" nor "path"');
     const created = createWorktree({ projectRoot: MAIN_ROOT, name: input.name });
     worktreePath = created.path;
     branch = branch || created.branch;
-  }
-
-  const pathCheck = health.validatePath(worktreePath);
-  if (!pathCheck.safe) {
-    throw new Error(`possible injection in worktree path — ${pathCheck.violation}`);
   }
 
   // Readiness only. Tracked manifests and ignored env files are not consent

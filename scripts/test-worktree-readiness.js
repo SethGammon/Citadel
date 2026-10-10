@@ -146,7 +146,11 @@ function listen(port = 0) {
   // WorktreeCreate replaces Claude Code's native `git worktree add`: given only
   // a name, the hook must create the checkout and print its path last on stdout.
   // WorktreeRemove must then delete it (exit 0 means "removed" to Claude Code).
-  await withTempProject(async (projectRoot) => {
+  await withTempProject(async (tmpDir) => {
+    // '&' is legal in a checkout path and must not trip shell-metacharacter
+    // validation of the hook-generated worktree path.
+    const projectRoot = path.join(tmpDir, 'R&D');
+    fs.mkdirSync(projectRoot);
     const gitIn = (args) => execFileSync('git', args, { cwd: projectRoot, encoding: 'utf8' });
     gitIn(['init', '-q']);
     gitIn(['-c', 'user.email=t@example.com', '-c', 'user.name=t', 'commit', '-q', '--allow-empty', '-m', 'init']);
@@ -161,6 +165,8 @@ function listen(port = 0) {
     assert.equal(path.resolve(created).toLowerCase(), expected.toLowerCase(), 'last stdout line must be the worktree path');
     assert(fs.existsSync(path.join(created, '.git')), 'worktree checkout must exist');
     assert.equal(execFileSync('git', ['rev-parse', '--abbrev-ref', 'HEAD'], { cwd: created, encoding: 'utf8' }).trim(), 'worktree-bold-oak-a3f2');
+    assert.equal(gitIn(['status', '--porcelain', '--untracked-files=all']).trim(), '',
+      'the nested worktree must be excluded from the parent checkout');
 
     const again = execFileSync(process.execPath, [
       path.join(__dirname, '..', 'hooks_src', 'worktree-setup.js'),

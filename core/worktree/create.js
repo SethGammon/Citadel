@@ -69,6 +69,12 @@ function createWorktree({ projectRoot, name }) {
   }
   if (registered) git(topLevel, ['worktree', 'prune']);
 
+  // Keep the nested checkout out of the parent's status and `git add -A`
+  // (it would otherwise be staged as an embedded repository). Loaded lazily:
+  // protect-files requires this module on every write.
+  const { ensureMachineLocalExcludes } = require('../runtime/install-contract');
+  ensureMachineLocalExcludes(topLevel);
+
   fs.mkdirSync(path.dirname(worktreePath), { recursive: true });
   const args = branchExists(topLevel, branch)
     ? ['worktree', 'add', worktreePath, branch]

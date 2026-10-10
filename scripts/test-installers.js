@@ -233,6 +233,19 @@ function testPortableInstallContractAndTwoClones() {
     assert(firstExcludeText.includes('.planning/opencode/'),
       'OpenCode pending notices must be machine-local by default');
 
+    // A block written by an older Citadel is reconciled in place; user lines
+    // around it are preserved and the rewrite is idempotent.
+    const excludeFile = path.join(first, '.git', 'info', 'exclude');
+    const staleBlock = firstExcludeText.replace('.claude/worktrees/\n', '');
+    assert.notEqual(staleBlock, firstExcludeText, 'fixture must drop a current pattern');
+    fs.writeFileSync(excludeFile, `user-before\n${staleBlock}user-after\n`);
+    assert(ensureMachineLocalExcludes(first).written, 'outdated block must be rewritten');
+    const reconciled = fs.readFileSync(excludeFile, 'utf8');
+    assert(reconciled.includes('.claude/worktrees/'), 'new patterns must reach existing checkouts');
+    assert(reconciled.startsWith('user-before\n') && reconciled.endsWith('user-after\n'), 'user lines must survive');
+    assert.equal(reconciled.split('# BEGIN CITADEL MACHINE-LOCAL OUTPUTS').length, 2, 'exactly one block');
+    assert(ensureMachineLocalExcludes(first).skipped, 'reconciled block must be idempotent');
+
     installClaudeHooks({ projectRoot: first, citadelRoot: CITADEL_ROOT });
     const firstSettings = fs.readFileSync(path.join(first, '.claude', 'settings.json'), 'utf8');
     installClaudeHooks({ projectRoot: second, citadelRoot: CITADEL_ROOT });
