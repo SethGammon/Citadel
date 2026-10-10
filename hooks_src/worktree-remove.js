@@ -5,21 +5,20 @@
  *
  * Fires when a git worktree is removed (fleet agent completes or is cleaned up).
  * Responsibilities:
- *   1. Check if branch maps to a persistent campaign (worktree_status: active) — if so, skip removal telemetry and exit
- *   2. Log the worktree removal to telemetry
- *   3. Update the fleet session file to mark the agent as complete
- *   4. Queue a merge conflict check if the worktree had changes (Tier 9 prep)
- *   5. Clean up any scope claims the worktree's agent held
- *   6. Remove the worktree directory (git worktree remove --force, branch kept).
+ *   1. Refuse cleanup for a persistent campaign (worktree_status: active).
+ *   2. Remove the worktree directory (git worktree remove --force, branch kept).
  *      Required because worktree-setup.js owns creation: once a WorktreeCreate
  *      hook is registered, Claude Code treats exit 0 here as "removed".
+ *   3. Only after removal, log telemetry, queue merge review, release claims,
+ *      and update fleet state. An already-missing directory is a success.
  *
  * Fringe cases:
  * - Worktree removed without corresponding fleet session: log and skip
  * - Worktree had no commits: skip merge check, just clean up
  * - Multiple worktrees removed simultaneously: each runs independently, no coordination needed
  * - Scope claim file missing: skip cleanup (already released or never claimed)
- * - Persistent worktree (campaign worktree_status: active): log skip and exit 0 — do not clean up
+ * - Persistent worktree (campaign worktree_status: active): refuse with exit 1
+ * - Failed or refused removal: exit 1 without marking cleanup complete
  */
 
 const fs = require('fs');
@@ -48,9 +47,19 @@ function main() {
     // The campaign file is the source of truth — if the branch maps to an active
     // persistent campaign, this removal event is spurious (e.g., session end cleanup)
     // and the worktree should be left intact for the next session.
-    if (branchName && isPersistentWorktree(branchName)) {
-      process.stderr.write(`[worktree-remove] Branch "${branchName}" is a persistent worktree (worktree_status: active). Skipping cleanup.\n`);
-      process.exit(0);
+    try {
+      if (typeof worktreePath !== 'string' || !worktreePath) {
+        throw new Error('hook input has no worktree path');
+      }
+      if (fs.existsSync(worktreePath) && branchName && isPersistentWorktree(branchName)) {
+        throw new Error(`Branch "${branchName}" is a persistent worktree (worktree_status: active). Skipping cleanup.`);
+      }
+      if (!removeWorktree({ projectRoot: PROJECT_ROOT, worktreePath })) {
+        throw new Error(`refused removal of ${worktreePath}; directory remains`);
+      }
+    } catch (err) {
+      process.stderr.write(`[worktree-remove] Removal failed: ${err.message}\n`);
+      process.exit(1);
       return;
     }
 
@@ -78,15 +87,6 @@ function main() {
     // Update fleet session if this worktree was part of one
     updateFleetSession(worktreeName, branchName);
 
-    if (worktreePath) {
-      try {
-        removeWorktree({ projectRoot: PROJECT_ROOT, worktreePath });
-      } catch (err) {
-        process.stderr.write(`[worktree-remove] git worktree remove failed for ${worktreePath}: ${err.message}\n`);
-        process.exit(1);
-      }
-    }
-
     process.exit(0);
   });
 }
@@ -105,7 +105,7 @@ function isPersistentWorktree(branch) {
       const filePath = path.join(campaignsDir, file);
       const content = fs.readFileSync(filePath, 'utf8');
       // Extract YAML frontmatter (between first --- and second ---)
-      const fmMatch = content.match(/^---\n([\s\S]*?)\n---/);
+      const fmMatch = content.match(/^---\r?\n([\s\S]*?)\r?\n---/);
       if (!fmMatch) continue;
       const fm = fmMatch[1];
       // Check branch field matches
@@ -119,7 +119,9 @@ function isPersistentWorktree(branch) {
       const status = statusMatch[1].trim().replace(/^["']|["']$/g, '');
       if (status === 'active') return true;
     }
-  } catch { /* non-critical — if we can't read, assume ephemeral */ }
+  } catch (err) {
+    throw new Error(`cannot check persistent campaign ownership: ${err.message}`);
+  }
   return false;
 }
 

@@ -50,6 +50,29 @@ function listWorktreeRoots(projectRoot) {
     .map((line) => path.resolve(line.slice('worktree '.length)));
 }
 
+// The repository may itself be reached through a platform alias, but no
+// component below its canonical root may redirect worktree creation. Check
+// with lstat so dangling links are rejected before any directories, excludes,
+// or branches are changed.
+function assertUnredirectedDestination(projectRoot, worktreePath) {
+  const fold = (p) => (process.platform === 'win32' ? p.toLowerCase() : p);
+  let cursor = projectRoot;
+  for (const segment of path.relative(projectRoot, worktreePath).split(path.sep)) {
+    cursor = path.join(cursor, segment);
+    let stat;
+    try {
+      stat = fs.lstatSync(cursor);
+    } catch (err) {
+      if (err.code === 'ENOENT') break;
+      throw err;
+    }
+    if (stat.isSymbolicLink() || fold(fs.realpathSync.native(cursor)) !== fold(cursor)) {
+      throw new Error(`redirected worktree destination: ${cursor}`);
+    }
+    if (!stat.isDirectory()) throw new Error(`worktree destination is not a directory: ${cursor}`);
+  }
+}
+
 /**
  * Create (or reuse) the worktree for `name`. Returns { path, branch, created }.
  * Throws on invalid names or git failure so the hook can exit non-zero.
@@ -58,9 +81,10 @@ function createWorktree({ projectRoot, name }) {
   if (typeof name !== 'string' || !NAME_RE.test(name) || name.includes('..')) {
     throw new Error(`invalid worktree name: ${JSON.stringify(name)}`);
   }
-  const topLevel = path.resolve(git(projectRoot, ['rev-parse', '--show-toplevel']));
+  const topLevel = fs.realpathSync.native(git(projectRoot, ['rev-parse', '--show-toplevel']));
   const worktreePath = path.join(topLevel, '.claude', 'worktrees', name);
   const branch = `worktree-${name}`;
+  assertUnredirectedDestination(topLevel, worktreePath);
 
   const fold = (p) => (process.platform === 'win32' ? p.toLowerCase() : p);
   const registered = listWorktreeRoots(topLevel).some((root) => fold(root) === fold(worktreePath));
@@ -76,6 +100,7 @@ function createWorktree({ projectRoot, name }) {
   ensureMachineLocalExcludes(topLevel);
 
   fs.mkdirSync(path.dirname(worktreePath), { recursive: true });
+  assertUnredirectedDestination(topLevel, worktreePath);
   const args = branchExists(topLevel, branch)
     ? ['worktree', 'add', worktreePath, branch]
     : ['worktree', 'add', '-b', branch, worktreePath, 'HEAD'];
@@ -100,6 +125,12 @@ function worktreeBranch(worktreePath) {
  * is gone afterwards.
  */
 function removeWorktree({ projectRoot, worktreePath }) {
+  try {
+    fs.lstatSync(worktreePath);
+  } catch (err) {
+    if (err.code === 'ENOENT') return true;
+    throw err;
+  }
   const fold = (p) => (process.platform === 'win32' ? p.toLowerCase() : p);
   const target = fold(path.resolve(worktreePath));
   const [mainRoot, ...linked] = listWorktreeRoots(projectRoot);
