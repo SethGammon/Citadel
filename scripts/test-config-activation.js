@@ -470,6 +470,39 @@ test('generated config invocations bind the target project outside its cwd', () 
   }
 });
 
+test('repair commands run the installation that checks the receipt', () => {
+  const root = tempProject();
+  writeHarness(root, harness(['core']));
+  const checkingScript = path.join(__dirname, 'citadel-config.js');
+  const delegate = path.join(root, '.citadel', 'scripts', 'citadel-config.js');
+
+  // The project delegate points at a different Citadel installation.
+  const other = tempProject();
+  fs.writeFileSync(path.join(other, 'package.json'), JSON.stringify({ name: 'citadel', version: '0.0.1' }));
+  ensureProjectDelegate(root, other, 'citadel-config.js');
+  const foreign = config.readEffectiveConfig(root, { runtime: claudeRuntime });
+  assert.equal(foreign.status, 'missing');
+  assert(foreign.repairCommand.includes(checkingScript), foreign.repairCommand);
+  assert.equal(foreign.repairCommand.includes(delegate), false);
+  execFileSync(
+    process.execPath,
+    buildConfigInvocation({
+      projectRoot: root,
+      subcommand: 'reconcile',
+      args: ['--apply', '--runtime', 'claude-code', '--json'],
+    }).args,
+    { encoding: 'utf8' },
+  );
+  assert.equal(config.readEffectiveConfig(root, { runtime: claudeRuntime }).status, 'current');
+
+  // A delegate that reaches the checking installation stays project-relative.
+  fs.rmSync(path.join(root, '.citadel', 'scripts'), { recursive: true, force: true });
+  fs.rmSync(path.join(root, '.citadel', 'plugin-root.txt'), { force: true });
+  ensureProjectDelegate(root, path.join(__dirname, '..'), 'citadel-config.js');
+  const local = config.readEffectiveConfig(root, { runtime: codexRuntime });
+  assert(local.repairCommand.includes(delegate), local.repairCommand);
+});
+
 test('displayed config commands execute in supported shells', () => {
   assert.equal(activeShell('win32', { MSYSTEM: 'MINGW64' }), 'powershell');
   assert.equal(activeShell('win32', { MSYSTEM: 'MINGW64', SHELL: '/usr/bin/bash', TERM: 'xterm-256color' }), 'posix');

@@ -12,14 +12,39 @@ function requireProjectRoot(projectRoot) {
   return path.resolve(projectRoot);
 }
 
+function delegatedInstallation(projectRoot) {
+  try {
+    const target = fs.readFileSync(path.join(projectRoot, '.citadel', 'plugin-root.txt'), 'utf8').trim();
+    return target || null;
+  } catch {
+    return null;
+  }
+}
+
+// Receipts are checked against the installation generation of the code doing
+// the check, so a command must run that same installation. Two paths with the
+// same generation (e.g. one release cached by two runtimes) are equivalent.
+function sameInstallation(left, right) {
+  if (path.resolve(left) === path.resolve(right)) return true;
+  try {
+    const { installationGeneration } = require('../config/identity');
+    return installationGeneration({ installationRoot: left }).id
+      === installationGeneration({ installationRoot: right }).id;
+  } catch {
+    return false;
+  }
+}
+
 function configScriptPath(projectRoot, installationRoot) {
   const root = requireProjectRoot(projectRoot);
+  const checking = path.resolve(installationRoot || CITADEL_ROOT);
+  const checkingScript = path.join(checking, 'scripts', 'citadel-config.js');
   const delegate = path.join(root, '.citadel', 'scripts', 'citadel-config.js');
+  const delegated = fs.existsSync(delegate) ? delegatedInstallation(root) : null;
+  // Prefer the project-relative delegate only when it reaches the checking installation.
+  if (delegated && sameInstallation(delegated, checking)) return delegate;
+  if (fs.existsSync(checkingScript)) return checkingScript;
   if (fs.existsSync(delegate)) return delegate;
-  const requested = installationRoot
-    ? path.join(path.resolve(installationRoot), 'scripts', 'citadel-config.js')
-    : null;
-  if (requested && fs.existsSync(requested)) return requested;
   return path.join(CITADEL_ROOT, 'scripts', 'citadel-config.js');
 }
 
