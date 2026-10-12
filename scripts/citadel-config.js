@@ -281,7 +281,7 @@ function applyPlan(loaded, plan, options = {}) {
   if (currentDigest !== plan.sourceDigest) {
     throw new Error('Config changed after planning; rerun the command before applying');
   }
-  const effectivePath = config.effectiveConfigPath(loaded.projectRoot);
+  const effectivePath = config.effectiveConfigPath(loaded.projectRoot, { runtime: options.runtime });
   const priorEffective = fs.existsSync(effectivePath)
     ? fs.readFileSync(effectivePath)
     : null;
