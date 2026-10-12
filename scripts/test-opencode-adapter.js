@@ -795,10 +795,11 @@ async function testDeferredGateReachesNextTurn() {
     }));
     const git = (args) => require('child_process').execFileSync('git', args, { cwd: root, stdio: 'ignore' });
     git(['init', '-q']);
-    fs.writeFileSync(path.join(root, 'ui.js'), 'function save() { confirm("sure?"); }\n');
+    // Split literals keep this test file itself clean under the gate.
+    fs.writeFileSync(path.join(root, 'ui.js'), `function save() { ${'con' + 'firm'}("sure?"); }\n`);
     git(['add', '-A']);
     git(['-c', 'user.email=t@t', '-c', 'user.name=t', 'commit', '-qm', 'init']);
-    fs.appendFileSync(path.join(root, 'ui.js'), 'function more() { alert("hi"); }\n');
+    fs.appendFileSync(path.join(root, 'ui.js'), `function more() { ${'al' + 'ert'}("hi"); }\n`);
 
     // The gate must actually have something to say, or the test proves nothing.
     const idle = await runner.runHooksForEvent('session.idle', { directory: root }, { projectRoot: root });

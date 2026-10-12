@@ -1,0 +1,14 @@
+# Quality-gate cross-reference waivers, one fingerprint per line.
+# Each path below names a file that is intentionally absent from the repository.
+
+# Negative reference: the guide says never to create this file.
+CONTRIBUTING.md:cross-reference:hooks/hooks.json
+
+# Runtime state written by the daemon and the momentum synthesizer.
+skills/archon/SKILL.md:cross-reference:.planning/daemon.json
+skills/do/SKILL.md:cross-reference:.planning/daemon.json
+skills/fleet/SKILL.md:cross-reference:.planning/momentum.json
+
+# Files the setup skill creates in the target project.
+skills/setup/SKILL.md:cross-reference:.planning/tmp/citadel-stack.json
+skills/setup/SKILL.md:cross-reference:.github/workflows/claude-triage.yml
