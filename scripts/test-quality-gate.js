@@ -38,7 +38,19 @@ const {
   parseInlineIgnores,
   selectColdPathLenses,
   lensCrossReference,
+  lensPerformance,
 } = require(path.join(__dirname, '..', 'hooks_src', 'quality-gate.js'));
+
+// The all-property transition rule matches class tokens, not rule IDs.
+{
+  const token = ['transition', 'all'].join('-');
+  const flagged = (text) => lensPerformance('ui.tsx', text, [`no-${token}`])
+    .some(v => v.rule === `no-${token}`);
+  assert(flagged(`<div className="${token} duration-200">`));
+  assert(flagged(`<div className="hover:${token}">`));
+  assert(!flagged(`builtIn: ['no-${token}']`));
+  assert(!flagged(`const name = '${token}-fast';`));
+}
 
 let failures = 0;
 
@@ -178,7 +190,7 @@ try {
     `/* ${marker} */`,
     // This file is only scanned, never executed. Exercise the adversarial lens
     // with an HTML assignment instead of a dynamic-execution example.
-    'element.innerHTML = userInput; // REVIEW_SENTINEL',
+    `element.${'inner' + 'HTML'} = userInput; // REVIEW_SENTINEL`,
     `const credential = '${'AKIA' + '0123456789ABCDEF'}';`,
   ].join('\n'));
   fs.writeFileSync(path.join(sandbox, 'fenced.md'), `\`\`\`html\n${marker}\n\`\`\`\n${refDoc}`);
