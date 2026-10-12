@@ -299,7 +299,7 @@ In all modes, setup:
    Persistence. Recommended shows the plan; Express treats its explicit mode
    selection as approval of that bounded baseline.
 3. **Applies and reconciles authority** into `.claude/harness.json` and
-   `.citadel/effective-config.json`. Stale, malformed, or future receipts block
+   `.citadel/effective-config/<runtime-id>.json`. Stale, malformed, or future receipts block
    non-Core execution.
 4. **Installs only hooks owned by effective bundles**. A disabled skill or
    direct route is blocked with its activation plan instead of executing.
