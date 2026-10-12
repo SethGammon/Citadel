@@ -424,9 +424,9 @@ function incrementTrustCounters() {
     }
 
     fs.writeFileSync(configPath, JSON.stringify(config, null, 2) + '\n', 'utf8');
-    const receiptPath = configControl.effectiveConfigPath(PROJECT_ROOT);
-    if (fs.existsSync(receiptPath)) {
-      const runtime = configControl.detectRuntimeContract(PROJECT_ROOT);
+    // Refresh only this runtime's receipt; other runtimes own theirs.
+    const runtime = configControl.detectRuntimeContract(PROJECT_ROOT);
+    if (configControl.readEffectiveConfig(PROJECT_ROOT, { runtime }).status !== 'missing') {
       configControl.reconcileEffectiveConfig(PROJECT_ROOT, { runtime });
     }
   } catch { /* non-critical -- never block session end */ }

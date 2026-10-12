@@ -33,6 +33,22 @@ try {
     'legacy compatibility command must not delete inferred paths by default',
   );
 
+  // Derived receipts are per runtime, plus an optional pre-split shared file.
+  const legacyApply = path.join(suite, 'legacy-apply');
+  const receipts = path.join(legacyApply, '.citadel', 'effective-config');
+  fs.mkdirSync(receipts, { recursive: true });
+  for (const runtime of ['claude-code', 'codex']) {
+    fs.writeFileSync(path.join(receipts, `${runtime}.json`), '{}\n');
+  }
+  fs.writeFileSync(path.join(legacyApply, '.citadel', 'effective-config.json'), '{}\n');
+  const legacyApplyResult = run(legacyApply, ['--legacy-apply']);
+  assert.equal(legacyApplyResult.status, 0, legacyApplyResult.stderr);
+  assert.equal(
+    fs.existsSync(path.join(legacyApply, '.citadel')),
+    false,
+    'legacy cleanup must remove per-runtime and pre-split effective config receipts',
+  );
+
   const governed = path.join(suite, 'governed');
   fs.mkdirSync(path.join(governed, '.citadel', 'adoption'), { recursive: true });
   fs.writeFileSync(

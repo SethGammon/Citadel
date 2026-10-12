@@ -226,7 +226,7 @@ value.language = 'typescript';
 writeHarness(value);
 const stalePreview = buildPreview('review auth module', {
   projectRoot: root,
-  runtime: fullRuntime,
+  runtime: claudeRuntime,
   gitDirty: false,
   routeOverride: '/review',
 });
