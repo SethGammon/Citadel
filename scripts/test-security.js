@@ -55,6 +55,12 @@ function assert(condition, message) {
 function main() {
   console.log('\nCitadel Security Test Suite\n' + '='.repeat(40));
 
+  // Isolated temp project root keeps these tests independent of the repo's
+  // own harness.json, campaigns, and consent state, and keeps the blocks they
+  // provoke out of the repo's .planning/telemetry.
+  const envProj = fs.mkdtempSync(path.join(os.tmpdir(), 'citadel-envproj-'));
+  const isolatedEnv = { ...process.env, CLAUDE_PROJECT_DIR: envProj };
+
   // ── 1. Path Traversal Protection ──
 
   console.log('\n▶ Path Traversal Protection');
@@ -68,7 +74,8 @@ function main() {
     const result = spawnSync(process.execPath, [PROTECT_FILES_HOOK], {
       input,
       encoding: 'utf8',
-      cwd: PLUGIN_ROOT,
+      cwd: envProj,
+      env: isolatedEnv,
     });
 
     assert(result.status === 2, `Expected exit code 2 (block), got ${result.status}`);
@@ -87,7 +94,8 @@ function main() {
     const result = spawnSync(process.execPath, [PROTECT_FILES_HOOK], {
       input,
       encoding: 'utf8',
-      cwd: PLUGIN_ROOT,
+      cwd: envProj,
+      env: isolatedEnv,
     });
 
     assert(result.status === 2, `Expected exit code 2 (block), got ${result.status}`);
@@ -102,7 +110,8 @@ function main() {
     const result = spawnSync(process.execPath, [PROTECT_FILES_HOOK], {
       input,
       encoding: 'utf8',
-      cwd: PLUGIN_ROOT,
+      cwd: envProj,
+      env: isolatedEnv,
     });
 
     assert(result.status === 0, `Expected exit code 0 (allow), got ${result.status}: ${result.stdout}`);
@@ -111,13 +120,14 @@ function main() {
   test('protect-files allows legitimate project-relative path', () => {
     const input = JSON.stringify({
       tool_name: 'Edit',
-      tool_input: { file_path: path.join(PLUGIN_ROOT, 'README.md') }
+      tool_input: { file_path: path.join(envProj, 'README.md') }
     });
 
     const result = spawnSync(process.execPath, [PROTECT_FILES_HOOK], {
       input,
       encoding: 'utf8',
-      cwd: PLUGIN_ROOT,
+      cwd: envProj,
+      env: isolatedEnv,
     });
 
     assert(result.status === 0, `Expected exit code 0 (allow), got ${result.status}`);
@@ -174,7 +184,8 @@ function main() {
     const result = spawnSync(process.execPath, [PROTECT_FILES_HOOK], {
       input,
       encoding: 'utf8',
-      cwd: PLUGIN_ROOT,
+      cwd: envProj,
+      env: isolatedEnv,
     });
 
     assert(result.status === 2, `Expected exit code 2 (block), got ${result.status}`);
@@ -237,7 +248,8 @@ function main() {
     const result = spawnSync(process.execPath, [EAG_HOOK], {
       input,
       encoding: 'utf8',
-      cwd: PLUGIN_ROOT,
+      cwd: envProj,
+      env: isolatedEnv,
     });
 
     assert(result.status === 2, `Expected exit code 2 (block), got ${result.status}`);
@@ -253,7 +265,8 @@ function main() {
     const result = spawnSync(process.execPath, [EAG_HOOK], {
       input,
       encoding: 'utf8',
-      cwd: PLUGIN_ROOT,
+      cwd: envProj,
+      env: isolatedEnv,
     });
 
     assert(result.status === 2, `Expected exit code 2 (block), got ${result.status}`);
@@ -272,7 +285,8 @@ function main() {
     const result = spawnSync(process.execPath, [EAG_HOOK], {
       input,
       encoding: 'utf8',
-      cwd: PLUGIN_ROOT,
+      cwd: envProj,
+      env: isolatedEnv,
     });
 
     assert(result.status === 2, `Expected exit code 2 (block), got ${result.status}`);
@@ -288,8 +302,8 @@ function main() {
     const result = spawnSync(process.execPath, [EAG_HOOK], {
       input,
       encoding: 'utf8',
-      cwd: PLUGIN_ROOT,
-      env: { ...process.env, CLAUDE_PROJECT_DIR: os.tmpdir() },
+      cwd: envProj,
+      env: isolatedEnv,
     });
 
     assert(result.status === 0, `Expected exit code 0 (allow), got ${result.status}: ${result.stderr}`);
@@ -304,7 +318,8 @@ function main() {
     const result = spawnSync(process.execPath, [EAG_HOOK], {
       input,
       encoding: 'utf8',
-      cwd: PLUGIN_ROOT,
+      cwd: envProj,
+      env: isolatedEnv,
     });
 
     assert(result.status === 0, `Expected exit code 0 (allow), got ${result.status}`);
@@ -358,10 +373,6 @@ function main() {
   // ── 6. Symmetric .env Protection (Edit/Write) ──
 
   console.log('\n▶ Symmetric .env Protection (Edit/Write)');
-
-  // Isolated temp project root keeps these tests independent of the repo's
-  // own harness.json, campaigns, and consent state.
-  const envProj = fs.mkdtempSync(path.join(os.tmpdir(), 'citadel-envproj-'));
 
   function runProtectFiles(toolName, filePath, extraEnv = {}) {
     const input = JSON.stringify({

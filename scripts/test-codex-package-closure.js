@@ -36,7 +36,10 @@ try {
   const result = spawnSync(process.execPath, [
     path.join(installed, 'scripts', 'run-with-timeout.js'), '15', process.execPath,
     '-e', 'process.stdout.write(JSON.stringify(process.argv.slice(1)))', arg,
-  ], { cwd: consumer, encoding: 'utf8', shell: false, windowsHide: true, timeout: 20000 });
+  ], {
+    cwd: consumer, env: { ...process.env, CLAUDE_PROJECT_DIR: consumer },
+    encoding: 'utf8', shell: false, windowsHide: true, timeout: 20000,
+  });
   assert.strictEqual(result.status, 0, result.stderr);
   assert.deepStrictEqual(JSON.parse(result.stdout), [arg]);
   console.log('Codex consumer package closure passed');

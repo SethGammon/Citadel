@@ -79,6 +79,24 @@ function fireHook(hookName, payload, sandboxDir, extraEnv = {}) {
   };
 }
 
+/**
+ * Load harness-health-util in-process, bound to a sandbox.
+ * The module fixes PROJECT_ROOT when it loads, so a plain require() would
+ * write telemetry into the checkout running the tests.
+ */
+function loadHealthUtil(sandboxDir) {
+  const modulePath = require.resolve(path.join(HOOKS_SRC, 'harness-health-util'));
+  const previous = process.env.CLAUDE_PROJECT_DIR;
+  process.env.CLAUDE_PROJECT_DIR = sandboxDir;
+  delete require.cache[modulePath];
+  try {
+    return require(modulePath);
+  } finally {
+    if (previous === undefined) delete process.env.CLAUDE_PROJECT_DIR;
+    else process.env.CLAUDE_PROJECT_DIR = previous;
+  }
+}
+
 function fileExists(sandboxDir, relPath) {
   return fs.existsSync(path.join(sandboxDir, relPath));
 }
@@ -1109,19 +1127,20 @@ test('protect-files: hard-blocks on Restricted Files edit when strict policy is 
 // ── Audit integrity (harness-health-util) ──
 
 test('audit integrity: writeAuditLog produces _hash field', () => {
-  const health = require(path.join(CITADEL_ROOT, 'hooks_src', 'harness-health-util'));
+  const health = loadHealthUtil(rDir);
   health.writeAuditLog('test-event', { detail: 'verify-hooks test' });
   const auditFile = path.join(rDir, '.planning', 'telemetry', 'audit.jsonl');
   if (!fs.existsSync(auditFile)) return 'audit.jsonl not created';
   const lines = fs.readFileSync(auditFile, 'utf8').split('\n').filter(Boolean);
   const last = JSON.parse(lines[lines.length - 1]);
+  if (last.event !== 'test-event') return `last audit record is not the one just written (event ${last.event})`;
   if (!last._hash) return 'no _hash field on audit record';
   if (last._hash_v !== 1) return `expected _hash_v 1, got ${last._hash_v}`;
   if (typeof last._hash !== 'string' || last._hash.length !== 64) return `unexpected _hash value: ${last._hash}`;
 });
 
 test('audit integrity: verifyAuditIntegrity detects clean records', () => {
-  const health = require(path.join(CITADEL_ROOT, 'hooks_src', 'harness-health-util'));
+  const health = loadHealthUtil(rDir);
   const auditFile = path.join(rDir, '.planning', 'telemetry', 'audit.jsonl');
   const result = health.verifyAuditIntegrity(auditFile);
   if (result.tampered.length > 0) return `${result.tampered.length} records flagged as tampered (should be 0)`;
@@ -1129,7 +1148,7 @@ test('audit integrity: verifyAuditIntegrity detects clean records', () => {
 });
 
 test('audit integrity: verifyAuditIntegrity detects tampered record', () => {
-  const health = require(path.join(CITADEL_ROOT, 'hooks_src', 'harness-health-util'));
+  const health = loadHealthUtil(rDir);
   const tamperedFile = path.join(rDir, '.planning', 'telemetry', 'audit-tampered-test.jsonl');
   // Write a record, then corrupt its hash
   const base = { schema: 1, event: 'test', timestamp: new Date().toISOString(), project: 'test' };
@@ -1141,18 +1160,19 @@ test('audit integrity: verifyAuditIntegrity detects tampered record', () => {
 });
 
 test('audit integrity: logTiming produces _hash field', () => {
-  const health = require(path.join(CITADEL_ROOT, 'hooks_src', 'harness-health-util'));
+  const health = loadHealthUtil(rDir);
   health.logTiming('verify-hooks-test', 0, { test: true });
   const timingFile = path.join(rDir, '.planning', 'telemetry', 'hook-timing.jsonl');
   if (!fs.existsSync(timingFile)) return 'hook-timing.jsonl not created';
   const lines = fs.readFileSync(timingFile, 'utf8').split('\n').filter(Boolean);
   const last = JSON.parse(lines[lines.length - 1]);
+  if (last.hook !== 'verify-hooks-test') return `last timing record is not the one just written (hook ${last.hook})`;
   if (!last._hash) return 'no _hash field on timing record';
   if (last._hash_v !== 1) return `expected _hash_v 1, got ${last._hash_v}`;
 });
 
 test('audit integrity: hashRecord is deterministic', () => {
-  const health = require(path.join(CITADEL_ROOT, 'hooks_src', 'harness-health-util'));
+  const health = loadHealthUtil(rDir);
   const record = { b: 2, a: 1, c: { z: 26, y: 25 } };
   const h1 = health.hashRecord(record);
   const h2 = health.hashRecord(record);
