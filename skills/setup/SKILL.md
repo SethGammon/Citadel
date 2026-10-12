@@ -73,7 +73,7 @@ If harness.json already exists with full config, add: `  [4] Update — reconfig
 
 ### Step 1: INSTALL HOOKS (all modes, always first)
 
-Hooks must be live before anything else. Run `node {citadel-root}/scripts/install-hooks.js`. Find `{citadel-root}`: read `.citadel/plugin-root.txt`; fallback: directory containing this SKILL.md. The installer resolves the current config (or the bootstrap Standard + Core + Persistence default), writes `.citadel/effective-config.json`, installs only hooks owned by effective bundles, preserves non-Citadel settings, and is idempotent.
+Hooks must be live before anything else. Run `node {citadel-root}/scripts/install-hooks.js`. Find `{citadel-root}`: read `.citadel/plugin-root.txt`; fallback: directory containing this SKILL.md. The installer resolves the current config (or the bootstrap Standard + Core + Persistence default), writes `.citadel/effective-config/<runtime-id>.json`, installs only hooks owned by effective bundles, preserves non-Citadel settings, and is idempotent.
 
 **On success:** `  ✓ {N} hooks installed (protect-files, external-gate, circuit-breaker, quality-gate + more)`
 **On failure:** output the error, explain manual install path (`node /path/to/Citadel/scripts/install-hooks.js`), continue — setup must not abort.
@@ -138,7 +138,7 @@ Delivery remains off until the user explicitly enables it.
 
 The apply creates a sibling backup when replacing an existing config, validates
 the observed digest, rolls back a failed write, and reconciles
-`.citadel/effective-config.json`. Re-run `install-hooks.js` after the final
+`.citadel/effective-config/<runtime-id>.json`. Re-run `install-hooks.js` after the final
 bundle choice so disabled hook families are removed from the generated runtime
 projection.
 
@@ -296,7 +296,7 @@ Use the plan-first `citadel-config.js initialize` flow above.
 
 - Hooks must be installed before any other step completes
 - harness.json must validate as schema v2 and contain `registeredSkillCount` matching actual skill count
-- `.citadel/effective-config.json` must be current for the harness source digest
+- `.citadel/effective-config/<runtime-id>.json` must be current for the harness source digest
 - installed hooks must belong only to effective bundles
 - CLAUDE.md must not lose existing content
 - Demo must run on real user code, not a canned example

@@ -613,7 +613,8 @@ function writeConsent(category, preference) {
   };
   if (kind === 'v2' || kind === 'new') configControl.assertConfigV2(candidate);
 
-  const effectivePath = configControl.effectiveConfigPath(PROJECT_ROOT);
+  const runtime = configControl.detectRuntimeContract(PROJECT_ROOT);
+  const effectivePath = configControl.effectiveConfigPath(PROJECT_ROOT, { runtime });
   const effectiveExisted = fs.existsSync(effectivePath);
   const previousEffective = effectiveExisted ? fs.readFileSync(effectivePath) : null;
   const temporary = path.join(
@@ -624,9 +625,7 @@ function writeConsent(category, preference) {
   fs.writeFileSync(temporary, `${JSON.stringify(candidate, null, 2)}\n`);
   try {
     fs.renameSync(temporary, configPath);
-    configControl.reconcileEffectiveConfig(PROJECT_ROOT, {
-      runtime: configControl.detectRuntimeContract(PROJECT_ROOT),
-    });
+    configControl.reconcileEffectiveConfig(PROJECT_ROOT, { runtime });
   } catch (error) {
     try {
       if (fs.existsSync(temporary)) fs.unlinkSync(temporary);

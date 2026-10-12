@@ -77,7 +77,7 @@ function assertBoundCommand(command, root, subcommand) {
 test('reconciliation atomically writes a current derived receipt', () => {
   const root = tempProject();
   const result = reconcile(root, harness(['core', 'persistence']));
-  const receiptPath = path.join(root, '.citadel', 'effective-config.json');
+  const receiptPath = path.join(root, '.citadel', 'effective-config', 'full-test-runtime.json');
   assert.equal(result.usable, true);
   assert.equal(result.receiptPath, receiptPath);
   assert.equal(result.receipt.receiptKind, config.EFFECTIVE_RECEIPT_KIND);
@@ -104,7 +104,7 @@ test('stale effective receipts are rejected and preflight fails closed', () => {
   const root = tempProject();
   reconcile(root, harness(['core']));
   writeHarness(root, harness(['core', 'persistence']));
-  const read = config.readEffectiveConfig(root);
+  const read = config.readEffectiveConfig(root, { runtime: fullRuntime });
   assert.equal(read.usable, false);
   assert.equal(read.status, 'stale');
   assert.equal(read.reasonCode, config.EFFECTIVE_RECEIPT_REASONS.STALE);
@@ -120,14 +120,14 @@ test('stale effective receipts are rejected and preflight fails closed', () => {
 test('malformed and future effective receipts are rejected distinctly', () => {
   const root = tempProject();
   reconcile(root, harness(['core']));
-  const receiptPath = config.effectiveConfigPath(root);
+  const receiptPath = config.effectiveConfigPath(root, { runtime: fullRuntime });
   fs.writeFileSync(receiptPath, '{bad json', 'utf8');
-  const malformed = config.readEffectiveConfig(root);
+  const malformed = config.readEffectiveConfig(root, { runtime: fullRuntime });
   assert.equal(malformed.status, 'malformed');
   assert.equal(malformed.reasonCode, config.EFFECTIVE_RECEIPT_REASONS.MALFORMED);
 
   fs.writeFileSync(receiptPath, JSON.stringify({ contractVersion: 2 }), 'utf8');
-  const future = config.readEffectiveConfig(root);
+  const future = config.readEffectiveConfig(root, { runtime: fullRuntime });
   assert.equal(future.status, 'future');
   assert.equal(future.reasonCode, config.EFFECTIVE_RECEIPT_REASONS.FUTURE);
   assert.equal(config.preflightHook(future, 'protect-files').status, 'blocked');
@@ -139,7 +139,7 @@ test('tampered receipt bodies fail digest validation', () => {
   const raw = JSON.parse(fs.readFileSync(current.receiptPath, 'utf8'));
   raw.activation.onDemand = 'deny';
   fs.writeFileSync(current.receiptPath, JSON.stringify(raw), 'utf8');
-  const read = config.readEffectiveConfig(root);
+  const read = config.readEffectiveConfig(root, { runtime: fullRuntime });
   assert.equal(read.status, 'malformed');
   assert(read.errors.some((error) => error.includes('receiptDigest')));
 });
@@ -327,15 +327,21 @@ test('effective receipts bind runtime and installation identities without machin
     if (previousRuntime === undefined) delete process.env.CITADEL_RUNTIME;
     else process.env.CITADEL_RUNTIME = previousRuntime;
   }
-  assert.equal(switchedByEnv.reasonCode, config.EFFECTIVE_RECEIPT_REASONS.STALE);
-  assert.match(switchedByEnv.errors[0], /runtime codex does not match active runtime claude-code/);
+  // A codex receipt never answers for claude-code: that runtime has none yet.
+  assert.equal(switchedByEnv.reasonCode, config.EFFECTIVE_RECEIPT_REASONS.MISSING);
+  assert.match(switchedByEnv.errors[0], /not been reconciled for runtime claude-code/);
   assertBoundCommand(switchedByEnv.repairCommand, root, 'reconcile');
   assert(switchedByEnv.repairCommand.includes('--apply --runtime claude-code --json'));
 
+  // A receipt placed under the wrong runtime's path is still rejected.
+  const claudePath = config.effectiveConfigPath(root, { runtime: claudeRuntime });
+  fs.mkdirSync(path.dirname(claudePath), { recursive: true });
+  fs.copyFileSync(current.receiptPath, claudePath);
   const switched = config.readEffectiveConfig(root, {
     runtime: claudeRuntime,
     installationRoot,
   });
+  fs.unlinkSync(claudePath);
   assert.equal(switched.reasonCode, config.EFFECTIVE_RECEIPT_REASONS.STALE);
   assert.match(switched.errors[0], /runtime codex does not match active runtime claude-code/);
   assertBoundCommand(switched.repairCommand, root, 'reconcile');
@@ -379,6 +385,63 @@ test('effective receipts bind runtime and installation identities without machin
       === current.receipt.installationGeneration.id,
     false,
   );
+});
+
+test('runtimes sharing a repository keep independent current receipts', () => {
+  const root = tempProject();
+  const value = harness(['core']);
+  writeHarness(root, value);
+  const options = { reconciledAt: '2026-07-30T18:00:00.000Z' };
+  const claude = config.reconcileEffectiveConfig(root, { ...options, runtime: claudeRuntime });
+  const codex = config.reconcileEffectiveConfig(root, { ...options, runtime: codexRuntime });
+  assert.notEqual(claude.receiptPath, codex.receiptPath);
+  for (const [runtime, id] of [[claudeRuntime, 'claude-code'], [codexRuntime, 'codex']]) {
+    const read = config.readEffectiveConfig(root, { runtime });
+    assert.equal(read.status, 'current', `${id} receipt must stay current`);
+    assert.equal(read.receipt.runtime.id, id);
+  }
+
+  // SessionEnd bumps trust counters for the active runtime only.
+  value.trust = { ...(value.trust || {}), sessionsCompleted: 7, campaignsCompleted: 1 };
+  writeHarness(root, value);
+  config.reconcileEffectiveConfig(root, { ...options, runtime: claudeRuntime });
+  assert.equal(config.readEffectiveConfig(root, { runtime: codexRuntime }).status, 'current');
+
+  // A real configuration change still invalidates every runtime.
+  writeHarness(root, { ...value, activation: { ...value.activation, onDemand: 'deny' } });
+  for (const runtime of [claudeRuntime, codexRuntime]) {
+    assert.equal(config.readEffectiveConfig(root, { runtime }).status, 'stale');
+  }
+  value.trust.override = 'trusted';
+  writeHarness(root, value);
+  assert.equal(config.readEffectiveConfig(root, { runtime: codexRuntime }).status, 'stale');
+});
+
+test('legacy shared receipts migrate only to their own runtime', () => {
+  const root = tempProject();
+  writeHarness(root, harness(['core']));
+  const legacyPath = path.join(root, '.citadel', 'effective-config.json');
+  const written = config.reconcileEffectiveConfig(root, {
+    runtime: codexRuntime,
+    reconciledAt: '2026-07-30T18:00:00.000Z',
+  });
+  fs.renameSync(written.receiptPath, legacyPath);
+
+  const legacy = config.readEffectiveConfig(root, { runtime: codexRuntime });
+  assert.equal(legacy.status, 'current');
+  assert.equal(legacy.receiptPath, legacyPath);
+
+  const other = config.readEffectiveConfig(root, { runtime: claudeRuntime });
+  assert.equal(other.status, 'missing');
+  assert.equal(other.reasonCode, config.EFFECTIVE_RECEIPT_REASONS.MISSING);
+  assert.equal(config.loadActivationContext(root, { runtime: claudeRuntime }).usable, true);
+
+  config.reconcileEffectiveConfig(root, { runtime: claudeRuntime });
+  assert.equal(fs.existsSync(legacyPath), true, 'another runtime must not remove the codex legacy receipt');
+  const migrated = config.reconcileEffectiveConfig(root, { runtime: codexRuntime });
+  assert.notEqual(migrated.receiptPath, legacyPath);
+  assert.equal(fs.existsSync(legacyPath), false, 'the owning runtime retires its legacy receipt');
+  assert.equal(config.readEffectiveConfig(root, { runtime: claudeRuntime }).status, 'current');
 });
 
 test('generated config invocations bind the target project outside its cwd', () => {

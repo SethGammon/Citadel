@@ -488,7 +488,7 @@ test('session-end: preserves the v2 trust schema and removes legacy aliases', ()
 });
 
 for (const runtime of [claudeRuntime, codexRuntime]) {
-  test(`session-end: refreshes effective config for ${runtime.id}`, () => {
+  test(`session-end: keeps every runtime's effective config current (${runtime.id})`, () => {
     const root = sandbox();
     try {
       const configPath = path.join(root, '.claude', 'harness.json');
@@ -497,10 +497,13 @@ for (const runtime of [claudeRuntime, codexRuntime]) {
         `${JSON.stringify(configControl.createDefaultConfig(), null, 2)}\n`,
         'utf8',
       );
-      configControl.reconcileEffectiveConfig(root, {
-        runtime,
-        reconciledAt: '2026-09-22T12:00:00.000Z',
-      });
+      for (const each of [claudeRuntime, codexRuntime]) {
+        configControl.reconcileEffectiveConfig(root, {
+          runtime: each,
+          reconciledAt: '2026-09-22T12:00:00.000Z',
+        });
+      }
+      const beforeBytes = fs.readFileSync(configPath, 'utf8');
       const before = configControl.readConfigFile(root).sourceDigest;
       const result = fireHook(
         'session-end.js',
@@ -510,15 +513,18 @@ for (const runtime of [claudeRuntime, codexRuntime]) {
       );
       if (result.exitCode !== 0) return `exit ${result.exitCode}: ${result.stderr.slice(0, 200)}`;
 
-      const after = configControl.readConfigFile(root).sourceDigest;
-      if (after === before) return 'trust update did not change the source digest';
-      const effective = configControl.loadActivationContext(root, {
-        runtime,
-        allowBootstrap: false,
-      });
-      if (!effective.usable) return `effective config remained ${effective.status}: ${effective.reasonCode}`;
-      if (effective.receipt.sourceDigest !== after) return 'receipt sourceDigest was not refreshed';
-      if (effective.receipt.runtime.id !== runtime.id) return `receipt runtime is ${effective.receipt.runtime.id}`;
+      if (fs.readFileSync(configPath, 'utf8') === beforeBytes) return 'trust counters were not written';
+      if (configControl.readConfigFile(root).sourceDigest !== before) {
+        return 'trust counter update changed the source digest';
+      }
+      for (const each of [claudeRuntime, codexRuntime]) {
+        const effective = configControl.loadActivationContext(root, {
+          runtime: each,
+          allowBootstrap: false,
+        });
+        if (!effective.usable) return `${each.id} effective config became ${effective.status}: ${effective.reasonCode}`;
+        if (effective.receipt.runtime.id !== each.id) return `${each.id} receipt runtime is ${effective.receipt.runtime.id}`;
+      }
     } finally {
       cleanup(root);
     }

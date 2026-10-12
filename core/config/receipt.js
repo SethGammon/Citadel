@@ -272,11 +272,62 @@ function validateEffectiveReceipt(value) {
   };
 }
 
+// Each runtime owns its own receipt so runtimes sharing a repository never
+// overwrite each other. The pre-split shared receipt is still read by the
+// runtime that wrote it and retired when that runtime next reconciles.
+function legacyEffectiveConfigPath(projectRoot) {
+  return path.join(path.resolve(projectRoot || process.cwd()), '.citadel', 'effective-config.json');
+}
+
+function receiptRuntimeId(projectRoot, options = {}) {
+  const runtime = options.runtime && typeof options.runtime === 'object'
+    ? options.runtime
+    : detectRuntimeContract(projectRoot, options);
+  const { id } = runtimeIdentity(runtime);
+  if (!/^[a-z0-9][a-z0-9-]*$/i.test(id)) {
+    throw new Error(`Refusing effective config path for runtime id: ${JSON.stringify(id)}`);
+  }
+  return id.toLowerCase();
+}
+
 function effectiveConfigPath(projectRoot, options = {}) {
   const root = path.resolve(projectRoot || process.cwd());
   return options.effectiveConfigPath
     ? path.resolve(root, options.effectiveConfigPath)
-    : path.join(root, '.citadel', 'effective-config.json');
+    : path.join(root, '.citadel', 'effective-config', `${receiptRuntimeId(root, options)}.json`);
+}
+
+function legacyReceiptOwner(legacyPath) {
+  try {
+    const raw = JSON.parse(fs.readFileSync(legacyPath, 'utf8'));
+    return typeof raw?.runtime?.id === 'string' ? raw.runtime.id : null;
+  } catch {
+    return null;
+  }
+}
+
+// The active runtime's receipt is its own file, or the legacy shared file
+// when that file was written by the same runtime.
+function locateReceipt(projectRoot, options, runtimeId) {
+  const receiptPath = effectiveConfigPath(projectRoot, options);
+  if (options.effectiveConfigPath || fs.existsSync(receiptPath)) {
+    return { receiptPath, exists: fs.existsSync(receiptPath) };
+  }
+  const legacyPath = legacyEffectiveConfigPath(projectRoot);
+  if (fs.existsSync(legacyPath) && legacyReceiptOwner(legacyPath) === runtimeId) {
+    return { receiptPath: legacyPath, exists: true };
+  }
+  return { receiptPath, exists: false };
+}
+
+// An unreadable legacy receipt has no provable owner, so any runtime may retire it.
+function retireLegacyReceipt(projectRoot, options, runtimeId) {
+  if (options.effectiveConfigPath) return;
+  const legacyPath = legacyEffectiveConfigPath(projectRoot);
+  if (!fs.existsSync(legacyPath)) return;
+  const owner = legacyReceiptOwner(legacyPath);
+  if (owner !== null && owner !== runtimeId) return;
+  try { fs.unlinkSync(legacyPath); } catch { /* best effort; the per-runtime receipt wins */ }
 }
 
 function regenerationCommand(projectRoot, options = {}, fallbackRuntime = null) {
@@ -305,15 +356,21 @@ function readEffectiveConfig(projectRoot, options = {}) {
   const activeRuntime = options.runtime && typeof options.runtime === 'object'
     ? options.runtime
     : detectRuntimeContract(source.projectRoot, options);
-  const receiptPath = effectiveConfigPath(source.projectRoot, options);
-  if (!fs.existsSync(receiptPath)) {
+  const activeRuntimeId = runtimeIdentity(activeRuntime).id;
+  const { receiptPath, exists } = locateReceipt(
+    source.projectRoot,
+    { ...options, runtime: activeRuntime },
+    activeRuntimeId,
+  );
+  if (!exists) {
     return rejectedRead(
       source,
       receiptPath,
       'missing',
       EFFECTIVE_RECEIPT_REASONS.MISSING,
-      ['effective config has not been reconciled'],
+      [`effective config has not been reconciled for runtime ${activeRuntimeId}`],
       options,
+      activeRuntimeId,
     );
   }
   let raw;
@@ -425,11 +482,8 @@ function atomicWriteEffectiveConfig(receiptPath, receipt) {
 
 function reconcileEffectiveConfig(projectRoot, options = {}) {
   const source = readConfigFile(projectRoot, options);
-  const receiptPath = effectiveConfigPath(source.projectRoot, options);
-  const runtime = options.runtime || require('./runtime').detectRuntimeContract(
-    source.projectRoot,
-    options,
-  );
+  const runtime = options.runtime || detectRuntimeContract(source.projectRoot, options);
+  const receiptPath = effectiveConfigPath(source.projectRoot, { ...options, runtime });
   const receipt = resolveConfig(source.raw, {
     ...options,
     runtime,
@@ -450,6 +504,7 @@ function reconcileEffectiveConfig(projectRoot, options = {}) {
       `Effective config reconciliation failed: ${observed.reasonCode}`,
     );
   }
+  retireLegacyReceipt(source.projectRoot, options, runtimeIdentity(runtime).id);
   return observed;
 }
 
@@ -459,6 +514,7 @@ module.exports = Object.freeze({
   EFFECTIVE_RECEIPT_VERSION,
   atomicWriteEffectiveConfig,
   effectiveConfigPath,
+  legacyEffectiveConfigPath,
   readEffectiveConfig,
   reconcileEffectiveConfig,
   validateEffectiveReceipt,

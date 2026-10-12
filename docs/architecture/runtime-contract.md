@@ -67,11 +67,17 @@ then exactly one project marker directory: `.claude`, `.codex`, or
 fails closed with a reconcile command. Directory timestamps are never used to
 guess the active runtime.
 
-The derived `.citadel/effective-config.json` receipt records the selected
-runtime ID and contract digest together with an installation generation
-identity. The generation includes the Citadel package version and source
-digests, so switching runtimes or changing the installed harness invalidates
-the receipt. Reconcile with the reported command before activation continues.
+Each runtime keeps its own derived receipt at
+`.citadel/effective-config/<runtime-id>.json`, so Claude Code, Codex, and
+OpenCode can share a repository without invalidating each other. A receipt
+records its runtime ID and contract digest together with an installation
+generation identity. The generation includes the Citadel package version and
+source digests, so changing that runtime's installed harness invalidates its
+receipt. Trust counters that SessionEnd maintains in `harness.json` are
+excluded from the source digest; every other config edit invalidates all
+runtimes' receipts. A pre-split `.citadel/effective-config.json` is still read
+by the runtime that wrote it and is retired when that runtime next reconciles.
+Reconcile with the reported command before activation continues.
 
 ## Normalized Event Vocabulary
 

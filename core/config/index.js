@@ -39,7 +39,7 @@ function loadActivationContext(projectRoot, options = {}) {
     reasonCode: 'EFFECTIVE_CONFIG_BOOTSTRAP',
     errors: [],
     sourceDigest: resolved.loaded.sourceDigest,
-    receiptPath: receipts.effectiveConfigPath(projectRoot, options),
+    receiptPath: effective.receiptPath,
     receipt: resolved.receipt,
     projectRoot: resolved.loaded.projectRoot,
     installationRoot: options.installationRoot || null,
