@@ -146,10 +146,14 @@ function run(input) {
     }
   }
 
+  const basename = path.basename(filePath);
+  const isEnvSecret = basename.startsWith('.env') &&
+    !ENV_TEMPLATE_SUFFIXES.some((suffix) => basename.endsWith(suffix));
+
   // Claude Code native auto-memory, plan-mode plan files and the session
   // scratchpad live outside the project root by design. Allow those writes
-  // before the block below.
-  if (toolName !== 'Read' && !insideProject
+  // before the block below. .env secrets are never exempt there.
+  if (toolName !== 'Read' && !insideProject && !isEnvSecret
     && (isNativeMemoryPath(normalizedPath)
       || isNativePlanPath(normalizedPath)
       || isSessionScratchpadPath(normalizedPath, event.session_id))) {
@@ -188,9 +192,6 @@ function run(input) {
   // Edit/Write events: symmetric .env protection (Read is blocked above).
   // Template files (.example/.sample/.template) stay writable. Escape hatch:
   // allowEnvWrites=true in harness.json. CITADEL_DEV does not bypass this.
-  const basename = path.basename(filePath);
-  const isEnvSecret = basename.startsWith('.env') &&
-    !ENV_TEMPLATE_SUFFIXES.some((suffix) => basename.endsWith(suffix));
   if (isEnvSecret && config.allowEnvWrites !== true) {
     health.logBlock('protect-files', 'blocked', `${toolName} ${relativePath} (.env secrets)`);
     blockOutput('protect-files', 'blocked',
@@ -389,11 +390,16 @@ function isNativeMemoryPath(normalizedPath) {
  * default plan-mode directory, <home>/.claude/plans/. A custom
  * `plansDirectory` must resolve inside the project root (Claude Code falls
  * back to ~/.claude/plans otherwise), so it never needs an exemption here.
+ * Always false under other runtimes (CITADEL_RUNTIME set to anything other
+ * than claude-code), which have no plan mode.
  *
  * @param {string} normalizedPath - Result of path.normalize(path.resolve(...))
  * @returns {boolean}
  */
 function isNativePlanPath(normalizedPath) {
+  // Only Claude Code has plan mode; other runtimes set CITADEL_RUNTIME.
+  const runtime = process.env.CITADEL_RUNTIME;
+  if (runtime && runtime !== 'claude-code') return false;
   const segments = claudeHomeSegments(normalizedPath, 'plans');
   return segments !== null && segments.length >= 1;
 }

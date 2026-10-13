@@ -454,7 +454,9 @@ function main() {
       const planFile = path.join(tmpHome, '.claude', 'plans', 'plan.md');
       for (const home of [tmpHome, homeAlias]) {
         for (const tool of ['Write', 'Edit']) {
-          const result = runProtectFiles(tool, planFile, { CITADEL_TEST: '1', CITADEL_HOME_OVERRIDE: home });
+          const result = runProtectFiles(tool, planFile, {
+            CITADEL_TEST: '1', CITADEL_HOME_OVERRIDE: home, CITADEL_RUNTIME: 'claude-code',
+          });
           assert(
             result.status === 0,
             `Expected ${tool} allow via ${home}, got ${result.status}: ${result.stdout} ${result.stderr}`
@@ -471,9 +473,11 @@ function main() {
   test('protect-files keeps the plan-file exemption narrow', () => {
     const tmpHome = fs.mkdtempSync(path.join(os.tmpdir(), 'citadel-home-'));
     try {
-      const env = { CITADEL_TEST: '1', CITADEL_HOME_OVERRIDE: tmpHome };
+      const env = { CITADEL_TEST: '1', CITADEL_HOME_OVERRIDE: tmpHome, CITADEL_RUNTIME: 'claude-code' };
       for (const rel of [
         ['.claude', 'plansX', 'plan.md'],
+        ['.claude', 'plans', '.env'],
+        ['.claude', 'plans', '.env.local'],
         ['.claude', 'settings.json'],
         ['.claude', 'plans'],
         ['.claude', 'projects', 'some-slug', 'plans', 'plan.md'],
@@ -481,6 +485,33 @@ function main() {
         const result = runProtectFiles('Write', path.join(tmpHome, ...rel), env);
         assert(result.status === 2, `Expected block for ${rel.join('/')}, got ${result.status}`);
       }
+      const planFile = path.join(tmpHome, '.claude', 'plans', 'plan.md');
+      for (const runtime of ['codex', 'opencode']) {
+        const result = runProtectFiles('Write', planFile, { ...env, CITADEL_RUNTIME: runtime });
+        assert(result.status === 2, `Expected block under ${runtime}, got ${result.status}`);
+      }
+    } finally {
+      fs.rmSync(tmpHome, { recursive: true, force: true });
+    }
+  });
+
+  test('protect-files never exempts .env secrets in native memory or the scratchpad', () => {
+    const tmpHome = fs.mkdtempSync(path.join(os.tmpdir(), 'citadel-home-'));
+    try {
+      const memEnv = path.join(tmpHome, '.claude', 'projects', 'some-slug', 'memory', '.env');
+      const mem = runProtectFiles('Write', memEnv, { CITADEL_TEST: '1', CITADEL_HOME_OVERRIDE: tmpHome });
+      assert(mem.status === 2, `Expected block for memory .env, got ${mem.status}`);
+      const padEnv = path.join(tmpHome, 'claude', 'C--proj', 'sess-1', 'scratchpad', '.env');
+      const pad = spawnSync(process.execPath, [PROTECT_FILES_HOOK], {
+        input: JSON.stringify({ tool_name: 'Write', tool_input: { file_path: padEnv }, session_id: 'sess-1' }),
+        encoding: 'utf8',
+        cwd: PLUGIN_ROOT,
+        env: { ...process.env, CLAUDE_PROJECT_DIR: envProj, CLAUDE_CODE_TMPDIR: tmpHome },
+      });
+      assert(pad.status === 2, `Expected block for scratchpad .env, got ${pad.status}`);
+      const template = path.join(tmpHome, '.claude', 'projects', 'some-slug', 'memory', '.env.example');
+      const ok = runProtectFiles('Write', template, { CITADEL_TEST: '1', CITADEL_HOME_OVERRIDE: tmpHome });
+      assert(ok.status === 0, `Expected allow for memory .env.example, got ${ok.status}: ${ok.stderr}`);
     } finally {
       fs.rmSync(tmpHome, { recursive: true, force: true });
     }

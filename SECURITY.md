@@ -78,7 +78,7 @@ Citadel's direct-file hooks and bounded shell checks cover different surfaces:
 
 Write boundaries:
 
-- Direct Edit and Write tool calls outside the project root are blocked, with one allowlisted location: the Claude Code native auto-memory directory under `~/.claude/projects/<project-slug>/memory/`.
+- Direct Edit and Write tool calls outside the project root are blocked, with three allowlisted locations that Claude Code owns: the native auto-memory directory under `~/.claude/projects/<project-slug>/memory/`, the plan-mode directory `~/.claude/plans/` (Claude Code runtime only), and the current session's scratchpad under the system temp directory. Non-template `.env*` files stay blocked in all three.
 - Shells, scripts, interpreters, aliases, expansions, and child processes can write outside that direct-tool boundary. Citadel does not parse arbitrary shell effects and is not an OS sandbox. Complete containment requires the coding runtime's supported sandbox or another OS-level boundary. `scripts/install-hooks.js` reports this boundary explicitly and warns that native-Windows Claude Code cannot establish it through Citadel.
 - Every block reason is mirrored to stderr in addition to stdout, so runtimes that only surface stderr still show why an action was stopped.
 
