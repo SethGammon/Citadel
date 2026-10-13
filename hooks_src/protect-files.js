@@ -146,10 +146,13 @@ function run(input) {
     }
   }
 
-  // Claude Code native auto-memory and the session scratchpad live outside
-  // the project root by design. Allow those writes before the block below.
+  // Claude Code native auto-memory, plan-mode plan files and the session
+  // scratchpad live outside the project root by design. Allow those writes
+  // before the block below.
   if (toolName !== 'Read' && !insideProject
-    && (isNativeMemoryPath(normalizedPath) || isSessionScratchpadPath(normalizedPath, event.session_id))) {
+    && (isNativeMemoryPath(normalizedPath)
+      || isNativePlanPath(normalizedPath)
+      || isSessionScratchpadPath(normalizedPath, event.session_id))) {
     process.exit(0);
   }
 
@@ -346,29 +349,53 @@ function isSessionScratchpadPath(normalizedPath, sessionId) {
 }
 
 /**
+ * Path segments of an absolute, normalized path below <home>/.claude/<subdir>,
+ * or null when the path is not strictly inside that directory. The directory
+ * is canonicalized so symlinked homes match. Segments are case-folded on win32.
+ * CITADEL_HOME_OVERRIDE replaces the home directory only when CITADEL_TEST=1
+ * so tests can exercise this path without touching the real home.
+ *
+ * @param {string} normalizedPath - Result of path.normalize(path.resolve(...))
+ * @param {string} subdir - Directory name directly under <home>/.claude
+ * @returns {string[]|null}
+ */
+function claudeHomeSegments(normalizedPath, subdir) {
+  const home = (process.env.CITADEL_TEST === '1' && process.env.CITADEL_HOME_OVERRIDE)
+    ? process.env.CITADEL_HOME_OVERRIDE
+    : os.homedir();
+  const dir = path.normalize(health.canonicalizePath(path.resolve(home, '.claude', subdir)));
+  const fold = (p) => (process.platform === 'win32' ? p.toLowerCase() : p);
+  const target = fold(normalizedPath);
+  const root = fold(dir);
+  if (!target.startsWith(root + path.sep)) return null;
+  return target.slice(root.length + 1).split(path.sep).filter(Boolean);
+}
+
+/**
  * True when an absolute, normalized path points into the Claude Code native
  * auto-memory directory: <home>/.claude/projects/<slug>/memory/ where <slug>
  * is a single path segment. The memory directory itself also matches.
- * Comparison is case-insensitive on win32.
- * CITADEL_HOME_OVERRIDE replaces the home directory only when CITADEL_TEST=1
- * so tests can exercise this path without touching the real home.
  *
  * @param {string} normalizedPath - Result of path.normalize(path.resolve(...))
  * @returns {boolean}
  */
 function isNativeMemoryPath(normalizedPath) {
-  const home = (process.env.CITADEL_TEST === '1' && process.env.CITADEL_HOME_OVERRIDE)
-    ? process.env.CITADEL_HOME_OVERRIDE
-    : os.homedir();
-  const projectsRoot = path.normalize(health.canonicalizePath(
-    path.resolve(home, '.claude', 'projects')
-  ));
-  const fold = (p) => (process.platform === 'win32' ? p.toLowerCase() : p);
-  const target = fold(normalizedPath);
-  const root = fold(projectsRoot);
-  if (!target.startsWith(root + path.sep)) return false;
-  const segments = target.slice(root.length + 1).split(path.sep).filter(Boolean);
-  return segments.length >= 2 && segments[1] === 'memory';
+  const segments = claudeHomeSegments(normalizedPath, 'projects');
+  return segments !== null && segments.length >= 2 && segments[1] === 'memory';
+}
+
+/**
+ * True when an absolute, normalized path points to a file in Claude Code's
+ * default plan-mode directory, <home>/.claude/plans/. A custom
+ * `plansDirectory` must resolve inside the project root (Claude Code falls
+ * back to ~/.claude/plans otherwise), so it never needs an exemption here.
+ *
+ * @param {string} normalizedPath - Result of path.normalize(path.resolve(...))
+ * @returns {boolean}
+ */
+function isNativePlanPath(normalizedPath) {
+  const segments = claudeHomeSegments(normalizedPath, 'plans');
+  return segments !== null && segments.length >= 1;
 }
 
 /**

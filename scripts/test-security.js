@@ -444,6 +444,48 @@ function main() {
     );
   });
 
+  test('protect-files allows plan-mode writes to ~/.claude/plans, including through a home alias', () => {
+    const tmpRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'citadel-home-'));
+    try {
+      const tmpHome = path.join(tmpRoot, 'real-home');
+      const homeAlias = path.join(tmpRoot, 'home-alias');
+      fs.mkdirSync(tmpHome);
+      fs.symlinkSync(tmpHome, homeAlias, process.platform === 'win32' ? 'junction' : 'dir');
+      const planFile = path.join(tmpHome, '.claude', 'plans', 'plan.md');
+      for (const home of [tmpHome, homeAlias]) {
+        for (const tool of ['Write', 'Edit']) {
+          const result = runProtectFiles(tool, planFile, { CITADEL_TEST: '1', CITADEL_HOME_OVERRIDE: home });
+          assert(
+            result.status === 0,
+            `Expected ${tool} allow via ${home}, got ${result.status}: ${result.stdout} ${result.stderr}`
+          );
+        }
+      }
+      const read = runProtectFiles('Read', planFile, { CITADEL_TEST: '1', CITADEL_HOME_OVERRIDE: tmpHome });
+      assert(read.status === 0, `Expected Read allow, got ${read.status}: ${read.stderr}`);
+    } finally {
+      fs.rmSync(tmpRoot, { recursive: true, force: true });
+    }
+  });
+
+  test('protect-files keeps the plan-file exemption narrow', () => {
+    const tmpHome = fs.mkdtempSync(path.join(os.tmpdir(), 'citadel-home-'));
+    try {
+      const env = { CITADEL_TEST: '1', CITADEL_HOME_OVERRIDE: tmpHome };
+      for (const rel of [
+        ['.claude', 'plansX', 'plan.md'],
+        ['.claude', 'settings.json'],
+        ['.claude', 'plans'],
+        ['.claude', 'projects', 'some-slug', 'plans', 'plan.md'],
+      ]) {
+        const result = runProtectFiles('Write', path.join(tmpHome, ...rel), env);
+        assert(result.status === 2, `Expected block for ${rel.join('/')}, got ${result.status}`);
+      }
+    } finally {
+      fs.rmSync(tmpHome, { recursive: true, force: true });
+    }
+  });
+
   test('protect-files still blocks other writes outside project root with stderr reason', () => {
     const tmpHome = fs.mkdtempSync(path.join(os.tmpdir(), 'citadel-home-'));
     const outsideFile = path.join(tmpHome, 'elsewhere', 'x.txt');
