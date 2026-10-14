@@ -15,7 +15,10 @@ fs.mkdirSync(project);
 
 function run(command, args, seconds = 15) {
   return spawnSync(process.execPath, [wrapper, String(seconds), command, ...args], {
-    cwd: project, encoding: 'utf8', shell: false, windowsHide: true,
+    // Pin the project root: an inherited CLAUDE_PROJECT_DIR would send the
+    // wrapper's result receipt to the real checkout instead of this project.
+    cwd: project, env: { ...process.env, CLAUDE_PROJECT_DIR: project },
+    encoding: 'utf8', shell: false, windowsHide: true,
     timeout: (seconds + 10) * 1000,
   });
 }
