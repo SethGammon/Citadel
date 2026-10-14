@@ -19,14 +19,20 @@ assert.equal(typeof codexRuntime.projectCodexAgents, 'function', 'Codex runtime 
 const adapterPath = path.join(__dirname, '..', 'hooks_src', 'codex-adapter.js');
 const { projectCodexOutput } = require(adapterPath);
 const projectRoot = path.join(__dirname, '..');
+// Hooks run against a throwaway project so the blocks they log stay out of
+// this checkout's .planning/telemetry.
+const hookProject = fs.mkdtempSync(path.join(os.tmpdir(), 'citadel-codex-hooks-'));
+process.on('exit', () => fs.rmSync(hookProject, { recursive: true, force: true }));
+const hookEnv = { ...process.env, CLAUDE_PROJECT_DIR: hookProject };
 const payload = {
   hook_event_name: 'PreToolUse',
-  cwd: projectRoot,
+  cwd: hookProject,
   tool_name: 'Read',
   tool_input: { file_path: '.env' },
 };
 const result = spawnSync(process.execPath, [adapterPath, 'protect-files'], {
-  cwd: projectRoot,
+  cwd: hookProject,
+  env: hookEnv,
   input: JSON.stringify(payload),
   encoding: 'utf8',
 });
@@ -52,7 +58,7 @@ if (process.platform === 'win32') {
       const command = hooks.flatMap(group => group.hooks).find(h => h.command.endsWith(` ${name}`)).commandWindows;
       const shellResult = spawnSync(shell === 'cmd' ? process.env.COMSPEC : 'pwsh.exe',
         shell === 'cmd' ? ['/C', `"${command}"`] : ['-NoProfile', '-Command', command], {
-          cwd: projectRoot, env: { ...process.env, PLUGIN_ROOT: projectRoot },
+          cwd: hookProject, env: { ...hookEnv, PLUGIN_ROOT: projectRoot },
           input, encoding: 'utf8', timeout: 10000, windowsHide: true,
           windowsVerbatimArguments: shell === 'cmd',
         });
