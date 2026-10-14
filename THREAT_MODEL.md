@@ -168,17 +168,38 @@ every skill into `core/skills/routing-table.json`, the `/do` table in
 ### Native memory write allowlist
 
 `hooks_src/protect-files.js` blocks Edit/Write outside the project root, with
-one carve-out: `isNativeMemoryPath` permits writes into the Claude Code native
-auto-memory directory, `<home>/.claude/projects/<slug>/memory/`.
+narrow carve-outs for locations Claude Code owns (see also the plan-mode
+allowlist below). `isNativeMemoryPath` permits writes into the Claude Code
+native auto-memory directory, `<home>/.claude/projects/<slug>/memory/`.
 
 - Why it is bounded: the path is normalized and traversal-checked first, the
   slug must be a single path segment, and `memory` must be the segment
-  immediately after it. `.env` reads remain blocked everywhere by basename.
+  immediately after it. `.env` reads remain blocked everywhere by basename,
+  and non-template `.env*` writes are blocked before any outside-root
+  carve-out applies.
 - Residual: the allowlist matches any project slug, not only the current
   project, and allowlisted writes skip the protected-pattern check. Memory
   files are prompt context, so a poisoned memory write is an injection vector
   into future sessions. Accepted as low risk: memory is plain markdown,
   reviewable, and never executed.
+
+### Plan-mode write allowlist
+
+`isNativePlanPath` permits Edit/Write into Claude Code's default plan-mode
+directory, `<home>/.claude/plans/`, so plan mode can save the plan that
+ExitPlanMode reads back for approval.
+
+- Why it is bounded: same normalization and canonicalization as the memory
+  carve-out; only files strictly below `plans/` match (not `plans` itself or
+  a sibling such as `plansX`); it applies only when `CITADEL_RUNTIME` is
+  unset or `claude-code`, so Codex and OpenCode get no carve-out. A custom
+  `plansDirectory` must resolve inside the project root, so it needs none.
+  Non-template `.env*` writes stay blocked.
+- Residual: allowlisted writes skip the protected-pattern check, and the
+  directory is shared by all projects. Plan files are prompt context for the
+  approval step and later sessions, so a poisoned plan is an injection vector.
+  Accepted as low risk: plans are plain markdown the user reviews before
+  approving.
 
 ### Operation Fork
 
