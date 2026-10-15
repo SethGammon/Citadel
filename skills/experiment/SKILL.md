@@ -65,7 +65,12 @@ The metric MUST exit successfully and output a single finite number to stdout.
    assertions, fixtures/expected outputs, and relevant command/config files.
    These are outside candidate edit scope, even if a broad glob includes them.
    Keep the original incumbent commit, evaluator and plan fixed for the run.
-5. Measure the baseline and run the declared checks in isolation. Record commands,
+5. Pin one file-byte representation before measuring, including checkout filters
+   and line endings. Compare baseline and evaluator hashes with their committed
+   blobs; for commit-based evaluation, materialize matching bytes in the isolated
+   checkout. Use the same representation for every candidate and independent
+   check; a clean Git status alone does not establish byte identity.
+6. Measure the baseline and run the declared checks in isolation. Record commands,
    exit codes, values and evidence paths. An invalid baseline or required-check
    failure holds optimization until resolved; do not silently waive the check.
 
