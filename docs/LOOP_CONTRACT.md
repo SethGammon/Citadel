@@ -97,6 +97,21 @@ node scripts/loop-runner.js --action "npm run lint -- --fix" --verify "npm run l
 The verifier controls success. If the verifier passes, the loop stops with
 `verifier-passed`. If attempts run out, it stops with `attempt-limit`.
 
+Cancellation bounds how long the supervisor waits; it does not guarantee that
+every command has exited. On Windows, the owned process-tree termination helper
+has a two-second cleanup deadline. If that helper fails or exceeds its deadline,
+the shell-only fallback can leave commands or descendants running. The command
+receipt retains `cleanupError`, and the CLI prints the diagnostic to stderr.
+The interrupted or timed-out attempt remains nonpassing: it does not authorize
+a verifier, another attempt, or a recovery follow-up.
+
+Stopping a command does not reverse effects it already performed. A cleanup
+error means termination is uncertain, not that a surviving process was observed;
+even a null error does not account for escaped or detached descendants. Inspect
+the recorded receipt, the command's effects, and processes whose ownership can
+be established before deciding what to do. An unknown result is an inspection
+requirement, never permission to replay the action or run a new verifier.
+
 ## Interruption inspection and limited verification follow-up
 
 Inspect a source loop before deciding what to do:
