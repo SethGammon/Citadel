@@ -123,7 +123,7 @@ async function execute({ project, binary, output, scenarioName, checkOnly = fals
   const selected = bench.discoverScenarios().filter(item => item.skill === 'experiment' && item.name === scenarioName);
   if (!checkOnly && (selected.length !== 1 || bench.validateScenario(selected[0]).length)) throw new Error('Select one valid experiment scenario');
   const args = ['-c', 'service_tier="default"', '-c', 'model_reasoning_effort="ultra"',
-    '-c', 'plugins."citadel@citadel-local".enabled=false'];
+    '-c', 'plugins.citadel@citadel-local.enabled=false'];
   if (process.platform === 'win32') args.push('-c', 'windows.sandbox="elevated"');
   args.push('app-server', '--listen', 'stdio://');
   put(path.join(output, 'invocation.json'), { binary, args, project });
