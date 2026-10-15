@@ -201,7 +201,7 @@ async function main() {
   await test('source lock is never stolen and post-claim source change prevents dispatch', async (root) => {
     const source = await eligible(root);
     const lock = `${registry.loopPath(root, source.id)}.lock`;
-    const owner = JSON.stringify({ pid: process.pid, token: 'test-owned-lock' });
+    const owner = JSON.stringify({ pid: process.pid, token: require('crypto').randomUUID() });
     fs.writeFileSync(lock, owner);
     assert.throws(() => registry.registerRecovery(root, source.id, source.revision, { lockTimeoutMs: 0 }),
       (error) => error.code === 'LOOP_LOCK_TIMEOUT');

@@ -19,7 +19,7 @@ const catalog = JSON.parse(fs.readFileSync(path.join(EXAMPLE, 'catalog.json'), '
 assert.equal(operation.safeEnvironment, require('../core/runtime/environment').safeEnvironment);
 const environment = Object.assign(Object.create({ INHERITED: 'excluded' }), {
   PATH: 'path', Path: 'windows-path', HOME: 'home', USERPROFILE: 'user', SystemRoot: 'system',
-  CODEX_HOME: 'auth-home', CITADEL_CODEX_JS: 'runtime.js', SECRET: 'excluded',
+  CODEX_HOME: 'auth-home', CITADEL_CODEX_JS: 'runtime.js', SECRET: require('crypto').randomBytes(16).toString('hex'),
 });
 assert.deepEqual(operation.safeEnvironment(['CODEX_HOME', 'CITADEL_CODEX_JS', 'INHERITED'], environment), {
   PATH: 'path', Path: 'windows-path', SystemRoot: 'system', HOME: 'home', USERPROFILE: 'user',
@@ -406,9 +406,11 @@ try {
   assert.equal(observe().reasoning_effort_source, 'codex-session-turn-context');
   assert.equal(observe().service_tier, null, 'configured session tier is not served-tier evidence');
   const originalOpen = fs.openSync;
+  // macOS resolves /var to /private/var before opening the session file.
+  const canonicalSessionFile = fs.realpathSync(sessionFile);
   try {
     fs.openSync = (file, ...args) => {
-      if (path.resolve(file) === path.resolve(sessionFile)) throw Object.assign(new Error('denied'), { code: 'EACCES' });
+      if (fs.realpathSync(file) === canonicalSessionFile) throw Object.assign(new Error('denied'), { code: 'EACCES' });
       return originalOpen(file, ...args);
     };
     assert.equal(observe().reasoning_effort, null, 'inaccessible session cannot confirm effort');
