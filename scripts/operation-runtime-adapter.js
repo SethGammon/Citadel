@@ -107,7 +107,7 @@ function findSettingsSession(threadId, env) {
 
 // New setting evidence fails closed on incomplete or conflicting metadata.
 // Existing model/usage parsing remains in the unchanged optimizer adapter.
-function sessionReasoningEffort(threadId, repositoryPath, env) {
+function sessionReasoningSettings(threadId, repositoryPath, env) {
   const file = findSettingsSession(threadId, env);
   if (!file) return null;
   let descriptor;
@@ -139,29 +139,38 @@ function sessionReasoningEffort(threadId, repositoryPath, env) {
         if (!effort || (observed !== null && effort !== observed)) return null;
         const collaborationEffort = context.collaboration_mode?.settings?.reasoning_effort;
         if (collaborationEffort != null && collaborationEffort !== effort) return null;
+        const collaborationModel = context.collaboration_mode?.settings?.model;
+        if (collaborationModel != null && collaborationModel !== model) return null;
         observed = effort;
       }
     }
-    return identified ? observed : null;
+    return identified && observed !== null ? { model, reasoning_effort: observed } : null;
   } catch (_error) { return null; }
   finally { if (descriptor !== undefined) fs.closeSync(descriptor); }
 }
 
-function codexSettingsObservation(stdout, repositoryPath, env = process.env) {
+function codexSettingsObservation(stdout, repositoryPath, env = process.env, observedModel = null) {
   const unknown = { reasoning_effort: null, reasoning_effort_source: null, service_tier: null, service_tier_source: null };
   const threads = new Set();
+  const models = new Set();
   try {
     for (const line of String(stdout || '').split(/\r?\n/)) {
       if (!line.trim()) continue;
       const event = JSON.parse(line);
       if (event?.type === 'thread.started' && THREAD_PATTERN.test(event.thread_id || '')) threads.add(event.thread_id.toLowerCase());
+      const body = event?.msg && typeof event.msg === 'object' ? event.msg : event;
+      if (typeof body?.model === 'string' && /^[A-Za-z0-9][A-Za-z0-9._:@-]{0,127}$/.test(body.model)) models.add(body.model);
     }
   } catch (_error) { return unknown; }
   if (threads.size !== 1) return unknown;
-  const effort = sessionReasoningEffort([...threads][0], repositoryPath, env);
+  const settings = sessionReasoningSettings([...threads][0], repositoryPath, env);
+  // Effort is evidence about this session's model. Never attach it to a different
+  // model selected by stdout parsing, or discard conflicting stdout model claims.
+  if (!settings || models.size > 1 || (models.size === 1 && !models.has(settings.model))
+    || (observedModel !== null && observedModel !== settings.model)) return unknown;
   // turn_context records configured effort. It provides no supported evidence
   // of the backend's served service tier, even if a configured tier is present.
-  return { ...unknown, reasoning_effort: effort, reasoning_effort_source: effort === null ? null : 'codex-session-turn-context' };
+  return { ...unknown, reasoning_effort: settings.reasoning_effort, reasoning_effort_source: 'codex-session-turn-context' };
 }
 
 function observedToolCalls(runtime, stdout) {
@@ -208,7 +217,7 @@ function execute(input, runtime, options = {}) {
     output: String(result.stdout || ''),
     observations: {
       model: observation?.model || null,
-      ...(runtime === 'codex' ? codexSettingsObservation(result.stdout, input.workspace_root, options.env || process.env)
+      ...(runtime === 'codex' ? codexSettingsObservation(result.stdout, input.workspace_root, options.env || process.env, observation?.model || null)
         : { reasoning_effort: null, reasoning_effort_source: null, service_tier: null, service_tier_source: null }),
       topology: input.plan.topology,
       tools: input.plan.tools,

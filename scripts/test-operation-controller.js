@@ -311,10 +311,10 @@ const parityResult = {
   },
 };
 const parityCatalog = { ...pathCatalog, plans: [parityPlan] };
-function runParity(result) {
+function runParity(result, planOverrides = {}) {
   return operation.runOperation({
     request: { ...pathRequest, quality_target: 0.1, verifier: { kind: 'command', executable: 'verify-test', args: [], cwd: '.', timeout_ms: 1000, required_changed_paths: [] } },
-    catalog: parityCatalog,
+    catalog: { ...parityCatalog, plans: [{ ...parityPlan, ...planOverrides }] },
     workspaceRoot: EXAMPLE,
     spawn: (command, args) => command === 'node' ? result : command === 'verify-test'
       ? { status: 0, stdout: 'independent verification passed' }
@@ -399,6 +399,30 @@ try {
   assert.equal(withSession.observations.reasoning_effort, 'ultra');
   assert.equal(withSession.observations.service_tier, null);
   assert.equal(fs.readFileSync(configFile, 'utf8'), configBefore);
+  const effortOnlyInput = { ...settingInput, plan: { ...parityPlan, service_tier: null } };
+  const executeWithModel = (model) => runtimeAdapter.execute(effortOnlyInput, 'codex', {
+    resolve: (invocation) => invocation,
+    spawn: () => ({ status: 0, stdout: `${stdout}\n${JSON.stringify({ type: 'turn.completed', model })}` }), env: sessionEnv,
+  });
+  const matching = executeWithModel('direct-small');
+  assert.equal(matching.observations.reasoning_effort, 'ultra');
+  const matchingReport = runParity({ status: 0, stdout: JSON.stringify(matching) }, { service_tier: null });
+  assert.equal(matchingReport.status, 'passed');
+  assert.equal(operation.historyRecordFromAttempt(pathRequest, matchingReport.attempts[0]).verification_status, 'passed');
+  writeSession([meta, { ...context, payload: { ...context.payload, model: 'gpt-other-model' } }]);
+  const conflicting = executeWithModel('direct-small');
+  assert.equal(conflicting.observations.model, 'direct-small', 'preserve legacy stdout model parsing');
+  assert.equal(conflicting.observations.reasoning_effort, null, 'effort for another model cannot establish requested model/effort parity');
+  assert.equal(conflicting.observations.reasoning_effort_source, null);
+  const conflictReport = runParity({ status: 0, stdout: JSON.stringify(conflicting) }, { service_tier: null });
+  assert.equal(conflictReport.status, 'unknown');
+  assert.equal(conflictReport.attempts[0].completion_status, 'passed', 'independent verifier still passed');
+  assert.equal(conflictReport.attempts[0].control_status, 'unknown');
+  assert.equal(operation.historyRecordFromAttempt(pathRequest, conflictReport.attempts[0]).verification_status, 'unknown');
+  writeSession([meta, context]);
+  const conflictingStdout = `${stdout}\n${JSON.stringify({ type: 'turn.started', model: 'gpt-other-model' })}\n${JSON.stringify({ type: 'turn.completed', model: 'direct-small' })}`;
+  assert.equal(runtimeAdapter.codexSettingsObservation(conflictingStdout, EXAMPLE, sessionEnv).reasoning_effort, null);
+  assert.equal(runtimeAdapter.codexSettingsObservation(stdout, EXAMPLE, sessionEnv, 'gpt-other-model').reasoning_effort, null);
   for (const events of [
     [meta, { ...context, payload: { ...context.payload, cwd: settingsRoot } }],
     [{ ...meta, payload: { ...meta.payload, id: '00000000-0000-0000-0000-000000000000' } }, context],
@@ -406,6 +430,7 @@ try {
     [meta, context, { ...context, payload: { ...context.payload, effort: 'medium' } }],
     [meta, context, { ...context, payload: { ...context.payload, model: 'different-model' } }],
     [meta, { ...context, payload: { ...context.payload, collaboration_mode: { settings: { reasoning_effort: 'medium' } } } }],
+    [meta, { ...context, payload: { ...context.payload, collaboration_mode: { settings: { model: 'gpt-other-model' } } } }],
     [context],
   ]) { writeSession(events); assert.equal(observe().reasoning_effort, null); }
   writeSession([meta, context]);
