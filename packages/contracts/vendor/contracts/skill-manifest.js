@@ -5,18 +5,17 @@
 const SKILL_REQUIRED_FRONTMATTER = Object.freeze([
   'name',
   'description',
+  'user-invocable',
 ]);
 
 const SKILL_OPTIONAL_FRONTMATTER = Object.freeze([
-  'user-invocable',
   'auto-trigger',
   'last-updated',
   'dependencies',
 ]);
 
+// Canonical authoring headings; execution aliases are defined by structure.js.
 const SKILL_REQUIRED_SECTIONS = Object.freeze([
-  'Identity',
-  'Orientation',
   'Protocol',
   'Quality Gates',
   'Exit Protocol',

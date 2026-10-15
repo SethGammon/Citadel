@@ -104,6 +104,41 @@ const {
   console.log('  PASS  shared skill contract: full corpus, aliases and invalid structures');
 }
 
+// Shared hot/cold performance rules, including real PostToolUse dispatch.
+{
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'citadel-performance-parity-'));
+  const token = ['transition', 'all'].join('-');
+  const modal = ['pro', 'mpt'].join('');
+  try {
+    fs.mkdirSync(path.join(root, '.claude'));
+    const configPath = path.join(root, '.claude', 'harness.json');
+    const filePath = path.join(root, 'example.js');
+    const runHot = (content, builtIn) => {
+      fs.writeFileSync(filePath, content);
+      fs.writeFileSync(configPath, JSON.stringify({ qualityRules: { builtIn },
+        verification: { disabled: ['programmatic', 'structural', 'cross-reference'] } }));
+      const run = spawnSync(process.execPath, [path.join(__dirname, '..', 'hooks_src', 'post-edit.js')], {
+        cwd: root, encoding: 'utf8', input: JSON.stringify({ tool_name: 'Write', tool_input: { file_path: filePath } }),
+        env: { ...process.env, CLAUDE_PROJECT_DIR: root, CITADEL_UI: 'false' },
+      });
+      assert.equal(run.status, 0, run.stderr);
+      return run.stdout;
+    };
+    const rules = ['no-confirm-alert', `no-${token}`];
+    for (const content of [`const rules = ['no-${token}'];`, `<div className="hover:${token}">`,
+      `${modal}('input');`, `${'al' + 'ert'}('message'); // eslint comment`]) {
+      const cold = lensPerformance('example.js', content, rules);
+      const hot = runHot(content, rules);
+      assert.equal(hot.includes('[lint]'), cold.length > 0, content);
+      for (const finding of cold) assert(hot.includes(finding.message), hot);
+      assert(!runHot(content, []).includes('[lint]'), 'disabled rules must stay disabled');
+    }
+    assert.equal(lensPerformance('example.css', `.${token} {}`, rules).length, 1);
+    assert.equal(lensPerformance('example.md', token, rules).length, 0);
+    assert.equal(lensPerformance('example.js', 'setInterval(tick, 1000)', ['no-magic-intervals']).length, 1);
+  } finally { fs.rmSync(root, { recursive: true, force: true }); }
+}
+
 let failures = 0;
 
 function check(label, condition, detail) {

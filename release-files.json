@@ -49,6 +49,8 @@
     "core/utils/path-helpers.js",
     "core/utils/config-command.js",
     "core/verification/profiles.js",
+    "core/verification/performance.js",
+    "core/utils/frontmatter.js",
     "core/worktree/create.js",
     "core/worktree/readiness.js",
     "docs/ARCHITECTURE.md",

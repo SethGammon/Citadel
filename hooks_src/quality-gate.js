@@ -33,6 +33,7 @@ const fs = require('fs');
 const path = require('path');
 const { execFileSync } = require('child_process');
 const health = require('./harness-health-util');
+const { detectPerformance } = require('../core/verification/performance');
 const { STRUCTURE_CHECKS, parseFrontmatter } = require('../core/skills/structure');
 
 const CITADEL_UI = process.env.CITADEL_UI === 'true';
@@ -306,9 +307,6 @@ function runColdLens(lens, file, content, config, builtInRules) {
 // Rule tokens are assembled at runtime so this file's own patterns and
 // messages never match the rules it enforces when the gate scans itself.
 const TOKEN = Object.freeze({
-  confirm: ['con', 'firm'].join(''),
-  alert: ['al', 'ert'].join(''),
-  transitionAll: ['transition', 'all'].join('-'),
   setInnerHtml: ['dangerously', 'Set', 'InnerHTML'].join(''),
   documentWrite: ['document', 'write'].join('.'),
 });
@@ -316,31 +314,7 @@ const TOKEN = Object.freeze({
 // ── Performance Lens ────────────────────────────────────────────────────────
 
 function lensPerformance(file, content, builtInRules) {
-  const violations = [];
-
-  if (builtInRules.includes('no-confirm-alert') && /\.(ts|tsx|js|jsx)$/.test(file)) {
-    if (new RegExp(`\\b${TOKEN.confirm}\\s*\\(`).test(content)) {
-      violations.push({ file, lens: 'performance', rule: 'no-confirm-alert', message: `Uses ${TOKEN.confirm}() — use an in-app modal` });
-    }
-    if (new RegExp(`\\b${TOKEN.alert}\\s*\\((?!.*eslint)`).test(content)) {
-      violations.push({ file, lens: 'performance', rule: 'no-confirm-alert', message: `Uses ${TOKEN.alert}() — use an in-app notification` });
-    }
-  }
-
-  if (builtInRules.includes('no-transition-all')) {
-    // A standalone class token, so rule IDs such as no-transition-all do not match.
-    if (new RegExp(`(?<![\\w-])${TOKEN.transitionAll}(?![\\w-])`).test(content)) {
-      violations.push({ file, lens: 'performance', rule: 'no-transition-all', message: `Uses ${TOKEN.transitionAll} — name specific properties (e.g., transition-[opacity,transform])` });
-    }
-  }
-
-  if (builtInRules.includes('no-magic-intervals') && /\.(ts|tsx|js|jsx)$/.test(file)) {
-    if (/setInterval\s*\([^,]+,\s*\d+\s*\)/.test(content)) {
-      violations.push({ file, lens: 'performance', rule: 'no-magic-intervals', message: 'Hardcoded setInterval — use a named constant for the interval' });
-    }
-  }
-
-  return violations;
+  return detectPerformance(file, content, builtInRules);
 }
 
 // ── Accessibility Lens ──────────────────────────────────────────────────────

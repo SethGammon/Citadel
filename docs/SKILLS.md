@@ -91,7 +91,7 @@ The five sections below are authoring guidance. `Identity` is optional; perspect
 may be stated in the introduction. `Orientation` or `When to Use` describes scope
 and is recommended, rather than a mandatory literal heading.
 
-Both skill-lint and the quality gate use `core/skills/structure.js` for mandatory
+Skill-lint, the quality gate, and the Codex skill projection validator use `core/skills/structure.js` for mandatory
 checks: frontmatter with a name, a description of at least 10 characters, and an
 explicit `user-invocable` field; an execution protocol; quality gates; and an exit
 protocol. The existing protocol aliases (`Commands`, `Steps`, `How Work`,
@@ -100,6 +100,10 @@ protocol. The existing protocol aliases (`Commands`, `Steps`, `How Work`,
 the linter's existing prefix matching. These checks apply to skill entry points
 (`skills/{name}/SKILL.md`), not companion documents or benchmark scenarios.
 Other lint checks remain advisory (or failures in strict mode).
+
+Skills, the catalog, and agent projections share the flat frontmatter parser in
+`core/utils/frontmatter.js`: quoted strings, booleans, unsigned integers, inline
+and indented lists, and folded descriptions. It is not a general YAML parser.
 
 ## The Five Sections
 

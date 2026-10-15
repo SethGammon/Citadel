@@ -1,5 +1,7 @@
 'use strict';
 
+const { parseFrontmatter } = require('../utils/frontmatter');
+
 // Shared mandatory SKILL.md contract for lint and the Stop quality gate.
 const STRUCTURE_CHECKS = [
   {
@@ -54,51 +56,5 @@ const STRUCTURE_CHECKS = [
   },
 
 ];
-
-function parseFrontmatter(content) {
-  const match = content.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n([\s\S]*)$/);
-  if (!match) return { frontmatter: null, body: content };
-
-  const raw  = match[1];
-  const body = match[2];
-  const fm   = {};
-
-  const lines = raw.split(/\r?\n/);
-  let i = 0;
-  while (i < lines.length) {
-    const line = lines[i];
-
-    // Multiline value (>- or |)
-    const multilineMatch = line.match(/^(\S[\w-]*):\s*[>|]-?\s*$/);
-    if (multilineMatch) {
-      const key = multilineMatch[1];
-      const parts = [];
-      i++;
-      while (i < lines.length && /^\s+/.test(lines[i])) {
-        parts.push(lines[i].trim());
-        i++;
-      }
-      fm[key] = parts.join(' ');
-      continue;
-    }
-
-    // Simple key: value
-    const kvMatch = line.match(/^(\S[\w-]*):\s*(.*)/);
-    if (kvMatch) {
-      const key = kvMatch[1];
-      const val = kvMatch[2].trim();
-      if      (val === 'true')  fm[key] = true;
-      else if (val === 'false') fm[key] = false;
-      else if (val.startsWith('[') && val.endsWith(']')) {
-        fm[key] = val.slice(1, -1).split(',').map(s => s.trim()).filter(Boolean);
-      }
-      else if (val === '')      fm[key] = null;
-      else                      fm[key] = val;
-    }
-    i++;
-  }
-
-  return { frontmatter: fm, body };
-}
 
 module.exports = { STRUCTURE_CHECKS, parseFrontmatter };
