@@ -259,14 +259,35 @@ async function main() {
     throwsCode(() => registerLoop(project, { id: 'test' }), 'LOOP_UNSAFE_PATH');
   });
 
+  if (process.platform === 'win32') {
+    await test('Windows replacement waits for a real reader beyond the former 250ms window', async () => {
+      const project = root();
+      registerLoop(project, { id: 'test' });
+      const owned = child('hold-reader', project, 'test', 700);
+      await owned.ready;
+      owned.start();
+      await waitFor(() => fs.existsSync(path.join(project, 'reader-open')));
+      assert.equal(Number(fs.readFileSync(path.join(project, 'reader-open'), 'utf8')), owned.processChild.pid);
+      const updated = updateLoop(project, 'test', { title: 'after reader' }, { expectedRevision: 1 });
+      assert.equal(updated.revision, 2);
+      assert.equal(updated.title, 'after reader');
+      assert(fs.existsSync(path.join(project, 'reader-releasing')), 'replacement must wait for the real reader');
+      assert.equal((await owned.result).result.closed, true);
+      assert.equal(readLoop(project, 'test').revision, 2);
+      assert.deepEqual(fs.readdirSync(path.dirname(loopPath(project, 'test'))), ['test.json']);
+    });
+  }
+
   await test('failed rename retains old bytes and cleans its own temporary file', () => {
     const project = root();
     registerLoop(project, { id: 'test' });
     const before = bytes(project);
     const original = fs.renameSync;
     fs.renameSync = () => { throw Object.assign(new Error('test sharing violation'), { code: 'EACCES' }); };
+    const started = performance.now();
     try { throwsCode(() => updateLoop(project, 'test', { title: 'not published' }), 'EACCES'); }
     finally { fs.renameSync = original; }
+    assert(performance.now() - started < 10000, 'permanent denial must remain bounded');
     assert.equal(bytes(project), before);
     assert.deepEqual(fs.readdirSync(path.dirname(loopPath(project, 'test'))), ['test.json']);
     assert.equal(updateLoop(project, 'test', { title: 'retry' }).revision, 2);

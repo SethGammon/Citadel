@@ -183,6 +183,17 @@ to retry. Pending receipts remain unknown, and no original action is replayed.
 A child stopped or timed out uses the existing supervisor's cancellation and
 cleanup diagnostics. An expired source cannot acquire a fresh recovery budget.
 
+### Windows state replacement
+
+State publication uses a flushed temporary file and same-directory atomic
+replacement while holding the writer lock. An ordinary open reader can block
+Windows replacement even when writers are serialized. Sharing errors (`EPERM`,
+`EACCES`, `EBUSY`) receive a separate bounded five-second replacement window;
+other errors fail immediately. Persistent denial still fails, preserves the old
+record, and removes only the writer's own temporary file. The destination is
+never deleted to make replacement succeed. This does not guarantee availability
+against indefinitely held handles or durability through host/power failure.
+
 The source CLI and NPM `loops` script support this journey. Project delegates
 require an installed package containing `scripts/loops.js`. The current slim
 release allowlist omits that script, so the slim artifact does not provide this

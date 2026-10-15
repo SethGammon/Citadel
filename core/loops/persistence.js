@@ -8,6 +8,7 @@ const { performance } = require('perf_hooks');
 
 const sleepBuffer = new Int32Array(new SharedArrayBuffer(4));
 const DEFAULT_LOCK_TIMEOUT_MS = 5000;
+const WINDOWS_REPLACE_TIMEOUT_MS = 5000;
 
 function persistenceError(code, message, details = {}) {
   return Object.assign(new Error(message), { code }, details);
@@ -172,10 +173,12 @@ function atomicWriteState(projectRoot, target, value) {
       registryDirectory(projectRoot);
       assertRegularFile(target);
       try { fs.renameSync(temporary, target); break; } catch (error) {
-        // Windows sharing/antivirus contention may be transient. Never unlink
+        // An ordinary Node reader can prevent Windows replacement until its
+        // descriptor closes, even though writers hold the registry lock. Allow
+        // the same bounded contention window as lock acquisition. Never unlink
         // the destination: replacement failure must leave the old record intact.
         if (process.platform !== 'win32' || !['EPERM', 'EACCES', 'EBUSY'].includes(error.code)
-          || performance.now() - started >= 250) throw error;
+          || performance.now() - started >= WINDOWS_REPLACE_TIMEOUT_MS) throw error;
         Atomics.wait(sleepBuffer, 0, 0, 10);
       }
     }

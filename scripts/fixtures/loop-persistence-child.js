@@ -40,6 +40,7 @@ function interruptAt(stage) {
 }
 
 process.once('message', () => {
+  let disconnectOnReturn = true;
   try {
     let result;
     if (mode === 'append') {
@@ -60,6 +61,17 @@ process.once('message', () => {
       result = registry.updateLoop(root, id, { title: String(process.pid) }, { expectedRevision: Number(argument) });
     } else if (mode === 'stop') {
       result = registry.stopLoop(root, id, 'stopped', 'concurrent test stop');
+    } else if (mode === 'hold-reader') {
+      const descriptor = fs.openSync(registry.loopPath(root, id), 'r');
+      fs.writeFileSync(path.join(root, 'reader-open'), String(process.pid));
+      setTimeout(() => {
+        fs.writeFileSync(path.join(root, 'reader-releasing'), String(process.pid));
+        fs.closeSync(descriptor);
+        process.send({ result: { closed: true } });
+        process.disconnect();
+      }, Number(argument));
+      disconnectOnReturn = false;
+      return;
     } else if (mode === 'interrupt') {
       interruptAt(argument);
     } else {
@@ -69,7 +81,7 @@ process.once('message', () => {
   } catch (error) {
     process.send({ error: { code: error.code, message: error.message } });
   } finally {
-    process.disconnect();
+    if (disconnectOnReturn) process.disconnect();
   }
 });
 process.send({ ready: true });
