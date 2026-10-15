@@ -6,6 +6,8 @@ const fs = require('fs');
 const path = require('path');
 const {
   historyRecordFromAttempt,
+  digest,
+  runtimeSettings,
   routeOperation,
   runOperation,
   validateCatalog,
@@ -16,7 +18,7 @@ const {
 
 const USAGE = `Usage:
   citadel operation init --objective TEXT --runtime codex|claude --model MODEL --verifier-executable CMD [--verifier-arg ARG] --out-dir DIR
-  citadel operation catalog --runtime codex|claude --model MODEL [--fallback-model MODEL] [--tools CSV] [--out FILE]
+  citadel operation catalog --runtime codex|claude --model MODEL [--fallback-model MODEL] [--reasoning-effort VALUE] [--service-tier VALUE] [--tools CSV] [--out FILE]
   citadel operation plan --request FILE --catalog FILE [--history FILE] [--json]
   citadel operation explain --request FILE --catalog FILE [--history FILE]
   citadel operation run --request FILE --catalog FILE --workspace DIR [--history FILE] [--out FILE] [--history-out FILE] [--json]
@@ -26,6 +28,9 @@ const USAGE = `Usage:
 Planning is read-only. Run executes declared adapters and the independent
 verifier without a shell. Start ordinary work with /do; use this command only
 when an operation needs explicit quality, privacy, tool, time, or cost bounds.
+Init and catalog accept Codex --reasoning-effort and --service-tier settings.
+Both direct and fallback plans inherit them; runtime support is model-specific.
+Use --service-tier default to request standard speed; served tier may be unknown.
 `;
 
 function has(args, flag) { return args.includes(flag); }
@@ -57,20 +62,43 @@ function slug(input) {
 
 function unknownCost(source) { return { status: 'unknown', amount_usd: null, basis: 'estimate', source }; }
 
+function settingsIdentity(base, settings) {
+  if (!Object.keys(settings).length) return base;
+  return `${base.slice(0, 85)}-settings-${digest({ base, settings }).slice(7, 39)}`;
+}
+
+function requestedSettings(args, runtime) {
+  const settings = {};
+  for (const field of ['reasoning_effort', 'service_tier']) {
+    const flag = `--${field.replaceAll('_', '-')}`;
+    if (!args.some((item) => item === flag || item.startsWith(`${flag}=`))) continue;
+    const raw = value(args, flag);
+    if (raw === null || raw.startsWith('--')) throw Object.assign(new Error(`${flag} requires a value`), { code: 'USAGE' });
+    settings[field] = raw;
+  }
+  runtimeSettings(settings, 'runtime settings');
+  if (runtime !== 'codex' && Object.keys(settings).length) {
+    throw Object.assign(new Error(`${runtime} operation adapter does not support reasoning-effort or service-tier settings`), { code: 'USAGE' });
+  }
+  return settings;
+}
+
 function runtimeCatalog(args) {
   const runtime = required(args, '--runtime');
   if (!['codex', 'claude'].includes(runtime)) throw Object.assign(new Error('--runtime must be codex or claude'), { code: 'USAGE' });
   const model = required(args, '--model');
   const fallbackModel = value(args, '--fallback-model');
+  const settings = requestedSettings(args, runtime);
   const tools = csv(value(args, '--tools', 'filesystem,shell'));
   const adapterId = `${runtime}-cli`;
   const models = fallbackModel ? [model, fallbackModel] : [model];
   const plans = models.map((modelId, index) => ({
-    plan_id: `${runtime}-${index === 0 ? 'direct' : 'fallback'}-${slug(modelId)}`,
+    plan_id: settingsIdentity(`${runtime}-${index === 0 ? 'direct' : 'fallback'}-${slug(modelId)}`, settings),
     label: `${runtime} ${modelId}${index === 0 ? ' direct attempt' : ' fallback'}`,
     adapter_id: adapterId,
     topology: 'direct',
     model: modelId,
+    ...settings,
     tools,
     privacy: 'allow-remote',
     feature_keys: [],
@@ -83,11 +111,11 @@ function runtimeCatalog(args) {
     },
     retry_on: ['MALFORMED_OUTPUT', 'OUTPUT_TRUNCATED'],
     max_retries: 1,
-    fallback_plan_ids: index === 0 && fallbackModel ? [`${runtime}-fallback-${slug(fallbackModel)}`] : [],
+    fallback_plan_ids: index === 0 && fallbackModel ? [settingsIdentity(`${runtime}-fallback-${slug(fallbackModel)}`, settings)] : [],
   }));
   return {
     schema: 1,
-    catalog_id: `${runtime}-${slug(model)}-runtime-catalog`,
+    catalog_id: settingsIdentity(`${runtime}-${slug(model)}-runtime-catalog`, settings),
     adapters: {
       [adapterId]: {
         protocol: 'citadel-operation-adapter-v1',

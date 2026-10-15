@@ -2,14 +2,10 @@
 
 'use strict';
 
-const { spawnSync } = require('child_process');
 const path = require('path');
-const {
-  appendLoopRun,
-  registerLoop,
-  stopLoop,
-} = require('../core/loops/registry');
-const { createLoopContract } = require('../core/loops/contract');
+const { registerLoop } = require('../core/loops/registry');
+const { createLoopContract, validateLoopContract } = require('../core/loops/contract');
+const { superviseLoop } = require('../core/loops/supervisor');
 
 function arg(name, fallback = null) {
   const prefix = `${name}=`;
@@ -27,30 +23,15 @@ function usage() {
   return [
     'Usage:',
     '  node scripts/loop-runner.js --action "<shell command>" --verify "<shell command>" [--max-attempts 3] [--write]',
+    '    [--max-duration-ms <positive integer>] [--command-timeout-ms <positive integer>]',
     '',
     'Runs an explicit bounded foreground loop. The verifier controls success.',
+    'Commands must remain in the foreground. Command timeout defaults to 300000 ms.',
+    'Without --write or --run, only a plan is printed; no commands or state writes occur.',
   ].join('\n');
 }
 
-function runShell(command, cwd) {
-  const startedAt = new Date().toISOString();
-  const result = spawnSync(command, {
-    cwd,
-    shell: true,
-    encoding: 'utf8',
-    stdio: ['ignore', 'pipe', 'pipe'],
-  });
-  return {
-    command,
-    exitCode: result.status === null ? 1 : result.status,
-    stdout: String(result.stdout || '').slice(-4000),
-    stderr: String(result.stderr || '').slice(-4000),
-    startedAt,
-    completedAt: new Date().toISOString(),
-  };
-}
-
-function main() {
+async function main() {
   if (hasFlag('--help') || hasFlag('-h')) {
     process.stdout.write(`${usage()}\n`);
     return;
@@ -62,14 +43,7 @@ function main() {
   const maxAttempts = Number(arg('--max-attempts', 3));
   const write = hasFlag('--write') || hasFlag('--run');
 
-  if (!verify) {
-    process.stderr.write('Missing --verify. A bounded loop needs a verifier.\n');
-    process.exit(1);
-  }
-  if (!Number.isFinite(maxAttempts) || maxAttempts < 1) {
-    process.stderr.write('--max-attempts must be >= 1.\n');
-    process.exit(1);
-  }
+  if (!verify?.trim()) throw new Error('Missing --verify. A bounded loop needs a verifier.');
 
   const contractPlan = createLoopContract({
     type: 'foreground-loop',
@@ -78,9 +52,13 @@ function main() {
     command: action || null,
     verifierCommand: verify,
     maxAttempts,
+    maxDurationMs: arg('--max-duration-ms') === null ? null : Number(arg('--max-duration-ms')),
+    commandTimeoutMs: arg('--command-timeout-ms') === null ? undefined : Number(arg('--command-timeout-ms')),
     triggerKind: 'manual',
     status: write ? 'running' : 'planned',
   });
+  const validation = validateLoopContract(contractPlan);
+  if (!validation.pass) throw new Error(validation.errors.join('; '));
 
   if (!write) {
     process.stdout.write(`Loop planned: ${contractPlan.id}\n`);
@@ -90,50 +68,28 @@ function main() {
   }
 
   const contract = registerLoop(projectRoot, contractPlan);
-
-  let finalStatus = 'attempt-limit';
-  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-    if (action) {
-      const actionResult = runShell(action, projectRoot);
-      appendLoopRun(projectRoot, contract.id, {
-        attempt,
-        status: actionResult.exitCode === 0 ? 'running' : 'blocked',
-        summary: actionResult.exitCode === 0 ? 'action completed' : 'action failed',
-        command: action,
-        exitCode: actionResult.exitCode,
-        startedAt: actionResult.startedAt,
-        completedAt: actionResult.completedAt,
-      });
-      if (actionResult.exitCode !== 0) {
-        finalStatus = 'blocked';
-        break;
-      }
-    }
-
-    const verifierResult = runShell(verify, projectRoot);
-    const passed = verifierResult.exitCode === 0;
-    appendLoopRun(projectRoot, contract.id, {
-      attempt,
-      status: passed ? 'verifier-passed' : (attempt >= maxAttempts ? 'attempt-limit' : 'running'),
-      summary: passed ? 'verifier passed' : 'verifier failed',
-      command: action || null,
-      verifier: verify,
-      exitCode: verifierResult.exitCode,
-      startedAt: verifierResult.startedAt,
-      completedAt: verifierResult.completedAt,
-    });
-
-    if (passed) {
-      finalStatus = 'verifier-passed';
-      break;
-    }
+  process.stdout.write(`Loop started: ${contract.id}\n`);
+  const controller = new AbortController();
+  const interrupt = () => controller.abort();
+  process.on('SIGINT', interrupt);
+  process.on('SIGTERM', interrupt);
+  let stopped;
+  try {
+    stopped = await superviseLoop(projectRoot, contract.id, { signal: controller.signal });
+  } finally {
+    process.removeListener('SIGINT', interrupt);
+    process.removeListener('SIGTERM', interrupt);
   }
-
-  const stopped = stopLoop(projectRoot, contract.id, finalStatus, finalStatus);
   process.stdout.write(`Loop stopped: ${stopped.id}\n`);
   process.stdout.write(`Status: ${stopped.status}\n`);
   process.stdout.write(`State: ${stopped.statePath}\n`);
-  process.exit(finalStatus === 'verifier-passed' ? 0 : 1);
+  const run = stopped.runs?.at(-1);
+  const cleanupError = stopped.cleanupError || run?.verifierResult?.cleanupError || run?.actionResult?.cleanupError;
+  if (cleanupError) process.stderr.write(`Command cleanup failed: ${cleanupError}\n`);
+  process.exitCode = stopped.verified ? 0 : 1;
 }
 
-if (require.main === module) main();
+if (require.main === module) main().catch((error) => {
+  process.stderr.write(`${error.message}\n`);
+  process.exitCode = 1;
+});

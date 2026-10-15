@@ -3,6 +3,7 @@
 const {
   COST_LENSES,
   digest,
+  runtimeSettings,
   validateCatalog,
   validateHistory,
   validateRequest,
@@ -15,12 +16,16 @@ function median(values) {
   return sorted.length % 2 ? sorted[middle] : (sorted[middle - 1] + sorted[middle]) / 2;
 }
 
-function historyKey(planId, featureKey) { return `${planId}\u0000${featureKey}`; }
+function historyKey(planId, featureKey, value) {
+  const settings = runtimeSettings(value);
+  const suffix = Object.keys(settings).length ? `\u0000${digest(settings)}` : '';
+  return `${planId}\u0000${featureKey}${suffix}`;
+}
 
 function indexHistory(history) {
   const index = new Map();
   for (const record of history) {
-    const key = historyKey(record.plan_id, record.feature_key);
+    const key = historyKey(record.plan_id, record.feature_key, record);
     if (!index.has(key)) index.set(key, []);
     index.get(key).push(record);
   }
@@ -28,12 +33,14 @@ function indexHistory(history) {
 }
 
 function recordsFor(plan, request, history, indexed = null) {
+  const exactKey = historyKey(plan.plan_id, request.feature_key, plan);
+  const allKey = historyKey(plan.plan_id, 'all', plan);
   if (indexed) {
-    const exact = indexed.get(historyKey(plan.plan_id, request.feature_key)) || [];
-    return exact.length ? exact : indexed.get(historyKey(plan.plan_id, 'all')) || [];
+    const exact = indexed.get(exactKey) || [];
+    return exact.length ? exact : indexed.get(allKey) || [];
   }
-  const exact = history.filter((record) => record.plan_id === plan.plan_id && record.feature_key === request.feature_key);
-  return exact.length ? exact : history.filter((record) => record.plan_id === plan.plan_id && record.feature_key === 'all');
+  const exact = history.filter((record) => historyKey(record.plan_id, record.feature_key, record) === exactKey);
+  return exact.length ? exact : history.filter((record) => historyKey(record.plan_id, record.feature_key, record) === allKey);
 }
 
 function wilsonLowerBound(probability, sampleSize, z = 1.281552) {
@@ -259,7 +266,9 @@ function nextAction({ decision, attempt, catalog }) {
   const fallback = path[index + 1] || null;
   if (fallback) return Object.freeze({ action: 'escalate', reason_code: attempt.failure_code || 'VERIFICATION_NOT_PASSED', target_plan_id: fallback });
   return Object.freeze({
-    action: attempt.completion_status === 'unknown' ? 'stop-unknown' : 'stop-failed',
+    action: attempt.completion_status === 'unknown'
+      || (attempt.completion_status === 'passed' && attempt.control_status === 'unknown'
+        && Object.keys(runtimeSettings(plan)).length) ? 'stop-unknown' : 'stop-failed',
     reason_code: attempt.failure_code || 'PATH_EXHAUSTED',
     target_plan_id: null,
   });

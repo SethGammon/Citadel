@@ -1,64 +1,16 @@
 'use strict';
 
+const { parseFrontmatter: parseSharedFrontmatter } = require('../utils/frontmatter');
+const parseFrontmatter = content => {
+  const parsed = parseSharedFrontmatter(content);
+  return { ...parsed, frontmatter: parsed.frontmatter || {} };
+};
 const fs = require('fs');
 const path = require('path');
 const { bundleForSkill } = require('../config');
 
 const TASK_CLASSES = ['orchestration', 'quality', 'knowledge', 'research', 'creation', 'operations', 'integration', 'utility'];
 const RISK_LEVELS = ['low', 'medium', 'high'];
-
-function parseFrontmatter(content) {
-  const match = String(content || '').match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n([\s\S]*)$/);
-  if (!match) return { frontmatter: {}, body: content || '' };
-  const raw = match[1];
-  const body = match[2];
-  const fm = {};
-  const lines = raw.split(/\r?\n/);
-  let index = 0;
-  while (index < lines.length) {
-    const line = lines[index];
-    const multiline = line.match(/^(\S[\w-]*):\s*[>|]-?\s*$/);
-    if (multiline) {
-      const key = multiline[1];
-      const parts = [];
-      index++;
-      while (index < lines.length && /^\s+/.test(lines[index])) {
-        parts.push(lines[index].trim());
-        index++;
-      }
-      fm[key] = parts.join(' ');
-      continue;
-    }
-    const kv = line.match(/^(\S[\w-]*):\s*(.*)$/);
-    if (kv) {
-      const key = kv[1];
-      const value = kv[2].trim();
-      if (value === 'true') fm[key] = true;
-      else if (value === 'false') fm[key] = false;
-      else if (value.startsWith('[') && value.endsWith(']')) {
-        fm[key] = value.slice(1, -1).split(',').map((item) => item.trim()).filter(Boolean);
-      } else if (value) fm[key] = value;
-      else {
-        const items = [];
-        let next = index + 1;
-        while (next < lines.length) {
-          const item = lines[next].match(/^\s+-\s+(.*)$/);
-          if (!item) break;
-          items.push(item[1].trim().replace(/^(['"])(.*)\1$/, '$2'));
-          next++;
-        }
-        if (items.length > 0) {
-          fm[key] = items;
-          index = next;
-          continue;
-        }
-        fm[key] = null;
-      }
-    }
-    index++;
-  }
-  return { frontmatter: fm, body };
-}
 
 function skillDirs(skillsDir) {
   if (!fs.existsSync(skillsDir)) return [];

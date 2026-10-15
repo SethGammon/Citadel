@@ -20,6 +20,9 @@ const TERMINAL_STATUSES = Object.freeze([
   'verifier-failed',
   'no-active-work',
   'stopped',
+  'interrupted',
+  'action-failed',
+  'timeout',
 ]);
 
 const LOOP_STATUSES = Object.freeze([
@@ -50,6 +53,9 @@ function stopSummary(status) {
     'verifier-failed': 'The loop stopped because the verifier failed.',
     'no-active-work': 'The loop stopped because no active work remained.',
     stopped: 'The loop was stopped explicitly.',
+    interrupted: 'The loop was interrupted before verification completed.',
+    'action-failed': 'The loop stopped because its action failed.',
+    timeout: 'The loop reached its command or elapsed-time limit.',
   };
   return summaries[normalized] || 'The loop status is active or unknown.';
 }
