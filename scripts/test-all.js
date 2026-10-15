@@ -115,6 +115,7 @@ const PRODUCT_PROOF_REPORT_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-produc
 const UNLOCK_TESTS = Object.freeze([
   ['Bounded loop supervision', 'test-loop-supervisor.js'],
   ['Atomic loop persistence', 'test-loop-persistence.js'],
+  ['Conservative loop recovery', 'test-loop-recovery.js'],
   ['Fleet integration admission', 'test-fleet-integration-queue.js'],
   ['Benchmark execution honesty', 'test-skill-bench-execution.js'],
   ['Timeout wrapper safety', 'test-run-with-timeout.js'],
