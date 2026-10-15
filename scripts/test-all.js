@@ -113,6 +113,10 @@ const SARIF_COORDINATES_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-sarif-coo
 const ECOSYSTEM_COMPAT_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-ecosystem-compat.js');
 const PRODUCT_PROOF_REPORT_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-product-proof-report.js');
 const UNLOCK_TESTS = Object.freeze([
+  ['Bounded loop supervision', 'test-loop-supervisor.js'],
+  ['Atomic loop persistence', 'test-loop-persistence.js'],
+  ['Fleet integration admission', 'test-fleet-integration-queue.js'],
+  ['Benchmark execution honesty', 'test-skill-bench-execution.js'],
   ['Timeout wrapper safety', 'test-run-with-timeout.js'],
   ['Codex consumer package closure', 'test-codex-package-closure.js'],
   ['Agent model projections', 'test-agent-projections.js'],
