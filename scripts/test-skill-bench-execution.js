@@ -238,6 +238,18 @@ try {
     const result = spawnSync(process.execPath, ['-e', code], { encoding: 'utf8', timeout: 5000, windowsHide: true });
     assert.equal(result.status, 0, result.stderr);
   });
+  test('fatal IPC and cleanup uncertainty cannot be overwritten by earlier success', () => {
+    const { finalizeResult } = require('./skill-bench-native');
+    const clean = { closed: true, forced: false, exit: { code: 0, signal: null } };
+    assert(finalizeResult({ passed: true }, clean, null).passed);
+    for (const earlier of [{ passed: true, preflightOnly: true }, { passed: true, scenario: 'case' }]) {
+      const result = finalizeResult(earlier, clean, new Error('fatal IPC during drain'));
+      assert.equal(result.passed, false); assert.match(result.error, /fatal IPC during drain/);
+      assert(!finalizeResult(earlier, { ...clean, forced: true }, null).passed);
+      assert(!finalizeResult(earlier, { ...clean, closed: false }, null).passed);
+      assert(!finalizeResult(earlier, { ...clean, exit: { code: 1 } }, null).passed);
+    }
+  });
   process.stdout.write(`${passed} skill benchmark execution tests passed.\n`);
   process.exitCode = 0;
 } catch (error) {

@@ -110,6 +110,12 @@ async function boundedShutdown(child, exited, graceMs = 5000, killMs = 1000) {
   return { closed: exit !== null, forced, exit };
 }
 
+function finalizeResult(result, shutdown, error) {
+  return { ...result, shutdown,
+    passed: result.passed === true && shutdown.closed === true && !shutdown.forced && shutdown.exit?.code === 0 && !error,
+    ...(error ? { error: error.message || String(error) } : {}) };
+}
+
 async function execute({ project, binary, output, scenarioName, checkOnly = false }) {
   const manifest = validateFixture(project);
   fs.mkdirSync(output, { recursive: false }); // never overwrite a prior attempt
@@ -133,16 +139,18 @@ async function execute({ project, binary, output, scenarioName, checkOnly = fals
   const append = (name, value) => fs.appendFileSync(path.join(output, name), JSON.stringify(value) + '\n');
   const exited = new Promise(resolve => child.once('close', (code, signal) => resolve({ code, signal })));
   function abort(error) {
-    if (!finished) sessionError ||= error;
+    sessionError ||= error;
     for (const waiter of pending.values()) waiter.reject(error);
     pending.clear();
     if (!finished) rejectSession?.(error);
   }
   function send(message) {
+    if (sessionError || finished) throw sessionError || new Error('Native session is closing');
     append('requests.jsonl', message);
     child.stdin.write(JSON.stringify(message) + '\n', error => { if (error) abort(error); });
   }
   function request(method, params) {
+    if (sessionError || finished) return Promise.reject(sessionError || new Error('Native session is closing'));
     const id = ++sequence;
     return new Promise((resolve, reject) => { pending.set(id, { resolve, reject }); send({ id, method, params }); });
   }
@@ -151,7 +159,7 @@ async function execute({ project, binary, output, scenarioName, checkOnly = fals
     child.once('error', abort);
     child.stdin.on('error', abort);
     child.once('close', () => {
-      abort(new Error('Native server exited before completion'));
+      if (!finished) abort(new Error('Native server exited before completion'));
     });
     child.stderr.on('data', value => fs.appendFileSync(path.join(output, 'stderr.log'), value));
     child.stdout.on('data', value => {
@@ -219,8 +227,7 @@ async function execute({ project, binary, output, scenarioName, checkOnly = fals
   } catch (error) { result = { passed: false, error: error.message, threadId, turnId }; }
   finally {
     finished = true; clearTimeout(timeout);
-    result.shutdown = await boundedShutdown(child, exited);
-    if (!result.shutdown.closed || result.shutdown.forced || result.shutdown.exit?.code !== 0) result.passed = false;
+    result = finalizeResult(result, await boundedShutdown(child, exited), sessionError);
     put(path.join(output, 'result.json'), result);
   }
   return result;
@@ -235,5 +242,5 @@ async function main() {
     scenarioName: value('--scenario'), checkOnly: args.includes('--preflight') });
   console.log(JSON.stringify(result, null, 2)); process.exitCode = result.passed ? 0 : 1;
 }
-module.exports = { verifyHooks, verifyTurn, boundedShutdown, samePath };
+module.exports = { verifyHooks, verifyTurn, boundedShutdown, finalizeResult, samePath };
 if (require.main === module) main().catch(error => { console.error(error.stack); process.exitCode = 1; });
