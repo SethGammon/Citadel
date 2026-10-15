@@ -33,6 +33,8 @@ const fs = require('fs');
 const path = require('path');
 const { execFileSync } = require('child_process');
 const health = require('./harness-health-util');
+const { detectPerformance } = require('../core/verification/performance');
+const { STRUCTURE_CHECKS, parseFrontmatter } = require('../core/skills/structure');
 
 const CITADEL_UI = process.env.CITADEL_UI === 'true';
 
@@ -305,9 +307,6 @@ function runColdLens(lens, file, content, config, builtInRules) {
 // Rule tokens are assembled at runtime so this file's own patterns and
 // messages never match the rules it enforces when the gate scans itself.
 const TOKEN = Object.freeze({
-  confirm: ['con', 'firm'].join(''),
-  alert: ['al', 'ert'].join(''),
-  transitionAll: ['transition', 'all'].join('-'),
   setInnerHtml: ['dangerously', 'Set', 'InnerHTML'].join(''),
   documentWrite: ['document', 'write'].join('.'),
 });
@@ -315,31 +314,7 @@ const TOKEN = Object.freeze({
 // ── Performance Lens ────────────────────────────────────────────────────────
 
 function lensPerformance(file, content, builtInRules) {
-  const violations = [];
-
-  if (builtInRules.includes('no-confirm-alert') && /\.(ts|tsx|js|jsx)$/.test(file)) {
-    if (new RegExp(`\\b${TOKEN.confirm}\\s*\\(`).test(content)) {
-      violations.push({ file, lens: 'performance', rule: 'no-confirm-alert', message: `Uses ${TOKEN.confirm}() — use an in-app modal` });
-    }
-    if (new RegExp(`\\b${TOKEN.alert}\\s*\\((?!.*eslint)`).test(content)) {
-      violations.push({ file, lens: 'performance', rule: 'no-confirm-alert', message: `Uses ${TOKEN.alert}() — use an in-app notification` });
-    }
-  }
-
-  if (builtInRules.includes('no-transition-all')) {
-    // A standalone class token, so rule IDs such as no-transition-all do not match.
-    if (new RegExp(`(?<![\\w-])${TOKEN.transitionAll}(?![\\w-])`).test(content)) {
-      violations.push({ file, lens: 'performance', rule: 'no-transition-all', message: `Uses ${TOKEN.transitionAll} — name specific properties (e.g., transition-[opacity,transform])` });
-    }
-  }
-
-  if (builtInRules.includes('no-magic-intervals') && /\.(ts|tsx|js|jsx)$/.test(file)) {
-    if (/setInterval\s*\([^,]+,\s*\d+\s*\)/.test(content)) {
-      violations.push({ file, lens: 'performance', rule: 'no-magic-intervals', message: 'Hardcoded setInterval — use a named constant for the interval' });
-    }
-  }
-
-  return violations;
+  return detectPerformance(file, content, builtInRules);
 }
 
 // ── Accessibility Lens ──────────────────────────────────────────────────────
@@ -458,46 +433,18 @@ function lensAdversarial(file, content) {
 // ── Contractual Lens ────────────────────────────────────────────────────────
 
 function lensContractual(file, content) {
-  // Only check skill files
-  if (!/^skills\/.*\.md$/.test(file)) return [];
+  // Companion docs and benchmark scenarios are not skill entry points.
+  if (!/^skills\/[^/]+\/SKILL\.md$/.test(file)) return [];
 
+  const { frontmatter, body } = parseFrontmatter(content);
   const violations = [];
-
-  // Check for required frontmatter fields
-  const frontmatterMatch = content.match(/^---\n([\s\S]*?)\n---/);
-  if (!frontmatterMatch) {
-    violations.push({
-      file,
-      lens: 'contractual',
-      message: 'Skill file missing frontmatter block (---)',
-    });
-    return violations;
-  }
-
-  const fm = frontmatterMatch[1];
-  const requiredFields = ['name', 'description'];
-  for (const field of requiredFields) {
-    if (!new RegExp(`^${field}:`, 'm').test(fm)) {
-      violations.push({
-        file,
-        lens: 'contractual',
-        message: `Skill file missing required frontmatter field: ${field}`,
-      });
+  for (const check of STRUCTURE_CHECKS) {
+    if (check.check(frontmatter, body) !== true) {
+      violations.push({ file, lens: 'contractual', message: `Skill file: ${check.description}` });
     }
+    // Avoid cascading metadata findings when the whole block is absent.
+    if (check.id === 'frontmatter-present' && frontmatter === null) break;
   }
-
-  // Check for required sections
-  const requiredSections = ['## Protocol', '## Identity'];
-  for (const section of requiredSections) {
-    if (!content.includes(section)) {
-      violations.push({
-        file,
-        lens: 'contractual',
-        message: `Skill file missing required section: ${section}`,
-      });
-    }
-  }
-
   return violations;
 }
 
@@ -680,4 +627,5 @@ module.exports = {
   selectColdPathLenses,
   lensCrossReference,
   lensPerformance,
+  lensContractual,
 };

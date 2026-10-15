@@ -133,38 +133,8 @@ function readJSON(filePath) {
   }
 }
 
-function parseFrontmatter(content) {
-  // Normalize line endings to \n for consistent parsing
-  const normalized = content.replace(/\r\n/g, '\n');
-  const match = normalized.match(/^---\n([\s\S]*?)\n---/);
-  if (!match) return {};
-  const fm = {};
-  for (const line of match[1].split('\n')) {
-    // Skip YAML list items (lines starting with -)
-    if (line.trim().startsWith('-')) continue;
-    const colonIdx = line.indexOf(':');
-    if (colonIdx === -1) continue;
-    const key = line.slice(0, colonIdx).trim();
-    // Skip indented keys (nested YAML)
-    if (line.match(/^\s+\w/)) continue;
-    let val = line.slice(colonIdx + 1).trim();
-    // Strip YAML quotes
-    if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) {
-      val = val.slice(1, -1);
-    }
-    // Handle multiline description (>-)
-    if (val === '>-' || val === '>') {
-      continue;
-    }
-    if (key && val) fm[key] = val;
-  }
-  // Handle multiline description by regex
-  const descMatch = normalized.match(/description:\s*>-?\n([\s\S]*?)(?=\n[a-zA-Z][\w-]*:|\n---)/);
-  if (descMatch) {
-    fm.description = descMatch[1].replace(/\n\s*/g, ' ').trim();
-  }
-  return fm;
-}
+const { parseFrontmatter: parseSharedFrontmatter } = require('../core/utils/frontmatter');
+const parseFrontmatter = content => parseSharedFrontmatter(content).frontmatter || {};
 
 // ---- 1. Generate .codex/config.toml -----------------------------------------
 
