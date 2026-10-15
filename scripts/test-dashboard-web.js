@@ -20,6 +20,7 @@ const { sha256Digest } = require('../core/operations');
 const operations = require('../core/operations');
 const forks = require('../core/forks');
 const config = require('../core/config');
+const { createLoopContract } = require('../core/loops/contract');
 
 const FULL_RUNTIME = Object.freeze({
   id: 'dashboard-test-runtime',
@@ -264,13 +265,13 @@ async function main() {
   // 2. Healthy project: a loop needing review, a handoff, daemon state.
   const healthyRoot = makeFixture('healthy');
   try {
-    write(healthyRoot, '.planning/loops/nightly-deps.json', JSON.stringify({
+    write(healthyRoot, '.planning/loops/nightly-deps.json', JSON.stringify(createLoopContract({
       id: 'nightly-deps',
       type: 'dependency-refresh',
       status: 'needs-human-review',
-      budget: { total: 5, spent: 3 },
-      verifier: 'npm test',
-    }));
+      maxAttempts: 5,
+      verify: 'npm test',
+    })));
     write(healthyRoot, '.planning/handoffs/2026-06-12-auth.md', '# Handoff\n');
     write(healthyRoot, '.planning/daemon.json', JSON.stringify({ running: false }));
     write(healthyRoot, '.planning/fleet/session-live.md', 'status: active\ncurrent_wave: 2\nagents_total: 3\n');
@@ -313,7 +314,7 @@ async function main() {
     cleanup(healthyRoot);
   }
 
-  // 3. Corrupted state: malformed JSON must render as absence, not a crash.
+  // 3. Corrupted state must be explicitly unreadable, never a healthy zero.
   const corruptRoot = makeFixture('corrupt');
   try {
     write(corruptRoot, '.planning/loops/broken.json', '{not json');
@@ -340,6 +341,21 @@ async function main() {
     check('corrupted loop count is unknown', views.overview.active.loops === null);
   } finally {
     cleanup(corruptRoot);
+  }
+
+  const invalidLoopRoot = makeFixture('invalid-loop-contract');
+  try {
+    const validLoop = createLoopContract({ id: 'valid-sibling', command: 'echo check', verify: 'echo pass' });
+    write(invalidLoopRoot, '.planning/loops/valid-sibling.json', JSON.stringify(validLoop));
+    // JSON parsing alone succeeds, but this is not a valid registry record.
+    write(invalidLoopRoot, '.planning/loops/invalid-sibling.json', JSON.stringify({ id: 'invalid-sibling' }));
+    const views = deriveViews(createDataSource(invalidLoopRoot).get());
+    check('invalid loop contract makes source unreadable', views.loops.state.status === 'unreadable');
+    check('invalid loop contract does not claim zero active loops', views.overview.active.loops === null);
+    check('invalid loop contract exposes a source failure', views.overview.needs_you.some((item) => item.kind === 'source'));
+    check('invalid loop contract retains diagnostic detail', views.loops.state.detail.includes('Loop registry could not be read'));
+  } finally {
+    cleanup(invalidLoopRoot);
   }
 
   // 4. HTTP round-trip on an ephemeral port.

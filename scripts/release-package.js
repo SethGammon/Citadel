@@ -807,15 +807,6 @@ const RELEASE_INSTRUCTION_RULES = new Map([
       preserves: [/overnight/, /continuous/, /Needs You \/ Resume/, /unattended/],
     },
   ]],
-  ['skills/experiment/SKILL.md', [
-    {
-      id: 'preserve-manual-review-trust-gate',
-      whenOmitted: ['improve'],
-      from: '- Familiar (5+ sessions): iterates and commits autonomously; novices should use /improve with manual review between steps.',
-      to: '- Familiar (5+ sessions): iterates and commits autonomously; novices must stop for manual review between every step and must not run unattended iterations.',
-      preserves: [/Familiar \(5\+ sessions\)/, /iterates and commits autonomously/, /novices.*manual review/i],
-    },
-  ]],
   ['skills/houseclean/SKILL.md', [
     {
       id: 'preserve-monthly-check-guidance',

@@ -730,8 +730,10 @@ function syncProjectScripts() {
   );
 
   let synced = 0;
-  for (const file of fs.readdirSync(sourceDir)) {
-    if (!file.endsWith('.js') && !file.endsWith('.cjs')) continue;
+  // Match SessionStart's runtime surface. Projecting every maintainer/test
+  // script makes cold startup inspect hundreds of unnecessary wrappers.
+  for (const file of require('../hooks_src/delegate-scripts.json')) {
+    if (!fs.existsSync(path.join(sourceDir, file))) continue;
     writeFile(path.join(PROJECT_ROOT, '.citadel', 'scripts', file), generateDelegate(file));
     synced++;
   }
