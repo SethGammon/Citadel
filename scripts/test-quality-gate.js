@@ -39,6 +39,7 @@ const {
   selectColdPathLenses,
   lensCrossReference,
   lensPerformance,
+  lensContractual,
 } = require(path.join(__dirname, '..', 'hooks_src', 'quality-gate.js'));
 
 // The all-property transition rule matches class tokens, not rule IDs.
@@ -50,6 +51,57 @@ const {
   assert(flagged(`<div className="hover:${token}">`));
   assert(!flagged(`builtIn: ['no-${token}']`));
   assert(!flagged(`const name = '${token}-fast';`));
+}
+
+// Regression: the gate and lint enforce the same mandatory skill contract.
+{
+  const { STRUCTURE_CHECKS, parseFrontmatter } = require('../core/skills/structure');
+  const root = path.join(__dirname, '..');
+  const file = 'skills/example/SKILL.md';
+  const fixture = (protocol = '## Protocol') => [
+    '---', 'name: example', 'description: A substantive test skill description.',
+    'user-invocable: true', '---', '## Orientation', 'Use when testing.',
+    protocol, 'Execute the task.', '## Quality Gates', 'Verify output.',
+    '## Exit Protocol', 'Return evidence.',
+  ].join('\n');
+  const mandatoryFailures = content => {
+    const { frontmatter, body } = parseFrontmatter(content);
+    return STRUCTURE_CHECKS.filter(check => check.check(frontmatter, body) !== true);
+  };
+  for (const name of fs.readdirSync(path.join(root, 'skills'))) {
+    const skillPath = `skills/${name}/SKILL.md`;
+    if (!fs.existsSync(path.join(root, skillPath))) continue;
+    const content = fs.readFileSync(path.join(root, skillPath), 'utf8');
+    assert.equal(mandatoryFailures(content).length, 0, `${name}: lint contract`);
+    assert.deepEqual(lensContractual(skillPath, content), [], `${name}: gate contract`);
+  }
+  for (const heading of ['Protocol', 'Commands', 'Steps', 'How Work', 'How You Work',
+    'How to Use', 'Execution Protocol']) {
+    assert.deepEqual(lensContractual(file, fixture(`## ${heading}`)), [], heading);
+  }
+  for (const heading of ['Step 1', 'Tier 2', 'Phase 3']) {
+    assert.deepEqual(lensContractual(file, fixture(`### ${heading}`)), [], heading);
+  }
+  for (const heading of ['## Orientation', '## Identity', '## When to Use', '']) {
+    assert.deepEqual(lensContractual(file, fixture().replace('## Orientation', heading)), []);
+  }
+  assert.deepEqual(lensContractual(file, fixture().replace(/\n/g, '\r\n')), []);
+  for (const fragment of ['name: example', 'description: A substantive test skill description.',
+    'user-invocable: true', '## Protocol', '## Quality Gates', '## Exit Protocol']) {
+    const content = fixture().replace(fragment, '');
+    assert(mandatoryFailures(content).length > 0, fragment);
+    assert(lensContractual(file, content).length > 0, fragment);
+  }
+  for (const content of [fixture().replace('## Protocol', 'Inline ## Protocol mention'),
+    fixture().replace('description: A substantive test skill description.', 'description: short'),
+    '## Protocol\n## Quality Gates\n## Exit Protocol']) {
+    assert(mandatoryFailures(content).length > 0);
+    assert(lensContractual(file, content).length > 0);
+  }
+  for (const companion of ['skills/example/README.md', 'skills/example/__benchmarks__/basic.md', 'docs/SKILLS.md']) {
+    assert.deepEqual(lensContractual(companion, 'No skill frontmatter'), []);
+  }
+  console.log('  PASS  shared skill contract: full corpus, aliases and invalid structures');
 }
 
 let failures = 0;

@@ -33,6 +33,7 @@ const fs = require('fs');
 const path = require('path');
 const { execFileSync } = require('child_process');
 const health = require('./harness-health-util');
+const { STRUCTURE_CHECKS, parseFrontmatter } = require('../core/skills/structure');
 
 const CITADEL_UI = process.env.CITADEL_UI === 'true';
 
@@ -458,46 +459,18 @@ function lensAdversarial(file, content) {
 // ── Contractual Lens ────────────────────────────────────────────────────────
 
 function lensContractual(file, content) {
-  // Only check skill files
-  if (!/^skills\/.*\.md$/.test(file)) return [];
+  // Companion docs and benchmark scenarios are not skill entry points.
+  if (!/^skills\/[^/]+\/SKILL\.md$/.test(file)) return [];
 
+  const { frontmatter, body } = parseFrontmatter(content);
   const violations = [];
-
-  // Check for required frontmatter fields
-  const frontmatterMatch = content.match(/^---\n([\s\S]*?)\n---/);
-  if (!frontmatterMatch) {
-    violations.push({
-      file,
-      lens: 'contractual',
-      message: 'Skill file missing frontmatter block (---)',
-    });
-    return violations;
-  }
-
-  const fm = frontmatterMatch[1];
-  const requiredFields = ['name', 'description'];
-  for (const field of requiredFields) {
-    if (!new RegExp(`^${field}:`, 'm').test(fm)) {
-      violations.push({
-        file,
-        lens: 'contractual',
-        message: `Skill file missing required frontmatter field: ${field}`,
-      });
+  for (const check of STRUCTURE_CHECKS) {
+    if (check.check(frontmatter, body) !== true) {
+      violations.push({ file, lens: 'contractual', message: `Skill file: ${check.description}` });
     }
+    // Avoid cascading metadata findings when the whole block is absent.
+    if (check.id === 'frontmatter-present' && frontmatter === null) break;
   }
-
-  // Check for required sections
-  const requiredSections = ['## Protocol', '## Identity'];
-  for (const section of requiredSections) {
-    if (!content.includes(section)) {
-      violations.push({
-        file,
-        lens: 'contractual',
-        message: `Skill file missing required section: ${section}`,
-      });
-    }
-  }
-
   return violations;
 }
 
@@ -680,4 +653,5 @@ module.exports = {
   selectColdPathLenses,
   lensCrossReference,
   lensPerformance,
+  lensContractual,
 };

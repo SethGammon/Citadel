@@ -85,6 +85,22 @@ What does the skill output when it's finished?
 | `auto-trigger` | no | `true` if the skill should auto-activate on certain inputs |
 | `last-updated` | no | Date for tracking freshness |
 
+## Structure contract
+
+The five sections below are authoring guidance. `Identity` is optional; perspective
+may be stated in the introduction. `Orientation` or `When to Use` describes scope
+and is recommended, rather than a mandatory literal heading.
+
+Both skill-lint and the quality gate use `core/skills/structure.js` for mandatory
+checks: frontmatter with a name, a description of at least 10 characters, and an
+explicit `user-invocable` field; an execution protocol; quality gates; and an exit
+protocol. The existing protocol aliases (`Commands`, `Steps`, `How Work`,
+`How You Work`, `How to Use`, `Execution Protocol`) and level-three numbered
+`Step`, `Tier`, or `Phase` headings are accepted. Quality and Exit headings use
+the linter's existing prefix matching. These checks apply to skill entry points
+(`skills/{name}/SKILL.md`), not companion documents or benchmark scenarios.
+Other lint checks remain advisory (or failures in strict mode).
+
 ## The Five Sections
 
 ### Identity

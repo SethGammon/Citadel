@@ -38,6 +38,7 @@
     "core/skills/project-skill.js",
     "core/skills/routing-table.json",
     "core/skills/routing.js",
+    "core/skills/structure.js",
     "core/telemetry/activation.js",
     "core/telemetry/integrity.js",
     "core/telemetry/io.js",
