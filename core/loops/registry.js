@@ -5,11 +5,11 @@
 const fs = require('fs');
 const path = require('path');
 const { createLoopContract, validateLoopContract } = require('./contract');
-const { isTerminalStatus, normalizeStatus } = require('./status');
-
-function ensureDir(dir) {
-  fs.mkdirSync(dir, { recursive: true });
-}
+const { LOOP_STATUSES, isTerminalStatus, normalizeStatus } = require('./status');
+const {
+  atomicWriteState, persistenceError, readStateFile, registryDirectory,
+  registryPath, validateLoopId, withStateLock,
+} = require('./persistence');
 
 function nowIso(options = {}) {
   return options.now || new Date().toISOString();
@@ -20,11 +20,11 @@ function planningDir(projectRoot, ...parts) {
 }
 
 function loopsDir(projectRoot) {
-  return planningDir(projectRoot, 'loops');
+  return registryDirectory(projectRoot);
 }
 
 function loopPath(projectRoot, id) {
-  return path.join(loopsDir(projectRoot), `${id}.json`);
+  return registryPath(projectRoot, id);
 }
 
 function readJsonIfExists(filePath) {
@@ -32,9 +32,46 @@ function readJsonIfExists(filePath) {
   return JSON.parse(fs.readFileSync(filePath, 'utf8'));
 }
 
-function writeJson(filePath, value) {
-  ensureDir(path.dirname(filePath));
-  fs.writeFileSync(filePath, `${JSON.stringify(value, null, 2)}\n`, 'utf8');
+function validateStoredLoop(loop, id) {
+  const validation = validateLoopContract(loop);
+  if (!validation.pass || Array.isArray(loop) || loop.id !== id || loop.version !== 1
+    || !LOOP_STATUSES.includes(loop.status) || !Array.isArray(loop.runs)
+    || loop.runs.some((run) => !run || typeof run !== 'object' || Array.isArray(run))
+    || (loop.revision !== undefined && (!Number.isSafeInteger(loop.revision) || loop.revision < 0))) {
+    throw persistenceError('LOOP_INVALID_STATE', `Invalid loop record ${id}; preserve and inspect its state file`);
+  }
+  return { ...loop, revision: loop.revision ?? 0 };
+}
+
+function checkRevision(current, options) {
+  if (options.expectedRevision === undefined) return;
+  if (!Number.isSafeInteger(options.expectedRevision) || options.expectedRevision < 0) {
+    throw persistenceError('LOOP_INVALID_OPTIONS', 'expectedRevision must be a non-negative safe integer');
+  }
+  const actualRevision = current?.revision ?? 0;
+  if (options.expectedRevision !== actualRevision) {
+    throw persistenceError('LOOP_REVISION_CONFLICT',
+      `Loop revision conflict: expected ${options.expectedRevision}, found ${actualRevision}`,
+      { expectedRevision: options.expectedRevision, actualRevision });
+  }
+}
+
+function mutateLoop(projectRoot, id, options, mutate) {
+  return withStateLock(projectRoot, id, options, (target) => {
+    const value = readStateFile(target);
+    const current = value === null ? null : validateStoredLoop(value, id);
+    checkRevision(current, options);
+    const updated = mutate(current);
+    if ((current?.revision ?? 0) >= Number.MAX_SAFE_INTEGER) {
+      throw persistenceError('LOOP_INVALID_STATE', `Loop revision exhausted: ${id}`);
+    }
+    updated.revision = (current?.revision ?? 0) + 1;
+    updated.updatedAt = nowIso(options);
+    // Validate the serialized form too; JSON must not silently discard state.
+    const stored = validateStoredLoop(JSON.parse(JSON.stringify(updated)), id);
+    atomicWriteState(projectRoot, target, stored);
+    return stored;
+  });
 }
 
 function registerLoop(projectRoot, contractOrOptions = {}, options = {}) {
@@ -44,48 +81,60 @@ function registerLoop(projectRoot, contractOrOptions = {}, options = {}) {
     : createLoopContract(contractOrOptions);
   const validation = validateLoopContract(contract);
   if (!validation.pass) throw new Error(`Invalid loop contract: ${validation.errors.join('; ')}`);
-  contract.updatedAt = nowIso(options);
-  writeJson(loopPath(root, contract.id), contract);
-  return contract;
+  validateLoopId(contract.id);
+  return mutateLoop(root, contract.id, options, (current) => {
+    if (current) throw persistenceError('LOOP_ALREADY_EXISTS', `Loop already exists: ${contract.id}`);
+    return contract;
+  });
 }
 
 function readLoop(projectRoot, id) {
   const root = path.resolve(projectRoot || process.cwd());
-  return readJsonIfExists(loopPath(root, id));
+  const loop = readStateFile(loopPath(root, id));
+  return loop === null ? null : validateStoredLoop(loop, id);
 }
 
 function updateLoop(projectRoot, id, patch = {}, options = {}) {
-  const current = readLoop(projectRoot, id);
-  if (!current) throw new Error(`Loop not found: ${id}`);
-  const updated = {
-    ...current,
-    ...patch,
-    status: patch.status ? normalizeStatus(patch.status) : current.status,
-    updatedAt: nowIso(options),
-  };
-  writeJson(loopPath(projectRoot, id), updated);
-  return updated;
+  return mutateLoop(projectRoot, id, options, (current) => {
+    if (!current) throw persistenceError('LOOP_NOT_FOUND', `Loop not found: ${id}`);
+    const updated = {
+      ...current,
+      ...patch,
+      status: patch.status ? normalizeStatus(patch.status) : current.status,
+    };
+    if (updated.id !== id || updated.version !== current.version || updated.statePath !== current.statePath) {
+      throw persistenceError('LOOP_INVALID_STATE', 'Loop id, version and statePath cannot be changed');
+    }
+    if (isTerminalStatus(current.status)) {
+      const changedStop = ['stoppedAt', 'stopReason'].some((key) => current[key] !== undefined && updated[key] !== current[key]);
+      const changedHistory = !Array.isArray(updated.runs) || updated.runs.length !== current.runs.length
+        || current.runs.some((run, index) => run.completedAt != null && JSON.stringify(run) !== JSON.stringify(updated.runs[index]));
+      if (updated.status !== current.status || changedStop || changedHistory) {
+        throw persistenceError('LOOP_TERMINAL', `Terminal loop ${id} cannot be restarted or have its stop/history overwritten`);
+      }
+    }
+    return updated;
+  });
 }
 
 function appendLoopRun(projectRoot, id, run = {}, options = {}) {
-  const current = readLoop(projectRoot, id);
-  if (!current) throw new Error(`Loop not found: ${id}`);
-  const entry = {
-    attempt: Number(run.attempt || (current.runs || []).length + 1),
-    status: normalizeStatus(run.status || 'running'),
-    summary: run.summary || '',
-    command: run.command || null,
-    verifier: run.verifier || null,
-    exitCode: Number.isInteger(run.exitCode) ? run.exitCode : null,
-    startedAt: run.startedAt || nowIso(options),
-    completedAt: run.completedAt || nowIso(options),
-    evidence: run.evidence || [],
-  };
-  current.runs = [...(current.runs || []), entry];
-  current.status = entry.status;
-  current.updatedAt = nowIso(options);
-  writeJson(loopPath(projectRoot, id), current);
-  return current;
+  return mutateLoop(projectRoot, id, options, (current) => {
+    if (!current) throw persistenceError('LOOP_NOT_FOUND', `Loop not found: ${id}`);
+    if (isTerminalStatus(current.status)) throw persistenceError('LOOP_TERMINAL', `Cannot append a run to terminal loop ${id}`);
+    const entry = {
+      ...run,
+      attempt: Number(run.attempt || current.runs.length + 1),
+      status: normalizeStatus(run.status || 'running'),
+      summary: run.summary || '',
+      command: run.command || null,
+      verifier: run.verifier || null,
+      exitCode: Number.isInteger(run.exitCode) ? run.exitCode : null,
+      startedAt: run.startedAt || nowIso(options),
+      completedAt: run.completedAt === null ? null : (run.completedAt || nowIso(options)),
+      evidence: run.evidence || [],
+    };
+    return { ...current, runs: [...current.runs, entry], status: entry.status };
+  });
 }
 
 function stopLoop(projectRoot, id, status = 'stopped', reason = '', options = {}) {
@@ -101,8 +150,7 @@ function listRegisteredLoops(projectRoot) {
   if (!fs.existsSync(dir)) return [];
   return fs.readdirSync(dir)
     .filter((name) => name.endsWith('.json'))
-    .map((name) => readJsonIfExists(path.join(dir, name)))
-    .filter(Boolean)
+    .map((name) => readLoop(projectRoot, name.slice(0, -5)))
     .map((loop) => ({ ...loop, source: 'loop-registry' }));
 }
 
