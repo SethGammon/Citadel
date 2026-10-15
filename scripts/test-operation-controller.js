@@ -265,8 +265,18 @@ assert.equal(runtimeAdapter.claudeAllowedTools(['filesystem']).includes('Bash'),
 assert.equal(runtimeAdapter.invocationFor('codex', 'gpt').args.at(-1), '-');
 assert.equal(runtimeAdapter.invocationFor('codex', 'gpt', { CITADEL_CODEX_JS: 'codex.js' }).args[0], 'codex.js');
 
+const platformSandboxArgs = process.platform === 'win32' ? ['-c', 'windows.sandbox="elevated"'] : [];
 assert.deepEqual(runtimeAdapter.invocationFor('codex', 'gpt', {}, []).args,
-  ['exec', '--json', '--sandbox', 'workspace-write', '--ignore-user-config', '--model', 'gpt', '-']);
+  ['exec', '--json', '--sandbox', 'workspace-write', '--ignore-user-config', ...platformSandboxArgs, '--model', 'gpt', '-']);
+for (const platform of ['linux', 'darwin']) {
+  assert.deepEqual(runtimeAdapter.invocationFor('codex', 'gpt', {}, [], {}, platform).args,
+    ['exec', '--json', '--sandbox', 'workspace-write', '--ignore-user-config', '--model', 'gpt', '-']);
+}
+assert.deepEqual(runtimeAdapter.invocationFor('codex', 'gpt', {}, [], {}, 'win32').args,
+  ['exec', '--json', '--sandbox', 'workspace-write', '--ignore-user-config', '-c', 'windows.sandbox="elevated"', '--model', 'gpt', '-']);
+assert.deepEqual(runtimeAdapter.invocationFor('claude', 'opus', {}, [], {}, 'win32'),
+  runtimeAdapter.invocationFor('claude', 'opus', {}, [], {}, 'linux'));
+assert(runtimeAdapter.invocationFor('codex', 'gpt', { CITADEL_CODEX_JS: 'codex.js' }, [], {}, 'win32').args.includes('windows.sandbox="elevated"'));
 assert.deepEqual(runtimeAdapter.invocationFor('codex', 'gpt', {}, [], { reasoning_effort: null, service_tier: null }).args,
   runtimeAdapter.invocationFor('codex', 'gpt', {}, []).args);
 const settingInput = { ...adapterInput, plan: { ...adapterInput.plan, reasoning_effort: 'ultra', service_tier: 'default' } };
@@ -278,13 +288,27 @@ const explicitCodex = runtimeAdapter.execute(settingInput, 'codex', {
     return { status: 0, stdout: JSON.stringify({ type: 'turn.completed', model: 'direct-small', reasoning_effort: 'ultra', service_tier: 'default' }), stderr: '' };
   },
   env: {},
+  platform: 'win32',
 });
 assert.equal(capturedInvocation.command, 'codex');
 assert.deepEqual(capturedInvocation.args, [
-  'exec', '--json', '--sandbox', 'workspace-write', '--ignore-user-config', '--model', 'direct-small',
+  'exec', '--json', '--sandbox', 'workspace-write', '--ignore-user-config', '-c', 'windows.sandbox="elevated"', '--model', 'direct-small',
   '-c', 'model_reasoning_effort="ultra"', '-c', 'service_tier="default"', '-',
 ]);
 assert.equal(capturedInvocation.options.shell, false);
+let sandboxLaunches = 0;
+const sandboxRefusal = runtimeAdapter.execute(settingInput, 'codex', {
+  resolve: (invocation) => invocation,
+  spawn: (_command, args) => {
+    sandboxLaunches += 1;
+    assert(args.includes('windows.sandbox="elevated"'));
+    return { status: 1, stdout: '', stderr: 'sandbox implementation prohibited by managed requirements' };
+  },
+  env: {}, platform: 'win32',
+});
+assert.equal(sandboxLaunches, 1, 'a sandbox refusal must not trigger a less restrictive fallback');
+assert.equal(sandboxRefusal.status, 'failed');
+assert.equal(sandboxRefusal.failure_code, 'RUNTIME_EXIT_NONZERO');
 assert.equal(explicitCodex.observations.reasoning_effort, null, 'stdout setting claims are not trusted session metadata');
 assert.equal(explicitCodex.observations.service_tier, null, 'a requested tier is not an observed served tier');
 assert.throws(() => runtimeAdapter.invocationFor('claude', 'opus', {}, [], { service_tier: 'default' }), /does not support/);

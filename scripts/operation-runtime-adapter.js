@@ -43,7 +43,7 @@ function claudeAllowedTools(tools) {
   return allowed.join(',');
 }
 
-function invocationFor(runtime, model, env = process.env, tools = [], settings = {}) {
+function invocationFor(runtime, model, env = process.env, tools = [], settings = {}, platform = process.platform) {
   const requested = runtimeSettings(settings);
   if (runtime === 'claude') {
     if (Object.keys(requested).length) throw new TypeError('claude operation adapter does not support reasoning-effort or service-tier settings');
@@ -56,6 +56,11 @@ function invocationFor(runtime, model, env = process.env, tools = [], settings =
   }
   if (runtime === 'codex') {
     const args = ['exec', '--json', '--sandbox', 'workspace-write', '--ignore-user-config'];
+    // Windows needs a native sandbox implementation when user config is ignored.
+    // Select the restricted-user backend; Codex still enforces workspace-write,
+    // setup requirements, approvals, and managed policy. This does not elevate
+    // the CLI process or grant full filesystem access.
+    if (platform === 'win32') args.push('-c', 'windows.sandbox="elevated"');
     if (model) args.push('--model', model);
     // Identifier validation and a quoted TOML string keep each override literal.
     // Runtime/model support is checked by Codex; no user config file is changed.
@@ -191,7 +196,7 @@ function observedToolCalls(runtime, stdout) {
 function execute(input, runtime, options = {}) {
   if (!input || input.protocol !== 'citadel-operation-adapter-v1') throw new TypeError('invalid operation adapter input');
   const invocation = (options.resolve || platformInvocation)(
-    invocationFor(runtime, input.plan.model, options.env || process.env, input.plan.tools, input.plan),
+    invocationFor(runtime, input.plan.model, options.env || process.env, input.plan.tools, input.plan, options.platform || process.platform),
     { env: options.env || process.env },
   );
   const result = (options.spawn || spawnSync)(invocation.command, invocation.args, {
