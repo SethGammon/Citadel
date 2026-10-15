@@ -6,6 +6,7 @@
   "compress-discovery.cjs",
   "continue-action.js",
   "codex-app-artifacts.js",
+  "codex-compat.js",
   "codex-automation.js",
   "codex-pr-review.js",
   "codex-review-fetch.js",
