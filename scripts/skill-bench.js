@@ -36,6 +36,7 @@
 const fs            = require('fs');
 const path          = require('path');
 const os            = require('os');
+const { randomUUID } = require('crypto');
 const { execFileSync, execSync } = require('child_process');
 const { buildCodexExecArgs } = require('../core/codex/native-integrations');
 
@@ -185,7 +186,9 @@ function parseScenario(filePath) {
 
 // ── Scenario discovery ────────────────────────────────────────────────────────
 
+let discoveryFailures = 0;
 function discoverScenarios() {
+  discoveryFailures = 0;
   if (!fs.existsSync(SKILLS_DIR)) return [];
 
   const scenarios = [];
@@ -207,6 +210,7 @@ function discoverScenarios() {
     for (const file of files) {
       const scenario = parseScenario(path.join(benchDir, file));
       if (scenario) scenarios.push(scenario);
+      else discoveryFailures++;
     }
   }
 
@@ -628,7 +632,8 @@ function findClaudeCLI() {
 function findCodexCLI() {
   if (_codexCmd !== undefined) return _codexCmd;
 
-  const candidates = [CODEX_BIN, 'codex', 'codex.exe'].filter(Boolean);
+  // An explicit executable is an identity constraint, not a fallback hint.
+  const candidates = CODEX_BIN ? [CODEX_BIN] : ['codex', 'codex.exe'];
   for (const cmd of candidates) {
     try {
       execFileSync(cmd, ['--version'], { stdio: 'pipe', timeout: 5000 });
@@ -760,7 +765,7 @@ function validateScenario(scenario) {
   const issues = [];
 
   if (!scenario.input) issues.push('missing input');
-  if (scenario.assertContains.length === 0 && scenario.assertNotContains.length === 0) {
+  if (scenario.assertContains.length === 0 && scenario.assertNotContains.length === 0 && (scenario.assertFilesAbsent || []).length === 0) {
     issues.push('no assertions defined (add assert-contains or assert-not-contains)');
   }
   if (!STATES[scenario.state]) {
@@ -778,9 +783,9 @@ function writeResults(allResults) {
       fs.mkdirSync(RESULTS_DIR, { recursive: true });
     }
     const date = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
-    const outFile = path.join(RESULTS_DIR, `bench-${date}.jsonl`);
+    const outFile = path.join(RESULTS_DIR, `bench-${date}-${randomUUID()}.jsonl`);
     const lines = allResults.map(r => JSON.stringify(r));
-    fs.writeFileSync(outFile, lines.join('\n') + '\n');
+    fs.writeFileSync(outFile, lines.join('\n') + '\n', { flag: 'wx' });
     return outFile;
   } catch { return null; }
 }
@@ -788,7 +793,7 @@ function writeResults(allResults) {
 // ── Output formatting ─────────────────────────────────────────────────────────
 
 function printScenarioResult(scenario, result, verbose) {
-  const tag = result.passed ? 'PASS' : result.skipped ? 'SKIP' : 'FAIL';
+  const tag = result.skipped ? 'SKIP' : result.passed ? 'PASS' : 'FAIL';
   const note = result.mode === 'static-only' ? ' [static]' : '';
   console.log(`  ${tag.padEnd(5)} ${scenario.skill}/${scenario.name}${note}`);
 
@@ -815,13 +820,29 @@ function printScenarioResult(scenario, result, verbose) {
 // ── Main ──────────────────────────────────────────────────────────────────────
 
 function main() {
+  if (!['claude', 'codex-exec'].includes(runtimeFilter)) {
+    console.error(`Unsupported runtime "${runtimeFilter}". Use claude or codex-exec.`);
+    process.exit(1);
+  }
+  if (VERIFY_HOOKS && !EXECUTE_MODE) {
+    console.error('--verify-hooks requires --execute; static validation cannot verify hook execution.');
+    process.exit(1);
+  }
   const allScenarios = discoverScenarios();
+  if (discoveryFailures > 0) {
+    console.error(`${discoveryFailures} scenario file(s) could not be parsed; no benchmark was run.`);
+    if (JSON_MODE) console.log('[]');
+    process.exit(1);
+  }
 
   if (allScenarios.length === 0) {
-    console.log('\nNo benchmark scenarios found.');
-    console.log('Add scenario files at skills/{skill-name}/__benchmarks__/{scenario}.md');
-    console.log('\nSee skills/dashboard/__benchmarks__/ for examples.');
-    process.exit(0);
+    if (JSON_MODE) console.log('[]');
+    else {
+      console.log('\nNo benchmark scenarios found.');
+      console.log('Add scenario files at skills/{skill-name}/__benchmarks__/{scenario}.md');
+      console.log('\nSee skills/dashboard/__benchmarks__/ for examples.');
+    }
+    process.exit(EXECUTE_MODE ? 1 : 0);
   }
 
   // Apply filters
@@ -887,13 +908,12 @@ function main() {
   const canExecute = EXECUTE_MODE && runtimeCmd !== null;
 
   if (EXECUTE_MODE && !runtimeCmd) {
-    console.warn(`\nWARN: ${runtimeName} CLI not found in PATH - running static validation only.`);
-    console.warn(`Install ${runtimeName} to enable execution testing.\n`);
+    console.error(`\nExecution unavailable: ${runtimeName} CLI was not found or could not start. No scenarios were executed.`);
   }
 
-  const mode = canExecute ? 'execute' : 'static';
-  console.log(`\nCitadel Skill Bench (${mode} mode)\n` + '='.repeat(40));
-  if (mode === 'static') {
+  const mode = EXECUTE_MODE ? 'execute' : 'static';
+  if (!JSON_MODE) console.log(`\nCitadel Skill Bench (${mode} mode)\n` + '='.repeat(40));
+  if (mode === 'static' && !JSON_MODE) {
     console.log(`Validating scenario structure. Use --execute --runtime ${runtimeFilter} to run against ${runtimeName}.\n`);
   }
 
@@ -905,15 +925,33 @@ function main() {
   for (const scenario of scenarios) {
     let result;
     let tmpDir = null;
+    let executionAttempted = false;
 
-    if (canExecute && scenario.skipExecute) {
+    const validationIssues = validateScenario(scenario);
+    if (EXECUTE_MODE && validationIssues.length > 0) {
+      result = {
+        scenario: scenario.name, skill: scenario.skill,
+        mode: isCodexRuntime ? 'codex-exec' : 'execute',
+        passed: false, skipped: false,
+        executionError: `Invalid scenario: ${validationIssues.join('; ')}`,
+        validationIssues, assertionResults: [],
+      };
+    } else if (EXECUTE_MODE && !canExecute) {
+      result = {
+        scenario: scenario.name, skill: scenario.skill,
+        mode: isCodexRuntime ? 'codex-exec' : 'execute',
+        passed: false, skipped: false,
+        executionError: `${runtimeName} CLI unavailable; execution was required`,
+        assertionResults: [],
+      };
+    } else if (canExecute && scenario.skipExecute) {
       // skip-execute: true — scenario requires sub-agent spawning or external services
       // that can't reliably run in bench. Count as skipped (not failed).
       result = {
         scenario: scenario.name,
         skill:    scenario.skill,
         mode:     isCodexRuntime ? 'codex-exec' : 'execute',
-        passed:   true,
+        passed:   false,
         skipped:  true,
         assertionResults: [],
       };
@@ -934,6 +972,7 @@ function main() {
           });
         }
         const telemetryBefore = VERIFY_HOOKS ? snapshotTelemetry(tmpDir) : null;
+        executionAttempted = true;
         const execResult = isCodexRuntime
           ? executeCodexScenario(scenario, runtimeCmd, tmpDir)
           : executeClaudeScenario(scenario, runtimeCmd, tmpDir);
@@ -1009,6 +1048,9 @@ function main() {
       };
     }
 
+    result.executionAttempted = executionAttempted;
+    result.executionSucceeded = executionAttempted && !result.executionError;
+    result.requestedMode = EXECUTE_MODE ? 'execute' : 'static';
     result.tags        = scenario.tags;
     result.behavior    = scenario.behavior;
     result.description = scenario.description;
@@ -1034,6 +1076,8 @@ function main() {
 
   // Write results to disk
   const outFile = writeResults(allResults);
+  const missingEvidence = EXECUTE_MODE && !outFile;
+  if (missingEvidence) console.error('Could not preserve benchmark results; execution evidence is unavailable.');
   if (outFile && !JSON_MODE) {
     console.log(`Results written: ${path.relative(PLUGIN_ROOT, outFile)}\n`);
   }
@@ -1053,11 +1097,13 @@ function main() {
       console.log('  node scripts/skill-bench.js --execute');
       console.log('  node scripts/skill-bench.js --execute --runtime codex-exec\n');
     }
-  } else {
+  } else if (totalPass > 0) {
     console.log(`All ${totalPass} scenarios passed.\n`);
+  } else {
+    console.error('No scenario passed live execution; skipped work is not execution evidence.');
   }
 
-  process.exit(totalFail > 0 ? 1 : 0);
+  process.exit(totalFail > 0 || missingEvidence || (EXECUTE_MODE && totalPass === 0) ? 1 : 0);
 }
 
 // Reusable pieces for other tools (e.g. scripts/noop-ablate.js). Exported only
@@ -1069,6 +1115,8 @@ module.exports = {
   executeClaudeScenario,
   runAssertions,
   findClaudeCLI,
+  validateScenario,
+  writeResults,
   STATES,
 };
 
