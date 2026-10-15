@@ -42,6 +42,17 @@ try {
   assert(fs.existsSync(path.join(target, 'citadel-config.js')));
   context.pruneRetiredDelegates();
 
+  // A fresh Codex installation must not make SessionStart inspect hundreds of
+  // maintainer/test wrappers before it can scaffold the runtime delegates.
+  const compatRoot = path.join(root, 'cold-codex');
+  fs.mkdirSync(compatRoot);
+  execFileSync(process.execPath, [path.join(repo, 'scripts/codex-compat.js'), compatRoot], {
+    cwd: compatRoot, env: { ...process.env, CLAUDE_PROJECT_DIR: compatRoot, CITADEL_RUNTIME: 'codex' },
+    encoding: 'utf8', timeout: 30000,
+  });
+  const installed = fs.readdirSync(path.join(compatRoot, '.citadel', 'scripts')).filter(name => /\.(js|cjs)$/.test(name));
+  assert.deepEqual(installed.sort(), Array.from(delegated).sort(), 'cold Codex installs must project only runtime delegates');
+
   // A redirected scripts directory is not owned by this project.
   const redirected = path.join(root, 'redirected-scripts');
   fs.mkdirSync(redirected);

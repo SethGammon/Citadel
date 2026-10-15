@@ -151,13 +151,17 @@ function createDataSource(projectRoot) {
       snapshot = null;
     }
     let loops = [];
+    let loopsError = null;
     try {
       loops = listLoops(projectRoot) || [];
-    } catch { /* loops panel renders empty with a note */ }
+    } catch (error) {
+      loopsError = String(error && error.message ? error.message : error);
+    }
     const collected = {
       snapshot,
       collectError,
       loops,
+      loopsError,
       daemon: readDaemon(),
       handoffs: readHandoffs(),
       operations: readOperationControls(projectRoot),
@@ -334,6 +338,12 @@ function inspectSources(projectRoot, data) {
     filter: (name) => name.endsWith('.json'), json: true,
     midRun: (data.loops || []).some((loop) => !['done', 'stopped', 'verifier-passed'].includes(loop.status || (loop.state && loop.state.status))),
   });
+  if (data.loopsError) {
+    loopsState.status = 'unreadable';
+    loopsState.detail = `Loop registry could not be read: ${data.loopsError}`;
+    loopsState.count = null;
+    if (!loopsState.unreadable.length) loopsState.unreadable = ['.planning/loops'];
+  }
   const hooksState = inspectDirectory(projectRoot, '.planning/telemetry', {
     filter: (name) => /^(hook-timing|hook-errors|audit|agent-runs|task-events)\.jsonl$/.test(name), jsonl: true,
   });

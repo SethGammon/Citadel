@@ -205,7 +205,7 @@
         "A/B",
         "measure"
       ],
-      "description": "Automated optimization loop with scalar fitness function. Proposes changes in isolated worktrees, measures with a metric command, keeps improvements, discards failures. Supports convergence detection and diminishing returns.",
+      "description": "Automated optimization loop with scalar fitness function. Proposes changes in isolated worktrees, measures against a fixed baseline, and retains verified candidates locally. Supports convergence detection and diminishing returns.",
       "productBundle": "operations"
     },
     {

@@ -9,6 +9,7 @@ const COST_LENSES = Object.freeze(['actual_cash', 'marginal', 'market_equivalent
 const PRIVACY_LEVELS = Object.freeze(['local-only', 'allow-remote']);
 const TOPOLOGIES = Object.freeze(['direct', 'tool', 'shallow-roma', 'deep-roma', 'custom']);
 const ID_PATTERN = /^[a-z0-9][a-z0-9._:-]{0,127}$/;
+const RUNTIME_SETTING_FIELDS = Object.freeze(['reasoning_effort', 'service_tier']);
 
 function canonical(value) {
   if (Array.isArray(value)) return `[${value.map(canonical).join(',')}]`;
@@ -35,6 +36,25 @@ function exact(value, fields, name) {
     throw new TypeError(`${name} fields must exactly match: ${expected.join(', ')}`);
   }
   return value;
+}
+
+function exactOptional(value, fields, optional, name) {
+  object(value, name);
+  return exact(value, [...fields, ...optional.filter((field) => Object.prototype.hasOwnProperty.call(value, field))], name);
+}
+
+// Validate transport syntax, not model availability. The selected runtime must
+// support each requested value; a runtime rejection must remain a failed attempt.
+function runtimeSettings(value, name = 'settings') {
+  const settings = {};
+  for (const field of RUNTIME_SETTING_FIELDS) {
+    if (!Object.prototype.hasOwnProperty.call(value, field) || value[field] === null) continue;
+    if (typeof value[field] !== 'string' || !/^[a-z0-9][a-z0-9_-]{0,63}$/.test(value[field])) {
+      throw new TypeError(`${name}.${field} must be a bounded non-empty identifier or null`);
+    }
+    settings[field] = value[field];
+  }
+  return settings;
 }
 
 function id(value, name) {
@@ -154,10 +174,11 @@ function validateAdapter(value, name) {
 }
 
 function validatePlan(value, name) {
-  exact(value, [
+  exactOptional(value, [
     'plan_id', 'label', 'adapter_id', 'topology', 'model', 'tools', 'privacy', 'feature_keys',
     'prior', 'expected_duration_ms', 'costs', 'retry_on', 'max_retries', 'fallback_plan_ids',
-  ], name);
+  ], RUNTIME_SETTING_FIELDS, name);
+  runtimeSettings(value, name);
   id(value.plan_id, `${name}.plan_id`);
   if (typeof value.label !== 'string' || !value.label.trim()) throw new TypeError(`${name}.label is required`);
   id(value.adapter_id, `${name}.adapter_id`);
@@ -202,7 +223,8 @@ function validateCatalog(value) {
 }
 
 function validateHistoryRecord(value, index = 0) {
-  exact(value, ['schema', 'feature_key', 'plan_id', 'verification_status', 'duration_ms', 'costs', 'observed_tools'], `history[${index}]`);
+  exactOptional(value, ['schema', 'feature_key', 'plan_id', 'verification_status', 'duration_ms', 'costs', 'observed_tools'], RUNTIME_SETTING_FIELDS, `history[${index}]`);
+  runtimeSettings(value, `history[${index}]`);
   if (value.schema !== 1) throw new TypeError(`history[${index}].schema must be 1`);
   id(value.feature_key, `history[${index}].feature_key`);
   id(value.plan_id, `history[${index}].plan_id`);
@@ -226,10 +248,13 @@ module.exports = Object.freeze({
   ID_PATTERN,
   PRIVACY_LEVELS,
   REQUEST_SCHEMA,
+  RUNTIME_SETTING_FIELDS,
   TOPOLOGIES,
   canonical,
   codeArray,
   digest,
+  exactOptional,
+  runtimeSettings,
   validateAdapter,
   validateCatalog,
   validateCostLens,

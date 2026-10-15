@@ -1,6 +1,19 @@
 # Changelog
 
-## 1.4.3 - 2026-09-15
+## 1.4.3 - 2026-10-15
+
+### Added
+
+- Persist bounded loop execution and recovery evidence across interruptions, with serialized state updates and conservative handling of uncertain effects.
+- Expose a read-only Fleet integration queue with revision-bound admission checks.
+- Verify native Codex skill planning and lifecycle hooks with candidate-bound receipts and bounded teardown.
+
+### Improved
+
+- Preserve experiment isolation, frozen evaluator checks, and independent promotion decisions.
+- Report benchmark execution and persistence honestly, without treating static validation as live execution.
+- Limit fresh Codex installations to runtime script delegates so cold startup avoids scanning maintainer and test wrappers.
+- Tolerate transient Windows file-sharing conflicts during atomic state replacement while preserving the previous destination on persistent denial.
 
 ### Fixed
 
