@@ -18,7 +18,21 @@ last-updated: 2026-10-15
 
 # /experiment — Metric-Driven Optimization Loop
 
-## Inputs
+## Identity
+
+Coordinate bounded metric-driven experiments in isolated checkouts, retaining
+candidates locally until the declared verification and independent review pass.
+
+## Orientation
+
+### When to Use
+
+- When you want to optimize a measurable metric (bundle size, error count, test coverage, FPS)
+- When you have a clear hypothesis but aren't sure which of several approaches wins
+- When manual A/B testing would be too slow or error-prone
+- NOT when the goal is subjective ("make it feel better") — the metric must be a number
+
+### Inputs
 
 The user provides three things:
 1. **scope**: Files to modify (glob pattern, e.g., "src/api/**/*.ts")
@@ -165,13 +179,6 @@ If unavailable, report that limitation; never append raw JSONL or fabricate hash
 | Increase throughput | Operations per second under the fixed workload |
 | Reduce latency | A predeclared percentile in milliseconds |
 | Reduce file/line count | Count within a fixed scope, with behavioral checks retained |
-
-## When to Use
-
-- When you want to optimize a measurable metric (bundle size, error count, test coverage, FPS)
-- When you have a clear hypothesis but aren't sure which of several approaches wins
-- When manual A/B testing would be too slow or error-prone
-- NOT when the goal is subjective ("make it feel better") — the metric must be a number
 
 ## Safety Rules
 

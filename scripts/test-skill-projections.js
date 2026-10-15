@@ -13,21 +13,21 @@ function fail(message) {
   process.exit(1);
 }
 
-function main() {
-  const skillRoot = path.join(__dirname, '..', 'skills', 'review');
-  const parsed = loadSkill(skillRoot, 'review');
+function testSkill(skillName) {
+  const skillRoot = path.join(__dirname, '..', 'skills', skillName);
+  const parsed = loadSkill(skillRoot, skillName);
   if (parsed.errors.length > 0) {
-    fail(`Parsed skill has validation errors: ${parsed.errors.join('; ')}`);
+    fail(`Parsed ${skillName} skill has validation errors: ${parsed.errors.join('; ')}`);
   }
 
   const yaml = renderOpenAIYaml(parsed);
-  if (!yaml.includes('display_name: "review"')) {
+  if (!yaml.includes(`display_name: "${skillName}"`)) {
     fail('Generated openai.yaml is missing the expected display name');
   }
 
   const tmpRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'citadel-skill-proj-'));
   const targetBase = path.join(tmpRoot, '.agents', 'skills');
-  const result = projectSkillToCodex(skillRoot, targetBase, 'review');
+  const result = projectSkillToCodex(skillRoot, targetBase, skillName);
 
   if (!fs.existsSync(result.outputs.skillPath)) {
     fail('Projected SKILL.md was not written');
@@ -38,7 +38,7 @@ function main() {
 
   const projectedSkill = fs.readFileSync(result.outputs.skillPath, 'utf8');
   const projectedYaml = fs.readFileSync(result.outputs.openaiYamlPath, 'utf8');
-  if (!projectedSkill.includes('name: review') || !projectedSkill.includes('## Protocol')) {
+  if (projectedSkill !== parsed.content || !projectedSkill.includes('## Protocol')) {
     fail('Projected SKILL.md does not contain expected canonical skill content');
   }
   if (!projectedYaml.includes('allow_implicit_invocation: true')) {
@@ -46,6 +46,10 @@ function main() {
   }
 
   fs.rmSync(tmpRoot, { recursive: true, force: true });
+}
+
+function main() {
+  for (const skillName of ['review', 'experiment']) testSkill(skillName);
   console.log('Skill projection tests pass.');
 }
 
