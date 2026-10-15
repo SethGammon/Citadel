@@ -451,16 +451,57 @@ try {
   assert.match(createAppVerify, /visual/i, 'release create-app must preserve visual-check semantics');
 
   const experimentSkill = fs.readFileSync(path.join(productRoot, 'skills', 'experiment', 'SKILL.md'), 'utf8');
+  const sourceExperiment = fs.readFileSync(path.join(ROOT, 'skills', 'experiment', 'SKILL.md'), 'utf8');
+  assert.equal(experimentSkill, sourceExperiment.replace(/\r\n/g, '\n'),
+    'release experiment must preserve the self-contained source contract without a legacy trust rewrite');
   const experimentTrust = sectionBody(
     experimentSkill,
     /\*\*Trust gates:\*\*\r?\n/,
     /## Quality Gates/,
     'release experiment Trust gates contract',
-  );
-  assert.match(experimentTrust, /novice/i, 'release experiment must preserve novice trust guidance');
-  assert.match(experimentTrust, /manual review/i, 'release experiment must preserve its manual-review boundary');
-  assert.match(experimentTrust, /Familiar \(5\+ sessions\)/, 'release experiment must preserve its familiar-user threshold');
-  assert.match(experimentTrust, /iterates and commits autonomously/i, 'release experiment must preserve its autonomous-commit disclosure');
+  ).replace(/\s+/g, ' ');
+  assert.match(experimentTrust, /Proceed within existing authorization for local work; do not request it again/,
+    'release experiment must preserve existing user authorization');
+  assert.match(experimentTrust, /Trust level never waives isolation, frozen evaluation, review or required checks/,
+    'release experiment must not waive safety gates based on trust level');
+
+  const experimentBaseline = sectionBody(
+    experimentSkill,
+    /### Step 1: BASELINE\r?\n/,
+    /### Step 2: ITERATE/,
+    'release experiment baseline contract',
+  ).replace(/\s+/g, ' ');
+  assert.match(experimentBaseline, /dedicated worktree at an explicit commit, or a separate local clone/,
+    'release experiment must require an isolated checkout at a recorded commit');
+  assert.match(experimentBaseline, /Leave the original index and files untouched/,
+    'release experiment must preserve the source checkout');
+  assert.match(experimentBaseline, /Freeze the evaluator: record hashes for the metric implementation, test assertions, fixtures\/expected outputs, and relevant command\/config files/,
+    'release experiment must freeze evaluator and verification inputs');
+  assert.match(experimentBaseline, /Pin one file-byte representation before measuring, including checkout filters and line endings/,
+    'release experiment must pin evaluation bytes before measurement');
+  assert.match(experimentBaseline, /same representation for every candidate and independent check/,
+    'release experiment must use the same byte representation for independent verification');
+  assert.match(experimentBaseline, /required-check failure holds optimization until resolved; do not silently waive the check/,
+    'release experiment must hold on a failed required baseline check');
+
+  const experimentIteration = sectionBody(
+    experimentSkill,
+    /### Step 2: ITERATE\r?\n/,
+    /### Step 3: CONVERGENCE CHECK/,
+    'release experiment iteration contract',
+  ).replace(/\s+/g, ' ');
+  assert.match(experimentIteration, /independent review of the exact diff, scope, behavior\/regressions and evidence/,
+    'release experiment must require independent review of the actual candidate');
+  assert.match(experimentIteration, /proposer cannot approve its own result/,
+    'release experiment must preserve reviewer independence');
+  assert.match(experimentIteration, /incomplete required check means HELD, not passed/,
+    'release experiment must not treat missing verification as a pass');
+  assert.match(experimentIteration, /every required check and independent review passed for this exact candidate/,
+    'release experiment must gate KEEP on required checks and review');
+  assert.match(experimentIteration, /Promotion is separate from KEEP\. Only after all gates pass may an already authorized local integration proceed/,
+    'release experiment must preserve authorization and verification before integration');
+  assert.match(experimentIteration, /Never push, publish, or overwrite dirty work/,
+    'release experiment must not authorize publication or overwriting dirty work');
 
   for (const relative of [...productPaths].filter((item) => /^skills\/[^/]+\/SKILL\.md$/.test(item))) {
     const sourceContent = fs.readFileSync(path.join(ROOT, ...relative.split('/')), 'utf8');

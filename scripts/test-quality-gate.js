@@ -39,6 +39,7 @@ const {
   selectColdPathLenses,
   lensCrossReference,
   lensPerformance,
+  lensContractual,
 } = require(path.join(__dirname, '..', 'hooks_src', 'quality-gate.js'));
 
 // The all-property transition rule matches class tokens, not rule IDs.
@@ -50,6 +51,92 @@ const {
   assert(flagged(`<div className="hover:${token}">`));
   assert(!flagged(`builtIn: ['no-${token}']`));
   assert(!flagged(`const name = '${token}-fast';`));
+}
+
+// Regression: the gate and lint enforce the same mandatory skill contract.
+{
+  const { STRUCTURE_CHECKS, parseFrontmatter } = require('../core/skills/structure');
+  const root = path.join(__dirname, '..');
+  const file = 'skills/example/SKILL.md';
+  const fixture = (protocol = '## Protocol') => [
+    '---', 'name: example', 'description: A substantive test skill description.',
+    'user-invocable: true', '---', '## Orientation', 'Use when testing.',
+    protocol, 'Execute the task.', '## Quality Gates', 'Verify output.',
+    '## Exit Protocol', 'Return evidence.',
+  ].join('\n');
+  const mandatoryFailures = content => {
+    const { frontmatter, body } = parseFrontmatter(content);
+    return STRUCTURE_CHECKS.filter(check => check.check(frontmatter, body) !== true);
+  };
+  for (const name of fs.readdirSync(path.join(root, 'skills'))) {
+    const skillPath = `skills/${name}/SKILL.md`;
+    if (!fs.existsSync(path.join(root, skillPath))) continue;
+    const content = fs.readFileSync(path.join(root, skillPath), 'utf8');
+    assert.equal(mandatoryFailures(content).length, 0, `${name}: lint contract`);
+    assert.deepEqual(lensContractual(skillPath, content), [], `${name}: gate contract`);
+  }
+  for (const heading of ['Protocol', 'Commands', 'Steps', 'How Work', 'How You Work',
+    'How to Use', 'Execution Protocol']) {
+    assert.deepEqual(lensContractual(file, fixture(`## ${heading}`)), [], heading);
+  }
+  for (const heading of ['Step 1', 'Tier 2', 'Phase 3']) {
+    assert.deepEqual(lensContractual(file, fixture(`### ${heading}`)), [], heading);
+  }
+  for (const heading of ['## Orientation', '## Identity', '## When to Use', '']) {
+    assert.deepEqual(lensContractual(file, fixture().replace('## Orientation', heading)), []);
+  }
+  assert.deepEqual(lensContractual(file, fixture().replace(/\n/g, '\r\n')), []);
+  for (const fragment of ['name: example', 'description: A substantive test skill description.',
+    'user-invocable: true', '## Protocol', '## Quality Gates', '## Exit Protocol']) {
+    const content = fixture().replace(fragment, '');
+    assert(mandatoryFailures(content).length > 0, fragment);
+    assert(lensContractual(file, content).length > 0, fragment);
+  }
+  for (const content of [fixture().replace('## Protocol', 'Inline ## Protocol mention'),
+    fixture().replace('description: A substantive test skill description.', 'description: short'),
+    '## Protocol\n## Quality Gates\n## Exit Protocol']) {
+    assert(mandatoryFailures(content).length > 0);
+    assert(lensContractual(file, content).length > 0);
+  }
+  for (const companion of ['skills/example/README.md', 'skills/example/__benchmarks__/basic.md', 'docs/SKILLS.md']) {
+    assert.deepEqual(lensContractual(companion, 'No skill frontmatter'), []);
+  }
+  console.log('  PASS  shared skill contract: full corpus, aliases and invalid structures');
+}
+
+// Shared hot/cold performance rules, including real PostToolUse dispatch.
+{
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'citadel-performance-parity-'));
+  const token = ['transition', 'all'].join('-');
+  const modal = ['pro', 'mpt'].join('');
+  try {
+    fs.mkdirSync(path.join(root, '.claude'));
+    const configPath = path.join(root, '.claude', 'harness.json');
+    const filePath = path.join(root, 'example.js');
+    const runHot = (content, builtIn) => {
+      fs.writeFileSync(filePath, content);
+      fs.writeFileSync(configPath, JSON.stringify({ qualityRules: { builtIn },
+        verification: { disabled: ['programmatic', 'structural', 'cross-reference'] } }));
+      const run = spawnSync(process.execPath, [path.join(__dirname, '..', 'hooks_src', 'post-edit.js')], {
+        cwd: root, encoding: 'utf8', input: JSON.stringify({ tool_name: 'Write', tool_input: { file_path: filePath } }),
+        env: { ...process.env, CLAUDE_PROJECT_DIR: root, CITADEL_UI: 'false' },
+      });
+      assert.equal(run.status, 0, run.stderr);
+      return run.stdout;
+    };
+    const rules = ['no-confirm-alert', `no-${token}`];
+    for (const content of [`const rules = ['no-${token}'];`, `<div className="hover:${token}">`,
+      `${modal}('input');`, `${'al' + 'ert'}('message'); // eslint comment`]) {
+      const cold = lensPerformance('example.js', content, rules);
+      const hot = runHot(content, rules);
+      assert.equal(hot.includes('[lint]'), cold.length > 0, content);
+      for (const finding of cold) assert(hot.includes(finding.message), hot);
+      assert(!runHot(content, []).includes('[lint]'), 'disabled rules must stay disabled');
+    }
+    assert.equal(lensPerformance('example.css', `.${token} {}`, rules).length, 1);
+    assert.equal(lensPerformance('example.md', token, rules).length, 0);
+    assert.equal(lensPerformance('example.js', 'setInterval(tick, 1000)', ['no-magic-intervals']).length, 1);
+  } finally { fs.rmSync(root, { recursive: true, force: true }); }
 }
 
 let failures = 0;

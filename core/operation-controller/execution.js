@@ -3,22 +3,9 @@
 const fs = require('fs');
 const path = require('path');
 const { spawnSync } = require('child_process');
-const { COST_LENSES, digest, validateCatalog, validateCosts, validateHistory, validateRequest } = require('./contracts');
+const { COST_LENSES, RUNTIME_SETTING_FIELDS, digest, exactOptional, runtimeSettings, validateCatalog, validateCosts, validateHistory, validateRequest } = require('./contracts');
 const { nextAction, routeOperation } = require('./controller');
-
-const BASE_ENVIRONMENT = Object.freeze([
-  'PATH', 'Path', 'PATHEXT', 'SystemRoot', 'ComSpec', 'WINDIR',
-  'HOME', 'USERPROFILE', 'LOCALAPPDATA', 'APPDATA', 'TEMP', 'TMP',
-  'LANG', 'LC_ALL', 'TERM',
-]);
-
-function safeEnvironment(allowlist, source = process.env) {
-  const output = {};
-  for (const key of [...BASE_ENVIRONMENT, ...allowlist]) {
-    if (Object.prototype.hasOwnProperty.call(source, key)) output[key] = source[key];
-  }
-  return output;
-}
+const { safeEnvironment } = require('../runtime/environment');
 
 function contained(root, target) {
   const relative = path.relative(path.resolve(root), path.resolve(target));
@@ -50,8 +37,19 @@ function parseAdapterResult(stdout) {
   if (value.failure_code !== null && typeof value.failure_code !== 'string') throw Object.assign(new Error('adapter failure_code is invalid'), { code: 'MALFORMED_OUTPUT' });
   if (typeof value.output !== 'string') throw Object.assign(new Error('adapter output is invalid'), { code: 'MALFORMED_OUTPUT' });
   const observedFields = ['model', 'topology', 'tools', 'tool_calls', 'usage', 'costs'];
-  if (!value.observations || JSON.stringify(Object.keys(value.observations).sort()) !== JSON.stringify(observedFields.sort())) {
-    throw Object.assign(new Error('adapter observations do not match the protocol'), { code: 'MALFORMED_OUTPUT' });
+  const sourceFields = RUNTIME_SETTING_FIELDS.map((field) => `${field}_source`);
+  try {
+    exactOptional(value.observations, observedFields, [...RUNTIME_SETTING_FIELDS, ...sourceFields], 'adapter observations');
+    runtimeSettings(value.observations, 'adapter observations');
+    for (const field of sourceFields) {
+      const source = value.observations[field];
+      if (source !== undefined && source !== null && (typeof source !== 'string' || !/^[a-z0-9][a-z0-9._:-]{0,127}$/.test(source))) {
+        throw new TypeError(`observed ${field} is invalid`);
+      }
+    }
+  } catch (error) {
+    error.code = 'MALFORMED_OUTPUT';
+    throw error;
   }
   const observations = value.observations;
   if (observations.model !== null && typeof observations.model !== 'string') throw Object.assign(new Error('observed model is invalid'), { code: 'MALFORMED_OUTPUT' });
@@ -72,6 +70,10 @@ function reconcile(plan, request, result) {
   const observed = result.observations;
   if (plan.model !== null && observed.model === null) unknownCodes.push('MODEL_NOT_OBSERVED');
   else if (plan.model !== null && observed.model !== plan.model) mismatchCodes.push('MODEL_MISMATCH');
+  for (const [field, requested] of Object.entries(runtimeSettings(plan))) {
+    if (observed[field] == null) unknownCodes.push(`${field.toUpperCase()}_NOT_OBSERVED`);
+    else if (observed[field] !== requested) mismatchCodes.push(`${field.toUpperCase()}_MISMATCH`);
+  }
   if (observed.topology === null) unknownCodes.push('TOPOLOGY_NOT_OBSERVED');
   else if (observed.topology !== plan.topology) mismatchCodes.push('TOPOLOGY_MISMATCH');
   const observedTools = new Set([...observed.tools, ...observed.tool_calls]);
@@ -229,6 +231,12 @@ function telemetryFor(attempt, request) {
       'gen_ai.operation.name': 'invoke_agent',
       'gen_ai.request.model': attempt.requested_model,
       'gen_ai.response.model': attempt.observed_model,
+      'citadel.reasoning_effort.requested': attempt.requested_reasoning_effort ?? null,
+      'citadel.reasoning_effort.observed': attempt.observed_reasoning_effort ?? null,
+      'citadel.reasoning_effort.source': attempt.reasoning_effort_source ?? null,
+      'citadel.service_tier.requested': attempt.requested_service_tier ?? null,
+      'citadel.service_tier.observed': attempt.observed_service_tier ?? null,
+      'citadel.service_tier.source': attempt.service_tier_source ?? null,
       'citadel.operation.id': request.operation_id,
       'citadel.plan.id': attempt.plan_id,
       'citadel.topology.requested': attempt.requested_topology,
@@ -271,6 +279,12 @@ function runOperation({ request, catalog, history = [], workspaceRoot, spawn = s
       retry_count: retryCount,
       requested_model: plan.model,
       observed_model: adapterResult?.observations.model ?? null,
+      requested_reasoning_effort: plan.reasoning_effort ?? null,
+      observed_reasoning_effort: adapterResult?.observations.reasoning_effort ?? null,
+      reasoning_effort_source: adapterResult?.observations.reasoning_effort_source ?? null,
+      requested_service_tier: plan.service_tier ?? null,
+      observed_service_tier: adapterResult?.observations.service_tier ?? null,
+      service_tier_source: adapterResult?.observations.service_tier_source ?? null,
       requested_topology: plan.topology,
       observed_topology: adapterResult?.observations.topology ?? null,
       planned_tools: plan.tools,
@@ -342,7 +356,11 @@ function historyRecordFromAttempt(request, attempt) {
     schema: 1,
     feature_key: request.feature_key,
     plan_id: attempt.plan_id,
-    verification_status: attempt.completion_status,
+    ...runtimeSettings({ reasoning_effort: attempt.requested_reasoning_effort ?? null, service_tier: attempt.requested_service_tier ?? null }),
+    // An unknown settings observation cannot train the requested configuration
+    // as successful, even when its independent output verifier passed.
+    verification_status: (attempt.requested_reasoning_effort != null || attempt.requested_service_tier != null)
+      && attempt.control_status !== 'passed' && attempt.completion_status === 'passed' ? 'unknown' : attempt.completion_status,
     duration_ms: attempt.duration_ms,
     costs: attempt.costs,
     observed_tools: attempt.observed_tool_calls,

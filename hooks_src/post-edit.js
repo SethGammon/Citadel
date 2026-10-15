@@ -26,6 +26,7 @@ const { execFileSync, spawnSync } = require('child_process');
 const path = require('path');
 const fs = require('fs');
 const health = require('./harness-health-util');
+const { detectPerformance } = require('../core/verification/performance');
 
 const PROJECT_ROOT = health.PROJECT_ROOT;
 
@@ -634,29 +635,15 @@ function typecheckRust() {
 // ── Performance Lint ─────────────────────────────────────────────────────────
 
 function performanceLint(filePath, relativePath) {
-  // Only lint source files
-  if (!/\.(ts|tsx|js|jsx|py|go|rs)$/.test(filePath)) return;
-
   let content;
   try {
     content = fs.readFileSync(filePath, 'utf8');
   } catch {
     return;
   }
-
-  const warnings = [];
-
-  // Check for confirm/alert/prompt (cross-language web anti-pattern)
-  if (/\.(ts|tsx|js|jsx)$/.test(filePath)) {
-    if (/\bconfirm\s*\(/.test(content)) warnings.push('Uses confirm() — use an in-app modal instead');
-    if (/\balert\s*\(/.test(content)) warnings.push('Uses alert() — use an in-app notification instead');
-    if (/\bprompt\s*\(/.test(content)) warnings.push('Uses prompt() — use an in-app input instead');
-  }
-
-  // Check for transition-all (CSS performance) — only in CSS/JS/TS files
-  if (/\.(ts|tsx|js|jsx|css|scss)$/.test(filePath) && /transition-all/.test(content)) {
-    warnings.push('Uses transition-all — specify properties explicitly (e.g., transition-[opacity,transform])');
-  }
+  const config = health.readConfig();
+  const warnings = detectPerformance(relativePath, content, config.qualityRules?.builtIn)
+    .map(finding => finding.message);
 
   if (warnings.length > 0) {
     hookOutput('post-edit', 'warned', `[lint] ${relativePath}:\n` + warnings.map(w => `  - ${w}`).join('\n') + '\n', { file: relativePath, warnings });
