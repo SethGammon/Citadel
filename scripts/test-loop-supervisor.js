@@ -146,12 +146,45 @@ async function main() {
     const result = await superviseLoop(root, contract.id, { executeCommand: async () => {
       calls++;
       stopLoop(root, contract.id, 'stopped', 'operator stop');
-      return success();
+      return { ...success(), stdout: 'effect-confirmed', stderr: 'action diagnostic', cleanupError: 'cleanup diagnostic' };
     } });
     assert.equal(calls, 1);
     assert.equal(result.status, 'stopped');
-    assert.equal(readLoop(root, contract.id).stopReason, 'operator stop');
+    const saved = readLoop(root, contract.id);
+    assert.equal(saved.stopReason, 'operator stop');
+    assert.equal(saved.runs[0].status, 'interrupted');
+    assert(saved.runs[0].completedAt);
+    assert.equal(saved.runs[0].actionResult.stdout, 'effect-confirmed');
+    assert.equal(saved.runs[0].actionResult.stderr, 'action diagnostic');
+    assert.equal(saved.runs[0].actionResult.cleanupError, 'cleanup diagnostic');
   });
+
+  for (const status of ['paused', 'needs-human-review', 'stopped']) {
+    await test(`${status} preserves verifier observations and unrelated receipt data`, async (root) => {
+      const contract = plan(root);
+      let operatorState;
+      const unrelated = { runId: 'other-run', attempt: 2, status: 'running', completedAt: null };
+      const result = await superviseLoop(root, contract.id, { executeCommand: async () => {
+        const current = readLoop(root, contract.id);
+        updateLoop(root, contract.id, { notes: ['operator note'],
+          runs: [...current.runs.map((run) => ({ ...run, operatorNote: 'retain me' })), unrelated] });
+        operatorState = stopLoop(root, contract.id, status, 'operator decision');
+        return { ...success(), stdout: 'verification-observed', cleanupError: 'cleanup diagnostic' };
+      } });
+      const saved = readLoop(root, contract.id);
+      assert.equal(result.verified, false);
+      assert.equal(saved.status, status);
+      assert.equal(saved.stoppedAt, operatorState.stoppedAt);
+      assert.equal(saved.stopReason, operatorState.stopReason);
+      assert.deepEqual(saved.notes, ['operator note']);
+      assert.deepEqual(saved.runs[1], unrelated);
+      assert.equal(saved.runs[0].operatorNote, 'retain me');
+      assert.equal(saved.runs[0].status, 'interrupted');
+      assert(saved.runs[0].completedAt);
+      assert.equal(saved.runs[0].verifierResult.stdout, 'verification-observed');
+      assert.equal(saved.runs[0].verifierResult.cleanupError, 'cleanup diagnostic');
+    });
+  }
 
   await test('stop after failed verifier prevents the next attempt', async (root) => {
     const contract = plan(root);
@@ -290,9 +323,64 @@ async function main() {
       const result = await superviseLoop(root, contract.id);
       assert.equal(result.status, 'stopped');
       assert.equal(result.stopReason, 'live stop');
+      const saved = readLoop(root, contract.id);
+      assert(saved.runs[0].completedAt);
+      assert.equal(saved.runs[0].actionResult.outcome, 'interrupted');
       assert(Date.now() - start < 5000);
     } finally { clearTimeout(timer); }
   });
+
+  for (const phase of ['action', 'verifier']) {
+    await test(`separate-process stop after ${phase} effect retains durable command result`, async (root) => {
+      const effectFile = path.join(root, 'effect.txt');
+      const command = script(root, 'effect',
+        `console.log('observed-effect'); require('fs').writeFileSync(${JSON.stringify(effectFile)}, 'effect-performed'); setTimeout(() => {}, 10000);`);
+      const contract = plan(root, { command: phase === 'action' ? command : null,
+        verifierCommand: phase === 'verifier' ? command : `${node} --version`, commandTimeoutMs: 5000 });
+      const registryFile = path.resolve(__dirname, '../core/loops/registry.js');
+      const stopReceipt = path.join(root, 'stop-receipt.json');
+      const stopperFile = path.join(root, 'stopper.js');
+      fs.writeFileSync(stopperFile, `
+        const fs = require('fs');
+        const registry = require(${JSON.stringify(registryFile)});
+        const timer = setInterval(() => {
+          if (!fs.existsSync(${JSON.stringify(effectFile)})) return;
+          clearInterval(timer);
+          const stopped = registry.stopLoop(${JSON.stringify(root)}, ${JSON.stringify(contract.id)}, 'stopped', 'independent-process-stop');
+          fs.writeFileSync(${JSON.stringify(stopReceipt)}, JSON.stringify(stopped));
+          process.exit(0);
+        }, 10);
+        setTimeout(() => process.exit(2), 9000);
+      `);
+      const stopper = spawn(process.execPath, [stopperFile], { windowsHide: true, stdio: 'ignore' });
+      const stopped = new Promise((resolve) => {
+        stopper.once('error', (error) => resolve({ error }));
+        stopper.once('close', (code) => resolve({ code }));
+      });
+      try {
+        const result = await superviseLoop(root, contract.id);
+        const stopperResult = await stopped;
+        assert.equal(stopperResult.code, 0, stopperResult.error?.message);
+        const operatorState = JSON.parse(fs.readFileSync(stopReceipt, 'utf8'));
+        const saved = readLoop(root, contract.id);
+        assert.equal(fs.readFileSync(effectFile, 'utf8'), 'effect-performed');
+        assert.equal(result.verified, false);
+        assert.equal(saved.status, 'stopped');
+        assert.equal(saved.stoppedAt, operatorState.stoppedAt);
+        assert.equal(saved.stopReason, 'independent-process-stop');
+        assert.equal(saved.runs.length, 1);
+        assert(saved.runs[0].completedAt);
+        assert.equal(saved.runs[0].outcome, 'interrupted');
+        assert(saved.runs[0][`${phase}Result`].stdout.includes('observed-effect'));
+        assert.equal(saved.runs[0][`${phase}Result`].outcome, 'interrupted');
+        assert(Object.hasOwn(saved.runs[0][`${phase}Result`], 'cleanupError'));
+        if (phase === 'action') assert.equal(saved.runs[0].verifierResult, undefined);
+      } finally {
+        if (stopper.exitCode === null) stopper.kill();
+        await stopped;
+      }
+    });
+  }
 
   await test('real timeout kills owned shell descendants and spares unrelated process', async (root) => {
     const unrelated = spawn(process.execPath, ['-e', 'setTimeout(() => {}, 10000)'], { windowsHide: true });

@@ -162,17 +162,31 @@ async function superviseLoop(projectRoot, id, options = {}) {
   };
   const runsWithActive = () => (loop.runs || []).map((run) => run.runId === activeRun?.runId ? activeRun : run);
   const changedResult = (current) => {
-    // A concurrent edit also revokes admission. Close our own pending receipt
-    // against the fresh revision, but leave operator stops/pauses untouched.
-    if (current && ['planned', 'running'].includes(current.status)
-      && activeRun && current.runs.some((run) => run.runId === activeRun.runId && run.completedAt === null)) {
+    // Stop wins admission, but must not discard observations from the command
+    // already in flight. Merge only our pending receipt into freshly read state.
+    for (let retry = 0; retry < 3; retry++) {
+      current = registry.readLoop(root, id);
+      if (!current || !activeRun
+        || !current.runs.some((run) => run.runId === activeRun.runId && run.completedAt === null)) break;
       try {
         current = registry.updateLoop(root, id, {
-          status: 'interrupted', stoppedAt: iso(), stopReason: 'state-changed',
+          ...(['planned', 'running'].includes(current.status) ? {
+            status: 'interrupted', stoppedAt: current.stoppedAt ?? iso(),
+            stopReason: current.stopReason ?? 'state-changed',
+          } : {}),
           runs: current.runs.map((run) => run.runId === activeRun.runId
-            ? { ...run, ...activeRun, status: 'interrupted', outcome: 'interrupted', completedAt: iso() } : run),
+            ? {
+              ...run, status: 'interrupted', outcome: 'interrupted', completedAt: iso(),
+              ...(activeRun.phase ? { phase: activeRun.phase } : {}),
+              ...(activeRun.actionResult ? { actionResult: activeRun.actionResult } : {}),
+              ...(activeRun.verifierResult ? { verifierResult: activeRun.verifierResult } : {}),
+              ...(activeRun.exitCode !== undefined ? { exitCode: activeRun.exitCode } : {}),
+            } : run),
         }, { expectedRevision: revision(current) });
-      } catch { current = registry.readLoop(root, id); }
+        break;
+      } catch (error) {
+        if (error.code !== 'LOOP_REVISION_CONFLICT' || retry === 2) throw error;
+      }
     }
     return {
       ...(current || { ...loop, status: 'interrupted' }), verified: false,
