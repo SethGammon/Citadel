@@ -75,6 +75,9 @@ function runCommand(command, options = {}) {
         command, exitCode: interruption ? null : exitCode, signal: signal || null,
         outcome: interruption || (error || exitCode !== 0 ? 'failed' : 'passed'),
         stdout, stderr, error: error?.message || null, cleanupError,
+        // A never-spawned observation is stronger than a successful tree kill:
+        // the latter cannot account for escaped/detached descendants.
+        quiescence: !child ? { kind: 'command-not-started', observedAt: new Date().toISOString() } : null,
         startedAt, completedAt: new Date().toISOString(),
       });
     };
@@ -135,6 +138,7 @@ async function superviseLoop(projectRoot, id, options = {}) {
     throw new Error('A bounded loop needs a verifier command');
   }
   if (!['planned', 'running'].includes(loop.status)) return { ...loop, verified: false };
+  if (loop.recoveryOf) loop = registry.claimRecoveryExecution(root, loop);
   const startedMs = loop.startedAt ? Date.parse(loop.startedAt) : now();
   if (!Number.isFinite(startedMs)) throw new Error('Invalid loop startedAt');
   const deadline = loop.budget.maxDurationMs == null ? Infinity : startedMs + loop.budget.maxDurationMs;
@@ -157,6 +161,7 @@ async function superviseLoop(projectRoot, id, options = {}) {
     if (!current || revision(current) !== revision(loop) || !['planned', 'running'].includes(current.status)) {
       throw new StateChanged(current);
     }
+    if (loop.recoveryOf) registry.checkRecoverySource(root, loop);
     if (options.signal?.aborted) throw new Halt('interrupted');
     if (now() >= deadline) throw new Halt('timeout');
   };
@@ -209,9 +214,12 @@ async function superviseLoop(projectRoot, id, options = {}) {
     persist({ runs: runsWithActive() });
     admission();
     let admissionError;
+    const source = loop.recoveryOf ? registry.checkRecoverySource(root, loop) : null;
+    const sourceRemaining = source?.budget.maxDurationMs == null ? Infinity
+      : Date.parse(source.startedAt) + source.budget.maxDurationMs - now();
     const result = await execute(value, {
       cwd: root,
-      timeoutMs: Math.max(1, Math.min(loop.budget.commandTimeoutMs ?? DEFAULT_COMMAND_TIMEOUT_MS, deadline - now())),
+      timeoutMs: Math.max(1, Math.min(loop.budget.commandTimeoutMs ?? DEFAULT_COMMAND_TIMEOUT_MS, deadline - now(), sourceRemaining)),
       signal: options.signal,
       shouldInterrupt: () => {
         try { admission(); return false; } catch (error) { admissionError = error; return true; }
@@ -262,6 +270,23 @@ async function superviseLoop(projectRoot, id, options = {}) {
   } catch (error) {
     if (error instanceof StateChanged) return changedResult(error.current);
     if (error instanceof Halt) {
+      if (error.status === 'interrupted' && !activeRun && !loop.runs.length) {
+        // Cancellation before the first admission has no dispatched command.
+        // Give inspection positive evidence without inferring orphan liveness.
+        const phase = loop.trigger.command ? 'action' : 'verifier';
+        activeRun = {
+          runId: randomUUID(), attempt: 1, status: 'interrupted', outcome: 'interrupted', phase,
+          command: loop.trigger.command || null, verifier: loop.verifier.command,
+          startedAt: iso(), completedAt: iso(),
+          [`${phase}Result`]: { command: phase === 'action' ? loop.trigger.command : loop.verifier.command,
+            outcome: 'interrupted', exitCode: null, cleanupError: null, startedAt: iso(), completedAt: iso(),
+            quiescence: { kind: 'command-not-started', observedAt: iso() } },
+        };
+        try { persist({ runs: [activeRun] }); } catch (conflict) {
+          if (conflict instanceof StateChanged) return changedResult(conflict.current);
+          throw conflict;
+        }
+      }
       try { return finish(error.status); } catch (conflict) {
         if (conflict instanceof StateChanged) return changedResult(conflict.current);
         throw conflict;

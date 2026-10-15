@@ -6,6 +6,7 @@ const fs = require('fs');
 const path = require('path');
 const { createLoopContract, validateLoopContract } = require('./contract');
 const { LOOP_STATUSES, isTerminalStatus, normalizeStatus } = require('./status');
+const { recoveryPlan, assertRecoveryBinding } = require('./recovery');
 const {
   atomicWriteState, persistenceError, readStateFile, registryDirectory,
   registryPath, validateLoopId, withStateLock,
@@ -94,6 +95,38 @@ function readLoop(projectRoot, id) {
   return loop === null ? null : validateStoredLoop(loop, id);
 }
 
+// Source CAS admission and child creation share the existing source lock. The
+// source is never rewritten. This is not a transaction spanning two files.
+function registerRecovery(projectRoot, id, expectedRevision, options = {}) {
+  return withStateLock(projectRoot, id, options, () => {
+    const source = readLoop(projectRoot, id);
+    if (!source) throw persistenceError('LOOP_NOT_FOUND', `Loop not found: ${id}`);
+    const plan = recoveryPlan(source, expectedRevision);
+    return registerLoop(projectRoot, plan.child, options);
+  });
+}
+
+function checkRecoverySource(projectRoot, child) {
+  const source = readLoop(projectRoot, child.recoveryOf.sourceLoopId);
+  if (!source) throw persistenceError('LOOP_NOT_FOUND', 'Recovery source no longer exists');
+  return assertRecoveryBinding(source, child);
+}
+
+// Claim is durable before the supervisor may start. A crash consumes the claim;
+// neither direct supervisor re-entry nor recover retries can run it twice.
+function claimRecoveryExecution(projectRoot, child, options = {}) {
+  return withStateLock(projectRoot, child.recoveryOf.sourceLoopId, options, () => {
+    checkRecoverySource(projectRoot, child);
+    return mutateLoop(projectRoot, child.id, { ...options, expectedRevision: child.revision }, (current) => {
+      if (!current || current.status !== 'planned' || current.runs.length || current.recoveryExecution) {
+        throw persistenceError('LOOP_RECOVERY_CONSUMED', 'Recovery was already claimed; inspect its existing child, do not retry');
+      }
+      checkRecoverySource(projectRoot, current);
+      return { ...current, recoveryExecution: { claimedAt: nowIso(options), pid: process.pid } };
+    });
+  });
+}
+
 function updateLoop(projectRoot, id, patch = {}, options = {}) {
   return mutateLoop(projectRoot, id, options, (current) => {
     if (!current) throw persistenceError('LOOP_NOT_FOUND', `Loop not found: ${id}`);
@@ -104,6 +137,15 @@ function updateLoop(projectRoot, id, patch = {}, options = {}) {
     };
     if (updated.id !== id || updated.version !== current.version || updated.statePath !== current.statePath) {
       throw persistenceError('LOOP_INVALID_STATE', 'Loop id, version and statePath cannot be changed');
+    }
+    if (current.recoveryOf && (JSON.stringify(current.recoveryOf) !== JSON.stringify(updated.recoveryOf)
+      || JSON.stringify(current.recoveryExecution) !== JSON.stringify(updated.recoveryExecution)
+      || JSON.stringify(current.trigger) !== JSON.stringify(updated.trigger)
+      || JSON.stringify(current.verifier) !== JSON.stringify(updated.verifier)
+      || JSON.stringify(current.budget) !== JSON.stringify(updated.budget)
+      || JSON.stringify(current.retry) !== JSON.stringify(updated.retry)
+      || JSON.stringify(current.stopConditions) !== JSON.stringify(updated.stopConditions))) {
+      throw persistenceError('LOOP_RECOVERY_CONFLICT', 'Recovery linkage, execution claim and authorized commands/budgets cannot change');
     }
     if (isTerminalStatus(current.status)) {
       const changedStop = ['stoppedAt', 'stopReason'].some((key) => current[key] !== undefined && updated[key] !== current[key]);
@@ -216,11 +258,14 @@ function listLoops(projectRoot, options = {}) {
 
 module.exports = Object.freeze({
   appendLoopRun,
+  checkRecoverySource,
+  claimRecoveryExecution,
   listLoops,
   loopPath,
   loopsDir,
   readLoop,
   registerLoop,
+  registerRecovery,
   stopLoop,
   updateLoop,
 });

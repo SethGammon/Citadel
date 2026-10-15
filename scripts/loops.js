@@ -7,11 +7,14 @@ const {
   listLoops,
   readLoop,
   registerLoop,
+  registerRecovery,
   stopLoop,
 } = require('../core/loops/registry');
 const { createLoopContract } = require('../core/loops/contract');
 const { instantiateLoopTemplate, listLoopTemplates } = require('../core/loops/templates');
 const { isTerminalStatus, stopSummary } = require('../core/loops/status');
+const { inspectRecovery, recoveryPlan } = require('../core/loops/recovery');
+const { superviseLoop } = require('../core/loops/supervisor');
 
 function arg(name, fallback = null) {
   const prefix = `${name}=`;
@@ -34,6 +37,7 @@ function usage() {
     'Usage:',
     '  node scripts/loops.js list [--active] [--json]',
     '  node scripts/loops.js inspect <id> [--json]',
+    '  node scripts/loops.js recover <id> --verify-only --expected-revision <n> [--write] [--json]',
     '  node scripts/loops.js templates [--json]',
     '  node scripts/loops.js plan --template <name> [--write] [--json]',
     '  node scripts/loops.js register --type <type> --title <title> --command <cmd> [--verify <cmd>] [--write] [--json]',
@@ -89,6 +93,7 @@ function renderTemplates() {
 
 function renderInspect(loop) {
   if (!loop) return 'Loop not found.\n';
+  const recovery = loop.recoverySummary || inspectRecovery(loop);
   return [
     `Loop: ${loop.id}`,
     `Status: ${loop.status} - ${stopSummary(loop.status)}`,
@@ -101,6 +106,18 @@ function renderInspect(loop) {
     `Stop conditions: ${(loop.stopConditions || []).join(', ')}`,
     `State: ${loop.statePath || '(unknown)'}`,
     `Runs: ${(loop.runs || []).length}`,
+    `Revision: ${recovery.sourceRevision}`,
+    `Stop reason: ${recovery.stopReason || '(none)'}`,
+    `Last run: ${recovery.lastRun?.runId || '(none)'} | attempt=${recovery.lastRun?.attempt ?? 'n/a'} | phase=${recovery.lastRun?.phase || '(none)'}`,
+    `Observations: action=${recovery.actionObservation} verifier=${recovery.verifierObservation}`,
+    `Effect outcome: ${recovery.effectOutcome}`,
+    `Remaining budget: attempts=${recovery.remainingAttempts} duration-ms=${recovery.remainingDurationMs ?? 'unbounded'}`,
+    `Deadline: ${recovery.deadlineAt || '(none)'}`,
+    `Cleanup: ${recovery.cleanupErrors.join('; ') || 'no recorded error; this does not establish quiescence'}`,
+    `Quiescence: ${recovery.quiescence?.kind || 'unproven'}`,
+    `Recovery: ${recovery.decision} (${recovery.reason})`,
+    recovery.authorization,
+    ...(recovery.nextCommand ? [`Preview: ${recovery.nextCommand}`] : []),
     '',
   ].join('\n');
 }
@@ -129,8 +146,82 @@ function contractFromArgs() {
   return createLoopContract(options);
 }
 
-function main() {
+function parseRecoveryArgs(args) {
+  const [id, ...flags] = args;
+  if (!id || id.startsWith('--')) throw new Error('Missing loop id.');
+  const result = { id, write: false, json: false, root: process.cwd() };
+  const seen = new Set();
+  for (let i = 0; i < flags.length; i++) {
+    const token = flags[i];
+    const equals = token.indexOf('=');
+    const name = equals === -1 ? token : token.slice(0, equals);
+    if (!['--verify-only', '--expected-revision', '--write', '--json', '--project-root'].includes(name)) {
+      throw new Error(`Unsupported recovery argument: ${name}`);
+    }
+    if (seen.has(name)) throw new Error(`Duplicate recovery argument: ${name}`);
+    seen.add(name);
+    if (['--verify-only', '--write', '--json'].includes(name)) {
+      if (equals !== -1) throw new Error(`Flag does not take a value: ${name}`);
+      if (name === '--write') result.write = true;
+      if (name === '--json') result.json = true;
+    } else {
+      const value = equals === -1 ? flags[++i] : token.slice(equals + 1);
+      if (!value || value.startsWith('--')) throw new Error(`Missing value: ${name}`);
+      if (name === '--project-root') result.root = path.resolve(value);
+      else {
+        if (!/^(0|[1-9][0-9]*)$/.test(value) || !Number.isSafeInteger(Number(value))) {
+          throw new Error('--expected-revision must be a non-negative safe integer');
+        }
+        result.expectedRevision = Number(value);
+      }
+    }
+  }
+  if (!seen.has('--verify-only') || !seen.has('--expected-revision')) {
+    throw new Error('Recovery requires --verify-only and --expected-revision.');
+  }
+  return result;
+}
+
+async function recover(args) {
+  const options = parseRecoveryArgs(args);
+  const source = readLoop(options.root, options.id);
+  if (!source) throw new Error(`Loop not found: ${options.id}`);
+  const plan = recoveryPlan(source, options.expectedRevision);
+  if (!options.write) {
+    const existing = readLoop(options.root, plan.child.id);
+    const result = { ...plan, existingChild: existing ? { id: existing.id, status: existing.status } : null, writes: false };
+    if (options.json) printJson(result);
+    else {
+      process.stdout.write(`Verification follow-up plan: ${plan.child.id}\n`);
+      process.stdout.write(`Source: ${source.id} revision ${source.revision}\nVerifier: ${plan.child.verifier.command}\n`);
+      process.stdout.write(`Budget: one invocation, ${plan.child.budget.commandTimeoutMs} ms\n`);
+      process.stdout.write(`${plan.recoverySummary.authorization}\n`);
+      process.stdout.write(existing ? `Already admitted: ${existing.id}; inspection only, no retry.\n`
+        : 'Pass --write to authorize this exact new invocation. Original action and history remain unchanged.\n');
+    }
+    return;
+  }
+  const child = registerRecovery(options.root, options.id, options.expectedRevision);
+  const controller = new AbortController();
+  const interrupt = () => controller.abort();
+  process.on('SIGINT', interrupt);
+  process.on('SIGTERM', interrupt);
+  let result;
+  try { result = await superviseLoop(options.root, child.id, { signal: controller.signal }); }
+  finally {
+    process.removeListener('SIGINT', interrupt);
+    process.removeListener('SIGTERM', interrupt);
+  }
+  if (options.json) printJson(result);
+  else process.stdout.write(`Verification follow-up: ${result.id}\nStatus: ${result.status}\nSource unchanged: ${source.id}\n`);
+  const cleanupError = result.cleanupError || result.runs?.at(-1)?.verifierResult?.cleanupError;
+  if (cleanupError) process.stderr.write(`Command cleanup failed: ${cleanupError}\n`);
+  process.exitCode = result.verified ? 0 : 1;
+}
+
+async function main() {
   const mode = process.argv[2] || 'list';
+  if (mode === 'recover') return recover(process.argv.slice(3));
   const root = projectRoot();
   const json = hasFlag('--json');
 
@@ -149,7 +240,7 @@ function main() {
   if (mode === 'inspect') {
     const id = process.argv[3];
     const loop = readLoop(root, id) || listLoops(root).find((item) => item.id === id);
-    if (json) printJson(loop || null);
+    if (json) printJson(loop ? { ...loop, recoverySummary: inspectRecovery(loop) } : null);
     else process.stdout.write(renderInspect(loop));
     process.exit(loop ? 0 : 1);
   }
@@ -190,10 +281,14 @@ function main() {
   process.exit(1);
 }
 
-if (require.main === module) main();
+if (require.main === module) main().catch((error) => {
+  process.stderr.write(`${error.code ? `${error.code}: ` : ''}${error.message}\n`);
+  process.exitCode = 1;
+});
 
 module.exports = {
   renderInspect,
   renderList,
   renderTemplates,
+  parseRecoveryArgs,
 };
