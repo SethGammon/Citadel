@@ -110,6 +110,46 @@ try {
     assert.strictEqual(row.passed, false);
     scenario();
   });
+  test('empty assertion strings are rejected rather than matching every output', () => {
+    scenario('assert-contains:\n  - ""');
+    const result = invoke(executeArgs);
+    assert.strictEqual(result.status, 1);
+    assert.strictEqual(rows(result)[0].executionAttempted, false);
+    assert.match(rows(result)[0].executionError, /nonblank strings/);
+    scenario();
+  });
+  test('an empty-list input cannot become an executed prompt', () => {
+    scenario('input:');
+    const result = invoke(executeArgs);
+    assert.strictEqual(result.status, 1);
+    assert.strictEqual(rows(result)[0].executionAttempted, false);
+    assert.match(rows(result)[0].executionError, /input must be/);
+    scenario();
+  });
+  test('inherited object properties are not named project states', () => {
+    scenario('state: toString');
+    const result = invoke(executeArgs);
+    assert.strictEqual(result.status, 1);
+    assert.match(rows(result)[0].executionError, /unknown state/);
+    scenario();
+  });
+  test('invalid file paths cannot pass by returning false from existsSync', () => {
+    for (const invalid of ['bad\u0000path', '../outside', 'C:\\outside', 'NUL', 'path/']) {
+      scenario(`assert-contains: []\nassert-files-absent:\n  - "${invalid}"`);
+      const result = invoke(executeArgs);
+      assert.strictEqual(result.status, 1, invalid);
+      assert.strictEqual(rows(result)[0].executionAttempted, false);
+      assert.match(rows(result)[0].executionError, /safe relative file paths/);
+    }
+    scenario();
+  });
+  test('a valid file-absence assertion is meaningful without text assertions', () => {
+    scenario('assert-contains: []\nassert-files-absent: [uncreated.txt]');
+    const result = invoke(executeArgs);
+    assert.strictEqual(result.status, 0, result.stderr);
+    assert.strictEqual(rows(result)[0].passed, true);
+    scenario();
+  });
   test('result writes cannot overwrite another run in the same second', () => {
     const bench = require(script);
     const first = bench.writeResults([{ id: 'first' }]);

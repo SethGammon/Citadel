@@ -764,12 +764,30 @@ function runAssertions(scenario, output, projectRoot) {
 function validateScenario(scenario) {
   const issues = [];
 
-  if (!scenario.input) issues.push('missing input');
-  if (scenario.assertContains.length === 0 && scenario.assertNotContains.length === 0 && (scenario.assertFilesAbsent || []).length === 0) {
-    issues.push('no assertions defined (add assert-contains or assert-not-contains)');
+  if (typeof scenario.input !== 'string' || !scenario.input.trim()) issues.push('input must be a nonblank string');
+  for (const field of ['assertContains', 'assertNotContains', 'assertFilesAbsent']) {
+    const values = scenario[field] || [];
+    if (!Array.isArray(values) || values.some((value) => typeof value !== 'string' || !value.trim())) {
+      issues.push(`${field} must contain only nonblank strings`);
+    }
   }
-  if (!STATES[scenario.state]) {
+  if (scenario.assertContains.length === 0 && scenario.assertNotContains.length === 0 && (scenario.assertFilesAbsent || []).length === 0) {
+    issues.push('no assertions defined (add assert-contains, assert-not-contains, or assert-files-absent)');
+  }
+  for (const value of scenario.assertFilesAbsent || []) {
+    if (typeof value !== 'string') continue;
+    const segments = value.replace(/\\/g, '/').split('/');
+    if (/[\u0000-\u001f\u007f<>:"|?*]/.test(value) || path.posix.isAbsolute(value) || path.win32.isAbsolute(value)
+      || segments.some((part) => !part || part === '..' || part === '.' || /[. ]$/.test(part)
+        || /^(con|prn|aux|nul|com[1-9]|lpt[1-9])(?:\.|$)/i.test(part))) {
+      issues.push('assert-files-absent must use safe relative file paths');
+    }
+  }
+  if (typeof scenario.state !== 'string' || !Object.hasOwn(STATES, scenario.state)) {
     issues.push(`unknown state "${scenario.state}" — valid: ${Object.keys(STATES).join(', ')}`);
+  }
+  if (!Number.isSafeInteger(scenario.timeout) || scenario.timeout < 1 || scenario.timeout > 2147483647) {
+    issues.push('timeout must be a positive integer no greater than 2147483647ms');
   }
 
   return issues;
