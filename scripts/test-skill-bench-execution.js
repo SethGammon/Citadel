@@ -209,6 +209,35 @@ try {
       assert(!verifyHooks(changed, options).passed);
     }
   });
+  test('native planning turns require exact candidate echo and refuse every observed action', () => {
+    const { verifyTurn } = require('./skill-bench-native');
+    const options = { threadId: 'thread', turnId: 'turn', prompt: 'exact candidate bytes' };
+    const event = { method: 'turn/completed', params: { threadId: 'thread', turn: { id: 'turn', status: 'completed', items: [
+      { id: 'input', type: 'userMessage', content: [{ type: 'text', text: options.prompt }] },
+      { id: 'output', type: 'agentMessage', text: 'done' },
+    ] } } };
+    assert(verifyTurn([event], options).passed);
+    assert(!verifyTurn([event], { ...options, threadId: 'other' }).passed);
+    assert(!verifyTurn([event], { ...options, turnId: 'other' }).passed);
+    assert(!verifyTurn([event], { ...options, prompt: 'different candidate' }).passed);
+    for (const type of ['commandExecution', 'fileChange', 'mcpToolCall', 'collabAgentToolCall', 'unknown']) {
+      const action = { method: 'item/started', params: { threadId: 'thread', turnId: 'turn', item: { id: 'action', type } } };
+      assert(!verifyTurn([action, event], options).passed);
+      const copy = JSON.parse(JSON.stringify(event)); copy.params.turn.items.push(action.params.item);
+      assert(!verifyTurn([copy], options).passed);
+    }
+  });
+  test('native shutdown is bounded even with a broken pipe and never-closing process', () => {
+    const code = `const assert=require('assert'); const {boundedShutdown}=require(${JSON.stringify(path.join(__dirname, 'skill-bench-native.js'))});
+      const stream={end(){throw Error('EPIPE')},destroy(){}}; let killed=false;
+      const child={stdin:stream,stdout:stream,stderr:stream,kill(){killed=true},unref(){}};
+      (async()=>{ const start=Date.now(); const result=await boundedShutdown(child,new Promise(()=>{}),10,10);
+        assert(result.forced && !result.closed && killed); assert(Date.now()-start<2000);
+        const clean=await boundedShutdown(child,Promise.resolve({code:0,signal:null}),10,10);
+        assert(clean.closed && !clean.forced); })().catch(error=>{console.error(error);process.exitCode=1});`;
+    const result = spawnSync(process.execPath, ['-e', code], { encoding: 'utf8', timeout: 5000, windowsHide: true });
+    assert.equal(result.status, 0, result.stderr);
+  });
   process.stdout.write(`${passed} skill benchmark execution tests passed.\n`);
   process.exitCode = 0;
 } catch (error) {
