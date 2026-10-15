@@ -177,6 +177,38 @@ try {
     assert.strictEqual(rows(result)[0].executionSucceeded, true);
     assert.match(result.stderr, /Could not preserve benchmark results/);
   });
+  test('regex assertions accept hyphenation without accepting missing meaning or empty patterns', () => {
+    const bench = require('./skill-bench');
+    const specimen = { input: 'Describe bytes', state: 'clean', timeout: 1000, assertContains: [], assertNotContains: [], assertMatches: ['line[- ]endings?'] };
+    assert.deepEqual(bench.validateScenario(specimen), []);
+    assert(bench.runAssertions(specimen, 'Pin line-ending conversion').every(row => row.passed));
+    assert(bench.runAssertions(specimen, 'Pin line endings').every(row => row.passed));
+    assert(bench.runAssertions(specimen, 'Pin bytes').some(row => !row.passed));
+    for (const pattern of ['', '.*', '[']) assert(bench.validateScenario({ ...specimen, assertMatches: [pattern] }).length);
+  });
+  test('native hook proof binds successful paired events to candidate and thread', () => {
+    const { verifyHooks } = require('./skill-bench-native');
+    const hookPath = path.join(fixture, '.codex/hooks.json');
+    const options = { threadId: 'thread', turnId: 'turn', hookPath };
+    const events = ['userPromptSubmit', 'stop'].flatMap((eventName, index) => ['started', 'completed'].map(status => ({
+      method: `hook/${status}`, params: { threadId: 'thread', turnId: 'turn', run: {
+        id: String(index), eventName, sourcePath: hookPath, status: status === 'started' ? 'running' : 'completed', entries: [],
+      } },
+    })));
+    assert(verifyHooks(events, options).passed);
+    assert(!verifyHooks([], options).passed);
+    assert(!verifyHooks(events.slice(1), options).passed);
+    for (const change of [
+      event => { event.params.threadId = 'other'; },
+      event => { event.params.turnId = 'other'; },
+      event => { event.params.run.sourcePath = path.join(fixture, 'installed/hooks.json'); },
+      event => { event.params.run.status = 'failed'; },
+      event => { event.params.run.entries = [{ kind: 'error', text: 'failure' }]; },
+    ]) {
+      const changed = JSON.parse(JSON.stringify(events)); change(changed[1]);
+      assert(!verifyHooks(changed, options).passed);
+    }
+  });
   process.stdout.write(`${passed} skill benchmark execution tests passed.\n`);
   process.exitCode = 0;
 } catch (error) {

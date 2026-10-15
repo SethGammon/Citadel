@@ -85,6 +85,7 @@ const CODEX_SERVICE_TIER = getArgValue('--codex-service-tier') || process.env.CI
  *   state           — named project state: clean | with-campaign | with-completed-campaign | with-telemetry
  *   behavior        — invariant | implementation (default: invariant)
  *   assert-contains — YAML list: patterns that MUST appear in output (case-insensitive substring)
+ *   assert-matches — nonempty regular expressions that MUST match output (case-insensitive)
  *   assert-not-contains — YAML list: patterns that must NOT appear in output
  *   assert-files-absent — project-relative paths that must not exist after execution
  *   timeout         — milliseconds before giving up (default: 180000)
@@ -174,6 +175,7 @@ function parseScenario(filePath) {
     state:            fm.state || 'clean',
     behavior:         fm.behavior || 'invariant',
     assertContains:    Array.isArray(fm['assert-contains'])     ? fm['assert-contains']     : [],
+    assertMatches:    Array.isArray(fm['assert-matches']) ? fm['assert-matches'] : [],
     assertNotContains: Array.isArray(fm['assert-not-contains']) ? fm['assert-not-contains'] : [],
     assertFilesAbsent: Array.isArray(fm['assert-files-absent']) ? fm['assert-files-absent'] : [],
     timeout:          parseInt(fm.timeout, 10) || 180000,
@@ -746,6 +748,10 @@ function runAssertions(scenario, output, projectRoot) {
     results.push({ assertion: `not-contains: "${pattern}"`, passed, type: 'not-contains' });
   }
 
+  for (const pattern of scenario.assertMatches || []) {
+    results.push({ assertion: `matches: "${pattern}"`, passed: new RegExp(pattern, 'i').test(output), type: 'matches' });
+  }
+
   for (const relative of scenario.assertFilesAbsent || []) {
     const safe = typeof relative === 'string' && relative.length > 0 &&
       !path.isAbsolute(relative) && !path.win32.isAbsolute(relative) &&
@@ -765,13 +771,18 @@ function validateScenario(scenario) {
   const issues = [];
 
   if (typeof scenario.input !== 'string' || !scenario.input.trim()) issues.push('input must be a nonblank string');
-  for (const field of ['assertContains', 'assertNotContains', 'assertFilesAbsent']) {
+  for (const field of ['assertContains', 'assertNotContains', 'assertFilesAbsent', 'assertMatches']) {
     const values = scenario[field] || [];
     if (!Array.isArray(values) || values.some((value) => typeof value !== 'string' || !value.trim())) {
       issues.push(`${field} must contain only nonblank strings`);
     }
   }
-  if (scenario.assertContains.length === 0 && scenario.assertNotContains.length === 0 && (scenario.assertFilesAbsent || []).length === 0) {
+  for (const pattern of scenario.assertMatches || []) {
+    try {
+      if (typeof pattern !== 'string' || !pattern.trim() || new RegExp(pattern, 'i').test('')) issues.push('assertMatches must not match empty output');
+    } catch { issues.push('assertMatches contains an invalid regular expression'); }
+  }
+  if (scenario.assertContains.length === 0 && scenario.assertNotContains.length === 0 && (scenario.assertFilesAbsent || []).length === 0 && (scenario.assertMatches || []).length === 0) {
     issues.push('no assertions defined (add assert-contains, assert-not-contains, or assert-files-absent)');
   }
   for (const value of scenario.assertFilesAbsent || []) {

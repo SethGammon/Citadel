@@ -4,7 +4,7 @@ skill: experiment
 description: experiment produces iterations and measurement plan for a bundle-size reduction goal
 tags: [happy-path]
 behavior: invariant
-input: /experiment plan only for a described repository; do not run commands or create files. Reduce bundle size within src/** using node tools/bundle-size.cjs which prints bytes, lower is better, budget 2 iterations. The reported incumbent is 450kb; explain how to verify the baseline and propose an iteration with a measurement plan.
+input: /experiment plan only for a described repository; apart from reading the selected candidate skill once, do not run other commands or create files. Reduce bundle size within src/** using node tools/bundle-size.cjs which prints bytes, lower is better, budget 2 iterations. The reported incumbent is 450kb; explain how to verify the baseline and propose an iteration with a measurement plan.
 state: clean
 assert-contains:
   - bundle
