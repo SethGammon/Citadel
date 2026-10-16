@@ -56,6 +56,9 @@ try {
   assert.equal(cli('continue').json.code, 'CONTINUATION_EVIDENCE_INVALID'); fs.writeFileSync(accepted, bytes);
   assert.equal(cli('continue', ['--out', accepted]).json.code, 'CHECKPOINT_UNSAFE_PATH');
   assert.equal(cli('continue', ['--out', path.join(workspace, 'report.json')]).json.code, 'CHECKPOINT_UNSAFE_PATH');
+  if (process.platform === 'win32') {
+    assert.equal(cli('continue', ['--out', path.join(workspace, 'case-report.json').toUpperCase()]).json.code, 'CHECKPOINT_UNSAFE_PATH');
+  }
   const completed = path.join(temp, 'checkpoint/journal/00000002.json'); const completedBytes = fs.readFileSync(completed);
   fs.unlinkSync(completed); assert.equal(cli('continue').json.code, 'CONTINUATION_BLOCKED'); fs.writeFileSync(completed, completedBytes);
   fs.writeFileSync(completed, '{}'); assert.notEqual(cli('continue').status, 0); fs.writeFileSync(completed, completedBytes);

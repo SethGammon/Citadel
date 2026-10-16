@@ -18,9 +18,13 @@ function safePath(input) {
     current = path.join(current, part);
     try {
       if (fs.lstatSync(current).isSymbolicLink()) fail('CHECKPOINT_UNSAFE_PATH', `Symbolic links are not supported: ${current}`);
+      // Resolve Windows short names/casing for each existing ancestor, including
+      // parents of an output that does not exist yet. Lexical comparison alone
+      // would mistake RUNNER~1 and runneradmin for different locations.
+      current = fs.realpathSync.native(current);
     } catch (error) { if (error.code !== 'ENOENT') throw error; }
   }
-  return resolved;
+  return current;
 }
 
 function git(root, args) {
