@@ -74,6 +74,8 @@ function runCheckpointed(options) {
   // Validate admission before claiming a checkpoint or launching an adapter.
   routeOperation(options);
   const ctx = context(options);
+  const binding = ctx.payload;
+  const assertBinding = () => { if (context(options).payload !== binding) fail('CONTINUATION_INPUT_CHANGED', 'Workspace identity or HEAD changed during execution or verification.'); };
   snapshot(ctx.root, options.request.verifier.required_changed_paths);
   const intent = options.reconciliation ? reconciliation.prepare(options, ctx, { safePath, snapshot }) : null;
   // Exclusive creation is the single-writer claim. Never reclaim stale state.
@@ -93,9 +95,10 @@ function runCheckpointed(options) {
     idempotencyKey: 'operation', effectClass: 'external-nonrepeatable', payloadDigest: ctx.payload,
     effect() {
       try {
-        report = runOperation(options);
+        report = runOperation({ ...options, ...(intent ? { checkpointRegistration: { file: path.join(ctx.checkpoint, 'adapter.json'), payload_digest: ctx.payload } } : {}) });
         if (report.status !== 'passed' || verifyReport(report).status !== 'verified') fail('CHECKPOINT_NOT_VERIFIED', 'Operation did not pass; automatic continuation is blocked.');
-        if (intent) reconciliation.validateCurrent(options, ctx, intent, { snapshot });
+        assertBinding();
+        if (intent) reconciliation.validateCurrent(options, ctx, intent, { snapshot, assertBinding });
         const accepted = { schema: 1, payload_digest: ctx.payload, report, files: snapshot(ctx.root, [...options.request.verifier.required_changed_paths, ...(intent ? [intent.verifier_path] : [])]) };
         writeNew(path.join(ctx.checkpoint, 'accepted.json'), accepted);
         return { evidence_digest: digest(accepted) };
@@ -122,6 +125,8 @@ function guardExports(options, files) {
 function continueOperation(options) {
   routeOperation(options);
   const ctx = context(options);
+  const binding = ctx.payload;
+  const assertBinding = () => { if (context(options).payload !== binding) fail('CONTINUATION_INPUT_CHANGED', 'Workspace identity or HEAD changed during verification.'); };
   let intent = null;
   if (options.reconciliation) {
     intent = JSON.parse(fs.readFileSync(safePath(path.join(ctx.checkpoint, 'intent.json')), 'utf8'));
@@ -143,7 +148,7 @@ function continueOperation(options) {
   if (entries.some((entry) => entry.payload_digest !== ctx.payload)) fail('CONTINUATION_INPUT_CHANGED', 'Request, catalog, history, workspace or HEAD changed.');
   const bound = entries.every(entry => entry.idempotency_key === 'operation' && entry.effect_class === 'external-nonrepeatable');
   if (intent && bound && entries[0]?.state === 'pending' && (entries.length === 1 || (entries.length === 2 && entries[1].state === 'unknown'))) {
-    return reconciliation.reconcile(options, ctx, intent, entries, { safePath, snapshot, writeNew });
+    return reconciliation.reconcile(options, ctx, intent, entries, { safePath, snapshot, writeNew, assertBinding });
   }
   // Admit exactly this command's pending -> completed transition. Every other
   // state, identity or effect class is uncertain and must never replay work.
@@ -163,6 +168,7 @@ function continueOperation(options) {
   if (digest(snapshot(ctx.root, [...options.request.verifier.required_changed_paths, ...(intent ? [intent.verifier_path] : [])])) !== digest(accepted.files)) {
     fail('CONTINUATION_ARTIFACT_CHANGED', 'Workspace files changed since verification.');
   }
+  assertBinding();
   return accepted.report;
 }
 

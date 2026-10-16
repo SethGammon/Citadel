@@ -64,19 +64,23 @@ in the expected file contents. A postcondition already satisfied before the run
 is rejected. Append operations declare the hash of the entire resulting file,
 so an extra, partial or different record cannot pass.
 
-This mode currently requires tool plans with no model, retries or fallback, and
+This mode currently requires Node adapter entry files (not shell commands or Node
+option injection), tool plans with no model, retries or fallback, and
 a trusted read-only Node verifier whose entry file is in the workspace outside
 the effect paths. All acceptance-critical inputs belong in that workspace.
 Remote APIs, model-session recovery, external verifier dependencies and undeclared
 effects are outside this contract. Stop the entire owned operation process tree
-before continuing. A live original owner blocks recovery; a missing PID is not
+before continuing. A live original owner or registered adapter blocks recovery; a missing PID is not
 treated as evidence that the effect completed. This command does not discover
-or terminate orphaned adapter descendants.
+or terminate unmanaged adapter descendants. Node adapters are registered durably
+before their entry code runs. Missing or invalid registration blocks pending
+recovery, including older pending checkpoints without this registration. Completed
+checkpoints remain readable. PID reuse can conservatively block recovery.
 
 Before launching the adapter, Citadel binds the manifest, workspace baseline and
 owner to the pending journal entry. After interruption, continuation checks the
 expected file hashes and unchanged remaining workspace, executes the independent
-verifier, and checks the files again before saving a completed checkpoint. It
+verifier, and checks the files and HEAD again before saving a completed checkpoint. It
 does not rerun the adapter. A lock prevents concurrent reconciliation; an
 interrupted reconciliation or an existing uncommitted accepted record remains
 blocked for inspection rather than being guessed safe.
@@ -88,3 +92,24 @@ records for a recovered execution. Subsequent continuation returns the saved
 report without rerunning the verifier. Missing, partial, duplicate, different or
 ambiguous effects continue to block. This is verified recovery for the declared
 local-file contract, not a universal exactly-once guarantee.
+
+## Tested failure boundaries and remaining limits
+
+The regression suite interrupts recovery during the verifier, after the accepted
+receipt is fsynced, and after the completed journal entry is published. The first
+two remain blocked for inspection. The last can deliver the saved result without
+repeating the adapter or verifier. This is safe refusal, not automatic recovery
+from every interruption. Competing resumptions admit one verifier. Edits outside
+the declared outputs, even unrelated notes, conservatively invalidate recovery
+because this contract binds the entire nonignored workspace.
+
+`operation verify` validates a receipt's structure and digest, not its current
+workspace, signer authenticity, or the adequacy of a user-written verifier. Use
+`operation continue` with the frozen request and workspace to check current
+bindings. Changing a verifier after the intent is frozen blocks continuation;
+an inadequate verifier declared from the outset remains the caller's responsibility.
+
+A loopback HTTP regression commits a remote effect then drops the response. The
+command refuses repeated continuation without repeating the remote action. This
+demonstrates safe handling of uncertainty only; there is no supported remote
+postcondition manifest or claim of recovery for third-party services.
