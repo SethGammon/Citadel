@@ -7,7 +7,9 @@ const path = require('path');
 const { spawnSync } = require('child_process');
 
 const root = path.resolve(__dirname, '..');
-const temp = fs.mkdtempSync(path.join(os.tmpdir(), 'citadel-continuation-'));
+// macOS exposes its temp root through /var -> /private/var. Use its canonical
+// location so the deliberate symlink guard is tested only on fixture links.
+const temp = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'citadel-continuation-')));
 const workspace = path.join(temp, 'workspace');
 fs.mkdirSync(workspace);
 function git(...args) {
