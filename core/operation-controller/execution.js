@@ -91,7 +91,7 @@ function reconcile(plan, request, result) {
   });
 }
 
-function executeAdapter({ adapter, plan, request, decision, workspaceRoot, retryCount, spawn = spawnSync, env = process.env }) {
+function executeAdapter({ adapter, plan, request, decision, workspaceRoot, retryCount, spawn = spawnSync, env = process.env, checkpointRegistration }) {
   const input = {
     schema: 1,
     protocol: adapter.protocol,
@@ -102,9 +102,18 @@ function executeAdapter({ adapter, plan, request, decision, workspaceRoot, retry
     retry_count: retryCount,
   };
   const started = Date.now();
-  const result = spawn(adapter.executable, adapter.args, {
+  const childEnv = safeEnvironment(adapter.environment_allowlist, env);
+  let executable = adapter.executable, args = adapter.args;
+  if (checkpointRegistration) {
+    // Reconciliation admits Node adapters only. Register this exact process
+    // durably before loading adapter code, including before any file effect.
+    executable = process.execPath;
+    args = ['--require', path.join(__dirname, '../../scripts/operation-register-adapter.js'), ...args];
+    childEnv.CITADEL_CHECKPOINT_REGISTRATION = JSON.stringify(checkpointRegistration);
+  }
+  const result = spawn(executable, args, {
     cwd: workspaceRoot,
-    env: safeEnvironment(adapter.environment_allowlist, env),
+    env: childEnv,
     input: `${JSON.stringify(input)}\n`,
     encoding: 'utf8',
     shell: false,
@@ -247,7 +256,7 @@ function telemetryFor(attempt, request) {
   });
 }
 
-function runOperation({ request, catalog, history = [], workspaceRoot, spawn = spawnSync, env = process.env }) {
+function runOperation({ request, catalog, history = [], workspaceRoot, spawn = spawnSync, env = process.env, checkpointRegistration }) {
   validateRequest(request);
   validateCatalog(catalog);
   validateHistory(history);
@@ -263,7 +272,7 @@ function runOperation({ request, catalog, history = [], workspaceRoot, spawn = s
     const plan = plans.get(targetPlanId);
     const retryCount = retries.get(targetPlanId) || 0;
     const adapter = catalog.adapters[plan.adapter_id];
-    const execution = executeAdapter({ adapter, plan, request, decision, workspaceRoot: root, retryCount, spawn, env });
+    const execution = executeAdapter({ adapter, plan, request, decision, workspaceRoot: root, retryCount, spawn, env, checkpointRegistration });
     const adapterResult = execution.result;
     const control = adapterResult ? reconcile(plan, request, adapterResult) : { status: 'unknown', mismatch_codes: [], unknown_codes: ['ADAPTER_OBSERVATION_MISSING'] };
     const verification = adapterResult

@@ -12,6 +12,13 @@ const runtimeAdapter = require('./operation-runtime-adapter');
 const operationCli = require('./operation');
 require('./test-operation-continuation');
 require('./test-operation-reconciliation');
+// These asynchronous, process-owning probes run in isolated child processes so
+// their lifecycle and failure status are included in the synchronous suite.
+for (const test of ['test-operation-boundaries.js', 'test-operation-remote-uncertainty.js']) {
+  const result = spawnSync(process.execPath, [path.join(__dirname, test)], { encoding: 'utf8', windowsHide: true, timeout: 180000 });
+  assert.equal(result.status, 0, `${test}: ${result.stdout}\n${result.stderr}`);
+  process.stdout.write(result.stdout);
+}
 
 const ROOT = path.resolve(__dirname, '..');
 const EXAMPLE = path.join(ROOT, 'examples', 'operation-control');

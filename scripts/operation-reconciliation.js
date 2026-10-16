@@ -4,7 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const { digest, verifyAttempt } = require('../core/operation-controller');
 const { recoveryReport } = require('../core/operation-controller/recovery-report');
-const { appendJournalEntry } = require('../core/operations');
+const { appendJournalEntry, readJournal } = require('../core/operations');
 
 function reject(message) { throw Object.assign(new Error(message), { code: 'RECONCILIATION_BLOCKED' }); }
 
@@ -28,6 +28,16 @@ function validateSpec(options) {
   return spec;
 }
 
+function validateTrackedAdapters(options) {
+  for (const plan of options.catalog.plans) {
+    const adapter = options.catalog.adapters[plan.adapter_id];
+    if (!['node', process.execPath].includes(adapter.executable) || !adapter.args[0] || adapter.args[0].startsWith('-')
+      || adapter.environment_allowlist.some(name => ['NODE_OPTIONS', 'NODE_PATH', 'CITADEL_CHECKPOINT_REGISTRATION'].includes(name.toUpperCase()))) {
+      reject('Reconciliation requires a Node adapter entry file without injected Node options.');
+    }
+  }
+}
+
 function outsideEffects(files, spec) {
   const effects = new Set(spec.files.map(f => f.path));
   return files.filter(f => !effects.has(f.path));
@@ -35,6 +45,7 @@ function outsideEffects(files, spec) {
 
 function prepare(options, ctx, helpers) {
   const spec = validateSpec(options);
+  validateTrackedAdapters(options);
   // Keep the verifier implementation in the frozen workspace. It is a trusted,
   // read-only Node verifier; remote state and arbitrary external effects are not
   // covered by this reconciliation contract.
@@ -46,24 +57,37 @@ function prepare(options, ctx, helpers) {
     || !fs.statSync(entry).isFile() || spec.files.some(f => path.resolve(ctx.root, f.path) === entry)) reject('Use a read-only Node verifier stored outside effect paths in the workspace.');
   const baseline = helpers.snapshot(ctx.root, [...spec.files.map(f => f.path), relative.replaceAll('\\', '/')]);
   for (const file of spec.files) if (baseline.find(f => f.path === file.path)?.sha256 === file.sha256) reject('An expected effect already exists before this operation.');
-  return { schema: 1, binding: ctx.payload, owner_pid: process.pid, spec, baseline, verifier_path: relative.replaceAll('\\', '/') };
+  return { schema: 1, binding: ctx.payload, owner_pid: process.pid, adapter_tracking: 'node-preload-v1', spec, baseline, verifier_path: relative.replaceAll('\\', '/') };
 }
 
 function validateCurrent(options, ctx, intent, helpers) {
+  helpers.assertBinding();
   const current = helpers.snapshot(ctx.root, [...intent.spec.files.map(f => f.path), intent.verifier_path]);
   if (digest(outsideEffects(current, intent.spec)) !== digest(outsideEffects(intent.baseline, intent.spec))) reject('Workspace or verifier changed outside the declared effects.');
   for (const file of intent.spec.files) if (current.find(f => f.path === file.path)?.sha256 !== file.sha256) reject('Effect is missing, partial, duplicated or different from its frozen postcondition.');
+  helpers.assertBinding();
   return current;
+}
+
+function requireDead(pid, label) {
+  try { process.kill(pid, 0); reject(`${label} is still live.`); } catch (error) { if (error.code !== 'ESRCH') throw error; }
 }
 
 function reconcile(options, ctx, intent, entries, helpers) {
   const started = Date.now();
   // A live or inaccessible original owner is ambiguous. PID reuse can cause a
   // conservative refusal; a missing PID alone never proves effect completion.
-  try { process.kill(intent.owner_pid, 0); reject('Original operation owner is still live.'); } catch (error) { if (error.code !== 'ESRCH') throw error; }
+  requireDead(intent.owner_pid, 'Original operation owner');
+  if (intent.adapter_tracking !== 'node-preload-v1') reject('No durable adapter identity; inspect the original process tree.');
+  const registration = JSON.parse(fs.readFileSync(helpers.safePath(path.join(ctx.checkpoint, 'adapter.json')), 'utf8'));
+  if (registration.schema !== 1 || registration.payload_digest !== ctx.payload || !Number.isSafeInteger(registration.pid) || registration.pid < 1) reject('Invalid adapter registration.');
+  requireDead(registration.pid, 'Original adapter');
   const lock = helpers.safePath(path.join(ctx.checkpoint, 'reconciliation.lock'));
   try { fs.mkdirSync(lock); } catch (error) { if (error.code === 'EEXIST') reject('Another or interrupted reconciliation owns this checkpoint.'); throw error; }
   try {
+    // The caller read before claiming the lock. Another continuation may have
+    // completed and released it in between; never verify from that stale view.
+    if (digest(readJournal(path.join(ctx.checkpoint, 'journal')).entries) !== digest(entries)) reject('Checkpoint advanced before lock acquisition; repeat continuation to read its completed result.');
     validateCurrent(options, ctx, intent, helpers);
     // The postcondition establishes the effect, not a synthetic adapter success.
     // verifyAttempt is used only to execute the existing independent verifier.
