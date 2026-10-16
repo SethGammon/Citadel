@@ -315,6 +315,99 @@ try {
   fs.rmSync(sandbox, { recursive: true, force: true });
 }
 
+// Repeated Stop advisories consume context without adding a new finding. The
+// real runner must still rescan, re-emit changed/recurring findings and block.
+{
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'citadel-quality-advisory-'));
+  try {
+    const git = args => execFileSync('git', args, { cwd: root, stdio: 'pipe' });
+    git(['init']);
+    const dataDir = path.join(root, '.claude');
+    fs.mkdirSync(dataDir);
+    const configPath = path.join(dataDir, 'harness.json');
+    const css = path.join(root, 'view.css');
+    const doc = path.join(root, 'notes.md');
+    const baseline = '.panel { color: blue; }\n';
+    const finding = `.${['transition', 'all'].join('-')} {}\n`;
+    const readCount = path.join(root, 'config-read-count.json');
+    const preload = path.join(root, 'config-read-count.js');
+    fs.writeFileSync(preload, [
+      `const health = require(${JSON.stringify(path.join(__dirname, '..', 'hooks_src', 'harness-health-util.js'))});`,
+      'const original = health.readConfig; let calls = 0;',
+      'health.readConfig = function(...args) { calls++; return original.apply(this, args); };',
+      `process.on('exit', () => require('fs').writeFileSync(${JSON.stringify(readCount)}, JSON.stringify({ calls })));`,
+    ].join('\n'));
+    fs.writeFileSync(css, baseline);
+    fs.writeFileSync(doc, 'Notes\n');
+    git(['add', 'view.css', 'notes.md']);
+    git(['-c', 'user.name=Test', '-c', 'user.email=test@example.invalid', 'commit', '-m', 'fixture']);
+    const runStop = (session, blocking = false, agent, builtIn = ['no-transition-all']) => {
+      fs.writeFileSync(configPath, JSON.stringify({ qualityRules: {
+        builtIn, blocking,
+      } }));
+      const result = spawnSync(process.execPath, ['--require', preload, path.join(__dirname, '..', 'hooks_src', 'quality-gate.js')], {
+        cwd: root, input: JSON.stringify({ session_id: session, agent_id: agent }), encoding: 'utf8', timeout: 15000,
+        env: { ...process.env, CITADEL_RUNTIME: 'claude-code', CITADEL_UI: 'false',
+          CLAUDE_PROJECT_DIR: root, CLAUDE_PLUGIN_DATA: dataDir },
+      });
+      assert.equal(result.status, 0, result.stderr);
+      return result.stdout;
+    };
+    fs.writeFileSync(css, finding);
+    const first = runStop('session-a');
+    assert(first.includes('[performance]'), first);
+    assert.equal(JSON.parse(fs.readFileSync(readCount, 'utf8')).calls, 1, 'one fresh configuration read per Stop');
+    assert.equal(runStop('session-a'), '', 'identical same-session advisory must be suppressed');
+    assert.equal(runStop('session-a'), '', 'third Stop must remain suppressed');
+    fs.writeFileSync(doc, 'See `planned/missing.ts`.\n');
+    const changed = runStop('session-a');
+    assert(changed.includes('[cross-reference]'), 'new finding must be emitted after a fresh scan');
+    assert.equal(JSON.parse(fs.readFileSync(readCount, 'utf8')).calls, 1, 'multiple changed files share one configuration snapshot');
+    assert.equal(runStop('session-a'), '', 'changed advisory is deduplicated after delivery');
+    assert(runStop('session-b').includes('[cross-reference]'), 'new session must receive the findings');
+    assert(runStop('session-a', false, 'agent-b').includes('[performance]'), 'another agent must receive the findings');
+    assert.equal(runStop('session-a', false, 'agent-b'), '', 'same agent receives one unchanged advisory');
+    assert(runStop(undefined).length > 0 && runStop(undefined).length > 0, 'missing session identity must always emit');
+    fs.writeFileSync(doc, 'Notes\n');
+    assert.equal(runStop('session-a'), first, 'return to the original advisory before clearing it');
+    fs.writeFileSync(css, baseline);
+    assert.equal(runStop('session-a'), '', 'clean diff must clear remembered advisory');
+    fs.writeFileSync(css, finding);
+    assert.equal(runStop('session-a'), first, 'byte-identical finding must return after a clean diff');
+    fs.writeFileSync(css, '.panel { color: red; }\n');
+    assert.equal(runStop('session-a'), '', 'dirty files without findings must also clear the advisory');
+    fs.writeFileSync(css, finding);
+    assert.equal(runStop('session-a'), first, 'byte-identical finding must return after a clean scan');
+    assert.equal(runStop('session-a', false, undefined, []), '', 'the next Stop must read changed rule configuration');
+    assert.equal(runStop('session-a'), first, 're-enabled rules must produce the original finding');
+    for (let i = 0; i < 2; i++) {
+      assert.equal(JSON.parse(runStop('session-a', true)).decision, 'block', 'blocking findings are never deduplicated');
+    }
+    const statePath = path.join(dataDir, 'quality-advisories.json');
+    fs.writeFileSync(statePath, '{invalid');
+    assert(runStop('session-a').length > 0, 'corrupt advisory cache must preserve delivery');
+    // Bound and validate storage directly through the same health helper in a
+    // subprocess; it stores hashes only and keeps the latest 32 scopes.
+    const helper = spawnSync(process.execPath, ['-e', [
+      `const health = require(${JSON.stringify(path.join(__dirname, '..', 'hooks_src', 'harness-health-util.js'))});`,
+      'for(let i=0;i<40;i++) health.qualityAdvisoryChanged({session_id:`scope-${i}`}, `message-${i}`);',
+    ].join('\n')], {
+      cwd: root, encoding: 'utf8', timeout: 15000,
+      env: { ...process.env, CLAUDE_PROJECT_DIR: root, CLAUDE_PLUGIN_DATA: dataDir },
+    });
+    assert.equal(helper.status, 0, helper.stderr);
+    const saved = JSON.parse(fs.readFileSync(statePath, 'utf8'));
+    assert.equal(saved.entries.length, 32);
+    assert(saved.entries.every(entry => Object.keys(entry).sort().join(',') === 'digest,scope'
+      && /^[a-f0-9]{64}$/.test(entry.scope) && /^[a-f0-9]{64}$/.test(entry.digest)));
+    fs.writeFileSync(statePath, 'x'.repeat(8193));
+    assert(runStop('session-a').length > 0, 'oversized cache must preserve delivery');
+    check('same-session advisory dedup preserves scans, identity, recurrence, blocking and bounded hash-only state', true);
+  } catch (error) {
+    check('same-session quality advisory dedup', false, error.stack || error.message);
+  } finally { fs.rmSync(root, { recursive: true, force: true }); }
+}
+
 if (failures > 0) {
   console.error(`\n${failures} check(s) failed`);
   process.exit(1);

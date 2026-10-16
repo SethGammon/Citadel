@@ -94,16 +94,14 @@ function orderedTasks(tasks) {
 }
 
 function conflictScope(scope) {
-  // Keep Fleet's conservative prefix overlap semantics. Normalize Windows
-  // spelling and widen glob prefixes so alternate path spellings cannot hide
-  // an overlap. A missing scope is handled as an explicit blocker below.
+  // Validate integration scope separately, then use the same normalized path
+  // comparison as live claims and same-wave scheduling. Keep glob spelling so
+  // the shared comparator can distinguish directory and partial-name prefixes.
   return scope.map((entry) => {
-    const readOnly = entry.trim().endsWith('(read-only)');
-    let value = entry.replace(/\(read-only\)$/, '').trim().replace(/\\/g, '/').toLowerCase();
+    const value = entry.trim().replace(/\(read-only\)$/, '').trim().replace(/\\/g, '/');
     const parts = value.split('/');
-    if (value.startsWith('/') || /^[a-z]:/.test(value) || parts.includes('..')) return null;
-    value = parts.filter((part) => part && part !== '.').join('/').split(/[*?[{]/)[0];
-    return `${value}${readOnly ? '(read-only)' : ''}`;
+    if (value.startsWith('/') || /^[a-z]:/i.test(value) || parts.includes('..')) return null;
+    return entry;
   });
 }
 

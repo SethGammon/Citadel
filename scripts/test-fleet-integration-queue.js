@@ -206,6 +206,22 @@ try {
     assert(plan.entries.every((entry) => entry.blockers.some((blocker) => blocker.code === 'SCOPE_CONFLICT')));
   });
 
+  test('integration uses the same path boundaries and glob prefixes as live claims', () => {
+    for (const [left, right, conflicts] of [
+      ['src/api', 'src/api', 1],
+      ['./src/api', 'src\\api', 1],
+      ['src/API', 'src/api', 1],
+      ['src/api/**', 'src/api/auth', 1],
+      ['src/api*', 'src/api-client', 1],
+      ['src/api', 'src/api-client', 0],
+      ['src/api/**', 'src/api-client', 0],
+    ]) {
+      const items = [task('1', { scope: [left] }), task('2', { scope: [right] })];
+      assert.equal(buildIntegrationPlan(items, options(items, root())).scopeConflicts.length,
+        conflicts, `${left} versus ${right}`);
+    }
+  });
+
   test('dependency-ordered overlap does not deadlock prerequisites; read-only scopes do not conflict', () => {
     const projectRoot = root();
     const items = [task('1', { scope: ['src'] }), task('2', { scope: ['src/api'], deps: ['1'] })];

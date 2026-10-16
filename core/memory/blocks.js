@@ -2,6 +2,10 @@
 
 const fs = require('fs');
 const path = require('path');
+const { createHash } = require('crypto');
+
+const COMPILER = 'citadel-source-excerpts-v1';
+const sourceDigest = (content) => createHash('sha256').update(content).digest('hex');
 
 const BLOCK_TYPES = [
   'project-rules',
@@ -39,12 +43,6 @@ function exists(projectRoot, relativePath) {
   return fs.existsSync(path.join(projectRoot, relativePath));
 }
 
-function readText(projectRoot, relativePath, maxChars = 24000) {
-  const filePath = path.join(projectRoot, relativePath);
-  if (!fs.existsSync(filePath)) return '';
-  return fs.readFileSync(filePath, 'utf8').slice(0, maxChars);
-}
-
 function listFiles(root, predicate = () => true, limit = 50) {
   if (!fs.existsSync(root)) return [];
   const out = [];
@@ -66,150 +64,104 @@ function source(projectRoot, relativePath, reason) {
 }
 
 function availableSources(projectRoot, candidates) {
-  return candidates.filter((entry) => exists(projectRoot, entry.path));
-}
-
-function extractDecisionLog(campaignText) {
-  const match = campaignText.match(/## Decision Log\s+([\s\S]*?)(?:\n## |\n<!--|$)/);
-  if (!match) return [];
-  return match[1]
-    .split(/\r?\n/)
-    .map((line) => line.trim())
-    .filter((line) => line.startsWith('- '))
-    .slice(-12);
-}
-
-function extractPatternLines(text, limit = 8) {
-  return text
-    .split(/\r?\n/)
-    .map((line) => line.trim())
-    .filter((line) => line.startsWith('- ') || line.startsWith('**What') || line.startsWith('**Why') || line.startsWith('| `/'))
-    .slice(0, limit);
+  return candidates.filter((entry) => exists(projectRoot, entry.path))
+    .slice(0, 4)
+    .map((entry) => {
+      const content = fs.readFileSync(path.join(projectRoot, entry.path));
+      return { ...entry, sha256: sourceDigest(content), excerpt: content.toString('utf8').slice(0, 600) };
+    });
 }
 
 function block(id, type, scope, sources, body, confidence = 'medium', options = {}) {
-  return {
+  const record = {
     id,
     type,
     scope,
     owner: options.owner || 'citadel',
     confidence,
+    generated_by: COMPILER,
     last_verified: today(options),
     sources,
     body,
   };
+  return { ...record, generated_sha256: sourceDigest(JSON.stringify(record)) };
 }
 
 function buildBlocks(projectRoot, options = {}) {
-  const campaignPath = '.planning/campaigns/citadel-competitor-gap-assessment.md';
-  const campaignText = readText(projectRoot, campaignPath);
-  const patternText = readText(projectRoot, '.planning/research/patterns.md');
-  const insightText = readText(projectRoot, '.planning/research/external-insights-brief.md');
-  const packageJson = readText(projectRoot, 'package.json');
-  const decisions = extractDecisionLog(campaignText);
-  const patterns = extractPatternLines(patternText || insightText, 10);
-
   const fleetOutputs = listFiles(path.join(projectRoot, '.planning', 'fleet'), (file) => /\.(md|json|jsonl)$/.test(file), 10)
     .map((file) => source(projectRoot, rel(projectRoot, file), 'fleet output or session evidence'));
   const postmortems = listFiles(path.join(projectRoot, '.planning', 'postmortems'), (file) => file.endsWith('.md'), 10)
     .map((file) => source(projectRoot, rel(projectRoot, file), 'postmortem evidence'));
 
+  // This compiler retrieves bounded source excerpts. It does not infer project
+  // identity, user preferences, approval, current architecture or test commands.
+  const fromSources = (id, type, scope, candidates) => {
+    const snapshots = availableSources(projectRoot, candidates);
+    if (!snapshots.length) return null;
+    const sources = snapshots.map(({ excerpt, ...entry }) => entry);
+    const excerpts = snapshots.map((entry) => {
+      return `### ${entry.path}\n${entry.excerpt.split(/\r?\n/).map((line) => `> ${line}`).join('\n')}`;
+    });
+    return block(id, type, scope, sources,
+      ['Source excerpts for context; current instructions and approval must be checked at the source.', ...excerpts].join('\n\n'),
+      'medium', options);
+  };
+
   return [
-    block(
+    fromSources(
       'memory-project-rules',
       'project-rules',
-      ['project', 'harness', 'skills', 'hooks'],
-      availableSources(projectRoot, [
+      ['project', 'rules'],
+      [
         source(projectRoot, 'AGENTS.md', 'repository operating rules'),
         source(projectRoot, 'docs/CONSTITUTION.md', 'harness rule hierarchy'),
         source(projectRoot, 'docs/SKILLS.md', 'skill authoring and handoff contract'),
-      ]),
-      [
-        '- Treat this repository as the Citadel harness; skills, agents, hooks, and state files are first-class product surfaces.',
-        '- Keep changes scoped to harness conventions: skills in `skills/`, agents in `agents/`, hooks in `hooks_src/`, and campaign state in `.planning/`.',
-        '- Every completed task must leave a compact HANDOFF and enough verification evidence for another session to resume.',
-      ].join('\n'),
-      'high',
-      options
+      ]
     ),
-    block(
+    fromSources(
       'memory-architecture-decisions',
       'architecture-decisions',
-      ['architecture', 'codex', 'fleet', 'worktree', 'telemetry'],
-      availableSources(projectRoot, [
+      ['architecture', 'decisions', 'codex', 'fleet', 'worktree', 'telemetry'],
+      [
         source(projectRoot, 'docs/ARCHITECTURE.md', 'current harness architecture'),
         source(projectRoot, 'docs/CODEX_NATIVE_INTEGRATIONS.md', 'Codex-native integration decisions'),
         source(projectRoot, 'docs/FLEET.md', 'fleet coordination design'),
         source(projectRoot, 'docs/worktree-isolation.md', 'worktree readiness design'),
-        source(projectRoot, campaignPath, 'competitor-gap implementation decisions'),
-      ]),
-      [
-        '- Citadel owns durable campaign memory, discovery relay, scope claims, policy, and evidence even when Codex supplies native execution primitives.',
-        '- Fleet work is dependency-aware: ready work, blocked work, readiness-blocked work, and merge-order blockers are separate operator states.',
-        '- Telemetry and artifact records now carry lineage IDs plus `_hash`; optional HMAC signing upgrades integrity without breaking old legacy records.',
-        ...decisions.slice(-6),
-      ].join('\n'),
-      'high',
-      options
+      ]
     ),
-    block(
+    fromSources(
       'memory-verification-recipes',
       'verification-recipes',
-      ['verification', 'tests', 'hooks', 'skills', 'telemetry'],
-      availableSources(projectRoot, [
+      ['verification', 'tests'],
+      [
         source(projectRoot, 'AGENTS.md', 'required verification table'),
         source(projectRoot, 'package.json', 'registered npm verification scripts'),
         source(projectRoot, 'scripts/test-all.js', 'full suite orchestration'),
         source(projectRoot, 'scripts/verify-telemetry-integrity.js', 'telemetry integrity verifier'),
-      ]),
-      [
-        '- After hook or skill changes, run the narrow check first, then `npm run test` before shipping.',
-        '- Use `node scripts/skill-lint.js <skill>` after skill edits and `node scripts/test-all.js` for the full harness gate.',
-        '- Use `npm run telemetry:verify` or `node scripts/verify-telemetry-integrity.js` to confirm hashed logs are clean and legacy records are only legacy.',
-        packageJson.includes('"test"') ? '- `npm run test` is the canonical full regression command for this repository.' : '- Full regression command should be confirmed from package.json before use.',
-      ].join('\n'),
-      'high',
-      options
+      ]
     ),
-    block(
+    fromSources(
       'memory-failure-patterns',
       'failure-patterns',
-      ['failure-patterns', 'quality', 'agents', 'daemon', 'learn'],
+      ['failure-patterns', 'quality'],
       [
-        ...availableSources(projectRoot, [
-          source(projectRoot, '.planning/research/patterns.md', 'observed harness patterns'),
-          source(projectRoot, '.planning/research/external-insights-brief.md', 'external memory/compiler gap analysis'),
-          source(projectRoot, '.planning/telemetry/hook-errors.jsonl', 'recent hook error evidence'),
-        ]),
+        source(projectRoot, '.planning/research/patterns.md', 'observed project patterns'),
+        source(projectRoot, '.planning/research/external-insights-brief.md', 'external analysis'),
+        source(projectRoot, '.planning/telemetry/hook-errors.jsonl', 'recent hook error evidence'),
         ...fleetOutputs,
         ...postmortems,
-      ].slice(0, 12),
-      [
-        '- Hung or silent agents need explicit timeout and continuation behavior; never let a workflow block indefinitely without a recovery path.',
-        '- Appending isolated logs does not compound knowledge; compile repeat findings into semantic memory or wiki pages with source links.',
-        '- Verification that only checks happy-path text can miss experiential failures; prefer command gates plus operator-readable summaries.',
-        ...patterns,
-      ].join('\n'),
-      'medium',
-      options
+      ]
     ),
-    block(
+    fromSources(
       'memory-user-preferences',
       'user-preferences',
-      ['user', 'planning', 'campaigns', 'verification'],
-      availableSources(projectRoot, [
-        source(projectRoot, campaignPath, 'active user-approved competitor-gap campaign'),
-        source(projectRoot, 'AGENTS.md', 'handoff and verification expectations'),
-      ]),
+      ['user', 'preferences'],
       [
-        '- The user approved proceeding from competitor research into implementation, with each accepted determination ending in a ready-to-approve plan or verified build slice.',
-        '- Keep the paper trail current: campaign phase status, decision log, continuation state, docs, and verification output should agree.',
-        '- Prefer technically correct and experientially clear operator surfaces: commands should be obvious, summaries should be readable, and failures should be actionable.',
-      ].join('\n'),
-      'high',
-      options
+        source(projectRoot, '.planning/user-preferences.md', 'recorded user preferences'),
+        source(projectRoot, 'docs/user-preferences.md', 'recorded user preferences'),
+      ]
     ),
-  ];
+  ].filter(Boolean);
 }
 
 function validateBlock(blockRecord) {
@@ -241,6 +193,7 @@ function writeIndex(projectRoot, blocks) {
       type: entry.type,
       scope: entry.scope,
       confidence: entry.confidence,
+      freshness: entry.freshness,
       file: `blocks/${slug(entry.id)}.json`,
     })),
   };
@@ -250,10 +203,26 @@ function writeIndex(projectRoot, blocks) {
 }
 
 function compileMemoryBlocks(projectRoot, options = {}) {
-  const blocks = buildBlocks(projectRoot, options);
-  const written = blocks.map((entry) => writeBlock(projectRoot, entry));
+  const generated = buildBlocks(projectRoot, options);
+  const written = [];
+  const preserved = [];
+  for (const entry of generated) {
+    const destination = path.join(blocksDir(projectRoot), `${slug(entry.id)}.json`);
+    if (fs.existsSync(destination)) {
+      let existing;
+      try { existing = readBlockFile(destination); } catch { /* preserve an unreadable authored file too */ }
+      const { generated_sha256, ...generatedContent } = existing || {};
+      if (existing?.generated_by !== COMPILER
+        || generated_sha256 !== sourceDigest(JSON.stringify(generatedContent))) {
+        preserved.push({ file: destination, reason: 'authored-or-unverified-block' });
+        continue;
+      }
+    }
+    written.push(writeBlock(projectRoot, entry));
+  }
+  const blocks = loadMemoryBlocks(projectRoot, { includeNonCurrent: true, now: options.now });
   const indexPath = writeIndex(projectRoot, blocks);
-  return { blocks, written, indexPath };
+  return { blocks, written, preserved, generated_count: generated.length, indexPath };
 }
 
 function readBlockFile(filePath) {
@@ -271,6 +240,8 @@ function loadMemoryBlocks(projectRoot, filters = {}) {
   return fs.readdirSync(dir)
     .filter((entry) => entry.endsWith('.json'))
     .map((entry) => readBlockFile(path.join(dir, entry)))
+    .map((entry) => ({ ...entry, freshness: blockFreshness(projectRoot, entry, filters).status }))
+    .filter((entry) => filters.includeNonCurrent || entry.freshness === 'current')
     .filter((entry) => !type || entry.type === type)
     .filter((entry) => !scope || entry.scope.some((item) => String(item).toLowerCase().includes(scope)))
     .filter((entry) => !query || query.every((term) => JSON.stringify(entry).toLowerCase().includes(term)))
@@ -281,6 +252,33 @@ function isOlderThan(dateString, days, now = new Date()) {
   const time = Date.parse(dateString);
   if (Number.isNaN(time)) return true;
   return (now.getTime() - time) > days * 24 * 60 * 60 * 1000;
+}
+
+function blockFreshness(projectRoot, entry, options = {}) {
+  const issues = [];
+  let status = 'current';
+  const add = (type, issue) => {
+    issues.push({ id: entry.id || null, type, issue });
+    if (type === 'stale') status = 'stale';
+    else if (status !== 'stale') status = 'unverified';
+  };
+  if (!Array.isArray(entry.sources) || !entry.sources.length) add('source', 'no verified sources');
+  for (const item of entry.sources || []) {
+    if (!item.path) add('source', 'source missing path');
+    else if (!exists(projectRoot, item.path)) add('stale', `source path not found: ${item.path}`);
+    else if (!item.sha256) add('source', `source content is unverified: ${item.path}`);
+    else if (sourceDigest(fs.readFileSync(path.join(projectRoot, item.path))) !== item.sha256) {
+      add('stale', `source content changed: ${item.path}`);
+    }
+  }
+  if (entry.generated_by === COMPILER) {
+    const { generated_sha256, freshness, ...content } = entry;
+    if (generated_sha256 !== sourceDigest(JSON.stringify(content))) add('source', 'generated block content was edited');
+  }
+  if (isOlderThan(entry.last_verified, options.staleDays || 60, options.now || new Date())) {
+    add('stale', `last_verified is stale: ${entry.last_verified}`);
+  }
+  return { status, issues };
 }
 
 function contradictionIssues(blockRecord) {
@@ -297,24 +295,15 @@ function contradictionIssues(blockRecord) {
 }
 
 function lintMemoryBlocks(projectRoot, options = {}) {
-  const blocks = loadMemoryBlocks(projectRoot);
+  const blocks = loadMemoryBlocks(projectRoot, { ...options, includeNonCurrent: true });
   const issues = [];
   const seen = new Set();
   for (const entry of blocks) {
     for (const issue of validateBlock(entry)) issues.push({ id: entry.id || null, type: 'schema', issue });
     if (seen.has(entry.id)) issues.push({ id: entry.id, type: 'duplicate', issue: `duplicate block id ${entry.id}` });
     seen.add(entry.id);
-    for (const item of entry.sources || []) {
-      if (!item.path) issues.push({ id: entry.id, type: 'source', issue: 'source missing path' });
-      else if (!exists(projectRoot, item.path)) issues.push({ id: entry.id, type: 'source', issue: `source path not found: ${item.path}` });
-    }
-    if (isOlderThan(entry.last_verified, options.staleDays || 60, options.now || new Date())) {
-      issues.push({ id: entry.id, type: 'stale', issue: `last_verified is stale: ${entry.last_verified}` });
-    }
+    issues.push(...blockFreshness(projectRoot, entry, options).issues);
     for (const issue of contradictionIssues(entry)) issues.push({ id: entry.id, type: 'contradiction', issue });
-  }
-  for (const type of BLOCK_TYPES) {
-    if (!blocks.some((entry) => entry.type === type)) issues.push({ id: null, type: 'coverage', issue: `missing block type ${type}` });
   }
   return { blocks, issues, pass: issues.length === 0 };
 }

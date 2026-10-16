@@ -1,6 +1,6 @@
 {
   "name": "citadel",
-  "version": "1.4.3",
+  "version": "1.4.4",
   "description": "Codex-native agent orchestration harness for durable campaigns, skills, hooks, telemetry, and parallel work.",
   "author": {
     "name": "Citadel",

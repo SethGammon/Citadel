@@ -1,9 +1,9 @@
 # Writing Skills
 
-> last-updated: 2026-03-24
+> last-updated: 2026-10-16
 
-Skills are the building blocks of the harness. Each skill is a markdown protocol
-that loads into Claude's context when invoked, giving it domain-specific expertise.
+Skills are Markdown task protocols that a supported coding runtime can load
+when invoked or selected for a relevant task.
 
 ## Why Skills?
 
@@ -11,7 +11,9 @@ Without skills, you re-explain the same patterns every session. With skills,
 you explain once, encode it in a file, and every future session starts with
 that knowledge already loaded.
 
-Skills cost zero tokens when not active. They're loaded on demand.
+Skill bodies load on demand. Discovery may still expose names, descriptions,
+or routing metadata to the runtime, so an inactive skill is not guaranteed to
+have zero context or token overhead.
 
 ## Skill File Format
 

@@ -120,6 +120,47 @@ function debugLog(hook, event, detail = '') {
 const PLUGIN_DATA_DIR = process.env.CLAUDE_PLUGIN_DATA || path.join(PROJECT_ROOT, '.claude');
 
 /**
+ * Deduplicate delivered quality advisories, never verification or blocking.
+ * A missing identity or unusable cache always emits. The one small cache holds
+ * only hashes for at most 32 recent project/session/agent scopes, not findings.
+ * Passing null clears this scope after a clean scan so recurrence is visible.
+ * The defensive branches keep this optional state from changing hook outcomes.
+ */
+function qualityAdvisoryChanged(context, message) {
+  if (typeof context?.session_id !== 'string' || !context.session_id.trim()) return true;
+  const scope = hashRecord([PROJECT_ROOT, context.session_id, context.agent_id || null]);
+  const target = path.join(PLUGIN_DATA_DIR, 'quality-advisories.json');
+  let temporary;
+  try {
+    let entries = [];
+    try {
+      const stat = fs.lstatSync(target);
+      if (!stat.isFile() || stat.isSymbolicLink() || stat.nlink > 1 || stat.size > 8192) return true;
+      const saved = JSON.parse(fs.readFileSync(target, 'utf8'));
+      if (saved.version === 1 && Array.isArray(saved.entries)) {
+        entries = saved.entries.slice(-32).filter(entry =>
+          /^[a-f0-9]{64}$/.test(entry?.scope) && /^[a-f0-9]{64}$/.test(entry?.digest));
+      }
+    } catch (error) {
+      if (error.code !== 'ENOENT' && !(error instanceof SyntaxError)) return true;
+    }
+    const digest = message === null ? null : hashRecord(message);
+    if (digest !== null && entries.some(entry => entry.scope === scope && entry.digest === digest)) return false;
+    const remaining = entries.filter(entry => entry.scope !== scope);
+    if (digest !== null) remaining.push({ scope, digest });
+    if (message === null && remaining.length === entries.length) return true;
+    fs.mkdirSync(PLUGIN_DATA_DIR, { recursive: true });
+    temporary = path.join(PLUGIN_DATA_DIR, `.quality-advisories-${process.pid}-${crypto.randomUUID()}.tmp`);
+    fs.writeFileSync(temporary, JSON.stringify({ version: 1, entries: remaining.slice(-32) }), { flag: 'wx', mode: 0o600 });
+    fs.renameSync(temporary, target);
+  } catch { /* Advisory cache failure must preserve delivery. */ }
+  finally {
+    if (temporary) { try { fs.unlinkSync(temporary); } catch { /* renamed or unavailable */ } }
+  }
+  return true;
+}
+
+/**
  * Ensure telemetry directory exists.
  */
 function ensureTelemetryDir() {
@@ -751,6 +792,7 @@ module.exports = {
   hashRecord,
   canonicalize,
   verifyAuditIntegrity,
+  qualityAdvisoryChanged,
   readConfig,
   checkSkillActivation,
   readTrustLevel,

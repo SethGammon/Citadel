@@ -3,7 +3,8 @@
 Documents what each runtime adapter supports. Used by the runtime registry
 and compatibility tests to verify behavior.
 
-Last updated: 2026-09-11
+Last reviewed against repository adapter declarations: 2026-10-16.
+This is a source capability contract, not a fresh live-runtime or human-use test.
 
 ## Capability IDs
 
@@ -28,24 +29,47 @@ Defined in `core/contracts/runtime.js` and printable with
 |---|---|---|---|
 | Claude Code | `hook-enabled` | guidance, skills, agents, hooks, workspace shell, worktrees | runtime-native MCP server mode |
 | Codex | `managed-subagent` | guidance, skills, agents, workspace shell, MCP, app artifacts | full hook parity, uniform CLI worktree handoff |
+| OpenCode | `hook-enabled` | guidance, skills, agents, plugin pre-tool gate, post-tool observers, workspace shell, MCP | Stop cannot block, no native permission gate, no batch/failure events |
 | OpenAI | `remote-cloud-task` | agent loop, tool calling, workspace container when provided | local hook lifecycle, native Citadel skill runtime, local worktree lifecycle |
 | Unknown | `native-files` | project guidance files | hooks, agents, worktrees, runtime history, approvals |
 
 ## Matrix
 
-| Capability | Claude Code | Codex | OpenAI | Notes |
-|---|---|---|---|---|
-| `guidance` | Full | Full | Full | CLAUDE.md / AGENTS.md projected from `.citadel/project.md` |
-| `skills` | Full | Full | Partial | Codex supports repo/user/admin/system/plugin skills; OpenAI uses Responses API reusable skills |
-| `agents` | Full | Partial | Partial | Codex supports `.codex/agents/*.toml` and native subagents, but projected TOML cannot machine-enforce Citadel tool allow/deny lists; OpenAI uses Responses API agent loop |
-| `hooks` | Full | Partial | Partial | Claude has 29 defined handler names but installs a detected compatible subset (safe fallback: eight). Codex translates a supported subset and has specialized tool exceptions. Hooks are guardrails, not a universal sandbox. |
-| `workspace` | Full | Full | Full | OpenAI Responses API provides shell tool + hosted container |
-| `worktrees` | Full | Partial | None | Codex app supports native Git worktrees and handoff; CLI flows still rely on Citadel-managed worktrees |
-| `approvals` | Full | Partial | Partial | Both Codex and OpenAI need adapter-level policy handling |
-| `history` | Full | Partial | Partial | Claude Code exposes session JSONL; Codex uses API logs; OpenAI uses Responses API state |
-| `telemetry` | Full | Full | Partial | Normalized events via `core/hooks/normalize-event.js` |
-| `mcp` | Full | Full | Partial | Codex supports MCP servers in CLI/IDE and can run as an MCP server; OpenAI has native tool support, MCP bridge possible |
-| `surfaces` | Full | Partial | Partial | Codex supports skills, plugins, app/IDE/CLI surfaces, browser/artifacts, and automations |
+| Capability | Claude Code | Codex | OpenCode | OpenAI | Notes |
+|---|---|---|---|---|---|
+| `guidance` | Full | Full | Full | Full | CLAUDE.md / AGENTS.md projected from `.citadel/project.md` |
+| `skills` | Full | Full | Full | Partial | OpenCode uses project-local skill projection and generated command wrappers; OpenAI uses Responses API reusable skills |
+| `agents` | Full | Partial | Full | Partial | OpenCode loads Markdown agents and native task-tool subagents. Codex projected TOML cannot machine-enforce Citadel tool allow/deny lists. |
+| `hooks` | Full | Partial | Partial | Partial | Claude installs a detected compatible subset (safe fallback: eight). Codex and OpenCode have tool/event exceptions. Hooks are guardrails, not a universal sandbox. |
+| `workspace` | Full | Full | Full | Full | OpenCode provides file/shell tools; OpenAI provides a container only when configured. |
+| `worktrees` | Full | Partial | Partial | None | Codex CLI and OpenCode use Citadel-managed worktrees; app-native and experimental APIs have separate contracts. |
+| `approvals` | Full | Partial | Partial | Partial | OpenCode gates covered tools before execution; its permission hook is observational. |
+| `history` | Full | Partial | Partial | Partial | Native session persistence does not replace Citadel-owned campaign state. |
+| `telemetry` | Full | Full | Partial | Partial | OpenCode event-bus delivery is fire-and-forget; no delivery guarantee is assumed. |
+| `mcp` | Full | Full | Full | Partial | OpenCode configures local MCP servers through `opencode.json`; OpenAI bridge support remains partial. |
+| `surfaces` | Full | Partial | Partial | Partial | OpenCode supports plugins, skills, Markdown agents and commands; surface parity remains runtime-specific. |
+
+OpenCode values above come from `runtimes/opencode/runtime.js`. Claude/Codex
+declarations live beside their adapters; OpenAI's contract remains a separate
+remote/API integration. The repository also contains `runtimes/local/` and
+`runtimes/github-actions/` workflow compilation targets. Those directories are
+not additional interactive coding-runtime registrations and do not imply local
+hook, approval, history, or worktree parity. See [Workflow Compiler](../WORKFLOW_COMPILER.md).
+
+## OpenCode evidence and limits
+
+The [installation guide](../OPENCODE_INSTALLATION_GUIDE.md) records a maintainer
+live check on 2026-09-10 using OpenCode 1.18.30, Bun 1.4.2 and Node 24.12.0 on
+Windows 11. That dated integration check does not establish compatibility with
+every later runtime version, independent adoption, or comparative usefulness.
+
+OpenCode uses an in-process plugin to invoke Citadel's Node hooks. Covered
+model-issued tools can be blocked at `tool.execute.before`. Stop findings are
+delivered on a later turn; optional bounded re-prompting does not make Stop
+blocking. The human-issued shell endpoint bypasses that pre-tool gate. Plugin
+discovery requires an OpenCode restart after installation. Use the installer and
+readiness checks from the guide for the target project rather than inferring
+activation from source presence.
 
 ## Hook Event Coverage
 
@@ -53,8 +77,8 @@ Citadel defines a full 29-name Claude Code event template. The Claude installer
 activates the subset compatible with the detected runtime profile, with eight
 events in the safe fallback. Codex translates a supported native subset.
 OpenAI Responses API supports agent-loop events natively through its adapter.
-The table below describes defined mappings, not guaranteed activation in every
-installation:
+The table below describes Claude Code, Codex and OpenAI mappings, not guaranteed
+activation in every installation. OpenCode's plugin boundary is described above:
 
 | Citadel Event | Claude Code | Codex | OpenAI |
 |---|---|---|---|

@@ -5,17 +5,18 @@ opencode has no command hooks, so Citadel ships an **in-process plugin** that
 spawns the existing `hooks_src/*.js` Node processes and translates their exit
 codes into opencode's throw/mutate semantics. Every hook is reused unchanged.
 
-Verified live against **opencode 1.18.30 / Bun 1.4.2 / Node 24.12.0 on Windows 11**
+Recorded maintainer live check: **opencode 1.18.30 / Bun 1.4.2 / Node 24.12.0 on Windows 11**
 (2026-09-10). See `docs/OPENCODE_SUPPORT_PLAN.md` section 5 for the evidence log.
+This dated integration check does not establish every later version's compatibility.
 
 ## Requirements
 
 | | |
 |---|---|
 | opencode | 1.18.x (`bun add -g opencode-ai`) |
-| Node | 18+ **on `PATH`** — the hooks are Node scripts, and under Bun `process.execPath` is the Bun binary, so the plugin resolves Node via `which`/`where node` |
+| Node | 22+ **on `PATH`**, matching Citadel's root requirement — the hooks are Node scripts, and under Bun `process.execPath` is the Bun binary, so the plugin resolves Node via `which`/`where node` |
 | Bun | whatever opencode ships with |
-| Citadel | a local checkout; the plugin stub points at it by absolute path |
+| Citadel | a verified release directory; the plugin stub points at it by absolute path. Source-main checkouts are development-only. |
 
 ## Install
 

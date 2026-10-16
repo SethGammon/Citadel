@@ -10,7 +10,19 @@ const {
 } = require('./io');
 
 function normalizeScopeEntry(entry) {
-  return String(entry || '').replace(/\(read-only\)$/u, '').trim();
+  const value = String(entry || '').trim().replace(/\(read-only\)$/u, '').trim()
+    .replace(/\\/g, '/').toLowerCase();
+  if (!value) return null;
+
+  // Match Fleet's conservative, case-insensitive path contract on every host.
+  // Widen globs to their fixed prefix; this is deliberately not a glob engine.
+  const glob = value.search(/[*?[{]/u);
+  const prefix = glob === -1 ? value : value.slice(0, glob);
+  const normalized = path.posix.normalize(prefix || '.').replace(/\/+$/u, '');
+  return {
+    path: normalized === '.' ? '' : normalized,
+    partialSegment: glob !== -1 && Boolean(prefix) && !prefix.endsWith('/'),
+  };
 }
 
 function isReadOnlyScope(entry) {
@@ -18,14 +30,20 @@ function isReadOnlyScope(entry) {
 }
 
 function scopesOverlap(scopeA, scopeB) {
+  const contains = (parent, child) => parent.path === ''
+    || child.path === parent.path || child.path.startsWith(`${parent.path}/`)
+    || parent.partialSegment && child.path.startsWith(parent.path);
+
   for (const left of scopeA) {
     if (isReadOnlyScope(left)) continue;
     const cleanLeft = normalizeScopeEntry(left);
+    if (!cleanLeft) continue;
 
     for (const right of scopeB) {
       if (isReadOnlyScope(right)) continue;
       const cleanRight = normalizeScopeEntry(right);
-      if (cleanLeft.startsWith(cleanRight) || cleanRight.startsWith(cleanLeft)) {
+      if (!cleanRight) continue;
+      if (contains(cleanLeft, cleanRight) || contains(cleanRight, cleanLeft)) {
         return true;
       }
     }

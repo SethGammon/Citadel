@@ -207,6 +207,8 @@ node scripts/memory-compile.js compile
 This writes compact semantic blocks to `.planning/memory/blocks/` and updates
 `.planning/memory/index.json`. Blocks must include `id`, `type`, `scope`,
 `owner`, `confidence`, `last_verified`, `sources`, and `body`.
+Compile only source-supported categories; absent categories and zero blocks are valid.
+Default context listing excludes stale/unverified records, including digestless legacy notes.
 
 For lint-only memory checks, run:
 
@@ -223,8 +225,8 @@ node scripts/memory-compile.js list --query "Fleet readiness"
 ```
 
 Memory block lint must pass before calling the compile successful. Missing
-source paths, stale blocks, missing required block types, and contradictions are
-reported as actionable failures.
+source paths, changed or unverified source bytes, stale blocks, and contradictions
+are reported as actionable failures.
 
 ### Step 6: APPEND QUALITY RULES
 
