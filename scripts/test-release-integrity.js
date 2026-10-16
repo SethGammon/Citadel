@@ -6,6 +6,7 @@ const assert = require('assert');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
+const vm = require('vm');
 const zlib = require('zlib');
 const { execFileSync, spawnSync } = require('child_process');
 const { buildRelease, sanitizeReleaseInstructions, sha256 } = require('./release-package');
@@ -74,6 +75,18 @@ function writeOwnershipManifest(root, version, options = {}) {
 
 function expectFailure(fn, pattern) {
   assert.throws(fn, pattern);
+}
+
+function releaseWithGit(execGit) {
+  const loaded = { exports: {} };
+  const filename = require.resolve('./release-package');
+  vm.runInNewContext(fs.readFileSync(filename, 'utf8'), {
+    Buffer,
+    __dirname,
+    module: loaded,
+    require: (request) => request === 'child_process' ? { execFileSync: execGit } : require(request),
+  }, { filename });
+  return loaded.exports;
 }
 
 function sectionBody(content, startPattern, endPattern, label) {
@@ -161,10 +174,35 @@ try {
   fs.mkdirSync(path.join(source, '.planning', 'campaigns'), { recursive: true });
   fs.writeFileSync(path.join(source, '.planning', '_templates', 'campaign.md'), 'distributable\n');
   fs.writeFileSync(path.join(source, '.planning', 'campaigns', 'private.md'), 'operational state\n');
+  const taggedFixtures = new Map([
+    ['assets/empty.bin', Buffer.alloc(0)],
+    ['assets/space name.bin', Buffer.from([0xff, 0x00, 0x0a, 0x0d, 0x0a, 0x80])],
+    ['assets/caf\u00e9 \u96ea.bin', Buffer.from('Unicode path\nblob 123\n\0tail\n')],
+    ['assets/duplicate.bin', Buffer.from([0xff, 0x00, 0x0a, 0x0d, 0x0a, 0x80])],
+    ['assets/another-empty.bin', Buffer.alloc(0)],
+    ['assets/a.bin', Buffer.from('a\n')],
+    ['assets/source-only.bin', Buffer.from('policy exclusion\n')],
+    ['scripts/executable.sh', Buffer.from('#!/bin/sh\nprintf release\n')],
+    ['dist/excluded.bin', Buffer.from('excluded dist\n')],
+    ['node_modules/excluded.bin', Buffer.from('excluded dependencies\n')],
+    ['.citadel-release.json', Buffer.from('excluded generated manifest\n')],
+  ]);
+  for (const [name, data] of taggedFixtures) {
+    const absolute = path.join(source, ...name.split('/'));
+    fs.mkdirSync(path.dirname(absolute), { recursive: true });
+    fs.writeFileSync(absolute, data);
+  }
+  const fixturePolicy = JSON.parse(fs.readFileSync(path.join(source, 'release-files.json'), 'utf8'));
+  fixturePolicy.excludeFiles.push('assets/source-only.bin');
+  writeJson(path.join(source, 'release-files.json'), fixturePolicy);
   execFileSync('git', ['init'], { cwd: source, stdio: 'pipe' });
+  execFileSync('git', ['config', 'core.autocrlf', 'false'], { cwd: source, stdio: 'pipe' });
   execFileSync('git', ['config', 'user.email', 'release-test@example.invalid'], { cwd: source, stdio: 'pipe' });
   execFileSync('git', ['config', 'user.name', 'Citadel Release Test'], { cwd: source, stdio: 'pipe' });
-  execFileSync('git', ['add', '.'], { cwd: source, stdio: 'pipe' });
+  execFileSync('git', ['add', '--force', '.'], { cwd: source, stdio: 'pipe' });
+  execFileSync('git', ['update-index', '--chmod=+x', '--', 'scripts/executable.sh'], { cwd: source, stdio: 'pipe' });
+  assert.equal(execFileSync('git', ['ls-files', '-z'], { cwd: source, encoding: 'utf8' }).split('\0').filter(Boolean).length, 20,
+    'tagged extraction regression must exercise twenty committed files');
   execFileSync('git', ['commit', '-m', 'release fixture'], {
     cwd: source,
     stdio: 'pipe',
@@ -219,7 +257,128 @@ try {
   assert(verified.files >= 5);
   assert(first.manifest.files.some((file) => file.path === '.planning/_templates/campaign.md'));
   assert(!first.manifest.files.some((file) => file.path === '.planning/campaigns/private.md'));
-  const tagged = buildRelease({ sourceDir: source, ref: 'v1.1.0', outputDir: path.join(temp, 'tagged') });
+  for (const name of taggedFixtures.keys()) {
+    fs.writeFileSync(path.join(source, ...name.split('/')), 'dirty working copy\n');
+  }
+  fs.rmSync(path.join(source, 'assets', 'duplicate.bin'));
+  fs.chmodSync(path.join(source, 'scripts', 'executable.sh'), 0o644);
+  fs.writeFileSync(path.join(source, 'assets', 'fixture.bin'), 'dirty large binary\n');
+  const gitCalls = [];
+  const gitOutputs = new Map();
+  const probedRelease = releaseWithGit((command, args, options) => {
+    assert.equal(command, 'git');
+    gitCalls.push({ args, input: options.input });
+    const output = execFileSync(command, args, options);
+    gitOutputs.set(args[0], output);
+    return output;
+  });
+  const tagged = probedRelease.buildRelease({ sourceDir: source, ref: 'v1.1.0', outputDir: path.join(temp, 'tagged') });
+  assert(gitCalls.length <= 5, `twenty-file tagged build launched ${gitCalls.length} Git subprocesses`);
+  const batchCalls = gitCalls.filter((call) => call.args[0] === 'cat-file');
+  assert.equal(batchCalls.length, 1, 'small tagged trees must use one blob batch');
+  assert.match(batchCalls[0].input, /^(?:[0-9a-f]{40,64}\n)+$/,
+    'batch requests must use object IDs, never paths or revision expressions');
+  assert(!gitCalls.some((call) => call.args[0] === 'show'), 'tagged extraction must not launch per-file git show');
+  const taggedTar = zlib.gunzipSync(fs.readFileSync(tagged.archivePath));
+  const taggedFiles = parseTar(taggedTar);
+  const taggedModes = new Map();
+  for (let offset = 0; offset + 512 <= taggedTar.length && taggedTar[offset] !== 0;) {
+    const header = taggedTar.subarray(offset, offset + 512);
+    const name = header.toString('utf8', 0, 100).replace(/\0.*$/, '');
+    const size = parseInt(header.toString('ascii', 124, 136), 8);
+    taggedModes.set(name, parseInt(header.toString('ascii', 100, 108), 8));
+    offset += 512 + Math.ceil(size / 512) * 512;
+  }
+  for (const [name, data] of taggedFixtures) {
+    if (!name.startsWith('assets/') && !name.startsWith('scripts/')) continue;
+    if (name === 'assets/source-only.bin') continue;
+    const archivedName = `citadel-1.1.0/${name}`;
+    assert.deepEqual(taggedFiles.get(archivedName), data, `tagged bytes must ignore working copy edits: ${name}`);
+    assert.equal(taggedModes.get(archivedName), name === 'scripts/executable.sh' ? 0o755 : 0o644,
+      `tagged mode must come from Git: ${name}`);
+  }
+  assert.deepEqual(taggedFiles.get('citadel-1.1.0/assets/fixture.bin'), LARGE_BINARY_FIXTURE,
+    'batched extraction must preserve large binary blobs despite dirty working bytes');
+  const taggedNames = tagged.manifest.files.map((file) => file.path);
+  assert.equal(taggedNames.join('\0'), [...taggedNames].sort().join('\0'), 'tagged manifest must retain deterministic sorting');
+  for (const name of ['dist/excluded.bin', 'node_modules/excluded.bin', 'assets/source-only.bin', '.planning/campaigns/private.md']) {
+    assert(!taggedNames.includes(name), `tagged release must retain exclusions: ${name}`);
+  }
+  const requestedOids = new Set(batchCalls[0].input.trim().split('\n'));
+  const treeRecords = String(gitOutputs.get('ls-tree')).split('\0');
+  for (const name of ['dist/excluded.bin', 'node_modules/excluded.bin', '.citadel-release.json', '.planning/campaigns/private.md']) {
+    const record = treeRecords.find((row) => row.endsWith(`\t${name}`));
+    assert(record, `exclusion fixture must be committed: ${name}`);
+    assert(!requestedOids.has(record.split(' ')[2]), `excluded tree blobs must not be requested: ${name}`);
+  }
+  const taggedAgain = buildRelease({ sourceDir: source, ref: 'v1.1.0', outputDir: path.join(temp, 'tagged-again') });
+  for (const key of ['archivePath', 'manifestPath', 'checksumPath']) {
+    assert.deepEqual(fs.readFileSync(tagged[key]), fs.readFileSync(taggedAgain[key]), `tagged ${key} must be byte-identical`);
+  }
+
+  const batchOutput = gitOutputs.get('cat-file');
+  const firstHeaderEnd = batchOutput.indexOf(0x0a);
+  const firstHeader = batchOutput.toString('utf8', 0, firstHeaderEnd);
+  const firstDataEnd = firstHeaderEnd + 1 + Number(firstHeader.split(' ')[2]);
+  const withHeader = (header) => Buffer.concat([Buffer.from(`${header}\n`), batchOutput.subarray(firstHeaderEnd + 1)]);
+  const badDelimiter = Buffer.from(batchOutput);
+  badDelimiter[firstDataEnd] = 0;
+  const corruptBatches = [
+    Buffer.alloc(0),
+    batchOutput.subarray(0, firstHeaderEnd),
+    withHeader(`${'0'.repeat(40)} blob ${firstHeader.split(' ')[2]}`),
+    withHeader(firstHeader.replace(' blob ', ' tree ')),
+    withHeader(firstHeader.replace(/\d+$/, 'NaN')),
+    withHeader(firstHeader.replace(/\d+$/, String(Number(firstHeader.split(' ')[2]) + 1))),
+    withHeader(`${firstHeader.split(' ')[0]} missing`),
+    batchOutput.subarray(0, firstDataEnd - 1),
+    batchOutput.subarray(0, firstDataEnd + 1),
+    batchOutput.subarray(0, batchOutput.length - 1),
+    badDelimiter,
+    Buffer.concat([batchOutput, Buffer.from('\n')]),
+  ];
+  for (const output of corruptBatches) {
+    const brokenRelease = releaseWithGit((_command, args) => args[0] === 'cat-file' ? output : gitOutputs.get(args[0]));
+    expectFailure(() => brokenRelease.buildRelease({ sourceDir: source, ref: 'v1.1.0', outputDir: path.join(temp, 'broken-batch') }),
+      /(?:Truncated|Malformed|Unexpected trailing) git cat-file batch/);
+  }
+  assert(!fs.existsSync(path.join(temp, 'broken-batch')), 'invalid batch output must fail before writing release artifacts');
+
+  const syntheticOids = Array.from({ length: 1025 }, (_, index) => index.toString(16).padStart(40, '0'));
+  const requestCounts = [];
+  const manyBlobs = releaseWithGit((_command, args, options) => {
+    if (args[0] === 'ls-tree') {
+      return syntheticOids.map((oid, index) => `100644 blob ${oid} 0\tassets/${index}.bin\0`).reverse().join('');
+    }
+    assert.equal(args[0], 'cat-file');
+    const oids = options.input.trim().split('\n');
+    requestCounts.push(oids.length);
+    return Buffer.from(oids.map((oid) => `${oid} blob 0\n\n`).join(''));
+  });
+  expectFailure(() => manyBlobs.buildRelease({ sourceDir: source, ref: 'v1.1.0' }), /Release source is missing release-files.json/);
+  assert(requestCounts.length > 1 && requestCounts.every((count) => count <= 1024), 'blob request count must be bounded');
+  assert.equal(requestCounts.reduce((sum, count) => sum + count, 0), syntheticOids.length, 'every blob must be retrieved across batch boundaries');
+
+  const largeBlobBytes = 140 * 1024 * 1024;
+  let largeBatchRequests = 0;
+  const largeBlobs = releaseWithGit((_command, args, options) => {
+    if (args[0] === 'ls-tree') {
+      return syntheticOids.slice(0, 2).map((oid, index) => `100644 blob ${oid} ${largeBlobBytes}\tassets/${index}.bin\0`).join('');
+    }
+    assert.equal(args[0], 'cat-file');
+    largeBatchRequests += 1;
+    assert.equal(options.input.trim().split('\n').length, 1, 'blob bytes must bound requests before allocating batch output');
+    throw new Error('large batch boundary checked');
+  });
+  expectFailure(() => largeBlobs.buildRelease({ sourceDir: source, ref: 'v1.1.0' }), /large batch boundary checked/);
+  assert.equal(largeBatchRequests, 1);
+  const oversizedBlob = releaseWithGit((_command, args) => {
+    assert.equal(args[0], 'ls-tree', 'oversized blobs must fail before starting cat-file');
+    return `100644 blob ${syntheticOids[0]} ${256 * 1024 * 1024}\tassets/oversized.bin\0`;
+  });
+  expectFailure(() => oversizedBlob.buildRelease({ sourceDir: source, ref: 'v1.1.0' }), /Git blob exceeds release buffer limit/);
+  for (const [name, data] of taggedFixtures) fs.writeFileSync(path.join(source, ...name.split('/')), data);
+  fs.writeFileSync(path.join(source, 'assets', 'fixture.bin'), LARGE_BINARY_FIXTURE);
   assert.equal(verifyRelease(tagged.archivePath, { version: '1.1.0', ref: 'v1.1.0' }).ref, 'v1.1.0');
   const tagObject = execFileSync('git', ['rev-parse', 'v1.1.0'], { cwd: source, encoding: 'utf8' }).trim();
   const sourceCommit = execFileSync('git', ['rev-parse', 'v1.1.0^{commit}'], { cwd: source, encoding: 'utf8' }).trim();

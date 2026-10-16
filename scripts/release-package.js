@@ -13,6 +13,7 @@ const ROOT = path.resolve(__dirname, '..');
 const MANIFEST_NAME = '.citadel-release.json';
 const RELEASE_FILES_NAME = 'release-files.json';
 const GIT_MAX_BUFFER = 256 * 1024 * 1024;
+const GIT_BATCH_MAX_OBJECTS = 1024;
 const MATRIX = { operatingSystems: ['linux', 'macos', 'windows'], node: ['22', '24'], runtimes: ['claude', 'codex'] };
 
 function compareNames(left, right) {
@@ -30,12 +31,13 @@ function arg(name, fallback = null) {
   return index >= 0 ? process.argv[index + 1] : fallback;
 }
 
-function runGit(args, cwd, encoding = 'utf8') {
+function runGit(args, cwd, encoding = 'utf8', input) {
   return execFileSync('git', args, {
     cwd,
     encoding,
+    input,
     maxBuffer: GIT_MAX_BUFFER,
-    stdio: ['ignore', 'pipe', 'pipe'],
+    stdio: [input === undefined ? 'ignore' : 'pipe', 'pipe', 'pipe'],
   });
 }
 
@@ -96,15 +98,64 @@ function worktreeEntries(sourceDir) {
   });
 }
 
+function readBlobBatch(sourceDir, batch) {
+  const input = batch.map((entry) => entry.oid).join('\n') + '\n';
+  const output = runGit(['cat-file', '--batch'], sourceDir, null, input);
+  let offset = 0;
+  const entries = batch.map((entry) => {
+    const headerEnd = output.indexOf(0x0a, offset);
+    if (headerEnd < 0) throw new Error(`Truncated git cat-file batch header: ${entry.name}`);
+    const header = output.toString('utf8', offset, headerEnd);
+    if (header !== `${entry.oid} blob ${entry.size}`) {
+      throw new Error(`Malformed git cat-file batch header: ${entry.name}`);
+    }
+    const start = headerEnd + 1;
+    const end = start + entry.size;
+    if (end >= output.length) throw new Error(`Truncated git cat-file batch data: ${entry.name}`);
+    if (output[end] !== 0x0a) throw new Error(`Malformed git cat-file batch delimiter: ${entry.name}`);
+    offset = end + 1;
+    return { name: entry.name, data: Buffer.from(output.subarray(start, end)), mode: entry.mode };
+  });
+  if (offset !== output.length) throw new Error('Unexpected trailing git cat-file batch output');
+  return entries;
+}
+
 function refEntries(sourceDir, ref) {
-  const records = String(runGit(['ls-tree', '-r', '-z', ref], sourceDir)).split('\0').filter(Boolean);
-  return records.map((record) => {
-    const match = /^(\d+)\s+\w+\s+[0-9a-f]+\t(.+)$/.exec(record);
+  // Sizes let us bound stdout as well as the number of requests per process.
+  // NUL-delimited paths stay out of the line-based cat-file protocol entirely.
+  const tree = String(runGit(['ls-tree', '-r', '-l', '-z', ref], sourceDir));
+  if (tree && !tree.endsWith('\0')) throw new Error('Truncated git tree output');
+  const records = tree.split('\0').filter(Boolean);
+  const objects = records.map((record) => {
+    const match = /^(\d+) (\w+) ([0-9a-f]+) +(-|\d+)\t([\s\S]+)$/.exec(record);
     if (!match) throw new Error(`Cannot parse git tree record: ${record}`);
-    const name = match[2].replace(/\\/g, '/');
-    const data = runGit(['show', `${ref}:${name}`], sourceDir, null);
-    return { name, data, mode: match[1] === '100755' ? 0o755 : 0o644 };
-  }).filter((entry) => !isExcluded(entry.name, true)).sort(compareNames);
+    const name = match[5].replace(/\\/g, '/');
+    if (isExcluded(name, true)) return null;
+    const size = Number(match[4]);
+    if (match[2] !== 'blob' || !Number.isSafeInteger(size) || size < 0) {
+      throw new Error(`Cannot read git tree blob: ${name}`);
+    }
+    const oid = match[3];
+    // Account for "<oid> blob <size>\n", the raw bytes, and the trailing LF.
+    const responseBytes = oid.length + String(size).length + 8 + size;
+    if (responseBytes > GIT_MAX_BUFFER) throw new Error(`Git blob exceeds release buffer limit: ${name}`);
+    return { name, oid, size, responseBytes, mode: match[1] === '100755' ? 0o755 : 0o644 };
+  }).filter(Boolean).sort(compareNames);
+
+  const entries = [];
+  let batch = [];
+  let batchBytes = 0;
+  for (const object of objects) {
+    if (batch.length && (batch.length >= GIT_BATCH_MAX_OBJECTS || batchBytes + object.responseBytes > GIT_MAX_BUFFER)) {
+      entries.push(...readBlobBatch(sourceDir, batch));
+      batch = [];
+      batchBytes = 0;
+    }
+    batch.push(object);
+    batchBytes += object.responseBytes;
+  }
+  if (batch.length) entries.push(...readBlobBatch(sourceDir, batch));
+  return entries;
 }
 
 function jsonFromEntries(entries, name) {
