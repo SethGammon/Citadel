@@ -4,6 +4,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const { runCheckpointed, continueOperation, guardExports } = require('./operation-continuation');
 const {
   historyRecordFromAttempt,
   digest,
@@ -21,7 +22,8 @@ const USAGE = `Usage:
   citadel operation catalog --runtime codex|claude --model MODEL [--fallback-model MODEL] [--reasoning-effort VALUE] [--service-tier VALUE] [--tools CSV] [--out FILE]
   citadel operation plan --request FILE --catalog FILE [--history FILE] [--json]
   citadel operation explain --request FILE --catalog FILE [--history FILE]
-  citadel operation run --request FILE --catalog FILE --workspace DIR [--history FILE] [--out FILE] [--history-out FILE] [--json]
+  citadel operation run --request FILE --catalog FILE --workspace DIR [--checkpoint DIR] [--history FILE] [--out FILE] [--history-out FILE] [--json]
+  citadel operation continue --checkpoint DIR --request FILE --catalog FILE --workspace DIR [--history FILE] [--out FILE] [--history-out FILE] [--json]
   citadel operation verify --input FILE [--json]
   citadel operation doctor --request FILE --catalog FILE [--history FILE] [--json]
 
@@ -31,6 +33,11 @@ when an operation needs explicit quality, privacy, tool, time, or cost bounds.
 Init and catalog accept Codex --reasoning-effort and --service-tier settings.
 Both direct and fallback plans inherit them; runtime support is model-specific.
 Use --service-tier default to request standard speed; served tier may be unknown.
+With --checkpoint, run saves verified evidence before delivering its report.
+Continue finishes that delivery without launching a worker. Changed inputs or
+workspace files and unfinished/uncertain runs are blocked. Use a new checkpoint
+directory outside the Git workspace; keep reports outside the workspace too.
+Source/full-plugin guide: docs/OPERATION_CONTINUATION.md
 `;
 
 function has(args, flag) { return args.includes(flag); }
@@ -282,10 +289,13 @@ function main(argv = process.argv.slice(2), options = {}) {
       write(report, json, io, `Operation Control is ready. Selected path: ${decision.selected.plan_ids.join(' -> ')}\n`);
       return 0;
     }
-    if (command === 'run') {
+    if (command === 'run' || command === 'continue') {
       const loaded = inputs(args, cwd);
       const workspaceRoot = path.resolve(cwd, required(args, '--workspace'));
-      const report = runOperation({ ...loaded, workspaceRoot });
+      const checkpoint = command === 'continue' ? required(args, '--checkpoint') : value(args, '--checkpoint');
+      const execution = { ...loaded, workspaceRoot, ...(checkpoint ? { checkpoint: path.resolve(cwd, checkpoint) } : {}) };
+      if (checkpoint) guardExports(execution, [value(args, '--out'), value(args, '--history-out')].filter(Boolean).map((file) => path.resolve(cwd, file)));
+      const report = command === 'continue' ? continueOperation(execution) : checkpoint ? runCheckpointed(execution) : runOperation(execution);
       const out = value(args, '--out');
       if (out) fs.writeFileSync(path.resolve(cwd, out), `${JSON.stringify(report, null, 2)}\n`, 'utf8');
       const historyOut = value(args, '--history-out');
@@ -293,7 +303,7 @@ function main(argv = process.argv.slice(2), options = {}) {
         const records = report.attempts.map((attempt) => historyRecordFromAttempt(loaded.request, attempt));
         fs.writeFileSync(path.resolve(cwd, historyOut), `${records.map((record) => JSON.stringify(record)).join('\n')}\n`, 'utf8');
       }
-      write(report, json, io, `Operation ${report.operation_id}: ${report.status}\nAttempts: ${report.attempts.length}\nReport digest: ${report.report_digest}\n`);
+      write(report, json, io, `${command === 'continue' ? 'Verified checkpoint restored. No adapter or verifier launched.\n' : ''}Operation ${report.operation_id}: ${report.status}\nAttempts: ${report.attempts.length}\nReport digest: ${report.report_digest}\n`);
       return report.status === 'passed' ? 0 : report.status === 'unknown' ? 2 : 1;
     }
     if (command === 'verify') {

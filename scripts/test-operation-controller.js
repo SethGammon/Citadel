@@ -10,6 +10,7 @@ const { spawnSync } = require('child_process');
 const operation = require('../core/operation-controller');
 const runtimeAdapter = require('./operation-runtime-adapter');
 const operationCli = require('./operation');
+require('./test-operation-continuation');
 
 const ROOT = path.resolve(__dirname, '..');
 const EXAMPLE = path.join(ROOT, 'examples', 'operation-control');
