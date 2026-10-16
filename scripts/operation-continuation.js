@@ -124,11 +124,15 @@ function continueOperation(options) {
   for (const name of names) safePath(path.join(journalDir, name));
   const { entries } = readJournal(journalDir);
   if (entries.some((entry) => entry.payload_digest !== ctx.payload)) fail('CONTINUATION_INPUT_CHANGED', 'Request, catalog, history, workspace or HEAD changed.');
+  // Admit exactly this command's pending -> completed transition. Every other
+  // state, identity or effect class is uncertain and must never replay work.
   if (entries.length !== 2 || entries[0].state !== 'pending' || entries[1].state !== 'completed'
     || entries.some((entry) => entry.idempotency_key !== 'operation' || entry.effect_class !== 'external-nonrepeatable')) {
     fail('CONTINUATION_BLOCKED', 'No completed verified checkpoint. Inspect the prior run; continuation will not launch or retry a worker.');
   }
   const accepted = JSON.parse(fs.readFileSync(safePath(path.join(ctx.checkpoint, 'accepted.json')), 'utf8'));
+  // These independent gates bind the evidence format, frozen inputs, journal
+  // digest, report identity and verified outcome before trusting any artifacts.
   if (accepted.schema !== 1 || accepted.payload_digest !== ctx.payload || digest(accepted) !== entries[1].evidence_digest
     || accepted.report?.request_digest !== digest(options.request)
     || accepted.report?.status !== 'passed' || verifyReport(accepted.report).status !== 'verified') {
