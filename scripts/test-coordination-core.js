@@ -6,6 +6,7 @@ const assert = require('assert');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
+const { spawnSync } = require('child_process');
 
 const { getCoordinationPaths, readJson, STALE_INSTANCE_MS } = require('../core/coordination/io');
 const { registerInstance, heartbeatInstance, unregisterInstance, getCoordinationStatus } = require('../core/coordination/instances');
@@ -29,6 +30,26 @@ withTempProject((projectRoot) => {
 
   assert.equal(scopesOverlap(['src/app'], ['src']), true, 'parent-child scopes should overlap');
   assert.equal(scopesOverlap(['src(read-only)'], ['src']), false, 'read-only scope should not block');
+  const scopeCases = [
+    ['same path', 'src/core', 'src/core', true],
+    ['Windows separator', 'src/core', 'src\\core', true],
+    ['dot prefix', 'src/core', './src/core', true],
+    ['dot segments', 'src/core', 'src/other/../core', true],
+    ['case aliases on every host', 'src/API', 'src/api', true],
+    ['trailing separator', 'src/core/', 'src/core', true],
+    ['nested glob directory', 'src/api/**', 'src/api/auth', true],
+    ['partial glob segment', 'src/api*', 'src/api-client', true],
+    ['directory siblings', 'src/api', 'src/api-client', false],
+    ['file siblings', 'src/api.js', 'src/api.json', false],
+    ['glob directory sibling', 'src/api/**', 'src/api-client', false],
+    ['root path', '.', 'src/api', true],
+    ['universal glob', '**/*.js', 'src/api', true],
+    ['read-only trailing space', 'src (read-only) ', 'src/api', false],
+  ];
+  for (const [label, left, right, expected] of scopeCases) {
+    assert.equal(scopesOverlap([left], [right]), expected, label);
+    assert.equal(scopesOverlap([right], [left]), expected, `${label} reversed`);
+  }
 
   const instance = registerInstance('agent-a', { projectRoot, now: freshStart, pid: process.pid });
   assert.equal(instance.instanceId, 'agent-a');
@@ -42,6 +63,13 @@ withTempProject((projectRoot) => {
   });
   assert.equal(claim.type, 'build');
   assert(findOverlap(['src'], { projectRoot }), 'broader scope should overlap with existing claim');
+  const cli = (command, scope) => spawnSync(process.execPath, [
+    path.join(__dirname, 'coordination.js'), command, '--id', 'alias-worker', '--scope', scope,
+  ], { cwd: projectRoot, encoding: 'utf8', env: { ...process.env, CLAUDE_PROJECT_DIR: projectRoot } });
+  assert.equal(cli('check-overlap', 'src\\core').status, 1, 'CLI should detect alias overlap');
+  assert.equal(cli('check-overlap', 'src/core-utils').status, 0, 'CLI should allow sibling paths');
+  assert.equal(cli('claim', './src/core').status, 1, 'CLI should refuse a second owner for the same path');
+  assert.equal(getClaimStatus({ projectRoot }).claims.length, 1, 'refused alias claim must not be persisted');
 
   registerInstance('agent-b', { projectRoot, now: staleSeen, pid: 999999 });
   let overlapError = null;

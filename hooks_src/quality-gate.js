@@ -5,7 +5,7 @@
  *
  * Runs when Claude stops responding. Applies cold-path verification lenses
  * to recently-edited files. More expensive checks than the hot path (post-edit)
- * since these only run once at session end.
+ * since these run when a turn stops rather than after every edit.
  *
  * Cold-path lenses:
  *   - performance: all-property transitions, confirm/alert, magic intervals
@@ -65,7 +65,7 @@ if (require.main === module) {
         process.exit(0);
         return;
       }
-      run();
+      run(ctx);
     } catch {
       run();
     }
@@ -76,7 +76,7 @@ if (require.main === module) {
 
 /**
  * Default cold-path lenses by file extension.
- * More expensive checks than hot-path — only runs at session end.
+ * More expensive checks than hot-path — runs when a turn stops.
  */
 const DEFAULT_COLD_LENSES = {
   '.ts':   ['performance', 'accessibility', 'adversarial'],
@@ -162,8 +162,7 @@ function isIgnoredViolation(violation, fingerprints) {
     && fingerprints.has(violation.fingerprint);
 }
 
-function selectColdPathLenses(file, content) {
-  const config = health.readConfig();
+function selectColdPathLenses(file, content, config = health.readConfig()) {
   const verification = config.verification || {};
   const disabled = new Set(verification.disabled || []);
   const ext = path.extname(file).toLowerCase();
@@ -190,7 +189,7 @@ function selectColdPathLenses(file, content) {
   return lenses.filter(l => !disabled.has(l) && !ignored.has(l));
 }
 
-function run() {
+function run(context = {}) {
   health.increment('quality-gate', 'count');
 
   const projectDir = health.PROJECT_ROOT;
@@ -222,6 +221,7 @@ function run() {
   }
 
   if (changedFiles.length === 0) {
+    health.qualityAdvisoryChanged(context, null);
     process.exit(0);
   }
 
@@ -241,7 +241,7 @@ function run() {
       continue;
     }
 
-    const lenses = selectColdPathLenses(file, content);
+    const lenses = selectColdPathLenses(file, content, config);
 
     for (const lens of lenses) {
       const lensViolations = runColdLens(lens, file, content, config, builtInRules);
@@ -269,7 +269,7 @@ function run() {
       // Documented Stop-hook blocking path: the model must address the violations
       // before it may stop. Loop-safe via the stop_hook_active guard above.
       process.stdout.write(JSON.stringify({ decision: 'block', reason: msg }));
-    } else {
+    } else if (health.qualityAdvisoryChanged(context, msg)) {
       // Inject violations into the model's context without blocking. For Stop hooks
       // the documented envelope is hookSpecificOutput.additionalContext — a bare
       // top-level `additionalContext` key is not part of the hook output schema and
@@ -278,6 +278,8 @@ function run() {
         hookSpecificOutput: { hookEventName: 'Stop', additionalContext: msg },
       }));
     }
+  } else {
+    health.qualityAdvisoryChanged(context, null);
   }
 
   process.exit(0);

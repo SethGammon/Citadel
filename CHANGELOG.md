@@ -1,5 +1,22 @@
 # Changelog
 
+## 1.4.4 - 2026-10-16
+
+### Fixed
+
+- Normalize shared coordination scope claims so equivalent path casing and separators cannot admit overlapping owners.
+- Keep repeated Stop advisories quiet while preserving fresh scans and blocking decisions, and resolve effective configuration once per Stop gate.
+- Bind generated memory blocks to source provenance and freshness while preserving authored legacy content.
+- Fix Windows fixture staging and avoid unnecessary handoff scans, first shipped from the changes in #354.
+
+### Improved
+
+- Correct installation, command, skill, and proof documentation to match the available package and runtime surfaces and their remaining verification gates.
+
+### Maintenance
+
+- Refresh pinned CI actions for Node setup, artifact upload and download, and plugin scanning.
+
 ## 1.4.3 - 2026-10-15
 
 ### Added

@@ -32,10 +32,16 @@ You keep the runtime and your repository. Citadel adds the operating contract ar
 
 The repository remains the source of truth. There is no hosted control plane required for the core workflow.
 
-For stable installation, use the archive, external manifest, and SHA-256
-sidecar from one GitHub Release and verify them together. A direct clone, pull,
-or GitHub repository marketplace source follows source-main development and is
-not the stable release channel.
+For normal Claude Code or Codex installation, use the native marketplace with
+an explicit released version ref, as shown in the [README](../README.md#install).
+A pinned release ref selects that tagged plugin source; floating `main`, an
+unpinned repository source, or a development clone can follow source-main.
+
+For manual or offline installation, verify the archive, external manifest, and
+SHA-256 sidecar from one GitHub Release together. The slim archive deliberately
+exposes fewer commands and skills than the full tagged repository. Its supported
+commands are listed in the [release CLI guide](CLI.md); advanced source features
+such as Operation Control are optional and are not exposed by that archive CLI.
 
 ## Where other tools are better
 

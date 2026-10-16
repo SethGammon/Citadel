@@ -40,7 +40,18 @@ should make their risk, artifacts, neighbors, and verification path explicit.
 
 ## Memory Visibility
 
-Compiled memory blocks are listed with:
+Compile bounded excerpts from the project's supported source files:
+
+```bash
+node scripts/memory-compile.js compile
+```
+
+The block count depends on available source evidence. An empty project can
+produce zero blocks successfully; every category need not be present. The
+compiler quotes sources and does not infer project identity, user approval, or
+verification commands.
+
+List the memory currently eligible for agent context with:
 
 ```bash
 node scripts/memory-compile.js list
@@ -61,8 +72,25 @@ Each memory block should be judged by:
 - `scope`: where the memory applies
 - `owner`: who or what owns the claim
 - `confidence`: how strongly Citadel should trust it
-- `last_verified`: freshness date for drift-prone claims
-- `sources`: files or artifacts that support the memory
+- `last_verified`: capture or review date used by the freshness check
+- `sources`: supporting paths and SHA-256 hashes of the source bytes
+- `freshness`: computed eligibility for retrieval
+
+The default loader and `list` command return only `current` records:
+
+- `current`: cited source bytes still match, the verification date is within
+  the freshness window, and generated content has not been edited.
+- `stale`: a source disappeared or changed, or `last_verified` is older than
+  60 days by default.
+- `unverified`: source hashes are missing, or a generated block was edited
+  without a new verification record.
+
+Compilation and lint inspect all saved records, including those excluded from
+default retrieval. To inspect their statuses and issues, run:
+
+```bash
+node scripts/memory-compile.js lint --json
+```
 
 Use the JSON view for automated checks and the text view for human triage.
 Memory is only useful when a future agent can tell where a claim came from and
@@ -77,8 +105,25 @@ node scripts/memory-compile.js lint
 ```
 
 Lint output should be treated as an operator warning. A lint failure does not
-mean the repository is broken, but it does mean a campaign may inherit stale,
-unsupported, or conflicting context.
+mean the repository is broken. Resolve or explain the reported stale,
+unsupported, or conflicting context before calling memory compilation successful.
+
+## Existing and Authored Notes
+
+Legacy blocks without source hashes remain on disk as `unverified` and are
+excluded from default retrieval. An upgrade does not silently rewrite or delete
+them, and an old confidence label does not make them current.
+
+The compiler refreshes only its own unchanged generated blocks. It preserves
+unmarked authored notes and manual edits to generated notes, including edits
+that leave the compiler marker in place. Preservation does not verify a note.
+
+For generated memory, update the source and compile again. For a preserved note,
+review the actual sources and explicitly decide whether to retire it, replace
+it from supported source files, or maintain it as authored memory. An authored
+block needs an explicit owner, a reviewed `last_verified` date, and current
+source hashes. Remove compiler generation metadata when intentionally taking
+authorship; do not relabel unsupported historical claims as verified.
 
 ## Private State Boundary
 

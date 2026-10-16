@@ -1,10 +1,14 @@
 # Citadel release CLI
 
-Citadel's supported distribution channel is a verified archive attached to a
-[GitHub Release](https://github.com/SethGammon/Citadel/releases). The root npm
-package is private because the unscoped `citadel` namespace is not owned by
-this project. Do not use `npm install citadel`, `npx citadel`, or a registry
-tarball as a Citadel installation source.
+For normal Claude Code or Codex installation, use the native marketplace pinned
+to an explicit released version, as shown in the [README](../README.md#install).
+This guide covers the smaller package CLI in the verified archive attached to a
+[GitHub Release](https://github.com/SethGammon/Citadel/releases), an alternative
+for manual or offline installation.
+
+The root npm package is private because the unscoped `citadel` namespace is not
+owned by this project. Do not use `npm install citadel`, `npx citadel`, or a
+registry tarball as a Citadel installation source.
 
 The stable archive intentionally exposes a small package CLI:
 
@@ -17,8 +21,8 @@ uninstall
 ```
 
 Use `node "$CITADEL_ROOT/bin/citadel.js" --help` from the extracted release as
-the authority. APIs present in a development checkout are not automatically
-part of the stable package CLI.
+the authority for that archive. Full tagged plugin source and development
+checkouts contain optional APIs that are deliberately absent from this CLI.
 
 ## Governed adoption
 

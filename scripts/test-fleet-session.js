@@ -150,6 +150,22 @@ assert.equal(conflicts.length, 1, 'same-wave parent-child scopes should conflict
 assert.equal(conflicts[0].left.id, '1');
 assert.equal(conflicts[0].right.id, '5');
 
+const scopeCases = [
+  ['same path', 'src/api', 'src/api', 1],
+  ['Windows separator', 'src/api', 'src\\api', 1],
+  ['dot prefix', 'src/api', './src/api', 1],
+  ['case aliases', 'src/API', 'src/api', 1],
+  ['nested glob directory', 'src/api/**', 'src/api/auth', 1],
+  ['directory siblings', 'src/api', 'src/api-client', 0],
+  ['glob directory sibling', 'src/api/**', 'src/api-client', 0],
+];
+for (const [label, left, right, expected] of scopeCases) {
+  assert.equal(getScopeConflicts([
+    { id: 'left', scope: [left], wave: 1 },
+    { id: 'right', scope: [right], wave: 1 },
+  ]).length, expected, `Fleet ${label}`);
+}
+
 const repair = createRepairTask(tasks, tasks[2], 'integration failed verification');
 assert.equal(repair.id, '7');
 assert.equal(repair.status, 'pending');
