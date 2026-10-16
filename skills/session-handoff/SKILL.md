@@ -10,10 +10,14 @@ auto-trigger: false
 trigger_keywords:
   - handoff
   - session summary
-last-updated: 2026-03-20
+last-updated: 2026-10-15
 ---
 
 # /session-handoff — Context Transfer
+
+## Identity
+
+You summarize the current task accurately and economically so another session can continue it.
 
 ## Orientation
 
@@ -24,18 +28,18 @@ Also used automatically by orchestrators (Archon, Fleet) at session boundaries.
 
 ## Protocol
 
-1. **Collect session data** (run in parallel):
-   - `git log --oneline -20` and `git diff HEAD --stat`
-   - Read `.planning/campaigns/` for files with `status: active`
-   - Read `.planning/fleet/` for files with `status: active` or `needs-continue`
+1. **Reuse current evidence first**:
+   - Start with the task, edits, verification results, decisions, and blockers already established in this session. If they are sufficient for a truthful handoff, make no tool calls.
+   - Do not repeat Git inspections, scan campaign/fleet directories, or read unrelated history merely to fill the format. A handoff summarizes work; it does not start a new audit.
+   - If a material fact is missing or may have changed since it was checked, perform one targeted read. Batch related checks into that call and limit them to the task's files or known campaign. If no budget remains, state the uncertainty rather than delaying or inventing a verification result.
 
-2. **Identify the primary thread**: If an active campaign exists, use its current phase as the anchor. If multiple campaigns are active, list each. If no campaign, use the most recent git commits as the frame.
+2. **Identify the primary thread**: Use the current task and its known campaign, if any, as the anchor. Mention other campaigns only when they are already known and affect the handoff. Do not discover unrelated work to create a frame.
 
 3. **Map data to HANDOFF fields**:
-   - *What changed*: campaign phase output if campaign active; otherwise commit subjects from this session
-   - *Key decisions*: commit messages with a tradeoff word ("instead", "because", "not"); or explicit statements from the conversation
-   - *Unresolved items*: campaign items marked `blocked` or `parked`; TODOs added this session; anything explicitly deferred
-   - *Next steps*: campaign's next phase if active; otherwise the top open item from above
+   - *What changed*: actual task output and files changed; distinguish committed, uncommitted, and proposed work when known
+   - *Key decisions*: the decisions and reasons established while doing the task
+   - *Unresolved items*: failed or missing verification, known blockers, and explicitly deferred work
+   - *Next steps*: the next actionable step, or "none" when the task is complete
 
 4. Output the HANDOFF block.
 
@@ -61,9 +65,9 @@ Keep it to 3-5 bullets, under 150 words. This is a context transfer, not a repor
 
 ## Fringe Cases
 
-**`.planning/` does not exist**: Skip campaign and fleet checks. Treat as "no active campaigns" and proceed with git-only context.
+**`.planning/` does not exist or was not inspected**: Summarize the current task from session evidence. Do not inspect Git or infer campaign status merely to fill the handoff.
 
-**Corrupted or unparseable campaign file** (malformed frontmatter, invalid status, or truncated content in `.planning/campaigns/`): Skip that file and treat it as inactive. Output: "Campaign file at `{path}` could not be parsed — treating as inactive. Check the file manually if this is unexpected."
+**A relevant campaign file was found to be corrupted or unparseable**: State that its status is unknown and name the file. Do not treat unreadable state as inactive or scan for other campaigns.
 
 **No active campaign and no git changes**: If there is nothing to summarize, say so explicitly: "No active campaign or session changes found. Nothing to hand off." Do not fabricate a handoff.
 

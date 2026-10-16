@@ -7,6 +7,7 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 const { execFileSync, spawnSync } = require('child_process');
+const { stagePlugin } = require('../core/golden-path/runner');
 
 const {
   buildAppServerApprovalResponse,
@@ -27,16 +28,30 @@ function tempProject(prefix) {
   return fs.mkdtempSync(path.join(os.tmpdir(), prefix));
 }
 
-function stagePluginRoot(targetRoot) {
-  const excluded = new Set(['.git', '.planning', 'node_modules']);
-  fs.cpSync(CITADEL_ROOT, targetRoot, {
-    recursive: true,
-    filter(source) {
-      const relative = path.relative(CITADEL_ROOT, source);
-      const topLevel = relative.split(path.sep)[0];
-      return !excluded.has(topLevel);
-    },
-  });
+function stagePluginRoot(targetRoot, sourceRoot = CITADEL_ROOT) {
+  stagePlugin(sourceRoot, targetRoot);
+}
+
+function testPluginStagingSkipsLocalLinks() {
+  const tmp = tempProject('citadel-plugin-stage-');
+  try {
+    const source = path.join(tmp, 'source');
+    const target = path.join(tmp, 'target');
+    const external = path.join(tmp, 'external');
+    fs.mkdirSync(source);
+    fs.mkdirSync(external);
+    fs.writeFileSync(path.join(source, 'plugin.json'), '{}');
+    fs.writeFileSync(path.join(source, '.env'), 'PRIVATE_FIXTURE_VALUE=private');
+    fs.writeFileSync(path.join(external, 'outside.txt'), 'must not be staged');
+    fs.symlinkSync(external, path.join(source, '_isolated-checkout'), 'junction');
+    stagePluginRoot(target, source);
+    assert.equal(fs.readFileSync(path.join(target, 'plugin.json'), 'utf8'), '{}');
+    assert(!fs.existsSync(path.join(target, '_isolated-checkout')), 'local checkout links must not be copied or followed');
+    assert(!fs.existsSync(path.join(target, '.env')), 'private environment files must not be staged');
+    assert.equal(fs.readFileSync(path.join(external, 'outside.txt'), 'utf8'), 'must not be staged');
+  } finally {
+    fs.rmSync(tmp, { recursive: true, force: true });
+  }
 }
 
 function snapshotSourcePluginArtifacts() {
@@ -496,6 +511,7 @@ function testAppServerCaptureVerification() {
   assert.equal(plan.turnSandbox, 'readOnly');
 }
 
+testPluginStagingSkipsLocalLinks();
 testReadinessCheck();
 testPluginMarketplaceSmoke();
 testFallbackSkillOwnership();

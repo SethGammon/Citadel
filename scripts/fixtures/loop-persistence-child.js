@@ -7,6 +7,10 @@ const path = require('path');
 const registry = require('../../core/loops/registry');
 const [mode, root, id, argument] = process.argv.slice(2);
 const waitBuffer = new Int32Array(new SharedArrayBuffer(4));
+// These burst writers test serialization, not the default latency budget.
+// Slow Windows fsyncs can exhaust 5s while other writers repeatedly acquire
+// the lock. Keep a finite test budget; abandoned-lock tests use their own 60ms.
+const contentionOptions = { lockTimeoutMs: 30000 };
 
 function pause(stage) {
   fs.writeFileSync(path.join(root, `stage-${stage}`), String(process.pid));
@@ -47,7 +51,7 @@ process.once('message', () => {
       let appended = 0;
       for (let index = 0; index < Number(argument); index++) {
         try {
-          registry.appendLoopRun(root, id, { status: 'running', summary: `${process.pid}:${index}` });
+          registry.appendLoopRun(root, id, { status: 'running', summary: `${process.pid}:${index}` }, contentionOptions);
           appended++;
         } catch (error) {
           if (error.code !== 'LOOP_TERMINAL') throw error;
@@ -56,11 +60,11 @@ process.once('message', () => {
       }
       result = { appended };
     } else if (mode === 'register') {
-      result = registry.registerLoop(root, { id, title: String(process.pid) });
+      result = registry.registerLoop(root, { id, title: String(process.pid) }, contentionOptions);
     } else if (mode === 'cas') {
-      result = registry.updateLoop(root, id, { title: String(process.pid) }, { expectedRevision: Number(argument) });
+      result = registry.updateLoop(root, id, { title: String(process.pid) }, { ...contentionOptions, expectedRevision: Number(argument) });
     } else if (mode === 'stop') {
-      result = registry.stopLoop(root, id, 'stopped', 'concurrent test stop');
+      result = registry.stopLoop(root, id, 'stopped', 'concurrent test stop', contentionOptions);
     } else if (mode === 'hold-reader') {
       const descriptor = fs.openSync(registry.loopPath(root, id), 'r');
       fs.writeFileSync(path.join(root, 'reader-open'), String(process.pid));
