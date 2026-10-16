@@ -30,13 +30,15 @@ function git(root, args) {
 }
 
 function context(options) {
-  const root = fs.realpathSync(safePath(options.workspaceRoot));
+  // Native realpath restores Windows filesystem casing; the JS implementation
+  // can retain caller casing and disagree with Git for the same directory.
+  const root = fs.realpathSync.native(safePath(options.workspaceRoot));
   const checkpoint = safePath(options.checkpoint);
   const relative = path.relative(root, checkpoint);
   if (!relative || (!relative.startsWith(`..${path.sep}`) && relative !== '..' && !path.isAbsolute(relative))) {
     fail('CHECKPOINT_UNSAFE_PATH', 'Keep the checkpoint outside the workspace.');
   }
-  if (fs.realpathSync(git(root, ['rev-parse', '--show-toplevel']).trim()) !== root) {
+  if (path.relative(fs.realpathSync.native(git(root, ['rev-parse', '--show-toplevel']).trim()), root) !== '') {
     fail('CHECKPOINT_WORKSPACE_INVALID', 'Use the Git repository root as --workspace.');
   }
   const binding = { schema: 1, workspace: root, head: git(root, ['rev-parse', 'HEAD']).trim(), request: options.request, catalog: options.catalog, history: options.history || [] };

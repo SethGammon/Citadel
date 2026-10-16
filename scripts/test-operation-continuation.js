@@ -19,7 +19,8 @@ function git(...args) {
 function cli(command, extra = []) {
   const result = spawnSync(process.execPath, [path.join(root, 'bin/citadel.js'), 'operation', command,
     '--request', path.join(temp, 'request.json'), '--catalog', path.join(temp, 'catalog.json'),
-    '--workspace', workspace, '--checkpoint', path.join(temp, 'checkpoint'), '--json', ...extra], { encoding: 'utf8', shell: false });
+    '--workspace', process.platform === 'win32' && command === 'run' ? workspace.toLowerCase() : workspace,
+    '--checkpoint', path.join(temp, 'checkpoint'), '--json', ...extra], { encoding: 'utf8', shell: false });
   return { ...result, json: JSON.parse(result.stdout) };
 }
 try {
@@ -32,7 +33,7 @@ try {
   git('init'); git('add', '.'); git('-c', 'user.name=Test', '-c', 'user.email=test@example.invalid', 'commit', '-m', 'fixture');
   const interrupted = cli('run', ['--out', path.join(temp, 'missing', 'report.json')]);
   assert.equal(interrupted.status, 1);
-  assert.equal(interrupted.json.code, 'ENOENT');
+  assert.equal(interrupted.json.code, 'ENOENT', interrupted.stdout);
   const resumed = cli('continue', ['--out', path.join(temp, 'report.json'), '--history-out', path.join(temp, 'history.jsonl')]);
   assert.equal(resumed.status, 0, resumed.stdout);
   assert.equal(resumed.json.status, 'passed');
