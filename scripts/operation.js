@@ -37,6 +37,7 @@ With --checkpoint, run saves verified evidence before delivering its report.
 Continue finishes that delivery without launching a worker. Changed inputs or
 workspace files and unfinished/uncertain runs are blocked. Use a new checkpoint
 directory outside the Git workspace; keep reports outside the workspace too.
+Source/full-plugin guide: docs/OPERATION_CONTINUATION.md
 `;
 
 function has(args, flag) { return args.includes(flag); }

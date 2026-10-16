@@ -24,9 +24,6 @@ Use `node "$CITADEL_ROOT/bin/citadel.js" --help` from the extracted release as
 the authority for that archive. Full tagged plugin source and development
 checkouts contain optional APIs that are deliberately absent from this CLI.
 
-For a source checkout or full plugin, see [Operation continuation](OPERATION_CONTINUATION.md)
-to recover an interrupted verified report delivery without launching another worker.
-
 ## Governed adoption
 
 Initial adoption uses the release's plan-first lifecycle script. Run it from
