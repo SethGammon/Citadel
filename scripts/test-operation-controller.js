@@ -11,6 +11,7 @@ const operation = require('../core/operation-controller');
 const runtimeAdapter = require('./operation-runtime-adapter');
 const operationCli = require('./operation');
 require('./test-operation-continuation');
+require('./test-operation-reconciliation');
 
 const ROOT = path.resolve(__dirname, '..');
 const EXAMPLE = path.join(ROOT, 'examples', 'operation-control');

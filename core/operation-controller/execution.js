@@ -331,6 +331,7 @@ function runOperation({ request, catalog, history = [], workspaceRoot, spawn = s
 }
 
 function verifyReport(report) {
+  if (report?.kind === 'citadel_operation_recovery_report') return require('./recovery-report').verifyRecoveryReport(report);
   if (!report || typeof report !== 'object' || report.kind !== 'citadel_operation_control_report') {
     return { status: 'invalid', reason_code: 'NOT_OPERATION_CONTROL_REPORT' };
   }
