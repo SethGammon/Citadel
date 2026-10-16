@@ -267,7 +267,7 @@ Next: review .planning/wiki/index.md — promote stable patterns to the project'
 
 **No completed campaigns:** Output message and stop.
 
-**`.planning/` does not exist:** Output "Run /do setup first to initialize the harness state directory." Stop.
+**`.planning/` does not exist:** Bare `/learn` follows Step 1's "No completed campaigns found" response and stops without creating files. Other invocation forms output "Run /do setup first to initialize the harness state directory." Stop.
 
 **No Decision Log:** Extract decisions from phase descriptions; note "inferred from phase descriptions."
 
