@@ -34,6 +34,9 @@ Init and catalog accept Codex --reasoning-effort and --service-tier settings.
 Both direct and fallback plans inherit them; runtime support is model-specific.
 Use --service-tier default to request standard speed; served tier may be unknown.
 With --checkpoint, run saves verified evidence before delivering its report.
+Optional --reconcile FILE freezes deterministic local-file postconditions before
+run; pass the same manifest to continue to verify an interrupted effect without
+relaunching its adapter. See the guide for the restricted reconciliation contract.
 Continue finishes that delivery without launching a worker. Changed inputs or
 workspace files and unfinished/uncertain runs are blocked. Use a new checkpoint
 directory outside the Git workspace; keep reports outside the workspace too.
@@ -294,6 +297,11 @@ function main(argv = process.argv.slice(2), options = {}) {
       const workspaceRoot = path.resolve(cwd, required(args, '--workspace'));
       const checkpoint = command === 'continue' ? required(args, '--checkpoint') : value(args, '--checkpoint');
       const execution = { ...loaded, workspaceRoot, ...(checkpoint ? { checkpoint: path.resolve(cwd, checkpoint) } : {}) };
+      const reconcileFile = value(args, '--reconcile');
+      if (reconcileFile) {
+        if (!checkpoint) throw Object.assign(new Error('--reconcile requires --checkpoint'), { code: 'USAGE' });
+        execution.reconciliation = readJson(reconcileFile, cwd);
+      }
       if (checkpoint) guardExports(execution, [value(args, '--out'), value(args, '--history-out')].filter(Boolean).map((file) => path.resolve(cwd, file)));
       const report = command === 'continue' ? continueOperation(execution) : checkpoint ? runCheckpointed(execution) : runOperation(execution);
       const out = value(args, '--out');
@@ -303,7 +311,10 @@ function main(argv = process.argv.slice(2), options = {}) {
         const records = report.attempts.map((attempt) => historyRecordFromAttempt(loaded.request, attempt));
         fs.writeFileSync(path.resolve(cwd, historyOut), `${records.map((record) => JSON.stringify(record)).join('\n')}\n`, 'utf8');
       }
-      write(report, json, io, `${command === 'continue' ? 'Verified checkpoint restored. No adapter or verifier launched.\n' : ''}Operation ${report.operation_id}: ${report.status}\nAttempts: ${report.attempts.length}\nReport digest: ${report.report_digest}\n`);
+      const continuationMessage = report.kind === 'citadel_operation_recovery_report'
+        ? 'Recovered file postconditions verified. Adapter not relaunched; original execution observations remain unknown.\n'
+        : 'Verified checkpoint restored. No adapter or verifier launched.\n';
+      write(report, json, io, `${command === 'continue' ? continuationMessage : ''}Operation ${report.operation_id}: ${report.status}\nAttempts: ${report.attempts.length}\nReport digest: ${report.report_digest}\n`);
       return report.status === 'passed' ? 0 : report.status === 'unknown' ? 2 : 1;
     }
     if (command === 'verify') {

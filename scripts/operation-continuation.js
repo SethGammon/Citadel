@@ -8,6 +8,7 @@ const { spawnSync } = require('child_process');
 const { digest, runOperation, verifyReport, routeOperation } = require('../core/operation-controller');
 const { readJournal } = require('../core/operations');
 const { executeStepAttempt } = require('./operation-runner');
+const reconciliation = require('./operation-reconciliation');
 
 function fail(code, message) { throw Object.assign(new Error(message), { code }); }
 
@@ -46,6 +47,7 @@ function context(options) {
     fail('CHECKPOINT_WORKSPACE_INVALID', 'Use the Git repository root as --workspace.');
   }
   const binding = { schema: 1, workspace: root, head: git(root, ['rev-parse', 'HEAD']).trim(), request: options.request, catalog: options.catalog, history: options.history || [] };
+  if (options.reconciliation) binding.reconciliation = reconciliation.validateSpec(options);
   return { root, checkpoint, payload: digest(binding) };
 }
 
@@ -73,10 +75,15 @@ function runCheckpointed(options) {
   routeOperation(options);
   const ctx = context(options);
   snapshot(ctx.root, options.request.verifier.required_changed_paths);
+  const intent = options.reconciliation ? reconciliation.prepare(options, ctx, { safePath, snapshot }) : null;
   // Exclusive creation is the single-writer claim. Never reclaim stale state.
   try { fs.mkdirSync(ctx.checkpoint, { mode: 0o700 }); } catch (error) {
     if (error.code === 'EEXIST') fail('CHECKPOINT_EXISTS', 'Checkpoint already exists. Use operation continue; do not rerun the worker.');
     throw error;
+  }
+  if (intent) {
+    writeNew(path.join(ctx.checkpoint, 'intent.json'), intent);
+    ctx.payload = digest({ binding: ctx.payload, intent });
   }
   let report;
   let cause;
@@ -88,7 +95,8 @@ function runCheckpointed(options) {
       try {
         report = runOperation(options);
         if (report.status !== 'passed' || verifyReport(report).status !== 'verified') fail('CHECKPOINT_NOT_VERIFIED', 'Operation did not pass; automatic continuation is blocked.');
-        const accepted = { schema: 1, payload_digest: ctx.payload, report, files: snapshot(ctx.root, options.request.verifier.required_changed_paths) };
+        if (intent) reconciliation.validateCurrent(options, ctx, intent, { snapshot });
+        const accepted = { schema: 1, payload_digest: ctx.payload, report, files: snapshot(ctx.root, [...options.request.verifier.required_changed_paths, ...(intent ? [intent.verifier_path] : [])]) };
         writeNew(path.join(ctx.checkpoint, 'accepted.json'), accepted);
         return { evidence_digest: digest(accepted) };
       } catch (error) { cause = error; throw error; }
@@ -114,6 +122,15 @@ function guardExports(options, files) {
 function continueOperation(options) {
   routeOperation(options);
   const ctx = context(options);
+  let intent = null;
+  if (options.reconciliation) {
+    intent = JSON.parse(fs.readFileSync(safePath(path.join(ctx.checkpoint, 'intent.json')), 'utf8'));
+    if (intent.schema !== 1 || intent.binding !== ctx.payload || digest(intent.spec) !== digest(options.reconciliation)
+      || !Number.isSafeInteger(intent.owner_pid) || intent.owner_pid < 1 || !Array.isArray(intent.baseline) || typeof intent.verifier_path !== 'string') {
+      fail('CONTINUATION_INPUT_CHANGED', 'Frozen reconciliation intent changed.');
+    }
+    ctx.payload = digest({ binding: ctx.payload, intent });
+  }
   const journalDir = safePath(path.join(ctx.checkpoint, 'journal'));
   // Check files before the journal reader follows them.
   let names;
@@ -124,21 +141,26 @@ function continueOperation(options) {
   for (const name of names) safePath(path.join(journalDir, name));
   const { entries } = readJournal(journalDir);
   if (entries.some((entry) => entry.payload_digest !== ctx.payload)) fail('CONTINUATION_INPUT_CHANGED', 'Request, catalog, history, workspace or HEAD changed.');
+  const bound = entries.every(entry => entry.idempotency_key === 'operation' && entry.effect_class === 'external-nonrepeatable');
+  if (intent && bound && entries[0]?.state === 'pending' && (entries.length === 1 || (entries.length === 2 && entries[1].state === 'unknown'))) {
+    return reconciliation.reconcile(options, ctx, intent, entries, { safePath, snapshot, writeNew });
+  }
   // Admit exactly this command's pending -> completed transition. Every other
   // state, identity or effect class is uncertain and must never replay work.
-  if (entries.length !== 2 || entries[0].state !== 'pending' || entries[1].state !== 'completed'
+  const completed = entries.length === 2 || (intent && entries.length === 3 && entries[1].state === 'unknown');
+  if (!completed || entries[0].state !== 'pending' || entries.at(-1).state !== 'completed'
     || entries.some((entry) => entry.idempotency_key !== 'operation' || entry.effect_class !== 'external-nonrepeatable')) {
     fail('CONTINUATION_BLOCKED', 'No completed verified checkpoint. Inspect the prior run; continuation will not launch or retry a worker.');
   }
   const accepted = JSON.parse(fs.readFileSync(safePath(path.join(ctx.checkpoint, 'accepted.json')), 'utf8'));
   // These independent gates bind the evidence format, frozen inputs, journal
   // digest, report identity and verified outcome before trusting any artifacts.
-  if (accepted.schema !== 1 || accepted.payload_digest !== ctx.payload || digest(accepted) !== entries[1].evidence_digest
+  if (accepted.schema !== 1 || accepted.payload_digest !== ctx.payload || digest(accepted) !== entries.at(-1).evidence_digest
     || accepted.report?.request_digest !== digest(options.request)
     || accepted.report?.status !== 'passed' || verifyReport(accepted.report).status !== 'verified') {
     fail('CONTINUATION_EVIDENCE_INVALID', 'Accepted report or evidence changed.');
   }
-  if (digest(snapshot(ctx.root, options.request.verifier.required_changed_paths)) !== digest(accepted.files)) {
+  if (digest(snapshot(ctx.root, [...options.request.verifier.required_changed_paths, ...(intent ? [intent.verifier_path] : [])])) !== digest(accepted.files)) {
     fail('CONTINUATION_ARTIFACT_CHANGED', 'Workspace files changed since verification.');
   }
   return accepted.report;
