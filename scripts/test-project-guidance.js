@@ -5,6 +5,9 @@
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
+const assert = require('assert');
+const { execFileSync } = require('child_process');
+const { guidanceOwner } = require('../core/runtime/install-contract');
 const { parseProjectSpec, validateProjectSpec } = require(path.join(__dirname, '..', 'core', 'project', 'load-project-spec'));
 const { CLAUDE_GUIDANCE_TARGET, renderClaudeGuidance } = require(path.join(__dirname, '..', 'runtimes', 'claude-code', 'guidance', 'render'));
 const { CODEX_GUIDANCE_TARGET, renderCodexGuidance } = require(path.join(__dirname, '..', 'runtimes', 'codex', 'guidance', 'render'));
@@ -45,10 +48,45 @@ function main() {
   }
 
   const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'citadel-project-guidance-'));
-  const tempCitadel = path.join(tempRoot, '.citadel');
-  fs.mkdirSync(tempCitadel, { recursive: true });
-  fs.writeFileSync(path.join(tempCitadel, 'project.md'), template, 'utf8');
-  fs.rmSync(tempRoot, { recursive: true, force: true });
+  try {
+    // Exercise both target layouts through the CLI: creation, guarded writes,
+    // and repeated overwrites must preserve ownership without duplicate markers.
+    for (const native of [false, true]) {
+      const projectRoot = path.join(tempRoot, native ? 'shared' : 'legacy');
+      const tempCitadel = path.join(projectRoot, '.citadel');
+      fs.mkdirSync(tempCitadel, { recursive: true });
+      fs.writeFileSync(path.join(tempCitadel, 'project.md'), template, 'utf8');
+      const args = [path.join(__dirname, 'generate-project-guidance.js'),
+        '--project-root', projectRoot, '--claude-version', '2.1.277'];
+      if (native) args.push('--claude-agents-md-supported');
+      const files = native ? ['AGENTS.md'] : ['AGENTS.md', 'CLAUDE.md'];
+      const run = (...flags) => execFileSync(process.execPath, [...args, ...flags], { encoding: 'utf8' });
+      run();
+      for (const file of files) assert(!fs.existsSync(path.join(projectRoot, file)), 'Dry-run must not write guidance');
+      run('--write');
+      const checkOwnership = () => {
+        for (const file of files) {
+          const content = fs.readFileSync(path.join(projectRoot, file), 'utf8');
+          assert.strictEqual(guidanceOwner(content), 'citadel:project-guidance', `${file} must remain Citadel-owned`);
+          assert.strictEqual(content.split('<!-- citadel:project-guidance -->').length - 1, 1,
+            `${file} must contain exactly one ownership marker`);
+        }
+      };
+      checkOwnership();
+      const agentsPath = path.join(projectRoot, 'AGENTS.md');
+      fs.appendFileSync(agentsPath, '\nUser addition\n');
+      const before = fs.readFileSync(agentsPath, 'utf8');
+      run('--write');
+      assert.strictEqual(fs.readFileSync(agentsPath, 'utf8'), before, 'Existing guidance requires --overwrite');
+      run('--write', '--overwrite');
+      checkOwnership();
+      assert(!fs.readFileSync(agentsPath, 'utf8').includes('User addition'), 'Overwrite must regenerate guidance');
+      run('--write', '--overwrite');
+      checkOwnership();
+    }
+  } finally {
+    fs.rmSync(tempRoot, { recursive: true, force: true });
+  }
 
   console.log('Project guidance tests pass.');
 }
