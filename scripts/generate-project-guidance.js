@@ -5,6 +5,7 @@
 const fs = require('fs');
 const path = require('path');
 const { spawnSync } = require('child_process');
+const { withGuidanceOwner } = require('../core/runtime/install-contract');
 const { loadProjectSpec } = require(path.join(__dirname, '..', 'core', 'project', 'load-project-spec'));
 const { inspectClaudeGuidance } = require(path.join(__dirname, '..', 'core', 'project', 'bootstrap-project-guidance'));
 const { CLAUDE_GUIDANCE_TARGET } = require(path.join(__dirname, '..', 'runtimes', 'claude-code', 'guidance', 'render'));
@@ -114,7 +115,7 @@ function main() {
       continue;
     }
 
-    fs.writeFileSync(absolutePath, target.content, 'utf8');
+    fs.writeFileSync(absolutePath, withGuidanceOwner(target.content), 'utf8');
     console.log(`[write] ${target.filePath}`);
   }
 }
