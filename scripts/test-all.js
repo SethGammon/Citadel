@@ -149,6 +149,7 @@ const UNLOCK_TESTS = Object.freeze([
   ['MCP server protocol conformance', 'test-mcp-server-protocols.js'],
   ['MCP external conformance provenance', 'test-mcp-conformance-pins.js'],
   ['MCP package closure', 'test-mcp-package-closure.js'],
+  ['Package require closure', 'test-package-require-closure.js'],
   ['Mission Control interactions', 'test-dashboard-interactions.js'],
   ['Team platform', 'test-team-platform.js'],
   ['Relay contract', 'test-relay-contract.js'],
