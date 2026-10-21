@@ -12,7 +12,7 @@ trigger_keywords:
   - campaign
   - multi-session
   - phases
-last-updated: 2026-07-30
+last-updated: 2026-10-20
 ---
 
 # /archon — Autonomous Strategist
@@ -188,6 +188,8 @@ Scan modified files for: `transition-all` (name specific properties); `confirm()
    ```
 
 ## Health Diagnostic (Undirected Mode)
+
+Begin the user-facing result with **Archon health diagnostic** so the mode is explicit even when there is no active work. Summarize the findings from the checks below and recommend the next action. Identify unavailable checks (for example, no configured typecheck) instead of implying they passed.
 
 1. Check `.planning/intake/` for pending items → suggest processing
 2. Check for active campaigns → suggest continuing
