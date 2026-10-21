@@ -115,7 +115,7 @@ For each phase:
 5.5. **Log delegation result**: `node .citadel/scripts/telemetry-log.cjs --event agent-complete --agent {delegate-name} --session {campaign-slug} --status {success|partial|failed}`
 6. **Record**: Update the campaign file:
    - Mark phase status using `updatePhaseStatus` from `core/campaigns/update-campaign` via `node -e` (snippet: docs/CAMPAIGNS.md#updating-phase-status). Valid values: `pending`, `in-progress`, `design-complete`, `complete`, `partial`, `failed`, `skipped`
-   - Add entries to Feature Ledger; log decisions to Decision Log
+   - Add entries to Feature Ledger; append decisions at the bottom of Decision Log (oldest-first), using top-level `- ` bullets with reasons and details indented beneath each entry
 7. **Self-correct**: Run applicable checks from Step 4: quality spot-check (every phase), direction alignment (every 2nd phase), regression guard and anti-pattern scan (build phases only).
 
 ### Step 4: SELF-CORRECTION (Mandatory)

@@ -193,11 +193,12 @@ function phaseSummary(campaign) {
 }
 
 function lastDecision(content) {
-  const sectionMatch = content.match(/^##\s+Decision Log\s*\r?\n([\s\S]*?)(?=^##\s+|\s*$)/m);
+  // With multiline matching, $ also ends a line; use a true end-of-input assertion.
+  const sectionMatch = content.match(/^##[ \t]+Decision Log[ \t]*\r?\n([\s\S]*?)(?=^##[ \t]+|(?![\s\S]))/m);
   if (!sectionMatch) return null;
   const section = sectionMatch[1];
+  // Logs append decisions oldest-first. Indented reasons and sub-bullets are not entries.
   const decisions = section.split(/\r?\n/)
-    .map((line) => line.trim())
     .filter((line) => line.startsWith('- '));
   return decisions.length > 0 ? decisions[decisions.length - 1].replace(/^- /, '') : null;
 }
