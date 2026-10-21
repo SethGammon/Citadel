@@ -175,7 +175,7 @@ function hookScripts(packageRoot) {
   return [...names].sort();
 }
 
-function runtimeProblems(packageRoot, scratch) {
+function runtimeProblems(packageRoot, scratch, environment = process.env) {
   const problems = [];
   const names = hookScripts(packageRoot);
   assert(names.length > 0, 'hooks/hooks-template.json registers no hooks_src scripts');
@@ -185,7 +185,7 @@ function runtimeProblems(packageRoot, scratch) {
       problems.push(`hooks/hooks-template.json registers hooks_src/${name}.js, which is not in the package`);
       continue;
     }
-    // Fresh project directory and home per hook, so no run reads or writes the developer's state.
+    // Isolate project, home and plugin data; inherited plugin data can point at live checkpoints.
     const workdir = fs.mkdtempSync(path.join(scratch, `${name}-`));
     const home = path.join(workdir, 'home');
     fs.mkdirSync(home);
@@ -198,15 +198,18 @@ function runtimeProblems(packageRoot, scratch) {
       timeout: HOOK_TIMEOUT_MS,
       stdio: ['pipe', 'pipe', 'pipe'],
       env: {
-        ...process.env,
+        ...environment,
         CLAUDE_PROJECT_DIR: workdir,
         CLAUDE_PLUGIN_ROOT: packageRoot,
+        CLAUDE_PLUGIN_DATA: path.join(workdir, 'plugin-data'),
         HOME: home,
         USERPROFILE: home,
       },
     });
-    // Exit codes are ignored on purpose: hooks legitimately exit 2 to block. Only a
-    // module-resolution failure means the packaged hook cannot load its dependencies.
+    if (result.error || result.signal) {
+      problems.push(`hooks_src/${name}.js did not finish: ${result.error?.message || result.signal}`);
+    }
+    // Exit codes are ignored on purpose: hooks legitimately exit 2 to block.
     const output = `${result.stdout || ''}\n${result.stderr || ''}`;
     const line = output.split(/\r?\n/).find((candidate) => MODULE_MISSING.test(candidate));
     if (line) problems.push(`hooks_src/${name}.js failed to load a module: ${line.trim()}`);
@@ -234,7 +237,16 @@ function main() {
     const statics = staticProblems(root, files);
     const scratch = path.join(temp, 'hook-runs');
     fs.mkdirSync(scratch);
-    const runtime = runtimeProblems(root, scratch);
+    // Simulate a caller with a live checkpoint outside the per-hook sandboxes.
+    // pre-compact writes plugin data unconditionally, so this catches environment leaks.
+    const inheritedPluginData = path.join(temp, 'inherited-plugin-data');
+    fs.mkdirSync(inheritedPluginData);
+    const checkpointPath = path.join(inheritedPluginData, 'compact-state.json');
+    const checkpoint = JSON.stringify({ activeCampaign: 'preserve-inherited-checkpoint' });
+    fs.writeFileSync(checkpointPath, checkpoint);
+    const runtime = runtimeProblems(root, scratch, { ...process.env, CLAUDE_PLUGIN_DATA: inheritedPluginData });
+    assert.equal(fs.readFileSync(checkpointPath, 'utf8'), checkpoint, 'hook probes overwrote inherited plugin state');
+    assert.deepEqual(fs.readdirSync(inheritedPluginData), ['compact-state.json'], 'hook probes wrote to inherited plugin data');
     const problems = [...statics.problems, ...runtime.problems];
     if (problems.length > 0) {
       process.stderr.write(`Package require closure failed (${problems.length} problem(s)):\n`);
