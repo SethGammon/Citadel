@@ -27,6 +27,37 @@ function appendJsonl(filePath, entries) {
   write(filePath, entries.map((entry) => JSON.stringify(entry)).join('\n') + '\n');
 }
 
+// Decision logs are append-only: use the final top-level entry, never a detail or another section.
+withTempProject((projectRoot) => {
+  const campaignPath = path.join(projectRoot, '.planning', 'campaigns', 'decisions.md');
+  const prefix = '---\nslug: decisions\nstatus: active\nphase_count: 2\ncurrent_phase: 1\n---\n' +
+    '# Campaign: Decisions\n\n## Phases\n1. [in-progress] Build\n2. [pending] Verify\n\n';
+  const cases = [
+    ['oldest-first', '## Decision Log\n- First\n- Second\n- Newest\n\n## Next\n- Unrelated', 'Newest'],
+    ['blank line', '## Decision Log\n\n- First\n- Newest\n', 'Newest'],
+    ['multiple blank lines', '## Decision Log\n\n\n- First\n- Newest\n', 'Newest'],
+    ['note before entries', '## Decision Log\n\nOldest first.\n\n- First\n- Newest\n', 'Newest'],
+    ['wrapped and nested details', '## Decision Log\n- First\n  wrapped\n  - detail\n- Newest\n  Reason: chosen\n  - final detail\n', 'Newest'],
+    ['CRLF', '## Decision Log\r\n- First\r\n- Newest\r\n\r\n## Next\r\n- Unrelated\r\n', 'Newest'],
+    ['end of input without newline', '## Decision Log\n- First\n- Newest', 'Newest'],
+    ['same-day decisions', '## Decision Log\n- 2026-10-20: First\n- 2026-10-20: Newest\n', '2026-10-20: Newest'],
+    ['legacy newest-first needs migration', '## Decision Log\n- 2026-10-20: Newest\n- 2026-10-19: Oldest\n', '2026-10-19: Oldest'],
+    ['missing section', '## Other\n- Unrelated\n', null],
+    ['empty section', '## Decision Log\n\n## Next\n- Unrelated\n', null],
+    ['only nested bullet', '## Decision Log\n  - detail\n', null],
+    ['heading without entries at EOF', '## Decision Log', null],
+  ];
+  for (const [name, section, expected] of cases) {
+    write(campaignPath, prefix + section);
+    const snapshot = collectDashboard({ projectRoot, now: '2026-10-20T12:00:00.000Z' });
+    assert.equal(snapshot.campaigns.length, 1, name);
+    assert.equal(snapshot.campaigns[0].lastDecision, expected, name);
+    const output = renderDashboard(snapshot);
+    if (expected === null) assert(!output.includes('Last decision:'), name);
+    else assert(output.includes(`Last decision: ${expected}`), name);
+  }
+});
+
 assert.equal(relativeTime('2026-06-04T12:00:00.000Z', new Date('2026-06-04T12:00:30.000Z')), 'just now');
 assert.equal(relativeTime('2026-06-04T11:30:00.000Z', new Date('2026-06-04T12:00:00.000Z')), '30 min ago');
 assert.equal(relativeTime('2026-06-03T12:00:00.000Z', new Date('2026-06-04T12:00:00.000Z')), '1 day ago');

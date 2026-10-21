@@ -66,6 +66,8 @@ Direction: {original user direction}
 |---------|--------|-------|-------|
 
 ## Decision Log
+Append new entries at the bottom (oldest-first).
+
 - {timestamp}: {decision}
   Reason: {why}
 
@@ -78,6 +80,16 @@ Sub-step: {within the phase}
 Files modified: {list}
 Blocking: {any blockers}
 ```
+
+Decision Log entries are top-level `- ` bullets in oldest-first order. Append each new
+decision at the bottom, keeping its reason and any sub-bullets indented beneath it.
+The dashboard displays the final top-level entry, including when timestamps tie.
+
+**Migration for existing campaigns:** if a log is newest-first, reorder its complete
+entries (including their attached reasons and details) into oldest-first order and
+update any ordering note. The previous dashboard could display the first entry by
+accident; after the parser fix, an unmigrated newest-first log displays its oldest
+entry. Timestamps are not used to reorder entries automatically.
 
 ## Section Purposes
 
