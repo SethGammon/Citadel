@@ -1,6 +1,7 @@
 'use strict';
 
 const path = require('path');
+const fs = require('fs');
 const {
   ensureDir,
   getCoordinationPaths,
@@ -65,37 +66,70 @@ function findOverlap(scope, options = {}) {
   return null;
 }
 
-function claimScope(id, scope, type, description, options = {}) {
-  const paths = getCoordinationPaths(options.projectRoot);
-  ensureDir(paths.claimsDir);
+// The overlap check and claim write are one cross-process critical section.
+// Directory creation is atomic on local filesystems. An abandoned lock blocks
+// new ownership instead of being silently stolen and risking dual writers.
+const CLAIM_WAIT_MS = 20;
+const CLAIM_TIMEOUT_MS = 2000;
+const claimWaitArray = new Int32Array(new SharedArrayBuffer(4));
 
-  const overlap = findOverlap(scope, { ...options, excludeInstanceId: id });
-  if (overlap) {
-    const error = new Error(`Scope overlap with ${overlap.instanceId}: ${(overlap.scope || []).join(', ')}`);
-    error.code = 'SCOPE_OVERLAP';
-    error.overlap = overlap;
-    throw error;
+function withClaimTransaction(projectRoot, operation) {
+  const paths = getCoordinationPaths(projectRoot);
+  ensureDir(paths.claimsDir);
+  const lockPath = path.join(paths.claimsDir, '.transaction.lock');
+  const deadline = Date.now() + CLAIM_TIMEOUT_MS;
+  while (true) {
+    try {
+      fs.mkdirSync(lockPath);
+      break;
+    } catch (error) {
+      if (error.code !== 'EEXIST') throw error;
+      if (Date.now() >= deadline) {
+        const blocked = new Error('Scope claim registry is busy or has an abandoned lock; inspect before retry');
+        blocked.code = 'CLAIM_BUSY';
+        throw blocked;
+      }
+      Atomics.wait(claimWaitArray, 0, 0, CLAIM_WAIT_MS);
+    }
   }
 
-  const now = options.now ? new Date(options.now) : new Date();
-  const data = {
-    instanceId: id,
-    type: type || 'unknown',
-    scope,
-    description: description || '',
-    claimedAt: now.toISOString(),
-  };
+  try {
+    return operation(paths);
+  } finally {
+    fs.rmdirSync(lockPath);
+  }
+}
 
-  writeJsonAtomic(path.join(paths.claimsDir, `${id}.json`), data);
-  return data;
+function claimScope(id, scope, type, description, options = {}) {
+  return withClaimTransaction(options.projectRoot, paths => {
+    const overlap = findOverlap(scope, { ...options, excludeInstanceId: id });
+    if (overlap) {
+      const error = new Error(`Scope overlap with ${overlap.instanceId}: ${(overlap.scope || []).join(', ')}`);
+      error.code = 'SCOPE_OVERLAP';
+      error.overlap = overlap;
+      throw error;
+    }
+
+    const now = options.now ? new Date(options.now) : new Date();
+    const data = {
+      instanceId: id,
+      type: type || 'unknown',
+      scope,
+      description: description || '',
+      claimedAt: now.toISOString(),
+    };
+    writeJsonAtomic(path.join(paths.claimsDir, `${id}.json`), data);
+    return data;
+  });
 }
 
 function releaseClaim(id, options = {}) {
-  const paths = getCoordinationPaths(options.projectRoot);
-  const file = path.join(paths.claimsDir, `${id}.json`);
-  const existed = require('./io').readJson(file);
-  removeFileIfExists(file);
-  return existed;
+  return withClaimTransaction(options.projectRoot, paths => {
+    const file = path.join(paths.claimsDir, `${id}.json`);
+    const existed = require('./io').readJson(file);
+    removeFileIfExists(file);
+    return existed;
+  });
 }
 
 function getClaimStatus(options = {}) {

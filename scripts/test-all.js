@@ -60,6 +60,7 @@ const STACK_PLAN_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-stack-plan.js');
 const DEPLOY_STEWARD_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-deploy-steward.js');
 const AGENTS_MD_ONLY_STEWARD_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-agents-md-only-steward.js');
 const COORDINATION_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-coordination-core.js');
+const COORDINATION_ATOMIC_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-coordination-claim-atomicity.js');
 const HOOK_INSTALLER_TEST = path.join(PLUGIN_ROOT, 'scripts', 'test-hook-installers.js');
 const CLAUDE_HOOK_INSTALLER_CONFORMANCE_TEST = path.join(
   PLUGIN_ROOT,
@@ -331,6 +332,7 @@ const stackPlanPassed = run('Stack Plan Check', STACK_PLAN_TEST);
 const deployStewardPassed = run('Deploy Steward Check', DEPLOY_STEWARD_TEST);
 const agentsMdOnlyStewardPassed = run('AGENTS.md-only Steward Check', AGENTS_MD_ONLY_STEWARD_TEST);
 const coordinationPassed = run('Coordination Core Check', COORDINATION_TEST);
+const coordinationAtomicPassed = run('Coordination Atomic Claims Check', COORDINATION_ATOMIC_TEST);
 const hookInstallerBasePassed = run('Hook Installer Check', HOOK_INSTALLER_TEST);
 const claudeHookInstallerConformancePassed = run(
   'Claude Hook Installer Conformance Check',
@@ -432,6 +434,7 @@ console.log(`  Stack plan:         ${stackPlanPassed ? 'PASS' : 'FAIL'}`);
 console.log(`  Deploy steward:     ${deployStewardPassed ? 'PASS' : 'FAIL'}`);
 console.log(`  AGENTS.md-only:     ${agentsMdOnlyStewardPassed ? 'PASS' : 'FAIL'}`);
 console.log(`  Coordination core:  ${coordinationPassed ? 'PASS' : 'FAIL'}`);
+console.log(`  Atomic claims:      ${coordinationAtomicPassed ? 'PASS' : 'FAIL'}`);
 console.log(`  Hook installers:    ${hookInstallerPassed ? 'PASS' : 'FAIL'}`);
 console.log(`  Campaign core:      ${campaignPassed ? 'PASS' : 'FAIL'}`);
 console.log(`  Discovery core:     ${discoveryPassed ? 'PASS' : 'FAIL'}`);
@@ -487,7 +490,7 @@ for (const [label, passed] of unlockResults) {
 }
 console.log('');
 
-if (hooksPassed && securityPassed && contractsPassed && operationsProtocolPassed && appContractsPassed && supervisorClientPassed && runtimeRegistryPassed && runtimeMatrixPassed && hookEventsPassed && opencodeAdapterPassed && opencodeInstallPassed && opencodeSkillCommandPassed && skillsPassed && demoPassed && telemetryPassed && telemetryIntegrityPassed && memoryBlockPassed && repositoryMemoryPassed && evidenceContractPassed && sandboxProviderPassed && skillPackagingPassed && mapSubstratePassed && deliveryPassed && deliveryPackagePassed && continueActionPassed && nextActionPassed && routePreviewPassed && loopsPassed && operatingProofPassed && usefulnessTrialPassed && operatorConsolePassed && operatorJourneyPassed && firstUseOperatorPassed && verificationPlanPassed && prReadyPassed && stackPlanPassed && deployStewardPassed && agentsMdOnlyStewardPassed && coordinationPassed && hookInstallerPassed && campaignPassed && discoveryPassed && discoveryWriterPassed && momentumPassed && momentumWatcherPassed && policyPassed && claudeRuntimePassed && codexRuntimePassed && codexNativeIntegrationPassed && codexOperationalImprovementPassed && installerPassed && cliPackagePassed && projectBootstrapPassed && compatFixturePassed && backwardCompatPassed && costTrackerPassed && dashboardPassed && docSyncPassed && agentsMdGuidancePassed && fleetSessionPassed && worktreeReadinessPassed && postEditTypecheckPassed && routingSyncPassed && watchDedupPassed && teammateRebalancePassed && docSurfacesPassed && siteStoryPassed && telemetryOtlpPassed && stateHygienePassed && permissionAuditPassed && secretsLensPassed && qualityGatePassed && dashboardWebPassed && dashboardPerfPassed && dashboardVisualPassed && noopDetectPassed && releaseIntegrityPassed && activationTelemetryPassed && activationCohortPassed && githubTrafficSnapshotPassed && goldenPathPassed && goldenPathMatrixPassed && productBenchmarkPassed && productProofCohortPassed && sarifCoordinatesPassed && ecosystemCompatPassed && productProofReportPassed && unlockSuitePassed && upgradeSafetyPassed && sessionSafetyPassed && unattendedSafetyPassed) {
+if (hooksPassed && securityPassed && contractsPassed && operationsProtocolPassed && appContractsPassed && supervisorClientPassed && runtimeRegistryPassed && runtimeMatrixPassed && hookEventsPassed && opencodeAdapterPassed && opencodeInstallPassed && opencodeSkillCommandPassed && skillsPassed && demoPassed && telemetryPassed && telemetryIntegrityPassed && memoryBlockPassed && repositoryMemoryPassed && evidenceContractPassed && sandboxProviderPassed && skillPackagingPassed && mapSubstratePassed && deliveryPassed && deliveryPackagePassed && continueActionPassed && nextActionPassed && routePreviewPassed && loopsPassed && operatingProofPassed && usefulnessTrialPassed && operatorConsolePassed && operatorJourneyPassed && firstUseOperatorPassed && verificationPlanPassed && prReadyPassed && stackPlanPassed && deployStewardPassed && agentsMdOnlyStewardPassed && coordinationPassed && coordinationAtomicPassed && hookInstallerPassed && campaignPassed && discoveryPassed && discoveryWriterPassed && momentumPassed && momentumWatcherPassed && policyPassed && claudeRuntimePassed && codexRuntimePassed && codexNativeIntegrationPassed && codexOperationalImprovementPassed && installerPassed && cliPackagePassed && projectBootstrapPassed && compatFixturePassed && backwardCompatPassed && costTrackerPassed && dashboardPassed && docSyncPassed && agentsMdGuidancePassed && fleetSessionPassed && worktreeReadinessPassed && postEditTypecheckPassed && routingSyncPassed && watchDedupPassed && teammateRebalancePassed && docSurfacesPassed && siteStoryPassed && telemetryOtlpPassed && stateHygienePassed && permissionAuditPassed && secretsLensPassed && qualityGatePassed && dashboardWebPassed && dashboardPerfPassed && dashboardVisualPassed && noopDetectPassed && releaseIntegrityPassed && activationTelemetryPassed && activationCohortPassed && githubTrafficSnapshotPassed && goldenPathPassed && goldenPathMatrixPassed && productBenchmarkPassed && productProofCohortPassed && sarifCoordinatesPassed && ecosystemCompatPassed && productProofReportPassed && unlockSuitePassed && upgradeSafetyPassed && sessionSafetyPassed && unattendedSafetyPassed) {
   console.log(suiteSuccessMessage(dashboardPerfStatus));
   console.log('Next steps:');
   console.log('  node scripts/skill-bench.js --list      see benchmark scenarios');
@@ -612,6 +615,7 @@ if (!stackPlanPassed) console.log('Stack plan check failed. Fix PR readiness ord
 if (!deployStewardPassed) console.log('Deploy steward check failed. Fix queue, lease, merge, deploy, or repair-task behavior before shipping.');
 if (!agentsMdOnlyStewardPassed) console.log('AGENTS.md-only steward check failed. Fix the standalone AGENTS.md bootstrap or 15-agent acceptance scenario before sending it.');
 if (!coordinationPassed) console.log('Coordination core check failed. Fix coordination regressions before shipping.');
+if (!coordinationAtomicPassed) console.log('Atomic coordination claim check failed. Fix concurrent ownership races before shipping.');
 if (!hookInstallerPassed) console.log('Hook installer check failed. Fix runtime installer regressions before shipping.');
 if (!campaignPassed) console.log('Campaign core check failed. Fix campaign regressions before shipping.');
 if (!discoveryPassed) console.log('Discovery core check failed. Fix discovery relay regressions before shipping.');
