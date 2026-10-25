@@ -9,6 +9,7 @@ const {
   removeFileIfExists,
   writeJsonAtomic,
 } = require('./io');
+const { releaseClaim } = require('./claims');
 
 function getInstanceFile(id, options = {}) {
   const paths = getCoordinationPaths(options.projectRoot);
@@ -36,9 +37,10 @@ function registerInstance(id, options = {}) {
 }
 
 function unregisterInstance(id, options = {}) {
-  const paths = getCoordinationPaths(options.projectRoot);
+  // Never remove an instance's claim outside the cross-process transaction.
+  // On CLAIM_BUSY, keep the instance record for a later retry.
+  releaseClaim(id, options);
   removeFileIfExists(getInstanceFile(id, options));
-  removeFileIfExists(path.join(paths.claimsDir, `${id}.json`));
 }
 
 function heartbeatInstance(id, options = {}) {
