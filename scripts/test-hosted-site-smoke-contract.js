@@ -14,7 +14,7 @@ for (const page of ['/', '/evidence.html', '/operation-control.html', '/optimize
 for (const gate of ['scrollY', 'active', 'scrollWidth', 'canonical', 'ogImage', 'consoleErrors', 'aria-expanded', 'LOCAL_RELEASE.source_digest', 'site-release-manifest.json']) assert(script.includes(gate), `hosted smoke is missing ${gate}`);
 assert(workflow.includes('workflow_run:'));
 assert(workflow.includes('schedule:'));
-assert(workflow.includes('playwright@1.55.0'));
+assert(workflow.includes('playwright@1.55.1'));
 assert(workflow.includes('node scripts/hosted-site-smoke.js'));
 assert(workflow.includes('ref: refs/heads/main'));
 assert(workflow.includes('persist-credentials: false'));
