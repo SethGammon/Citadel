@@ -15,7 +15,8 @@ permissions:
 jobs:
   deployed-browser-smoke:
     if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
-    runs-on: ubuntu-latest
+    # Keep the runner compatible with the pinned Playwright browser toolchain.
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -26,7 +27,7 @@ jobs:
         with:
           node-version: 22
       - name: Install pinned browser runtime
-        run: npm install --no-save --package-lock=false --ignore-scripts playwright@1.55.0
+        run: npm install --no-save --package-lock=false --ignore-scripts playwright@1.55.1
       - name: Install Chromium
         run: npx playwright install --with-deps chromium
       - name: Verify deployed Citadel pages
