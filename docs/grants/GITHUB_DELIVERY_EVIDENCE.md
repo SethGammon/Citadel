@@ -14,11 +14,14 @@ economic-impact count.
 | Stars | 809 | GitHub repository API |
 | Forks | 80 | GitHub repository API |
 | Commits reachable from `main` | 542 | `git rev-list --count origin/main` |
-| Commits attributed to Seth's Git identity | 518 | `git rev-list --count --author=gammon.seth@gmail.com origin/main` |
-| Non-merge commits attributed to Seth's Git identity | 377 | `git rev-list --count --no-merges --author=gammon.seth@gmail.com origin/main` |
+| Commits attributed to Seth's Git identity | 518 | `git rev-list --count --author='Seth Gammon' --author='Necromancer134' 6bbe695946de7433b02d18becb1b127474e5b683` |
+| Non-merge commits attributed to Seth's Git identity | 377 | `git rev-list --count --no-merges --author='Seth Gammon' --author='Necromancer134' 6bbe695946de7433b02d18becb1b127474e5b683` |
 
 Git author attribution establishes repository history and delivery ownership;
 it does not prove that every line was typed manually or without AI assistance.
+The two author-name filters reproduce the recorded counts at merge commit
+`6bbe695946de7433b02d18becb1b127474e5b683`. Name-based filters are an
+approximation and may differ from an email-based filter in future history.
 The repository contains outside contributions and automated dependency work,
 which remain credited to their recorded authors.
 
@@ -55,7 +58,7 @@ gh api repos/SethGammon/Citadel/contributors?per_page=100
 gh api repos/SethGammon/Citadel/traffic/clones
 gh api repos/SethGammon/Citadel/traffic/views
 git rev-list --count origin/main
-git rev-list --count --no-merges --author=gammon.seth@gmail.com origin/main
+git rev-list --count --no-merges --author='Seth Gammon' --author='Necromancer134' origin/main
 ```
 
 If any value changes, update this file, the Typeform answer pack, submission
