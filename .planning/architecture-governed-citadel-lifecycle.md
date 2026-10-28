@@ -5,7 +5,7 @@
 
 ## Baseline
 
-- Repository: `C:\Users\gammo\Desktop\Citadel`
+- Repository: `<repository>` (redacted path placeholder)
 - Branch: local `main`, behind recorded `origin/main` by four commits at research
   start; no fetch or branch mutation was authorized.
 - Worktree: dirty with pre-existing security-assurance, documentation,

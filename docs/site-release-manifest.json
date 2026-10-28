@@ -104,8 +104,8 @@
     },
     {
       "path": "grants/GITHUB_DELIVERY_EVIDENCE.md",
-      "bytes": 2738,
-      "digest": "sha256:58a94902fd8d9a8978fec6ee320013516a1e36ed53341b301c43f4f21e7f4657"
+      "bytes": 3069,
+      "digest": "sha256:356c5913fb78821bee37337df6be75169e92401d49a1f372a7be43b285728878"
     },
     {
       "path": "grants/MILESTONES_AND_BUDGET.md",
@@ -203,5 +203,5 @@
       "digest": "sha256:4ade6149f757c62ab3c60a0cce5c72214093bf3f3b214c553c5c44bb48e16495"
     }
   ],
-  "source_digest": "sha256:71eb54364b0a436e3152de8a822b5f682d97966136281bbfd2104c6524fb2008"
+  "source_digest": "sha256:f8a209996fcd219770c58fccfda5776e243292d69f0f52b0b21e4ba687261a40"
 }

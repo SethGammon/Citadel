@@ -1,6 +1,6 @@
 # Citadel 1.1 Baseline — Architecture Phase 0 / Campaign Phase 1
 
-Captured 2026-07-10 in `C:\Users\gammo\Desktop\Citadel` for the **Operable, Observable, Proven** campaign. Verdicts mean:
+Captured 2026-07-10 in `<repository>` for the **Operable, Observable, Proven** campaign. The repository path is redacted throughout this record. Verdicts mean:
 
 - **proven** — the named current-state check passed with direct evidence;
 - **partial** — useful evidence exists, but the milestone-level claim is not yet established;
@@ -138,8 +138,8 @@ Current product evidence:
 - Duration: `6.915s`
 - Timed out: `false`
 - Failure entry point: `testCodexInstallScript` at `scripts/test-codex-operational-improvements.js:90` invokes `scripts/codex-install.js` for a scratch destination.
-- Protected source refresh fails with `EPERM: operation not permitted, open 'C:\Users\gammo\Desktop\Citadel\.codex\config.toml'` from `scripts/codex-compat.js`.
-- Local marketplace refresh also fails with `EPERM: operation not permitted, open 'C:\Users\gammo\Desktop\Citadel\.agents\plugins\marketplace.json'` from `core/codex/native-integrations.js`.
+- Protected source refresh fails with `EPERM: operation not permitted, open '<repository>\.codex\config.toml'` from `scripts/codex-compat.js`.
+- Local marketplace refresh also fails with `EPERM: operation not permitted, open '<repository>\.agents\plugins\marketplace.json'` from `core/codex/native-integrations.js`.
 - Crucial control evidence: in the same run, Codex artifacts were successfully generated into `F:\Temp\citadel-codex-install-X9gGph`, 49 skills and 155 script delegates were synced, and all 12 scratch-project readiness checks passed.
 - Interpretation: the destination install/readiness path works, but the installer first treats its protected source plugin checkout as a writable generated-artifact target. Release/reliability work should make that source refresh hermetic, skippable when unchanged, or redirected to a writable staging area. Tests must not require writes to protected `.codex` or `.agents` source paths.
 
