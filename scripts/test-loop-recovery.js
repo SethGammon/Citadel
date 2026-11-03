@@ -10,6 +10,15 @@ const { createLoopContract } = require('../core/loops/contract');
 const registry = require('../core/loops/registry');
 const { inspectRecovery, recoveryPlan, assertRecoveryBinding } = require('../core/loops/recovery');
 const { superviseLoop } = require('../core/loops/supervisor');
+const commandApprovals = require('../core/security/command-approvals');
+
+const APPROVAL_DIR = fs.mkdtempSync(path.join(os.tmpdir(), 'citadel-loop-approvals-'));
+process.env.CITADEL_COMMAND_APPROVALS = path.join(APPROVAL_DIR, 'command-approvals.json');
+function approveLoop(root, loop) {
+  for (const command of [loop.trigger?.command, loop.verifier?.command]) {
+    if (typeof command === 'string' && command.trim()) commandApprovals.approve(root, 'loop', command);
+  }
+}
 
 const cli = path.resolve(__dirname, 'loops.js');
 const supervisor = path.resolve(__dirname, '../core/loops/supervisor.js');
@@ -51,6 +60,7 @@ async function eligible(root, options = {}) {
     verifierCommand: script(root, 'verify', "require('fs').appendFileSync('checks.txt','check\\n')"),
     maxAttempts: 3, commandTimeoutMs: 5000, ...options,
   }));
+  approveLoop(root, contract);
   const controller = new AbortController();
   controller.abort();
   await superviseLoop(root, contract.id, { signal: controller.signal });
@@ -341,6 +351,7 @@ async function main() {
       `);
       const source = registry.registerLoop(root, createLoopContract({ id: 'source', type: 'foreground-loop',
         command: phase === 'action' ? command : null, verifierCommand: phase === 'verifier' ? command : `${node} --version`, maxAttempts: 3 }));
+      approveLoop(root, source);
       const runner = path.join(root, 'runner.js');
       fs.writeFileSync(runner, `require(${JSON.stringify(supervisor)}).superviseLoop(${JSON.stringify(root)}, 'source').catch(e => {console.error(e); process.exitCode=1});`);
       const active = childProcess(runner);

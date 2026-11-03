@@ -31,6 +31,10 @@ const os = require('os');
 
 const PLUGIN_ROOT = path.resolve(__dirname, '..');
 const POST_EDIT_HOOK = path.join(PLUGIN_ROOT, 'hooks_src', 'post-edit.js');
+const commandApprovals = require('../core/security/command-approvals');
+// Machine-local approval store for this run, outside every temp project.
+const APPROVAL_DIR = fs.mkdtempSync(path.join(os.tmpdir(), 'citadel-typecheck-approvals-'));
+const APPROVAL_STORE = path.join(APPROVAL_DIR, 'command-approvals.json');
 
 let passed = 0;
 let failed = 0;
@@ -60,7 +64,7 @@ function assert(condition, message) {
  * Build a throwaway project the hook can treat as PROJECT_ROOT.
  * Always contains src/a.ts; extra files (fake tsc scripts, tsconfig) come from `files`.
  */
-function makeTempProject(harnessConfig, files = {}) {
+function makeTempProject(harnessConfig, files = {}, options = {}) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'citadel-typecheck-'));
   tempDirs.push(root);
   fs.mkdirSync(path.join(root, '.claude'), { recursive: true });
@@ -71,6 +75,10 @@ function makeTempProject(harnessConfig, files = {}) {
     const full = path.join(root, rel);
     fs.mkdirSync(path.dirname(full), { recursive: true });
     fs.writeFileSync(full, content);
+  }
+  const identity = commandApprovals.typecheckIdentity(harnessConfig.language, harnessConfig.typecheck || {});
+  if (identity && options.approve !== false) {
+    commandApprovals.approve(root, 'typecheck', identity, { storePath: APPROVAL_STORE });
   }
   return root;
 }
@@ -89,6 +97,7 @@ function runHook(projectRoot, filePath, extraEnv = {}) {
   delete env.CITADEL_DEBUG;
   delete env.CITADEL_TSC_PATH;
   env.CLAUDE_PROJECT_DIR = projectRoot;
+  env.CITADEL_COMMAND_APPROVALS = APPROVAL_STORE;
   Object.assign(env, extraEnv);
 
   return spawnSync(process.execPath, [POST_EDIT_HOOK], {
@@ -272,8 +281,66 @@ function main() {
     assert(!result.stdout.includes('DID NOT RUN'), `Retry should succeed without did-not-run advisory, got: ${result.stdout}`);
   });
 
+  // ── Approval gate: repository-configured typecheck never runs unapproved ──
+
+  const markerTsc = [
+    "const fs = require('fs');",
+    "const path = require('path');",
+    "fs.writeFileSync(path.join(__dirname, 'invoked.txt'), 'yes');",
+    'process.exit(0);',
+  ].join('\n');
+
+  test('approval: unapproved typecheck command is not executed and says how to approve', () => {
+    const root = makeTempProject({
+      language: 'typescript',
+      typecheck: { command: 'node fake-tsc.js' },
+      verification: { hotBlockOnErrors: true },
+    }, { 'fake-tsc.js': markerTsc }, { approve: false });
+
+    const result = runHook(root, path.join(root, 'src', 'a.ts'));
+
+    assert(result.status === 0, `Unapproved typecheck must not block the edit, got ${result.status}`);
+    assert(!fs.existsSync(path.join(root, 'invoked.txt')), 'Unapproved typecheck command was executed');
+    assert(result.stdout.includes('not approved'), `Expected not-approved advisory, got: ${result.stdout}`);
+    assert(result.stdout.includes('approve-command.js'), `Advisory should name the approval script, got: ${result.stdout}`);
+  });
+
+  test('approval: changing the configured command after approval requires a new approval', () => {
+    const root = makeTempProject({
+      language: 'typescript',
+      typecheck: { command: 'node fake-tsc.js' },
+    }, { 'fake-tsc.js': markerTsc, 'other-tsc.js': markerTsc });
+    fs.writeFileSync(path.join(root, '.claude', 'harness.json'), JSON.stringify({
+      language: 'typescript',
+      typecheck: { command: 'node other-tsc.js' },
+    }, null, 2));
+
+    const result = runHook(root, path.join(root, 'src', 'a.ts'));
+
+    assert(!fs.existsSync(path.join(root, 'invoked.txt')), 'Swapped typecheck command ran on the old approval');
+    assert(result.stdout.includes('not approved'), `Expected not-approved advisory, got: ${result.stdout}`);
+  });
+
+  test('approval: an approval store inside the project is ignored', () => {
+    const root = makeTempProject({
+      language: 'typescript',
+      typecheck: { command: 'node fake-tsc.js' },
+    }, { 'fake-tsc.js': markerTsc }, { approve: false });
+    const inRepoStore = path.join(root, '.citadel', 'command-approvals.json');
+    const identity = commandApprovals.typecheckIdentity('typescript', { command: 'node fake-tsc.js' });
+    let refused = false;
+    try { commandApprovals.approve(root, 'typecheck', identity, { storePath: inRepoStore }); } catch { refused = true; }
+    assert(refused, 'approve() must refuse a store inside the project');
+
+    const result = runHook(root, path.join(root, 'src', 'a.ts'), { CITADEL_COMMAND_APPROVALS: inRepoStore });
+
+    assert(!fs.existsSync(path.join(root, 'invoked.txt')), 'Typecheck ran using an in-project approval store');
+    assert(result.stdout.includes('not approved'), `Expected not-approved advisory, got: ${result.stdout}`);
+  });
+
   // ── Summary ──
 
+  tempDirs.push(APPROVAL_DIR);
   for (const dir of tempDirs) {
     try { fs.rmSync(dir, { recursive: true, force: true }); } catch { /* best effort */ }
   }

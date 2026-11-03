@@ -4,6 +4,7 @@ const { spawn } = require('child_process');
 const { randomUUID } = require('crypto');
 const path = require('path');
 const registry = require('./registry');
+const commandApprovals = require('../security/command-approvals');
 const { DEFAULT_COMMAND_TIMEOUT_MS, MAX_TIMER_MS, validateLoopContract } = require('./contract');
 
 const OUTPUT_LIMIT = 4000;
@@ -126,6 +127,23 @@ class StateChanged extends Error {
   constructor(current) { super('Loop state changed during execution'); this.current = current; }
 }
 
+// Loop commands run through a shell and come from .planning/loops/*.json,
+// which a repository or agent can write. Refuse to start any shell until the
+// user has approved each exact command for this project from a terminal.
+function assertLoopCommandsApproved(root, loop) {
+  const commands = [...new Set([loop.trigger?.command, loop.verifier?.command]
+    .filter((command) => typeof command === 'string' && command.trim()))];
+  const missing = commands.filter((command) => !commandApprovals.checkApproval(root, 'loop', command).approved);
+  if (!missing.length) return;
+  const error = new Error([
+    `Loop ${loop.id} has commands that are not approved for this project. Nothing was run.`,
+    'Review each command, then approve it yourself in a terminal:',
+    ...missing.map((command) => `  ${commandApprovals.approvalHint('loop', command, root)}`),
+  ].join('\n'));
+  error.code = 'LOOP_COMMAND_NOT_APPROVED';
+  throw error;
+}
+
 async function superviseLoop(projectRoot, id, options = {}) {
   const root = path.resolve(projectRoot || process.cwd());
   const now = options.now || Date.now;
@@ -138,6 +156,7 @@ async function superviseLoop(projectRoot, id, options = {}) {
     throw new Error('A bounded loop needs a verifier command');
   }
   if (!['planned', 'running'].includes(loop.status)) return { ...loop, verified: false };
+  if (!options.executeCommand) assertLoopCommandsApproved(root, loop);
   if (loop.recoveryOf) loop = registry.claimRecoveryExecution(root, loop);
   const startedMs = loop.startedAt ? Date.parse(loop.startedAt) : now();
   if (!Number.isFinite(startedMs)) throw new Error('Invalid loop startedAt');

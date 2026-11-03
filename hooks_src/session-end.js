@@ -562,6 +562,29 @@ function updateDaemonState() {
 }
 
 /**
+ * Resolve an organization.dynamic path for cleanup, refusing anything that
+ * could delete outside the project. harness.json is repository-controlled, so
+ * a path like "../../x" or an in-project symlink to elsewhere must never reach
+ * rmSync. Returns the real directory path, or null to skip the entry.
+ */
+function resolveContainedCleanupDir(relPath) {
+  if (typeof relPath !== 'string' || !relPath.trim() || path.isAbsolute(relPath)) return null;
+  let root;
+  try { root = fs.realpathSync(PROJECT_ROOT); } catch { return null; }
+  const candidate = path.resolve(root, relPath);
+  const lexical = path.relative(root, candidate);
+  if (!lexical || lexical.startsWith('..') || path.isAbsolute(lexical)) return null;
+  let stat;
+  try { stat = fs.lstatSync(candidate); } catch { return null; }
+  if (stat.isSymbolicLink() || !stat.isDirectory()) return null;
+  let real;
+  try { real = fs.realpathSync(candidate); } catch { return null; }
+  const rel = path.relative(root, real);
+  if (!rel || rel.startsWith('..') || path.isAbsolute(rel)) return null;
+  return real;
+}
+
+/**
  * Clean up expired dynamic directories based on the organization manifest.
  * Only runs cleanup for 'auto' policy and 'session'-scoped directories.
  * Campaign-scoped cleanup happens when campaigns complete, not on session end.
@@ -585,8 +608,8 @@ function cleanupDynamicDirectories() {
       // Only clean session-scoped directories at session end
       if (entry.scope !== 'session') continue;
 
-      const dirPath = path.join(PROJECT_ROOT, entry.path);
-      if (!fs.existsSync(dirPath)) continue;
+      const dirPath = resolveContainedCleanupDir(entry.path);
+      if (!dirPath) continue;
 
       const strategy = entry.cleanup;
 
@@ -597,8 +620,8 @@ function cleanupDynamicDirectories() {
           for (const item of items) {
             if (item.startsWith('.gitkeep') || item.startsWith('_TEMPLATE')) continue;
             const itemPath = path.join(dirPath, item);
-            const stat = fs.statSync(itemPath);
-            if (stat.isDirectory()) {
+            const stat = fs.lstatSync(itemPath);
+            if (stat.isDirectory() && !stat.isSymbolicLink()) {
               fs.rmSync(itemPath, { recursive: true, force: true });
             } else {
               fs.unlinkSync(itemPath);
@@ -626,7 +649,7 @@ function cleanupDynamicDirectories() {
         try {
           fs.rmSync(dirPath, { recursive: true, force: true });
           // Recreate if it's a known planning directory
-          const relativePath = path.relative(PROJECT_ROOT, dirPath).replace(/\\/g, '/');
+          const relativePath = path.relative(fs.realpathSync(PROJECT_ROOT), dirPath).replace(/\\/g, '/');
           if (relativePath.startsWith('.planning/')) {
             fs.mkdirSync(dirPath, { recursive: true });
           }

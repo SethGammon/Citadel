@@ -67,6 +67,7 @@
     "runtimes/opencode/",
     "runtimes/openai/",
     "scripts/adopt.js",
+    "scripts/approve-command.js",
     "scripts/bootstrap-project-guidance.js",
     "scripts/campaign.js",
     "scripts/citadel-state.js",
