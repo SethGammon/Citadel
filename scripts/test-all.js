@@ -117,6 +117,8 @@ const UNLOCK_TESTS = Object.freeze([
   ['Bounded loop supervision', 'test-loop-supervisor.js'],
   ['Atomic loop persistence', 'test-loop-persistence.js'],
   ['Conservative loop recovery', 'test-loop-recovery.js'],
+  ['Session-end cleanup containment', 'test-session-end-cleanup.js'],
+  ['Command approval hint safety', 'test-command-approvals.js'],
   ['Fleet integration admission', 'test-fleet-integration-queue.js'],
   ['Benchmark execution honesty', 'test-skill-bench-execution.js'],
   ['Timeout wrapper safety', 'test-run-with-timeout.js'],

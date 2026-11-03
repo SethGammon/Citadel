@@ -27,6 +27,7 @@ const path = require('path');
 const fs = require('fs');
 const health = require('./harness-health-util');
 const { detectPerformance } = require('../core/verification/performance');
+const commandApprovals = require('../core/security/command-approvals');
 
 const PROJECT_ROOT = health.PROJECT_ROOT;
 
@@ -285,6 +286,18 @@ function typeCheck(filePath, relativePath) {
     return 0;
   }
 
+  // Typecheck commands come from repository-controlled harness.json and run
+  // repository code (custom binaries, node_modules/typescript, build.rs, ...).
+  // Only run them after the user approved this exact command for this project.
+  const identity = commandApprovals.typecheckIdentity(language, typecheckConfig);
+  if (!['typescript', 'python', 'go', 'rust'].includes(language)) return 0;
+  if (!identity) {
+    return reportTypecheckNotRun('unavailable', 'configured typecheck command has no approval identity', relativePath);
+  }
+  if (!commandApprovals.checkApproval(PROJECT_ROOT, 'typecheck', identity).approved) {
+    return reportTypecheckNotApproved(identity, relativePath);
+  }
+
   try {
     if (language === 'typescript') {
       return typecheckTypeScript(filePath, relativePath, typecheckConfig);
@@ -471,6 +484,21 @@ function reportTypecheckNotRun(outcome, reason, relativePath) {
     { file: relativePath, outcome, reason });
   health.logBlock('post-edit', `typecheck-${outcome}`, reason);
   health.increment('post-edit', `typecheck-${outcome}`);
+  return 0;
+}
+
+/**
+ * Visible advisory when a configured typecheck has not been approved for this
+ * project. Never blocks the edit and never runs the command.
+ */
+function reportTypecheckNotApproved(identity, relativePath) {
+  _typecheckOutcome = 'not-approved';
+  hookOutput('post-edit', 'warned',
+    `[typecheck] DID NOT RUN (not approved) for ${relativePath}: this project's harness.json configures "${identity}", ` +
+    'which runs repository code. Citadel will not run it until you approve it yourself in a terminal:\n' +
+    `  ${commandApprovals.approvalHint('typecheck', identity, PROJECT_ROOT)}\n`,
+    { file: relativePath, outcome: 'not-approved', command: identity });
+  health.increment('post-edit', 'typecheck-not-approved');
   return 0;
 }
 

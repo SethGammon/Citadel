@@ -10,6 +10,17 @@ const { createLoopContract, validateLoopContract, MAX_TIMER_MS } = require('../c
 const { readLoop, registerLoop, stopLoop, updateLoop } = require('../core/loops/registry');
 const { runCommand, superviseLoop } = require('../core/loops/supervisor');
 const { inspectRecovery } = require('../core/loops/recovery');
+const commandApprovals = require('../core/security/command-approvals');
+
+// Loop commands require a machine-local approval. Tests approve the exact
+// commands they run in a store outside every fixture project.
+const APPROVAL_DIR = fs.mkdtempSync(path.join(os.tmpdir(), 'citadel-loop-approvals-'));
+process.env.CITADEL_COMMAND_APPROVALS = path.join(APPROVAL_DIR, 'command-approvals.json');
+function approveLoop(root, ...commands) {
+  for (const command of commands) {
+    if (typeof command === 'string' && command.trim()) commandApprovals.approve(root, 'loop', command);
+  }
+}
 
 const runner = path.resolve(__dirname, 'loop-runner.js');
 const node = `"${process.execPath}"`;
@@ -65,6 +76,10 @@ function own(root, child) {
 }
 
 function runNode(root, args, options = {}) {
+  // CLI runs take commands from --action/--verify; approve them for this root.
+  for (let i = 0; i < args.length - 1; i++) {
+    if (args[i] === '--action' || args[i] === '--verify') approveLoop(root, args[i + 1]);
+  }
   const result = spawnSync(process.execPath, args, { encoding: 'utf8', ...options });
   if (result.pid) fixtures.get(root).pids.set(result.pid, {
     exited: Number.isInteger(result.status) || typeof result.signal === 'string',
@@ -123,8 +138,10 @@ function reapOwnedScripts(entries) {
 }
 
 function plan(root, options = {}) {
-  return registerLoop(root, createLoopContract({ id: 'test-loop', type: 'foreground-loop',
+  const contract = registerLoop(root, createLoopContract({ id: 'test-loop', type: 'foreground-loop',
     verifierCommand: `${node} --version`, maxAttempts: 3, ...options }));
+  approveLoop(root, contract.trigger?.command, contract.verifier?.command);
+  return contract;
 }
 
 function script(root, name, source) {
@@ -390,6 +407,29 @@ async function main() {
       '--max-attempts', '1', '--command-timeout-ms', '5000', '--project-root', root], { encoding: 'utf8' });
     assert.equal(result.status, 0, result.stderr);
     assert(result.stdout.includes('Status: verifier-passed'));
+  });
+
+  await test('unapproved loop commands never start a shell', async (root) => {
+    const marker = path.join(root, 'ran.txt');
+    const command = `${node} -e "require('fs').writeFileSync(${JSON.stringify(marker).replace(/"/g, "'")}, 'x')"`;
+    const contract = registerLoop(root, createLoopContract({ id: 'unapproved', type: 'foreground-loop',
+      command, verifierCommand: command, maxAttempts: 1 }));
+    await assert.rejects(superviseLoop(root, contract.id), (error) => {
+      assert.equal(error.code, 'LOOP_COMMAND_NOT_APPROVED');
+      assert(error.message.includes(commandApprovals.approvalHint('loop', command, root)));
+      return true;
+    });
+    assert(!fs.existsSync(marker), 'Unapproved loop command executed');
+    commandApprovals.approve(root, 'loop', `${command} `);
+    await assert.rejects(superviseLoop(root, contract.id), /not approved/, 'A near-miss approval must not authorize the command');
+    assert(!fs.existsSync(marker));
+  });
+
+  await test('loop approval stored inside the project is refused', async (root) => {
+    const contract = plan(root, { id: 'in-repo-store' });
+    const inRepo = path.join(root, '.citadel', 'command-approvals.json');
+    assert.throws(() => commandApprovals.approve(root, 'loop', contract.verifier.command, { storePath: inRepo }), /inside the project/);
+    assert.equal(commandApprovals.checkApproval(root, 'loop', contract.verifier.command, { storePath: inRepo }).approved, false);
   });
 
   await test('real abort records interruption and prevents verifier admission', async (root) => {

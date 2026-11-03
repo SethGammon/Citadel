@@ -26,6 +26,11 @@ const {
 const { isTerminalStatus, normalizeStatus } = require('../core/loops/status');
 
 const CITADEL_ROOT = path.resolve(__dirname, '..');
+const commandApprovals = require('../core/security/command-approvals');
+
+// Loop commands need a machine-local approval, kept outside every fixture.
+const APPROVAL_DIR = fs.mkdtempSync(path.join(os.tmpdir(), 'citadel-loops-approvals-'));
+process.env.CITADEL_COMMAND_APPROVALS = path.join(APPROVAL_DIR, 'command-approvals.json');
 
 function tmpRoot() {
   return fs.mkdtempSync(path.join(os.tmpdir(), 'citadel-loops-'));
@@ -161,6 +166,7 @@ function tmpRoot() {
 {
   const root = tmpRoot();
   try {
+    commandApprovals.approve(root, 'loop', `"${process.execPath}" --version`);
     const result = childProcess.spawnSync(process.execPath, [
       path.join(CITADEL_ROOT, 'scripts', 'loop-runner.js'),
       '--verify',
@@ -180,4 +186,5 @@ function tmpRoot() {
   }
 }
 
+fs.rmSync(APPROVAL_DIR, { recursive: true, force: true });
 console.log('loop core tests passed');

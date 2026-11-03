@@ -1,6 +1,7 @@
 [
   "citadel-state.js",
   "adopt.js",
+  "approve-command.js",
   "campaign.js",
   "citadel-config.js",
   "compress-discovery.cjs",

@@ -109,6 +109,13 @@ itself, use `node scripts/loops.js` or `node scripts/loop-runner.js` instead.
 The runner writes a contract under `.planning/loops/{id}.json`, appends each
 attempt, and stops with a shared stop status.
 
+Loop commands run in a shell, so each exact action and verifier command must
+be approved for the project first. If the runner fails with
+`LOOP_COMMAND_NOT_APPROVED`, nothing ran. Stop and show the user the
+`approve-command.js approve loop ...` lines from the error; they must run those
+themselves in an interactive terminal. Do not retry, rewrite the command to
+dodge the check, or try to approve it yourself.
+
 ### Step 4: Stop on the first terminal condition
 
 Stop when any of these are true:
