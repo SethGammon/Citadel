@@ -565,20 +565,32 @@ function updateDaemonState() {
  * Resolve an organization.dynamic path for cleanup, refusing anything that
  * could delete outside the project. harness.json is repository-controlled, so
  * a path like "../../x" or an in-project symlink to elsewhere must never reach
- * rmSync. Returns the real directory path, or null to skip the entry.
+ * rmSync. For an archive destination, allowMissing resolves the deepest
+ * existing ancestor before any directories are created. Returns the real
+ * contained directory path, or null to skip the entry.
  */
-function resolveContainedCleanupDir(relPath) {
+function resolveContainedCleanupDir(relPath, { allowMissing = false } = {}) {
   if (typeof relPath !== 'string' || !relPath.trim() || path.isAbsolute(relPath)) return null;
   let root;
   try { root = fs.realpathSync(PROJECT_ROOT); } catch { return null; }
   const candidate = path.resolve(root, relPath);
   const lexical = path.relative(root, candidate);
   if (!lexical || lexical.startsWith('..') || path.isAbsolute(lexical)) return null;
+  let existing = candidate;
+  const missing = [];
   let stat;
-  try { stat = fs.lstatSync(candidate); } catch { return null; }
+  while (true) {
+    try { stat = fs.lstatSync(existing); break; } catch (error) {
+      if (!allowMissing || error.code !== 'ENOENT') return null;
+      const parent = path.dirname(existing);
+      if (parent === existing) return null;
+      missing.unshift(path.basename(existing));
+      existing = parent;
+    }
+  }
   if (stat.isSymbolicLink() || !stat.isDirectory()) return null;
   let real;
-  try { real = fs.realpathSync(candidate); } catch { return null; }
+  try { real = path.join(fs.realpathSync(existing), ...missing); } catch { return null; }
   const rel = path.relative(root, real);
   if (!rel || rel.startsWith('..') || path.isAbsolute(rel)) return null;
   return real;
@@ -635,8 +647,13 @@ function cleanupDynamicDirectories() {
           if (items.length === 0) continue;
 
           const dateStr = new Date().toISOString().slice(0, 10);
-          const archiveDir = path.join(PROJECT_ROOT, '.planning', 'archive', dateStr, path.basename(entry.path.replace(/\/$/, '')));
-          fs.mkdirSync(archiveDir, { recursive: true });
+          const archivePath = path.join('.planning', 'archive', dateStr, path.basename(dirPath));
+          const destination = resolveContainedCleanupDir(archivePath, { allowMissing: true });
+          if (!destination) continue;
+          fs.mkdirSync(destination, { recursive: true });
+          // Recheck the created directory and move only into its canonical path.
+          const archiveDir = resolveContainedCleanupDir(archivePath);
+          if (!archiveDir) continue;
 
           for (const item of items) {
             const src = path.join(dirPath, item);
