@@ -93,4 +93,48 @@ test('delete: a contained session directory is still cleaned and recreated', ({ 
   assert(!fs.existsSync(path.join(project, '.planning', 'scratch', 'tmp.txt')), 'contained cleanup should still run');
 });
 
+for (const depth of [1, 2, 3]) {
+  test(`archive-then-delete: destination link at depth ${depth} cannot overwrite outside files`, ({ project, outside }) => {
+    const date = new Date().toISOString().slice(0, 10);
+    const segments = ['archive', date, 'scratch'];
+    const link = path.join(project, '.planning', ...segments.slice(0, depth));
+    const escapedArchive = path.join(outside, ...segments.slice(depth));
+    fs.mkdirSync(path.dirname(link), { recursive: true });
+    fs.mkdirSync(escapedArchive, { recursive: true });
+    fs.writeFileSync(path.join(escapedArchive, 'precious.txt'), 'outside file must survive');
+    fs.writeFileSync(path.join(project, '.planning', 'scratch', 'precious.txt'), 'repository-controlled replacement');
+    fs.symlinkSync(outside, link, directoryLinkType);
+    writeConfig(project, [{ path: '.planning/scratch', scope: 'session', cleanup: 'archive-then-delete' }]);
+
+    const result = fire(project);
+
+    assert.strictEqual(result.status, 0, result.stderr);
+    assert.strictEqual(fs.readFileSync(path.join(escapedArchive, 'precious.txt'), 'utf8'), 'outside file must survive');
+    assert(fs.existsSync(path.join(project, '.planning', 'scratch', 'precious.txt')), 'unsafe archive must leave the source untouched');
+  });
+}
+
+test('archive-then-delete: a redirected destination cannot create directories outside the project', ({ project, outside }) => {
+  fs.symlinkSync(outside, path.join(project, '.planning', 'archive'), directoryLinkType);
+  writeConfig(project, [{ path: '.planning/scratch', scope: 'session', cleanup: 'archive-then-delete' }]);
+
+  const result = fire(project);
+
+  assert.strictEqual(result.status, 0, result.stderr);
+  assert.deepStrictEqual(fs.readdirSync(outside), ['precious.txt'], 'archive must validate containment before mkdir');
+  assert(fs.existsSync(path.join(project, '.planning', 'scratch', 'tmp.txt')), 'unsafe archive must leave the source untouched');
+});
+
+test('archive-then-delete: a contained destination can be created and receives the source files', ({ project, outside }) => {
+  writeConfig(project, [{ path: '.planning/scratch', scope: 'session', cleanup: 'archive-then-delete' }]);
+
+  const result = fire(project);
+
+  assert.strictEqual(result.status, 0, result.stderr);
+  const archived = path.join(project, '.planning', 'archive', new Date().toISOString().slice(0, 10), 'scratch', 'tmp.txt');
+  assert.strictEqual(fs.readFileSync(archived, 'utf8'), 'session scratch');
+  assert(!fs.existsSync(path.join(project, '.planning', 'scratch', 'tmp.txt')));
+  assert.strictEqual(fs.readFileSync(path.join(outside, 'precious.txt'), 'utf8'), 'keep me');
+});
+
 console.log(`session-end cleanup tests passed (${passed})`);
