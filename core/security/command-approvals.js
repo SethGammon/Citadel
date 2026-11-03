@@ -13,6 +13,7 @@ const crypto = require('crypto');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
+const { activeShell, shellQuote } = require('../utils/config-command');
 
 const STORE_VERSION = 1;
 const KINDS = Object.freeze(['typecheck', 'loop']);
@@ -163,9 +164,12 @@ function typecheckIdentity(language, typecheckConfig = {}) {
   return null;
 }
 
-function approvalHint(kind, command, projectRoot) {
+function approvalHint(kind, command, projectRoot, options = {}) {
   const script = path.join(__dirname, '..', '..', 'scripts', 'approve-command.js');
-  return `node "${script}" approve ${kind} --project-root "${realProjectRoot(projectRoot)}" --command ${JSON.stringify(command)}`;
+  const shell = options.shell || activeShell(options.platform, options.env);
+  return ['node', script, 'approve', kind, '--project-root', realProjectRoot(projectRoot), '--command', command]
+    .map((part) => shellQuote(part, shell))
+    .join(' ');
 }
 
 module.exports = Object.freeze({

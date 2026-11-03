@@ -290,6 +290,23 @@ function main() {
     'process.exit(0);',
   ].join('\n');
 
+  for (const command of ['   \t', true, {}, []]) {
+    test(`approval: command without an identity never invokes the checker (${JSON.stringify(command)})`, () => {
+      const root = makeTempProject({
+        language: 'typescript',
+        typecheck: { command, tscPath: './checker.js' },
+        verification: { hotBlockOnErrors: true },
+      }, { 'checker.js': markerTsc }, { approve: false });
+
+      const result = runHook(root, path.join(root, 'src', 'a.ts'));
+
+      assert(result.status === 0, `Invalid command must not block the edit: ${result.stderr}`);
+      assert(!fs.existsSync(path.join(root, 'invoked.txt')), 'Checker ran without an approval identity');
+      assert(result.stdout.includes('DID NOT RUN'), `Expected a did-not-run advisory: ${result.stdout}`);
+      assert(!result.stdout.includes('--command null'), 'Do not suggest approving an invalid identity');
+    });
+  }
+
   test('approval: unapproved typecheck command is not executed and says how to approve', () => {
     const root = makeTempProject({
       language: 'typescript',

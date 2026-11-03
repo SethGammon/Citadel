@@ -53,6 +53,9 @@ function test(name, fn) {
 }
 
 const strategies = ['delete', 'empty-on-expire', 'archive-then-delete'];
+// Junctions exercise Windows directory-link traversal without requiring the
+// symlink privilege. Unix continues to exercise ordinary directory symlinks.
+const directoryLinkType = process.platform === 'win32' ? 'junction' : 'dir';
 
 for (const cleanup of strategies) {
   test(`${cleanup}: ../ traversal never touches files outside the project`, ({ project, outside }) => {
@@ -68,7 +71,7 @@ for (const cleanup of strategies) {
   });
 
   test(`${cleanup}: in-project symlink to an outside directory is refused`, ({ project, outside }) => {
-    fs.symlinkSync(outside, path.join(project, '.planning', 'link'), 'dir');
+    fs.symlinkSync(outside, path.join(project, '.planning', 'link'), directoryLinkType);
     writeConfig(project, [{ path: '.planning/link', scope: 'session', cleanup }]);
     fire(project);
     assert(fs.existsSync(path.join(outside, 'precious.txt')), `${cleanup} followed a symlink out of the project`);
@@ -76,7 +79,7 @@ for (const cleanup of strategies) {
 }
 
 test('empty-on-expire: symlinked item inside a contained directory is unlinked, not followed', ({ project, outside }) => {
-  fs.symlinkSync(outside, path.join(project, '.planning', 'scratch', 'escape'), 'dir');
+  fs.symlinkSync(outside, path.join(project, '.planning', 'scratch', 'escape'), directoryLinkType);
   writeConfig(project, [{ path: '.planning/scratch', scope: 'session', cleanup: 'empty-on-expire' }]);
   fire(project);
   assert(fs.existsSync(path.join(outside, 'precious.txt')), 'empty-on-expire recursed through a symlink');

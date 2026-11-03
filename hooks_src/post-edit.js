@@ -290,7 +290,11 @@ function typeCheck(filePath, relativePath) {
   // repository code (custom binaries, node_modules/typescript, build.rs, ...).
   // Only run them after the user approved this exact command for this project.
   const identity = commandApprovals.typecheckIdentity(language, typecheckConfig);
-  if (identity && !commandApprovals.checkApproval(PROJECT_ROOT, 'typecheck', identity).approved) {
+  if (!['typescript', 'python', 'go', 'rust'].includes(language)) return 0;
+  if (!identity) {
+    return reportTypecheckNotRun('unavailable', 'configured typecheck command has no approval identity', relativePath);
+  }
+  if (!commandApprovals.checkApproval(PROJECT_ROOT, 'typecheck', identity).approved) {
     return reportTypecheckNotApproved(identity, relativePath);
   }
 

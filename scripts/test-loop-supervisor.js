@@ -416,7 +416,7 @@ async function main() {
       command, verifierCommand: command, maxAttempts: 1 }));
     await assert.rejects(superviseLoop(root, contract.id), (error) => {
       assert.equal(error.code, 'LOOP_COMMAND_NOT_APPROVED');
-      assert.match(error.message, /approve-command\.js" approve loop/);
+      assert(error.message.includes(commandApprovals.approvalHint('loop', command, root)));
       return true;
     });
     assert(!fs.existsSync(marker), 'Unapproved loop command executed');
