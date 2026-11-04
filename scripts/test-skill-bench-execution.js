@@ -186,6 +186,39 @@ try {
     assert(bench.runAssertions(specimen, 'Pin bytes').some(row => !row.passed));
     for (const pattern of ['', '.*', '[']) assert(bench.validateScenario({ ...specimen, assertMatches: [pattern] }).length);
   });
+
+  test('semantic scenario checks accept meaning but reject missing behavior and raw failures', () => {
+    const bench = require('./skill-bench');
+    const cases = [["create-skill","repeated-pattern","typecheck\nQ1: What do you repeat?","typecheck is available."],["dashboard","vague-status-phrase","Citadel Dashboard\nCAMPAIGNS\nHook errors: 0","Citadel Dashboard\nCAMPAIGNS\nTypeError: failed"],["design","extract-from-codebase","Colors #2563eb\nTypography\nSpacing","extract"],["experiment","no-metric","How to measure faster? Give a command that prints one number for a baseline.","metric"],["marshal","vague-direction","The task is undefined. What should I work on?","The task is undefined."],["do","no-planning-dir","Routing the login bug to /systematic-debugging; please provide source.","The login bug needs a source path."]];
+    for (const [skill, name, accept, reject] of cases) {
+      const spec = bench.parseScenario(path.join(__dirname, '..', 'skills', skill, '__benchmarks__', name + '.md'));
+      assert.deepStrictEqual(bench.validateScenario(spec), [], skill + '/' + name);
+      const textSpec = { ...spec, assertFilesAbsent: [], assertFilesUnchanged: [] };
+      assert(bench.runAssertions(textSpec, accept, fixture).every(row => row.passed), skill + ' rejected valid meaning');
+      assert(bench.runAssertions(textSpec, reject, fixture).some(row => !row.passed), skill + ' accepted missing meaning');
+    }
+  });
+  test('evolve status fixture supplies prior cycles and detects history mutation', () => {
+    const bench = require('./skill-bench');
+    const project = bench.setupProjectState('with-evolve-history');
+    try {
+      const spec = bench.parseScenario(path.join(__dirname, '..', 'skills', 'evolve', '__benchmarks__', 'happy-path-status.md'));
+      const state = path.join(project, '.planning', 'evolve', 'skill-md', 'director-state.json');
+      const saved = JSON.parse(fs.readFileSync(state, 'utf8'));
+      assert.equal(saved.cycle, 2);
+      assert.equal(saved.cumulativeSpend, 4.5);
+      assert.deepStrictEqual(saved.velocityHistory, [0.5, 0.25]);
+      const snapshots = bench.captureFileSnapshots(project, spec.assertFilesUnchanged);
+      assert(bench.runAssertions(spec, 'Belief model, velocity, spend.', project, snapshots).every(row => row.passed));
+      fs.writeFileSync(state, JSON.stringify({ ...saved, cycle: 3 }));
+      assert(bench.runAssertions(spec, 'Belief model, velocity, spend.', project, snapshots).some(row => !row.passed));
+    } finally {
+      const physical = fs.realpathSync(project);
+      assert.equal(path.dirname(physical), fs.realpathSync(os.tmpdir()));
+      assert(path.basename(physical).startsWith('citadel-bench-'));
+      fs.rmSync(physical, { recursive: true, force: true });
+    }
+  });
   test('ablation cannot score a failed CLI as passed using its partial output', () => {
     const vm = require('vm');
     const filename = path.join(__dirname, 'noop-ablate.js');

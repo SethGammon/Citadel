@@ -374,6 +374,30 @@ const STATES = {
     ].join('\n'));
   },
 
+  'with-evolve-history': (tmpDir) => {
+    STATES['with-scoring-rubric'](tmpDir);
+    const rubric = path.join(tmpDir, '.planning', 'rubrics');
+    const source = fs.readFileSync(path.join(rubric, 'citadel.md'), 'utf8');
+    fs.writeFileSync(path.join(rubric, 'skill-md.md'), source.replace('# Rubric: citadel', '# Rubric: skill-md'));
+    fs.unlinkSync(path.join(rubric, 'citadel.md'));
+    const dir = path.join(tmpDir, '.planning', 'evolve', 'skill-md');
+    fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(path.join(dir, 'director-state.json'), JSON.stringify({
+      target: 'skill-md', cycle: 2, status: 'paused', phase: 'halted',
+      cumulativeSpend: 4.5, velocityHistory: [0.5, 0.25],
+    }, null, 2) + '\n');
+    fs.writeFileSync(path.join(dir, 'belief-model.jsonl'), [1, 2].map(cycle => JSON.stringify({
+      cycle, axis: 'correctness', skill: 'fixture', score: 4 + cycle,
+      delta: cycle === 1 ? null : 1, hypothesis: 'Add explicit input contracts',
+      confidence: 0.85, evidence: 'Synthetic benchmark history; no real campaign execution.',
+    })).join('\n') + '\n');
+    fs.writeFileSync(path.join(dir, 'experiment-log.jsonl'), JSON.stringify({
+      id: 'fixture-contract', cycle: 2, status: 'verified', confidence: 0.85,
+      hypothesis: 'Add explicit input contracts', actual_delta: 1,
+      evidence: 'Synthetic benchmark history; no real campaign execution.',
+    }) + '\n');
+  },
+
   'with-telemetry': (tmpDir) => {
     const telemetryDir = path.join(tmpDir, '.planning', 'telemetry');
     fs.mkdirSync(telemetryDir, { recursive: true });

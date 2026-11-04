@@ -14,6 +14,7 @@
 - Serialize cross-process coordination claims so simultaneous requests cannot acquire overlapping scopes.
 - Guard recovery identity, checkpoint evidence, uncertain remote effects, and concurrent continuation after interruptions.
 - Preserve authored project guidance and show the final dashboard decision from the complete decision log.
+- Retain the selected intent route when application source or shell permission is missing, and report blocked activation honestly.
 
 ### Improved
 

@@ -7,8 +7,12 @@ behavior: invariant
 input: /experiment make the dashboard faster
 state: clean
 timeout: 240000
-assert-contains:
-  - metric
+assert-matches:
+  - how.to.measure|measurement.command|measurable|metric
+  - command|number|baseline|milliseconds|render.time|bundle.size
+assert-files-absent:
+  - src
+  - package.json
 assert-not-contains:
   - ENOENT
   - TypeError

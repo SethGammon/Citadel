@@ -4,15 +4,22 @@ skill: evolve
 description: evolve --status shows belief model and velocity without attacking
 tags: [happy-path]
 input: /evolve skill-md --status
-state: with-campaign
+state: with-evolve-history
 assert-contains:
   - belief
   - velocity
   - spend
+assert-files-unchanged:
+  - .planning/rubrics/skill-md.md
+  - .planning/evolve/skill-md/director-state.json
+  - .planning/evolve/skill-md/belief-model.jsonl
+  - .planning/evolve/skill-md/experiment-log.jsonl
+assert-files-absent:
+  - .planning/evolve/skill-md/cycle-3-digest.md
 assert-not-contains:
-  - attacking
-  - fleet
-  - worktree
+  - TypeError:
+  - SyntaxError:
+  - node:internal/
 ---
 
 ## What This Tests
@@ -22,7 +29,7 @@ cumulative spend without dispatching any agents or modifying any files.
 
 ## Setup
 
-`has-rubric-and-prior-cycles` state: `.planning/rubrics/skill-md.md` exists,
+`with-evolve-history` state: `.planning/rubrics/skill-md.md` exists,
 `.planning/evolve/skill-md/director-state.json` exists with `cycle: 2`,
 `.planning/evolve/skill-md/belief-model.jsonl` has entries.
 

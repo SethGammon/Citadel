@@ -7,7 +7,13 @@ behavior: invariant
 input: /design extract the design system
 state: with-ui-source
 assert-contains:
-  - extract
+  - colors
+  - typography
+  - spacing
+  - "#2563eb"
+assert-files-unchanged:
+  - src/tokens.css
+  - tailwind.config.js
 assert-not-contains:
   - ENOENT
   - TypeError

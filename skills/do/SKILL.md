@@ -14,7 +14,7 @@ trigger_keywords:
   - which tool
   - auto-route
   - unified router
-last-updated: 2026-07-31
+last-updated: 2026-11-04
 ---
 
 # /do — Unified Intent Router
@@ -259,6 +259,9 @@ When 2+ independent tasks detected (non-overlapping scopes, complexity >= 3, not
 **Trust level:** Read from `harness.json` `trust` object. Levels: novice (0-4 sessions), familiar (5-19), trusted (20+ with 2+ campaigns). `trust.override` takes precedence.
 
 ### Step 4: After Classification
+
+Name the intent's target before investigating app files. Missing source or shell permission does not erase the route.
+Show it and request context or approval; never claim activation preflight or invocation succeeded when blocked.
 
 1. **Enforce product activation before invocation.** Run:
    `node {citadelRoot}/scripts/citadel-config.js check route {bare-skill-name} --runtime {claude-code|codex|opencode} --json`.
