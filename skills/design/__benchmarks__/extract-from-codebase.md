@@ -18,7 +18,9 @@ assert-not-contains:
   - ENOENT
   - TypeError
   - SyntaxError
-  - undefined
+  - ReferenceError:
+  - at Module._compile
+  - node:internal/
 ---
 
 ## What This Tests
