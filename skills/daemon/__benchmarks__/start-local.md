@@ -3,8 +3,8 @@ name: start-local
 skill: daemon
 description: /daemon start (no --remote) creates daemon.json and instructs user to run npm run daemon:local
 tags: [happy-path]
-input: /daemon start
-state: with-campaign
+input: /daemon start --budget 5 --max-sessions 3 --cost-per-session 1; I approve this campaign, the $5 budget, and the three-session ceiling. Prepare the state and local terminal instructions, and leave launching the runner to me.
+state: with-approved-local-daemon
 assert-contains:
   - daemon.json
   - daemon:local
@@ -23,8 +23,10 @@ runner instructions.
 
 ## Setup
 
-`with-campaign` state provides an active campaign file in `.planning/campaigns/`
-so the prerequisite check passes.
+`with-approved-local-daemon` supplies an active campaign with enough remaining work
+and synthetic trusted-operator history. The input explicitly approves the finite
+budget and session ceiling. It does not authorize launching a runner or creating
+remote schedules. The separate novice-refusal scenario covers the safety gate.
 
 ## Expected Behavior
 

@@ -9,6 +9,7 @@
 
 ### Fixed
 
+- Resolve Citadel-namespaced skill ownership so the normal bundle activation gates apply to native plugin commands.
 - Include the complete shared utility directory so installed hooks can load frontmatter parsing dependencies. Add package dependency-closure and hook-loading regression checks.
 - Serialize cross-process coordination claims so simultaneous requests cannot acquire overlapping scopes.
 - Guard recovery identity, checkpoint evidence, uncertain remote effects, and concurrent continuation after interruptions.
@@ -16,6 +17,10 @@
 
 ### Improved
 
+- Honor proposal-only app requests and the host session's configured effort before starting downstream build work.
+- Clarify source-only orchestration commands and local runner confirmations.
+- Isolate live skill checks from account scheduling tools, supply valid safety preconditions, and verify authored-file preservation.
+- Pin macOS verification to the standard Intel macOS 26 pool while retaining the required check names.
 - Batch tagged release blob reads while preserving deterministic archive bytes.
 - Add guarded delivery continuation and local-effect reconciliation to the source-only Operation Control CLI.
 

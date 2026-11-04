@@ -4,14 +4,17 @@ skill: improve
 description: /improve citadel --score-only with existing rubric outputs a scorecard and makes no changes
 tags: [happy-path]
 input: /improve citadel --score-only
-state: with-completed-campaign
+state: with-scoring-rubric
 assert-contains:
   - score
   - axis
+assert-files-unchanged:
+  - src/sum.js
+  - .planning/rubrics/citadel.md
 assert-not-contains:
   - ENOENT
-  - TypeError
-  - undefined
+  - at Module._compile
+  - node:internal/
 ---
 
 ## What This Tests
@@ -21,7 +24,8 @@ scorecard without making any file changes or spawning attack agents.
 
 ## Setup
 
-`with-completed-campaign` provides a `.planning/rubrics/citadel.md` rubric file.
+`with-scoring-rubric` provides a `.planning/rubrics/citadel.md` rubric with two
+approved axes and a small synthetic source target.
 The rubric already exists — Phase 0 should be skipped.
 
 ## Expected Behavior

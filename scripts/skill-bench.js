@@ -36,7 +36,7 @@
 const fs            = require('fs');
 const path          = require('path');
 const os            = require('os');
-const { randomUUID } = require('crypto');
+const { randomUUID, createHash } = require('crypto');
 const { execFileSync, execSync } = require('child_process');
 const { buildCodexExecArgs } = require('../core/codex/native-integrations');
 
@@ -178,6 +178,7 @@ function parseScenario(filePath) {
     assertMatches:    Array.isArray(fm['assert-matches']) ? fm['assert-matches'] : [],
     assertNotContains: Array.isArray(fm['assert-not-contains']) ? fm['assert-not-contains'] : [],
     assertFilesAbsent: Array.isArray(fm['assert-files-absent']) ? fm['assert-files-absent'] : [],
+    assertFilesUnchanged: Array.isArray(fm['assert-files-unchanged']) ? fm['assert-files-unchanged'] : [],
     timeout:          parseInt(fm.timeout, 10) || 180000,
     skipExecute:      fm['skip-execute'] === 'true' || fm['skip-execute'] === true,
     skipReason:       fm['skip-reason'] || null,
@@ -239,7 +240,7 @@ const STATES = {
         lint: 'node scripts/lint.js',
       },
     }, null, 2) + '\n');
-    fs.writeFileSync(path.join(scriptsDir, 'lint.js'), "console.log('lint ok');\n");
+    fs.writeFileSync(path.join(scriptsDir, 'lint.js'), "require('fs').writeFileSync('benchmark-lint-ran.txt', 'executed'); console.log('lint ok');\n");
   },
 
   'with-campaign': (tmpDir) => {
@@ -304,6 +305,22 @@ const STATES = {
     ].join('\n') + '\n');
   },
 
+  // Synthetic operator history for the explicitly approved local-daemon case.
+  // Other with-campaign scenarios retain novice defaults and refusal coverage.
+  'with-approved-local-daemon': (tmpDir) => {
+    STATES['with-campaign'](tmpDir);
+    const configPath = path.join(tmpDir, '.claude', 'harness.json');
+    const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+    config.trust = { sessionsCompleted: 20, campaignsCompleted: 2 };
+    fs.writeFileSync(configPath, JSON.stringify(config, null, 2) + '\n');
+    const campaignPath = path.join(tmpDir, '.planning', 'campaigns', 'test-campaign.md');
+    const campaign = fs.readFileSync(campaignPath, 'utf8').replace(
+      '3. [pending] verify: Phase 3',
+      '3. [pending] build: Phase 3\n4. [pending] build: Phase 4\n5. [pending] verify: Phase 5'
+    );
+    fs.writeFileSync(campaignPath, campaign);
+  },
+
   'with-completed-campaign': (tmpDir) => {
     const completedDir = path.join(tmpDir, '.planning', 'campaigns', 'completed');
     fs.mkdirSync(completedDir, { recursive: true });
@@ -328,6 +345,32 @@ const STATES = {
       '## Decision Log',
       '- 2026-03-21: Chose jose library over jsonwebtoken for browser compat.',
       '- 2026-03-22: Refresh tokens stored in httpOnly cookies only.',
+    ].join('\n'));
+  },
+
+  'with-scoring-rubric': (tmpDir) => {
+    STATES['with-completed-campaign'](tmpDir);
+    const rubricDir = path.join(tmpDir, '.planning', 'rubrics');
+    fs.mkdirSync(rubricDir, { recursive: true });
+    fs.mkdirSync(path.join(tmpDir, 'src'), { recursive: true });
+    fs.writeFileSync(path.join(tmpDir, 'src', 'sum.js'), 'exports.sum = (a, b) => a + b;\n');
+    fs.writeFileSync(path.join(rubricDir, 'citadel.md'), [
+      '# Rubric: citadel', '',
+      '> Target: the synthetic src/sum.js benchmark fixture',
+      '> Status: approved', '',
+      '## Category: Engineering', '',
+      '### Axis: correctness', 'Weight: 1', 'Category: engineering',
+      '#### Anchors',
+      '- **0**: Does not add numeric inputs.',
+      '- **5**: Adds numbers but has no input contract or tests.',
+      '- **10**: Has a clear numeric contract and passing edge-case tests.',
+      '#### Verification', '- **structural**: Inspect src/sum.js and any tests.', '',
+      '### Axis: readability', 'Weight: 1', 'Category: engineering',
+      '#### Anchors',
+      '- **0**: Intent is obscured by misleading names and unrelated effects.',
+      '- **5**: Intent is readable but contracts are undocumented.',
+      '- **10**: Names, contracts, and examples make behavior explicit.',
+      '#### Verification', '- **structural**: Inspect the source and documentation.', '',
     ].join('\n'));
   },
 
@@ -395,6 +438,12 @@ const STATES = {
       'agents: 3',
       'coordinator: archon',
     ].join('\n'));
+  },
+
+  'with-existing-component': (tmpDir) => {
+    STATES['with-source'](tmpDir);
+    fs.writeFileSync(path.join(tmpDir, 'src', 'components', 'UserProfile.tsx'),
+      "export const UserProfile = () => <div>Authored profile: preserve this content</div>;\n");
   },
 
   'with-source': (tmpDir) => {
@@ -653,12 +702,32 @@ function findCodexCLI() {
  * Run a scenario against the real Claude CLI.
  * Returns { output: string, error: string|null, timedOut: boolean }
  */
+// Select the plugin being measured when the host has a colliding short command.
+// Preserve natural-language routing cases and explicitly namespaced inputs.
+function scopedClaudeInput(scenario) {
+  const shortName = '/' + scenario.skill;
+  const input = scenario.input;
+  if (typeof input === 'string' && (input === shortName || input.startsWith(shortName + ' '))) {
+    return '/citadel:' + scenario.skill + input.slice(shortName.length);
+  }
+  return input;
+}
+
+function claudeScenarioArgs(scenario) {
+  return [
+    '--plugin-dir', PLUGIN_ROOT, '--print', '--permission-mode', 'default',
+    '--permission-prompts', 'none', '--strict-mcp-config',
+    '--disallowedTools', 'RemoteTrigger,CronCreate,CronDelete',
+    '--', scopedClaudeInput(scenario),
+  ];
+}
+
 function executeClaudeScenario(scenario, claudeCmd, tmpDir) {
   const [bin, ...binArgs] = claudeCmd.split(' ');
   try {
     const output = execFileSync(
       bin,
-      [...binArgs, '--plugin-dir', PLUGIN_ROOT, '--print', '--permission-mode', 'default', '--', scenario.input],
+      [...binArgs, ...claudeScenarioArgs(scenario)],
       {
         cwd: tmpDir,
         timeout: scenario.timeout,
@@ -673,7 +742,7 @@ function executeClaudeScenario(scenario, claudeCmd, tmpDir) {
     );
     return { output, error: null, timedOut: false };
   } catch (err) {
-    if (err.killed) {
+    if (err.killed || err.code === 'ETIMEDOUT') {
       return { output: err.stdout || '', error: 'timed out', timedOut: true };
     }
     return {
@@ -734,7 +803,49 @@ function executeCodexScenario(scenario, codexCmd, tmpDir) {
  * Run all assertions against the captured output.
  * Returns array of { assertion, passed, type }
  */
-function runAssertions(scenario, output, projectRoot) {
+const FILE_SNAPSHOT_ROOT = Symbol('fixture-root');
+
+// Bind the original fixture directory and read through a checked file handle.
+// Both identity and canonical-path checks are needed: content equality alone
+// must not accept a replaced root, an outside link, or a raced file opening.
+function fixtureFileDigest(projectRoot, relative, rootSeal) {
+  try {
+    if (!rootSeal || typeof relative !== 'string' || !relative || path.isAbsolute(relative)
+      || path.win32.isAbsolute(relative) || relative.split(/[\\/]/).includes('..')) return null;
+    const root = fs.realpathSync(projectRoot);
+    const rootStat = fs.statSync(root, { bigint: true });
+    if (root !== rootSeal.path || rootStat.dev !== rootSeal.dev || rootStat.ino !== rootSeal.ino) return null;
+    const file = path.join(root, relative);
+    const stat = fs.lstatSync(file, { bigint: true });
+    if (!stat.isFile() || stat.isSymbolicLink() || stat.nlink !== 1n) return null;
+    const real = fs.realpathSync(file);
+    const within = path.relative(root, real);
+    if (path.isAbsolute(within) || within === '..' || within.startsWith('..' + path.sep)) return null;
+    const fd = fs.openSync(real, fs.constants.O_RDONLY);
+    try {
+      const opened = fs.fstatSync(fd, { bigint: true });
+      const currentRoot = fs.statSync(root, { bigint: true });
+      if (!opened.isFile() || opened.nlink !== 1n || opened.dev !== stat.dev || opened.ino !== stat.ino
+        || fs.realpathSync(file) !== real || fs.realpathSync(projectRoot) !== root
+        || currentRoot.dev !== rootSeal.dev || currentRoot.ino !== rootSeal.ino) return null;
+      return createHash('sha256').update(String(opened.mode & 0o777n) + ':').update(fs.readFileSync(fd)).digest('hex');
+    } finally { fs.closeSync(fd); }
+  } catch { return null; }
+}
+
+function captureFileSnapshots(projectRoot, relatives = []) {
+  const snapshots = Object.create(null);
+  let rootSeal = null;
+  try {
+    const real = fs.realpathSync(projectRoot);
+    const stat = fs.statSync(real, { bigint: true });
+    if (stat.isDirectory()) rootSeal = Object.freeze({ path: real, dev: stat.dev, ino: stat.ino });
+  } catch { /* Missing or invalid fixture roots cannot authorize preservation. */ }
+  Object.defineProperty(snapshots, FILE_SNAPSHOT_ROOT, { value: rootSeal });
+  for (const relative of relatives) snapshots[relative] = fixtureFileDigest(projectRoot, relative, rootSeal);
+  return snapshots;
+}
+function runAssertions(scenario, output, projectRoot, fileSnapshots = {}) {
   const results = [];
   const lowerOutput = output.toLowerCase();
 
@@ -759,6 +870,11 @@ function runAssertions(scenario, output, projectRoot) {
     const passed = Boolean(safe && projectRoot && !fs.existsSync(path.join(projectRoot, relative)));
     results.push({ assertion: 'file absent: ' + relative, passed, type: 'file-absent' });
   }
+  for (const relative of scenario.assertFilesUnchanged || []) {
+    const before = fileSnapshots[relative];
+    const passed = typeof before === 'string' && fixtureFileDigest(projectRoot, relative, fileSnapshots[FILE_SNAPSHOT_ROOT]) === before;
+    results.push({ assertion: 'file unchanged: ' + relative, passed, type: 'file-unchanged' });
+  }
   return results;
 }
 
@@ -771,7 +887,7 @@ function validateScenario(scenario) {
   const issues = [];
 
   if (typeof scenario.input !== 'string' || !scenario.input.trim()) issues.push('input must be a nonblank string');
-  for (const field of ['assertContains', 'assertNotContains', 'assertFilesAbsent', 'assertMatches']) {
+  for (const field of ['assertContains', 'assertNotContains', 'assertFilesAbsent', 'assertFilesUnchanged', 'assertMatches']) {
     const values = scenario[field] || [];
     if (!Array.isArray(values) || values.some((value) => typeof value !== 'string' || !value.trim())) {
       issues.push(`${field} must contain only nonblank strings`);
@@ -782,16 +898,18 @@ function validateScenario(scenario) {
       if (typeof pattern !== 'string' || !pattern.trim() || new RegExp(pattern, 'i').test('')) issues.push('assertMatches must not match empty output');
     } catch { issues.push('assertMatches contains an invalid regular expression'); }
   }
-  if (scenario.assertContains.length === 0 && scenario.assertNotContains.length === 0 && (scenario.assertFilesAbsent || []).length === 0 && (scenario.assertMatches || []).length === 0) {
-    issues.push('no assertions defined (add assert-contains, assert-not-contains, or assert-files-absent)');
+  if (scenario.assertContains.length === 0 && scenario.assertNotContains.length === 0 && (scenario.assertFilesAbsent || []).length === 0 && (scenario.assertMatches || []).length === 0 && (scenario.assertFilesUnchanged || []).length === 0) {
+    issues.push('no assertions defined (add text assertions, assert-files-absent, or assert-files-unchanged)');
   }
-  for (const value of scenario.assertFilesAbsent || []) {
-    if (typeof value !== 'string') continue;
-    const segments = value.replace(/\\/g, '/').split('/');
-    if (/[\u0000-\u001f\u007f<>:"|?*]/.test(value) || path.posix.isAbsolute(value) || path.win32.isAbsolute(value)
-      || segments.some((part) => !part || part === '..' || part === '.' || /[. ]$/.test(part)
-        || /^(con|prn|aux|nul|com[1-9]|lpt[1-9])(?:\.|$)/i.test(part))) {
-      issues.push('assert-files-absent must use safe relative file paths');
+  for (const [field, label] of [['assertFilesAbsent', 'assert-files-absent'], ['assertFilesUnchanged', 'assert-files-unchanged']]) {
+    for (const value of scenario[field] || []) {
+      if (typeof value !== 'string') continue;
+      const segments = value.replace(/\\/g, '/').split('/');
+      if (/[\u0000-\u001f\u007f<>:"|?*]/.test(value) || path.posix.isAbsolute(value) || path.win32.isAbsolute(value)
+        || segments.some((part) => !part || part === '..' || part === '.' || /[. ]$/.test(part)
+          || /^(con|prn|aux|nul|com[1-9]|lpt[1-9])(?:\.|$)/i.test(part))) {
+        issues.push(label + ' must use safe relative file paths');
+      }
     }
   }
   if (typeof scenario.state !== 'string' || !Object.hasOwn(STATES, scenario.state)) {
@@ -1001,6 +1119,7 @@ function main() {
           });
         }
         const telemetryBefore = VERIFY_HOOKS ? snapshotTelemetry(tmpDir) : null;
+        const fileSnapshots = captureFileSnapshots(tmpDir, scenario.assertFilesUnchanged);
         executionAttempted = true;
         const execResult = isCodexRuntime
           ? executeCodexScenario(scenario, runtimeCmd, tmpDir)
@@ -1027,7 +1146,7 @@ function main() {
             assertionResults: [],
           };
         } else {
-          const assertionResults = runAssertions(scenario, execResult.output, tmpDir);
+          const assertionResults = runAssertions(scenario, execResult.output, tmpDir, fileSnapshots);
 
           // Hook telemetry assertions (--verify-hooks mode)
           if (VERIFY_HOOKS && telemetryBefore) {
@@ -1142,6 +1261,9 @@ module.exports = {
   discoverScenarios,
   setupProjectState,
   executeClaudeScenario,
+  scopedClaudeInput,
+  claudeScenarioArgs,
+  captureFileSnapshots,
   runAssertions,
   findClaudeCLI,
   validateScenario,

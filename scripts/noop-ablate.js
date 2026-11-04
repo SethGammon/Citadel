@@ -36,7 +36,7 @@ const path = require('path');
 const { detectNoOps } = require('../core/skills/noop-detect');
 const {
   discoverScenarios, setupProjectState, executeClaudeScenario,
-  runAssertions, findClaudeCLI,
+  runAssertions, captureFileSnapshots, findClaudeCLI,
 } = require('./skill-bench');
 
 const PLUGIN_ROOT = path.resolve(__dirname, '..');
@@ -115,10 +115,11 @@ function runScenario(scenario, cli) {
   let tmpDir = null;
   try {
     tmpDir = setupProjectState(scenario.state);
+    const fileSnapshots = captureFileSnapshots(tmpDir, scenario.assertFilesUnchanged);
     const exec = executeClaudeScenario(scenario, cli, tmpDir);
     if (exec.timedOut) return { pass: null, vector: null, error: 'timed out' };
-    if (exec.error && !exec.output) return { pass: null, vector: null, error: exec.error };
-    const ar = runAssertions(scenario, exec.output);
+    if (exec.error) return { pass: null, vector: null, error: exec.error };
+    const ar = runAssertions(scenario, exec.output, tmpDir, fileSnapshots);
     return {
       pass: ar.every(a => a.passed),
       vector: ar.map(a => a.passed),
@@ -273,4 +274,5 @@ function main() {
   process.exit(0);
 }
 
-main();
+module.exports = { runScenario };
+if (require.main === module) main();

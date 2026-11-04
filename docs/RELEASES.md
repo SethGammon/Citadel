@@ -73,7 +73,9 @@ node scripts/release-verify.js "dist/release/citadel-$TAG.tar.gz" --ref "$TAG" -
 ```
 
 A pushed `v*` tag runs the same strict and reproducibility checks on Node 22 and
-24 across Linux, macOS, and Windows. The packaging job then rebuilds and
+24 across Linux, macOS, and Windows. macOS evidence uses the standard
+`macos-26-intel` runner. Existing `macos-latest` check names remain stable for
+branch protection; this release matrix covers Intel macOS 26. The packaging job then rebuilds and
 verifies the trio and creates GitHub-native provenance with least privilege. The
 packaging job alone receives `contents: write`, `id-token: write`, and
 `attestations: write`; it receives no package-registry or registry-linked

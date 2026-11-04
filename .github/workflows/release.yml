@@ -11,7 +11,8 @@ permissions:
 jobs:
   verify:
     name: verify node ${{ matrix.node }} on ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
+    # Preserve required check names while using the standard Intel macOS 26 pool.
+    runs-on: ${{ matrix.os == 'macos-latest' && 'macos-26-intel' || matrix.os }}
     strategy:
       fail-fast: false
       matrix:

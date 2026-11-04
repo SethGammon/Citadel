@@ -148,7 +148,8 @@ function normalizeOwnerId(id) {
 }
 
 function bundleForSkill(id) {
-  return SKILL_BUNDLE_OWNERSHIP[normalizeOwnerId(id)] || null;
+  const skillId = normalizeOwnerId(id).replace(/^citadel:/, '');
+  return SKILL_BUNDLE_OWNERSHIP[skillId] || null;
 }
 
 function bundleForHook(id) {
