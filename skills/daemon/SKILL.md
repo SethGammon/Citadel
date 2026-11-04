@@ -21,7 +21,7 @@ trigger_keywords:
   - daemon start
   - daemon stop
   - daemon status
-last-updated: 2026-03-28
+last-updated: 2026-11-04
 ---
 
 # /daemon -- Continuous Autonomous Operation
@@ -42,7 +42,7 @@ Architecture, daemon.json field reference, and rationale: docs/DAEMON.md.
 ### Default flow — `/daemon start` (no `--remote` flag)
 
 1. Do Steps 1, 2, and 4 below (validate, check existing, write `daemon.json`).
-2. **Skip Step 3** — do NOT create any `RemoteTrigger`. Leave `chainTriggerId` and `watchdogTriggerId` as `null` in the state file.
+2. **Skip Step 3.** Leave `chainTriggerId` and `watchdogTriggerId` as `null` in the state file. Keep the confirmation focused on the state path, campaign, finite budget, session ceiling, and local start/stop instructions.
 3. Instead of Step 5's trigger-confirmation, output the local-runner instructions (full text: docs/DAEMON.md#local-runner-default): the state file path, campaign, and budget, then:
    ```
    To start the tick loop, run in a separate terminal:
@@ -52,8 +52,6 @@ Architecture, daemon.json field reference, and rationale: docs/DAEMON.md.
    session, respects daemon.json status, and consumes zero Anthropic
    routine quota. Stop with Ctrl+C or `/daemon stop`.
 
-   For true unattended background operation (machine sleeps, user away):
-     /daemon start --remote    (uses RemoteTrigger, counts against 15/day cap)
    ```
 
 ### Local execution safety
@@ -263,7 +261,7 @@ Read trust level from `harness.json`:
 
 - Budget cap MUST be set (default $50, explicit `unlimited` to bypass)
 - Daemon state file MUST be written before any triggers are created
-- Both triggers (chain + watchdog) must be created; if either fails, abort and clean up
+- For an explicitly requested remote start, both triggers (chain + watchdog) must be created; if either fails, abort and clean up. Local starts keep both trigger IDs null.
 - Every tick must update daemon.json BEFORE scheduling the next tick
 - Campaign must have Continuation State before daemon can start
 - Lock mechanism must prevent overlapping sessions

@@ -14,14 +14,21 @@ assert-not-contains:
   - TypeError
   - Cannot read
   - undefined
-  - .planning
+  - ACTIVATION_OWNERSHIP_UNKNOWN
+assert-matches:
+  - /(?:citadel:)?(?:marshal|systematic-debugging)
+assert-files-absent:
+  - package.json
+  - src
 ---
 
 ## What This Tests
 
 A user runs `/do` on a project that has not been initialized with `.planning/`.
-The router must skip the Tier 1 active-state check (which reads `.planning/campaigns/`
-and `.planning/fleet/`) and fall through to Tier 2 keyword matching without crashing.
+Startup may create Citadel scaffolding before the prompt. With no application
+source or active work, the router must choose a debugging route or ask for the
+missing login context, without inventing code or leaking raw filesystem errors.
+Mentioning an initialized planning path is not itself a filesystem error.
 
 ## Expected Behavior
 

@@ -15,7 +15,7 @@ trigger_keywords:
   - until lint passes
   - max attempts
   - retry until
-last-updated: 2026-06-09
+last-updated: 2026-11-04
 ---
 
 # /loop -- Bounded Foreground Loop
@@ -29,6 +29,9 @@ times and stop if tests still fail."
 **Don't use when:** the work should run unattended across sessions (`/daemon`),
 on a clock (`/schedule`), on file changes (`/watch`), or as a metric-driven
 optimization experiment (`/experiment`).
+
+In Claude Code, invoke `/citadel:loop` to select this skill explicitly.
+The host also has a timer-based `/loop` command with different semantics.
 
 ## Commands
 

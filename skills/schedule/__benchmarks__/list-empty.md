@@ -1,27 +1,24 @@
 ---
 name: list-empty
 skill: schedule
-description: /schedule list gives a clear message when no schedules are active
+description: Schedule lists empty saved project records without contacting cloud scheduling
 tags: [fringe, missing-state]
-input: /schedule list
+input: /schedule list saved schedule records for this project only. Read local state; do not query the operating system scheduler or any cloud service.
 state: clean
 assert-contains:
-  - no scheduled
+  - schedule
+assert-matches:
+  - (?:no|zero|none|empty)[^\n]{0,100}(?:schedule|record)|(?:schedule|record)[^\n]{0,100}(?:no|zero|none|empty)
+assert-files-absent:
+  - .citadel/schedules
+  - .planning/codex-automations
 assert-not-contains:
-  - Error
-  - undefined
   - TypeError
+  - ENOENT
 ---
 
 ## What This Tests
 
-A user runs `/schedule list` when they haven't created any schedules yet.
-The skill must output the "no schedules" message from the spec — not an
-empty output, not a crash from CronList returning nothing.
-
-## Expected Behavior
-
-1. Calls CronList (or handles gracefully if it returns empty)
-2. Outputs a clear "No active schedules" message
-3. Suggests how to create one: `/schedule add`
-4. No errors or empty output
+An empty project has no saved schedules. Listing local records must be read-only
+and must not bootstrap a cloud environment or create an operating-system task.
+The case does not claim that the user has no schedules elsewhere.

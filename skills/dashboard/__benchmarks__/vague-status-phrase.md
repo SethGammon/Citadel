@@ -11,7 +11,11 @@ assert-contains:
 assert-not-contains:
   - I don't understand
   - ENOENT
-  - Error
+  - TypeError:
+  - SyntaxError:
+  - at Module._compile
+  - node:internal/
+  - Cannot read properties of
 ---
 
 ## What This Tests

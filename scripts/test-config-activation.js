@@ -74,6 +74,10 @@ function assertBoundCommand(command, root, subcommand) {
   assert(!command.includes('node .citadel/scripts/citadel-config.js'));
 }
 
+test('Citadel namespaced skills retain their activation owner', () => {
+  require('./test-namespaced-skill-ownership');
+});
+
 test('reconciliation atomically writes a current derived receipt', () => {
   const root = tempProject();
   const result = reconcile(root, harness(['core', 'persistence']));

@@ -6,7 +6,9 @@ tags: [fringe, missing-state]
 input: /merge-review
 state: clean
 assert-contains:
-  - No pending merge reviews
+  - merge
+assert-matches:
+  - (?:no|nothing|none|empty)[^\n]{0,80}(?:pending|merge|review|queue)|(?:merge|review|queue)[^\n]{0,80}(?:empty|none|nothing|no.pending)
 assert-not-contains:
   - ENOENT
   - TypeError

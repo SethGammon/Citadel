@@ -1,5 +1,35 @@
 # Changelog
 
+## 1.4.5 - 2026-11-04
+
+### Security
+
+- Require machine-local approval for each exact project and command before running repository-configured typechecks or loop trigger and verifier commands. Hooks and agents cannot grant these approvals themselves.
+- Contain session-end cleanup and archive destinations within the project, including paths with symlinked ancestors, and reject traversal outside the project.
+
+### Fixed
+
+- Resolve Citadel-namespaced skill ownership so the normal bundle activation gates apply to native plugin commands.
+- Include the complete shared utility directory so installed hooks can load frontmatter parsing dependencies. Add package dependency-closure and hook-loading regression checks.
+- Serialize cross-process coordination claims so simultaneous requests cannot acquire overlapping scopes.
+- Guard recovery identity, checkpoint evidence, uncertain remote effects, and concurrent continuation after interruptions.
+- Preserve authored project guidance and show the final dashboard decision from the complete decision log.
+- Retain the selected intent route when application source or shell permission is missing, and report blocked activation honestly.
+
+### Improved
+
+- Honor proposal-only app requests and the host session's configured effort before starting downstream build work.
+- Clarify source-only orchestration commands and local runner confirmations.
+- Isolate live skill checks from account scheduling tools, supply valid safety preconditions, and verify authored-file preservation.
+- Pin macOS verification to the standard Intel macOS 26 pool while retaining the required check names.
+- Batch tagged release blob reads while preserving deterministic archive bytes.
+- Add guarded delivery continuation and local-effect reconciliation to the source-only Operation Control CLI.
+
+### Upgrade
+
+- Repository-configured typechecks and loop commands now stay inactive until a person approves the exact command for that project. Review each displayed approval command and run it interactively; unattended approval is refused.
+- Thanks to [@brandstaetter](https://github.com/brandstaetter) for the installed-hook dependency fix and the security audit fixes.
+
 ## 1.4.4 - 2026-10-16
 
 ### Fixed

@@ -31,7 +31,7 @@ non-draft GitHub Release. `v1.3.0` is an immutable failed release tag with no
 GitHub Release and must not be installed. The `1.2.0` source milestone was
 never tagged or published.
 
-Examples below use `v1.4.4`. They are not evidence of publication: before a
+Examples below use `v1.4.5`. They are not evidence of publication: before a
 consumer install or update, confirm that the tag has a non-draft Release with
 the complete verified assets.
 
@@ -66,14 +66,16 @@ of `refs/tags/v*`. Once the source and all version manifests are ready, the
 release tag must exactly match the package version. For example:
 
 ```sh
-TAG=v1.4.4
+TAG=v1.4.5
 node scripts/release-package.js --ref "$TAG" --dry-run --verify-reproducible
 node scripts/release-package.js --ref "$TAG" --output-dir dist/release --verify-reproducible
-node scripts/release-verify.js "dist/release/citadel-$TAG.tar.gz" --ref "$TAG" --version 1.4.4
+node scripts/release-verify.js "dist/release/citadel-$TAG.tar.gz" --ref "$TAG" --version 1.4.5
 ```
 
 A pushed `v*` tag runs the same strict and reproducibility checks on Node 22 and
-24 across Linux, macOS, and Windows. The packaging job then rebuilds and
+24 across Linux, macOS, and Windows. macOS evidence uses the standard
+`macos-26-intel` runner. Existing `macos-latest` check names remain stable for
+branch protection; this release matrix covers Intel macOS 26. The packaging job then rebuilds and
 verifies the trio and creates GitHub-native provenance with least privilege. The
 packaging job alone receives `contents: write`, `id-token: write`, and
 `attestations: write`; it receives no package-registry or registry-linked
@@ -87,8 +89,8 @@ Download the complete trio from the GitHub Release. From a trusted Citadel
 checkout, verify the archive's offline integrity and internal manifest consistency:
 
 ```sh
-node scripts/release-verify.js /path/to/citadel-v1.4.4.tar.gz \
-  --ref v1.4.4 --version 1.4.4
+node scripts/release-verify.js /path/to/citadel-v1.4.5.tar.gz \
+  --ref v1.4.5 --version 1.4.5
 ```
 
 This offline check proves that the archive, checksum sidecar, embedded manifest,
@@ -100,9 +102,9 @@ for authenticated build provenance. See [GitHub's artifact-attestation guide](ht
 When online, independently verify GitHub's signed build provenance:
 
 ```sh
-gh attestation verify /path/to/citadel-v1.4.4.tar.gz -R SethGammon/Citadel
-gh attestation verify /path/to/citadel-v1.4.4.tar.gz.manifest.json -R SethGammon/Citadel
-gh attestation verify /path/to/citadel-v1.4.4.tar.gz.sha256 -R SethGammon/Citadel
+gh attestation verify /path/to/citadel-v1.4.5.tar.gz -R SethGammon/Citadel
+gh attestation verify /path/to/citadel-v1.4.5.tar.gz.manifest.json -R SethGammon/Citadel
+gh attestation verify /path/to/citadel-v1.4.5.tar.gz.sha256 -R SethGammon/Citadel
 ```
 
 The archive, sidecar, external manifest, embedded manifest, GitHub asset digest,
@@ -115,14 +117,14 @@ Point the updater at a standalone Citadel installation, not at a target project
 that Citadel manages. The default command is a read-only plan:
 
 ```sh
-node scripts/update.js --archive /path/to/citadel-v1.4.4.tar.gz --target /path/to/Citadel
+node scripts/update.js --archive /path/to/citadel-v1.4.5.tar.gz --target /path/to/Citadel
 ```
 
 After reviewing the verified source, backup path, and rollback command, apply it
 explicitly:
 
 ```sh
-node scripts/update.js --archive /path/to/citadel-v1.4.4.tar.gz --target /path/to/Citadel --apply
+node scripts/update.js --archive /path/to/citadel-v1.4.5.tar.gz --target /path/to/Citadel --apply
 ```
 
 The updater preserves `.git/` and `.planning/`, creates a backup beside the

@@ -186,6 +186,166 @@ try {
     assert(bench.runAssertions(specimen, 'Pin bytes').some(row => !row.passed));
     for (const pattern of ['', '.*', '[']) assert(bench.validateScenario({ ...specimen, assertMatches: [pattern] }).length);
   });
+
+  test('semantic scenario checks accept meaning but reject missing behavior and raw failures', () => {
+    const bench = require('./skill-bench');
+    const cases = [["create-skill","repeated-pattern","typecheck\nQ1: What do you repeat?","typecheck is available."],["dashboard","vague-status-phrase","Citadel Dashboard\nCAMPAIGNS\nHook errors: 0","Citadel Dashboard\nCAMPAIGNS\nTypeError: failed"],["design","extract-from-codebase","Colors #2563eb\nTypography\nSpacing\nMissing component patterns are undefined.","extract"],["experiment","no-metric","How to measure faster? Give a command that prints one number for a baseline.","metric"],["marshal","vague-direction","The task is undefined. What should I work on?","The task is undefined."],["do","no-planning-dir","Routing the login bug to /systematic-debugging; please provide source.","The login bug needs a source path."]];
+    for (const [skill, name, accept, reject] of cases) {
+      const spec = bench.parseScenario(path.join(__dirname, '..', 'skills', skill, '__benchmarks__', name + '.md'));
+      assert.deepStrictEqual(bench.validateScenario(spec), [], skill + '/' + name);
+      const textSpec = { ...spec, assertFilesAbsent: [], assertFilesUnchanged: [] };
+      assert(bench.runAssertions(textSpec, accept, fixture).every(row => row.passed), skill + ' rejected valid meaning');
+      assert(bench.runAssertions(textSpec, reject, fixture).some(row => !row.passed), skill + ' accepted missing meaning');
+    }
+  });
+  test('evolve status fixture supplies prior cycles and detects history mutation', () => {
+    const bench = require('./skill-bench');
+    const project = bench.setupProjectState('with-evolve-history');
+    try {
+      const spec = bench.parseScenario(path.join(__dirname, '..', 'skills', 'evolve', '__benchmarks__', 'happy-path-status.md'));
+      const state = path.join(project, '.planning', 'evolve', 'skill-md', 'director-state.json');
+      const saved = JSON.parse(fs.readFileSync(state, 'utf8'));
+      assert.equal(saved.cycle, 2);
+      assert.equal(saved.cumulativeSpend, 4.5);
+      assert.deepStrictEqual(saved.velocityHistory, [0.5, 0.25]);
+      const snapshots = bench.captureFileSnapshots(project, spec.assertFilesUnchanged);
+      assert(bench.runAssertions(spec, 'Belief model, velocity, spend.', project, snapshots).every(row => row.passed));
+      fs.writeFileSync(state, JSON.stringify({ ...saved, cycle: 3 }));
+      assert(bench.runAssertions(spec, 'Belief model, velocity, spend.', project, snapshots).some(row => !row.passed));
+    } finally {
+      const physical = fs.realpathSync(project);
+      assert.equal(path.dirname(physical), fs.realpathSync(os.tmpdir()));
+      assert(path.basename(physical).startsWith('citadel-bench-'));
+      fs.rmSync(physical, { recursive: true, force: true });
+    }
+  });
+  test('ablation cannot score a failed CLI as passed using its partial output', () => {
+    const vm = require('vm');
+    const filename = path.join(__dirname, 'noop-ablate.js');
+    const project = path.join(fixture, 'ablation-project');
+    let execution = { error: 'executor failed', output: 'done', timedOut: false };
+    let assertionCalls = 0;
+    const snapshots = { captured: true };
+    const fakeRequire = request => request === './skill-bench' ? {
+      discoverScenarios: () => [],
+      setupProjectState: () => { fs.mkdirSync(project); return project; },
+      executeClaudeScenario: () => execution,
+      captureFileSnapshots: () => snapshots,
+      runAssertions: (_scenario, _output, actualProject, actualSnapshots) => {
+        assertionCalls++;
+        assert.strictEqual(actualProject, project);
+        assert.strictEqual(actualSnapshots, snapshots);
+        return [{ passed: true }];
+      },
+      findClaudeCLI: () => 'unused',
+    } : require(request);
+    const loaded = { exports: {} };
+    vm.runInNewContext(fs.readFileSync(filename, 'utf8'), {
+      require: fakeRequire, module: loaded, __dirname, process, console,
+    }, { filename });
+    let outcome = loaded.exports.runScenario({ state: 'clean' }, 'unused');
+    assert.strictEqual(outcome.pass, null);
+    assert.strictEqual(assertionCalls, 0);
+    execution = { error: null, output: 'done', timedOut: true };
+    outcome = loaded.exports.runScenario({ state: 'clean' }, 'unused');
+    assert.strictEqual(outcome.pass, null);
+    assert.strictEqual(assertionCalls, 0);
+    execution = { error: null, output: 'done', timedOut: false };
+    assert.strictEqual(loaded.exports.runScenario({ state: 'clean' }, 'unused').pass, true);
+    assert.strictEqual(assertionCalls, 1);
+  });
+  test('live Claude checks retain normal permissions and exclude account scheduling tools', () => {
+    const { claudeScenarioArgs } = require('./skill-bench');
+    const args = claudeScenarioArgs({ skill: 'schedule', input: '/schedule list' });
+    assert.strictEqual(args[args.indexOf('--permission-mode') + 1], 'default');
+    assert.strictEqual(args[args.indexOf('--permission-prompts') + 1], 'none');
+    assert(args.includes('--strict-mcp-config'));
+    assert.strictEqual(args[args.indexOf('--disallowedTools') + 1], 'RemoteTrigger,CronCreate,CronDelete');
+    assert.strictEqual(args.at(-1), '/citadel:schedule list');
+    assert(!args.some(arg => /skip-permissions|bypassPermissions/.test(arg)));
+  });
+  test('file preservation cannot pass on missing, changed, linked, or outside files', () => {
+    const bench = require('./skill-bench');
+    const project = path.join(fixture, 'preservation');
+    fs.mkdirSync(project);
+    const file = path.join(project, 'authored.txt');
+    fs.writeFileSync(file, 'authored');
+    const spec = { input: 'Preserve file', state: 'clean', timeout: 1000, assertContains: [], assertNotContains: [], assertFilesUnchanged: ['authored.txt'] };
+    assert.deepStrictEqual(bench.validateScenario(spec), []);
+    const before = bench.captureFileSnapshots(project, spec.assertFilesUnchanged);
+    assert(bench.runAssertions(spec, 'done', project, before).every(row => row.passed));
+    fs.writeFileSync(file, 'changed');
+    assert(bench.runAssertions(spec, 'unchanged', project, before).some(row => !row.passed));
+    fs.unlinkSync(file);
+    assert(bench.runAssertions(spec, 'unchanged', project, before).some(row => !row.passed));
+    assert(bench.runAssertions(spec, 'unchanged', project, bench.captureFileSnapshots(project, spec.assertFilesUnchanged)).some(row => !row.passed));
+    const outside = path.join(fixture, 'outside.txt');
+    fs.writeFileSync(outside, 'authored');
+    fs.linkSync(outside, file);
+    assert.strictEqual(bench.captureFileSnapshots(project, ['authored.txt'])['authored.txt'], null);
+    for (const bad of ['../outside.txt', '/outside.txt', 'C:\\outside.txt']) {
+      assert(bench.validateScenario({ ...spec, assertFilesUnchanged: [bad] }).length);
+    }
+  });
+  test('identical bytes under a replaced fixture root cannot prove preservation', () => {
+    const bench = require('./skill-bench');
+    const project = path.join(fixture, 'root-binding');
+    fs.mkdirSync(project);
+    fs.writeFileSync(path.join(project, 'authored.txt'), 'authored');
+    const spec = { assertContains: [], assertNotContains: [], assertFilesUnchanged: ['authored.txt'] };
+    const before = bench.captureFileSnapshots(project, spec.assertFilesUnchanged);
+    fs.renameSync(project, project + '-original');
+    fs.mkdirSync(project);
+    fs.writeFileSync(path.join(project, 'authored.txt'), 'authored');
+    assert(bench.runAssertions(spec, 'unchanged', project, before).some(row => !row.passed));
+  });
+  test('score-only fixture supplies an approved rubric and inspectable target', () => {
+    const bench = require('./skill-bench');
+    const project = bench.setupProjectState('with-scoring-rubric');
+    try {
+      const rubric = fs.readFileSync(path.join(project, '.planning', 'rubrics', 'citadel.md'), 'utf8');
+      assert(rubric.includes('Status: approved'));
+      assert.strictEqual((rubric.match(/^### Axis:/gm) || []).length, 2);
+      assert(fs.existsSync(path.join(project, 'src', 'sum.js')));
+    } finally {
+      assert.strictEqual(path.dirname(project), path.resolve(os.tmpdir()));
+      assert(path.basename(project).startsWith('citadel-bench-'));
+      fs.rmSync(project, { recursive: true, force: true });
+    }
+  });
+  test('Claude execution selects this plugin instead of a colliding native short command', () => {
+    const { scopedClaudeInput } = require('./skill-bench');
+    assert.strictEqual(scopedClaudeInput({ skill: 'loop', input: '/loop run "npm run lint"' }), '/citadel:loop run "npm run lint"');
+    assert.strictEqual(scopedClaudeInput({ skill: 'loop', input: '/loop' }), '/citadel:loop');
+    for (const input of ['/citadel:loop run x', '/other:loop x', '/loop-other', 'what is happening?']) {
+      assert.strictEqual(scopedClaudeInput({ skill: 'loop', input }), input);
+    }
+  });
+  test('local daemon fixture survives initialization without promoting novice fixtures', () => {
+    const bench = require('./skill-bench');
+    const configAt = project => JSON.parse(fs.readFileSync(path.join(project, '.claude', 'harness.json'), 'utf8'));
+    const novice = bench.setupProjectState('with-campaign');
+    const approved = bench.setupProjectState('with-approved-local-daemon');
+    try {
+      assert.strictEqual(configAt(novice).trust?.sessionsCompleted || 0, 0);
+      const init = spawnSync(process.execPath, [path.join(__dirname, '..', 'hooks_src', 'init-project.js')], {
+        cwd: approved, input: '{}', encoding: 'utf8', timeout: 30000,
+        env: { ...process.env, CLAUDE_PROJECT_DIR: approved, CLAUDE_PLUGIN_DATA: path.join(approved, '.claude') },
+      });
+      assert.ifError(init.error);
+      assert.strictEqual(init.status, 0, init.stderr);
+      assert.strictEqual(configAt(approved).trust.sessionsCompleted, 20);
+      assert.strictEqual(configAt(approved).trust.campaignsCompleted, 2);
+      assert.strictEqual(fs.existsSync(path.join(approved, '.planning', 'daemon.json')), false);
+      assert.strictEqual(configAt(novice).trust?.sessionsCompleted || 0, 0);
+    } finally {
+      for (const project of [novice, approved]) {
+        assert.strictEqual(path.dirname(project), path.resolve(os.tmpdir()));
+        assert(path.basename(project).startsWith('citadel-bench-'));
+        fs.rmSync(project, { recursive: true, force: true });
+      }
+    }
+  });
   test('native hook proof binds successful paired events to candidate and thread', () => {
     const { verifyHooks } = require('./skill-bench-native');
     const hookPath = path.join(fixture, '.codex/hooks.json');

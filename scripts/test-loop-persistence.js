@@ -308,7 +308,11 @@ async function main() {
       const owned = child('interrupt', project, 'test', stage);
       await owned.ready;
       owned.start();
-      await waitFor(() => fs.existsSync(path.join(project, `stage-${stage}`)));
+      // Creation can become visible before writeFileSync finishes its PID bytes.
+      await waitFor(() => {
+        const marker = path.join(project, `stage-${stage}`);
+        return fs.existsSync(marker) && fs.readFileSync(marker, 'utf8') === String(owned.processChild.pid);
+      });
       assert.equal(Number(fs.readFileSync(path.join(project, `stage-${stage}`), 'utf8')), owned.processChild.pid);
       owned.processChild.kill('SIGKILL');
       await owned.result;

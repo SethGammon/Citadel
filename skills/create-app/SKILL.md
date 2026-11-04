@@ -17,7 +17,7 @@ trigger_keywords:
   - add auth
   - add payments
   - integrate
-effort: max
+last-updated: 2026-11-04
 ---
 
 # /create-app — From Description to Verified Application
@@ -82,6 +82,18 @@ Use when the user wants to create an app, add a feature, or scaffold a project. 
 ### Step 1: CLASSIFY
 
 Read the user's input. Determine the tier. Announce what you'll do in plain language — not tier numbers. If the classification is wrong, accept user overrides ("just scaffold it" → Tier 1, "just build it" → Tier 4).
+
+### Proposal-only and pre-approval turns
+
+Use the host session's configured effort level for this routing and proposal
+turn. Downstream skills keep their own effort settings.
+
+When the user requests a stack proposal or first steps before approving a build,
+present that proposal after the initial project and matching-template check.
+Choose reasonable defaults and state assumptions. Defer environment diagnostics,
+additional stack/architecture research, dependency installation, and application
+code until approval. A proposal-only turn ends at that approval boundary; it
+does not enter the downstream build campaign.
 
 ### Step 2: EXECUTE TIER
 

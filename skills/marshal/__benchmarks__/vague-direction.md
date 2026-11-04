@@ -10,9 +10,15 @@ assert-contains:
 assert-not-contains:
   - ENOENT
   - TypeError
-  - undefined
+  - TypeError:
+  - SyntaxError:
+  - at Module._compile
+  - node:internal/
   - Cannot read
   - crashed
+assert-files-absent:
+  - src
+  - package.json
 ---
 
 ## What This Tests

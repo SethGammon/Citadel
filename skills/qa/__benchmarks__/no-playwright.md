@@ -6,7 +6,9 @@ tags: [fringe, missing-state]
 input: /qa
 state: clean
 assert-contains:
-  - empty
+  - Playwright
+assert-matches:
+  - install|setup|set.up|URL|server
 assert-not-contains:
   - ENOENT
   - TypeError
